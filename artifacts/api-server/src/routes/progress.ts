@@ -17,8 +17,8 @@ router.get("/progress/summary", async (_req, res) => {
     .select({
       totalSessions: sql<number>`count(distinct ${sessionsTable.id})::int`,
       totalReps: sql<number>`coalesce(sum(${sessionsTable.totalReps}), 0)::int`,
-      avgFormScore: sql<number | null>`avg(${sessionsTable.avgFormScore})`,
-      bestFormScore: sql<number | null>`max(${sessionsTable.avgFormScore})`,
+      avgFormScore: sql<number | null>`avg(${sessionsTable.avgFormScore})::float`,
+      bestFormScore: sql<number | null>`max(${sessionsTable.avgFormScore})::float`,
     })
     .from(sessionsTable)
     .where(sql`${sessionsTable.completedAt} is not null`);
@@ -81,8 +81,8 @@ router.get("/progress/by-exercise", async (_req, res) => {
       exerciseName: exercisesTable.name,
       totalSessions: sql<number>`count(distinct ${sessionsTable.id})::int`,
       totalReps: sql<number>`coalesce(sum(${sessionsTable.totalReps}), 0)::int`,
-      avgFormScore: sql<number | null>`avg(${sessionsTable.avgFormScore})`,
-      bestFormScore: sql<number | null>`max(${sessionsTable.avgFormScore})`,
+      avgFormScore: sql<number | null>`avg(${sessionsTable.avgFormScore})::float`,
+      bestFormScore: sql<number | null>`max(${sessionsTable.avgFormScore})::float`,
       lastSessionAt: sql<string | null>`max(${sessionsTable.startedAt})`,
     })
     .from(exercisesTable)
@@ -108,7 +108,7 @@ router.get("/progress/timeline", async (req, res) => {
   const rows = await db
     .select({
       date: sql<string>`date(${sessionsTable.startedAt})`,
-      avgFormScore: sql<number>`avg(${sessionsTable.avgFormScore})`,
+      avgFormScore: sql<number>`avg(${sessionsTable.avgFormScore})::float`,
       totalReps: sql<number>`coalesce(sum(${sessionsTable.totalReps}), 0)::int`,
       exerciseId: exercisesTable.id,
       exerciseName: exercisesTable.name,
@@ -134,7 +134,7 @@ router.get("/progress/recent-sessions", async (req, res) => {
       avgFormScore: sessionsTable.avgFormScore,
       durationMinutes: sql<number | null>`
         case when ${sessionsTable.completedAt} is not null
-        then extract(epoch from (${sessionsTable.completedAt} - ${sessionsTable.startedAt})) / 60
+        then (extract(epoch from (${sessionsTable.completedAt} - ${sessionsTable.startedAt})) / 60)::float
         else null end
       `,
     })
