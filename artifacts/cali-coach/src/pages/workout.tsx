@@ -7,18 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Activity, Play, Square, FlaskConical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-function calculateAngle(
-  a: { x: number; y: number },
-  b: { x: number; y: number },
-  c: { x: number; y: number }
-) {
-  const radians =
-    Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
-  let angle = Math.abs((radians * 180.0) / Math.PI);
-  if (angle > 180.0) angle = 360 - angle;
-  return angle;
-}
+import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
 
 export function Workout() {
   const [, setLocation] = useLocation();
@@ -202,77 +191,54 @@ export function Workout() {
     }
   };
 
-  const processFrame = (landmarks: { x: number; y: number; z: number }[]) => {
+  const processFrame = (landmarks: Landmark[]) => {
     const exercise = exercises?.find((e) => e.id.toString() === selectedExerciseId);
     if (!exercise) return;
 
-    let angle = 0;
-    const name = exercise.name.toLowerCase();
-    if (name.includes("push-up") || name.includes("dip")) {
-      angle = calculateAngle(landmarks[11], landmarks[13], landmarks[15]);
-    } else if (name.includes("squat") || name.includes("lunge")) {
-      angle = calculateAngle(landmarks[23], landmarks[25], landmarks[27]);
-    } else if (name.includes("pull-up")) {
-      angle = calculateAngle(landmarks[11], landmarks[13], landmarks[15]);
-    } else {
-      angle = calculateAngle(landmarks[11], landmarks[23], landmarks[25]);
-    }
+    const config = getExerciseConfig(exercise.name);
+    if (!config) return;
 
-    if (stateRef.current.phase === "up" && angle < 90) {
-      stateRef.current.phase = "down";
-    } else if (stateRef.current.phase === "down" && angle > 150) {
-      stateRef.current.phase = "up";
+    const {
+      newPhase,
+      repCounted,
+      repQuality,
+      formScore: rawScore,
+      audioCue,
+    } = config.processFrame(landmarks, stateRef.current.phase as Phase);
+
+    stateRef.current.phase = newPhase;
+
+    if (repCounted) {
       const newRepCount = stateRef.current.repCount + 1;
       stateRef.current.repCount = newRepCount;
       setReps(newRepCount);
 
       const duration = Date.now() - stateRef.current.lastRepTime;
       stateRef.current.lastRepTime = Date.now();
-      stateRef.current.repFormScores.push(formScore);
+      stateRef.current.repFormScores.push(rawScore);
 
       createRep.mutate({
         sessionId: stateRef.current.sessionId,
         data: {
           repNumber: newRepCount,
-          formScore,
+          formScore: Math.round(rawScore),
           durationMs: duration > 0 ? duration : null,
-          feedbackGiven: null,
+          feedbackGiven: audioCue ?? null,
         },
       });
 
-      if (newRepCount % 5 === 0) {
+      if (repQuality === "incomplete") {
+        speak("Incomplete rep — go deeper next time");
+      } else if (newRepCount % 5 === 0) {
         speak(`${newRepCount} reps. Keep it up!`);
       } else {
         speak("Good rep");
       }
+    } else if (audioCue) {
+      speak(audioCue);
     }
 
-    const shoulderMid = {
-      x: (landmarks[11].x + landmarks[12].x) / 2,
-      y: (landmarks[11].y + landmarks[12].y) / 2,
-    };
-    const hipMid = {
-      x: (landmarks[23].x + landmarks[24].x) / 2,
-      y: (landmarks[23].y + landmarks[24].y) / 2,
-    };
-    const kneeMid = {
-      x: (landmarks[25].x + landmarks[26].x) / 2,
-      y: (landmarks[25].y + landmarks[26].y) / 2,
-    };
-    const spineAngle = calculateAngle(shoulderMid, hipMid, kneeMid);
-    let currentScore = 100;
-    if (spineAngle < 160) {
-      currentScore = Math.max(0, 100 - (180 - spineAngle) * 2);
-    }
-
-    setFormScore((prev) => {
-      const smoothed = prev * 0.9 + currentScore * 0.1;
-      const exercise2 = exercises?.find((e) => e.id.toString() === selectedExerciseId);
-      if (smoothed < 60 && exercise2?.coachingCues?.length) {
-        speak(exercise2.coachingCues[Math.floor(Math.random() * exercise2.coachingCues.length)]);
-      }
-      return smoothed;
-    });
+    setFormScore((prev) => prev * 0.9 + rawScore * 0.1);
   };
 
   useEffect(() => {
@@ -300,8 +266,10 @@ export function Workout() {
       const session = await createSession.mutateAsync({
         data: { exerciseId: parseInt(selectedExerciseId) },
       });
+      const selectedExercise = exercises?.find((e) => e.id.toString() === selectedExerciseId);
+      const config = selectedExercise ? getExerciseConfig(selectedExercise.name) : null;
       stateRef.current = {
-        phase: "up",
+        phase: config?.initialPhase ?? "up",
         repCount: 0,
         lastSpokenTime: Date.now(),
         sessionStartTime: Date.now(),

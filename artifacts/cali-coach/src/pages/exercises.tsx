@@ -1,9 +1,10 @@
 import { useListExercises } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dumbbell, Info, Volume2 } from "lucide-react";
+import { Dumbbell, Info, Volume2, Crosshair } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { getExerciseConfig } from "@/lib/exercise-registry";
 
 export function Exercises() {
   const { data: exercises, isLoading } = useListExercises();
@@ -58,6 +59,30 @@ export function Exercises() {
                     ))}
                   </div>
                 </div>
+
+                {(() => {
+                  const config = getExerciseConfig(exercise.name);
+                  if (!config) return null;
+                  return (
+                    <div>
+                      <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Crosshair className="w-3 h-3 text-primary" /> Critical Joints
+                      </div>
+                      <ul className="space-y-2">
+                        {config.criticalJoints.map((joint, i) => (
+                          <li key={i} className="text-sm">
+                            <span className="inline-flex items-center gap-1 font-medium text-primary">
+                              <Badge variant="outline" className="text-xs font-mono border-primary/40 text-primary">
+                                {joint.label}
+                              </Badge>
+                            </span>
+                            <p className="text-xs text-muted-foreground mt-0.5 pl-1">{joint.description}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
 
                 <div>
                   <div className="text-xs font-semibold text-foreground uppercase tracking-wider mb-2 flex items-center gap-1">

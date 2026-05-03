@@ -9,7 +9,9 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceL
 export function SessionDetail() {
   const params = useParams();
   const id = parseInt(params.id || "0");
-  const { data: session, isLoading } = useGetSession(id, { query: { enabled: !!id } });
+  const { data: session, isLoading } = useGetSession(id, {
+    query: { queryKey: [`/api/sessions/${id}`], enabled: !!id },
+  });
 
   if (isLoading) {
     return <div className="p-8">Loading...</div>;
