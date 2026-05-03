@@ -66,31 +66,48 @@ export function Workout() {
 
   useEffect(() => {
     async function loadModel() {
+      setIsModelLoading(true);
+      let vision;
       try {
-        setIsModelLoading(true);
-        const vision = await FilesetResolver.forVisionTasks(
+        vision = await FilesetResolver.forVisionTasks(
           "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
         );
-        const landmarker = await PoseLandmarker.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath:
-              "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
-            delegate: "GPU",
-          },
-          runningMode: "VIDEO",
-          numPoses: 1,
-        });
-        landmarkerRef.current = landmarker;
-        setIsModelLoading(false);
       } catch (err) {
-        console.error("Failed to load MediaPipe model", err);
+        console.error("Failed to load MediaPipe WASM", err);
         setIsModelLoading(false);
         toast({
-          title: "Model load error",
-          description: "Could not load pose tracking model.",
+          title: "Pose tracking unavailable",
+          description: "Could not load the vision library. Check your connection.",
           variant: "destructive",
         });
+        return;
       }
+
+      const modelAssetPath =
+        "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";
+
+      // Try GPU first, fall back to CPU silently
+      for (const delegate of ["GPU", "CPU"] as const) {
+        try {
+          const landmarker = await PoseLandmarker.createFromOptions(vision, {
+            baseOptions: { modelAssetPath, delegate },
+            runningMode: "VIDEO",
+            numPoses: 1,
+          });
+          landmarkerRef.current = landmarker;
+          setIsModelLoading(false);
+          return;
+        } catch (err) {
+          console.warn(`MediaPipe delegate "${delegate}" failed, trying next…`, err);
+        }
+      }
+
+      // Both delegates failed
+      setIsModelLoading(false);
+      toast({
+        title: "Pose tracking unavailable",
+        description: "Your device does not support real-time pose detection. Use Test Mode instead.",
+      });
     }
     loadModel();
     return () => {
@@ -134,8 +151,30 @@ export function Workout() {
 
     if (video.currentTime !== lastVideoTimeRef.current) {
       lastVideoTimeRef.current = video.currentTime;
-      const startTimeMs = performance.now();
-      const results = landmarkerRef.current.detectForVideo(video, startTimeMs);
+
+      // Video must be fully loaded with real dimensions before MediaPipe can process it
+      if (
+        video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA ||
+        video.videoWidth === 0 ||
+        video.videoHeight === 0
+      ) {
+        if (isWorkoutActive) requestRef.current = requestAnimationFrame(predictWebcam);
+        return;
+      }
+
+      // Keep canvas in sync with the actual video resolution
+      if (canvas.width !== video.videoWidth) canvas.width = video.videoWidth;
+      if (canvas.height !== video.videoHeight) canvas.height = video.videoHeight;
+
+      let results;
+      try {
+        const startTimeMs = performance.now();
+        results = landmarkerRef.current.detectForVideo(video, startTimeMs);
+      } catch (err) {
+        console.warn("Pose detection frame error (skipping frame):", err);
+        if (isWorkoutActive) requestRef.current = requestAnimationFrame(predictWebcam);
+        return;
+      }
 
       ctx.save();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
