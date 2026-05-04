@@ -57,6 +57,19 @@ Plank (static) → Burpee Basics → Burpee Conditioning → **Dragon Flag** (st
 ### LEGS (5 skills)
 Assisted Squat → Squat → Archer Squat → **Nordic Curls** → Pistol Squat
 
+### Ghost Mode AR Overlay
+Active during every live camera workout. Defined in `artifacts/cali-coach/src/lib/ghost-poses.ts`.
+
+- **Visual ghost**: semi-transparent cyan skeleton drawn on the same canvas as the user, animated at an independent 4-second rep cycle (smoothly cycling between phase keyframes) so the user can follow along
+- **Color**: cyan (`#00D4FF`) when synced (≥85%), amber when not synced
+- **Sync calculation**: `calcSyncPct()` — for each key landmark in the exercise config, checks if the Euclidean distance between user landmark and ideal ghost landmark is within 0.15 (15% of the 0–1 normalised space). Returns 0–100.
+- **Phase-matched ghost**: `computeGhostLandmarks()` applies `AngleCorrection` entries to the user's detected body (anchored to their scale and position) to show ideal joint angles for the current exercise phase.
+- **Gating**: rep counter and hold timer only advance when `syncPct >= 85`. If sync drops, a throttled voice says "Get back into position to continue."
+- **Blended form score**: `(angleFormScore + syncPct) / 2` — stored as `avgFormScore` in DB, ensuring mastery requires both good angles AND ghost sync.
+- **HUD**: "Ghost Sync XX%" badge in the centre (green ≥90%, yellow ≥75%, red <75%), border glow changes cyan when synced / amber when not.
+- **Session Results**: shows "Best Ghost Sync: XX%" with Elite badge at ≥90%.
+- Covered exercises: all Push, Pull, Squat, Lunge, Nordic Curls, Dip, all static holds. Unconfigured exercises (Burpee, Muscle-Up) default to 100% sync.
+
 ### Static Hold Timer
 Static exercises (`isStatic: true` in `ExerciseConfig`) use a Hold Timer instead of a rep counter:
 - `processFrame` returns `isHoldActive: boolean` — true when all joints are within ±10° of target

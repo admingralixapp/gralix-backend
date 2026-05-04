@@ -11,7 +11,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { Trophy, Star, ChevronRight, Zap } from "lucide-react";
+import { Trophy, Star, ChevronRight, Zap, Ghost } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type EvaluatedSkill } from "@/lib/skill-tree";
 import { getExerciseConfig } from "@/lib/exercise-registry";
@@ -238,6 +238,8 @@ export interface SessionResultsProps {
   totalReps: number;
   avgFormScore: number;
   sessionId: number;
+  /** Best ghost-sync percentage achieved during the session (0–100). Undefined when ghost mode was not active (e.g. test mode). */
+  bestSyncPct?: number;
   /** Skill tree evaluated BEFORE this session was included */
   prevEvaluated: EvaluatedSkill[];
   /** Skill tree evaluated AFTER this session is included */
@@ -250,6 +252,7 @@ export function SessionResults({
   totalReps,
   avgFormScore,
   sessionId,
+  bestSyncPct,
   prevEvaluated,
   nextEvaluated,
   onClose,
@@ -358,6 +361,31 @@ export function SessionResults({
             <div className="text-center">
               <FormRing score={avgFormScore} />
             </div>
+
+            {/* Ghost Sync badge */}
+            {bestSyncPct !== undefined && (
+              <div className="flex items-center justify-between bg-cyan-500/10 border border-cyan-500/30 rounded-xl px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Ghost className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <span className="text-sm font-semibold text-cyan-300">Best Ghost Sync</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="text-2xl font-black tabular-nums"
+                    style={{
+                      color:
+                        bestSyncPct >= 90 ? "#86efac" :
+                        bestSyncPct >= 75 ? "#fde047" : "#fca5a5",
+                    }}
+                  >
+                    {bestSyncPct}%
+                  </span>
+                  {bestSyncPct >= 90 && (
+                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Elite</span>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Perfect Set badge */}
             {isPerfectSet && (
