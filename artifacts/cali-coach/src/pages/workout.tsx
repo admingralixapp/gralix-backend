@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Activity, Play, Square, FlaskConical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
+import { speak as voiceSpeak, cancelSpeech } from "@/lib/voice-service";
 import { evaluateSkillTree, type EvaluatedSkill, type SessionSummary } from "@/lib/skill-tree";
 import { SessionResults, type SessionResultsProps } from "@/components/session-results";
 
@@ -67,13 +68,8 @@ export function Workout() {
   const speak = useCallback((text: string) => {
     const now = Date.now();
     if (now - stateRef.current.lastSpokenTime < 4000) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.1;
-    utterance.pitch = 0.95;
-    utterance.volume = 1;
-    window.speechSynthesis.speak(utterance);
     stateRef.current.lastSpokenTime = now;
+    voiceSpeak(text);
   }, []);
 
   useEffect(() => {
@@ -272,10 +268,12 @@ export function Workout() {
     } else {
       cancelAnimationFrame(requestRef.current);
       stopCamera();
+      cancelSpeech();
     }
     return () => {
       cancelAnimationFrame(requestRef.current);
       stopCamera();
+      cancelSpeech();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWorkoutActive]);

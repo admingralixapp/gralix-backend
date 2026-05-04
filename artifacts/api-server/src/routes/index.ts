@@ -7,6 +7,7 @@ import progressRouter from "./progress";
 import socialRouter from "./social";
 import leaderboardRouter from "./leaderboard";
 import feedRouter from "./feed";
+import ttsRouter from "./tts";
 
 const router: IRouter = Router();
 
@@ -14,6 +15,7 @@ router.use(healthRouter);
 router.use(socialRouter);
 router.use(leaderboardRouter);
 router.use(feedRouter);
+router.use(ttsRouter);
 router.use(exercisesRouter);
 router.use(sessionsRouter);
 router.use(repsRouter);
