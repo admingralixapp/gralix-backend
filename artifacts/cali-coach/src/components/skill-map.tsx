@@ -23,10 +23,12 @@ import {
   SKILL_TREE_BRANCHES,
   TOTAL_SKILL_COUNT,
   ALL_SKILL_NODES,
+  EQUIPMENT_SPECIALTIES,
   evaluateSkillTree,
   type SkillBranch,
   type EvaluatedSkill,
   type SkillType,
+  type EquipmentTag,
 } from "@/lib/skill-tree";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -35,13 +37,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 const BRANCHES: SkillBranch[] = ["PUSH", "PULL", "CORE", "LEGS"];
 
 const COL = {
-  PUSH:        75,
-  PUSH_HSPU:  110,
-  PULL_SHARED: 225,
-  PULL_FL:    195,
-  PULL_MU:    255,
-  CORE:       395,
-  LEGS:       530,
+  PUSH:        73,
+  PUSH_HSPU:  108,
+  PULL_SHARED: 218,
+  PULL_FL:    188,
+  PULL_MU:    248,
+  SPEC_BAR:   288,
+  SPEC_RINGS: 312,
+  SPEC_WGT:   336,
+  CORE:       415,
+  LEGS:       548,
 } as const;
 
 const ROW_Y = [52, 114, 176, 238, 300] as const;
@@ -50,9 +55,17 @@ const NODE_R  = 15;
 const RING_R  = 21;
 const RING_SW = 3;
 const RING_CIRC = 2 * Math.PI * (RING_R - RING_SW / 2);
+const SPEC_R  = 9;  // radius for equipment specialty nodes
 
-const SVG_W = 600;
+const SVG_W = 618;
 const SVG_H = 355;
+
+// Equipment specialty node colours (match EQUIPMENT_SPECIALTIES)
+const SPEC_COLOR: Record<EquipmentTag, string> = {
+  bar:      "#f97316",
+  rings:    "#06b6d4",
+  weighted: "#8b5cf6",
+};
 
 // ─── Colours ──────────────────────────────────────────────────────────────────
 
@@ -102,6 +115,95 @@ function LockShape({ cx, cy }: { cx: number; cy: number }) {
     </>
   );
 }
+
+// ─── Equipment specialty SVG helpers ─────────────────────────────────────────
+
+/** Tiny icon rendered inside a specialty node, centered at (cx, cy). */
+function SpecEquipIcon({
+  cx, cy, tag, fill,
+}: { cx: number; cy: number; tag: EquipmentTag; fill: string }) {
+  if (tag === "rings") {
+    return <circle cx={cx} cy={cy} r={5} fill="none" stroke={fill} strokeWidth={1.8} />;
+  }
+  if (tag === "weighted") {
+    return (
+      <>
+        <circle cx={cx - 3.5} cy={cy} r={2.5} fill={fill} />
+        <circle cx={cx + 3.5} cy={cy} r={2.5} fill={fill} />
+        <line x1={cx - 1} y1={cy} x2={cx + 1} y2={cy} stroke={fill} strokeWidth={1.5} />
+      </>
+    );
+  }
+  return (
+    <>
+      <line x1={cx - 5.5} y1={cy} x2={cx + 5.5} y2={cy} stroke={fill} strokeWidth={1.8} />
+      <line x1={cx - 5.5} y1={cy - 2.5} x2={cx - 5.5} y2={cy + 2.5} stroke={fill} strokeWidth={1.8} />
+      <line x1={cx + 5.5} y1={cy - 2.5} x2={cx + 5.5} y2={cy + 2.5} stroke={fill} strokeWidth={1.8} />
+    </>
+  );
+}
+
+function SpecialtyNodeSvg({
+  skill, cx, cy, equipmentTag,
+  onHover, onLeave, onTap,
+}: {
+  skill: EvaluatedSkill; cx: number; cy: number; equipmentTag: EquipmentTag;
+  onHover: () => void;
+  onLeave: () => void;
+  onTap:   () => void;
+}) {
+  const color  = SPEC_COLOR[equipmentTag];
+  const { status, progress, masteryRequirement: req } = skill;
+  const pct    = Math.min(1, req.minQualifyingSessions > 0
+    ? progress.qualifyingSessions / req.minQualifyingSessions : 0);
+  const isMastered  = status === "mastered";
+  const isLocked    = status === "locked";
+  const hasProgress = status === "unlocked" && progress.qualifyingSessions > 0;
+  const circ        = 2 * Math.PI * (SPEC_R - 1);
+
+  return (
+    <g onMouseEnter={onHover} onMouseLeave={onLeave} onClick={onTap}
+      style={{ cursor: isLocked ? "default" : "pointer" }}>
+      {/* Wide invisible hit area */}
+      <circle cx={cx} cy={cy} r={SPEC_R + 5} fill="transparent" />
+
+      {/* Progress ring */}
+      {hasProgress && (
+        <circle cx={cx} cy={cy} r={SPEC_R - 1}
+          fill="none" stroke={color} strokeWidth={1.5}
+          strokeDasharray={`${pct * circ} ${circ}`}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${cx} ${cy})`}
+          opacity={0.55} />
+      )}
+
+      {/* Main circle */}
+      <circle cx={cx} cy={cy} r={SPEC_R}
+        fill={isMastered ? color : isLocked ? "#1e293b" : "#0f172a"}
+        stroke={isMastered ? "none" : isLocked ? "#334155" : color}
+        strokeWidth={1.5}
+        opacity={isLocked ? 0.5 : 1} />
+
+      {/* Equipment icon */}
+      {!isLocked && (
+        <SpecEquipIcon cx={cx} cy={cy} tag={equipmentTag}
+          fill={isMastered ? "white" : color} />
+      )}
+      {isLocked && (
+        <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central"
+          fontSize={7} fill="#4b5563">—</text>
+      )}
+
+      {/* Gold dot badge when mastered */}
+      {isMastered && (
+        <circle cx={cx + SPEC_R - 2} cy={cy - SPEC_R + 2} r={3}
+          fill="#eab308" stroke="#0f172a" strokeWidth={0.8} />
+      )}
+    </g>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function SkillNodeSvg({
   skill, cx, cy, branchColor,
@@ -478,7 +580,8 @@ export function SkillMap() {
     ? BRANCHES.map((branch) => ({
         branch,
         color: BRANCH_COLOR[branch],
-        skills: evaluated.current!.filter((s) => s.branch === branch),
+        // Specialty nodes are shown in a separate strip — exclude from core branch lists
+        skills: evaluated.current!.filter((s) => s.branch === branch && !s.equipmentSpecialty),
       }))
     : null;
 
@@ -545,6 +648,17 @@ export function SkillMap() {
   const pullShared = pullAll.filter((s) => !s.path || s.path === "shared").slice(0, 2);
   const pullFL     = pullAll.filter((s) => s.path === "front-lever");
   const pullMU     = pullAll.filter((s) => s.path === "muscle-up");
+
+  // ── PULL specialty paths (branch from pull-2) ──────────────────────────────
+  const pullSpecBar = evaluated.current!
+    .filter((s) => s.branch === "PULL" && s.equipmentSpecialty && s.equipmentTag === "bar")
+    .sort((a, b) => a.level - b.level);
+  const pullSpecRings = evaluated.current!
+    .filter((s) => s.branch === "PULL" && s.equipmentSpecialty && s.equipmentTag === "rings")
+    .sort((a, b) => a.level - b.level);
+  const pullSpecWgt = evaluated.current!
+    .filter((s) => s.branch === "PULL" && s.equipmentSpecialty && s.equipmentTag === "weighted")
+    .sort((a, b) => a.level - b.level);
 
   // ── PUSH sub-paths ──────────────────────────────────────────────────────────
   const pushAll   = byBranch.find((b) => b.branch === "PUSH")!.skills;
@@ -614,6 +728,13 @@ export function SkillMap() {
               {label}
             </text>
           ))}
+          {/* Specialty section label */}
+          <text x={(COL.SPEC_BAR + COL.SPEC_WGT) / 2} y={22}
+            textAnchor="middle" fontSize={8} fontWeight="600"
+            fill={MUTED} fontFamily="ui-sans-serif, system-ui, sans-serif"
+            letterSpacing="0.07em">
+            SPEC
+          </text>
 
           {/* ── PUSH connectors ──────────────────────────────────────────── */}
           {pushMain.slice(0, -1).map((skill, si) => (
@@ -650,6 +771,33 @@ export function SkillMap() {
             <Connector key={`pull-mu-conn-${si}`}
               x1={COL.PULL_MU} y1={ROW_Y[si + 2]} x2={COL.PULL_MU} y2={ROW_Y[si + 3]}
               mastered={skill.status === "mastered"} branchColor={pullColor} />
+          ))}
+
+          {/* ── PULL → specialty connectors (fork from pull-2) ─────────────── */}
+          {pullShared.length >= 2 && (
+            <>
+              <Connector x1={COL.PULL_SHARED} y1={ROW_Y[1]} x2={COL.SPEC_BAR}   y2={ROW_Y[2]}
+                mastered={pullShared[1]?.status === "mastered"} branchColor={SPEC_COLOR.bar} />
+              <Connector x1={COL.PULL_SHARED} y1={ROW_Y[1]} x2={COL.SPEC_RINGS} y2={ROW_Y[2]}
+                mastered={pullShared[1]?.status === "mastered"} branchColor={SPEC_COLOR.rings} />
+              <Connector x1={COL.PULL_SHARED} y1={ROW_Y[1]} x2={COL.SPEC_WGT}   y2={ROW_Y[2]}
+                mastered={pullShared[1]?.status === "mastered"} branchColor={SPEC_COLOR.weighted} />
+            </>
+          )}
+          {pullSpecBar.slice(0, -1).map((skill, si) => (
+            <Connector key={`spec-bar-conn-${si}`}
+              x1={COL.SPEC_BAR} y1={ROW_Y[si + 2]} x2={COL.SPEC_BAR} y2={ROW_Y[si + 3]}
+              mastered={skill.status === "mastered"} branchColor={SPEC_COLOR.bar} />
+          ))}
+          {pullSpecRings.slice(0, -1).map((skill, si) => (
+            <Connector key={`spec-rings-conn-${si}`}
+              x1={COL.SPEC_RINGS} y1={ROW_Y[si + 2]} x2={COL.SPEC_RINGS} y2={ROW_Y[si + 3]}
+              mastered={skill.status === "mastered"} branchColor={SPEC_COLOR.rings} />
+          ))}
+          {pullSpecWgt.slice(0, -1).map((skill, si) => (
+            <Connector key={`spec-wgt-conn-${si}`}
+              x1={COL.SPEC_WGT} y1={ROW_Y[si + 2]} x2={COL.SPEC_WGT} y2={ROW_Y[si + 3]}
+              mastered={skill.status === "mastered"} branchColor={SPEC_COLOR.weighted} />
           ))}
 
           {/* ── CORE connectors ───────────────────────────────────────────── */}
@@ -703,6 +851,44 @@ export function SkillMap() {
           {/* ── PULL MU nodes ─────────────────────────────────────────────── */}
           {pullMU.map((skill, si) => (
             <SkillNodeSvg key={skill.id} {...nodeProps(skill, COL.PULL_MU, ROW_Y[si + 2])} />
+          ))}
+
+          {/* ── PULL specialty column sub-headers ────────────────────────────── */}
+          {([
+            { col: COL.SPEC_BAR,   tag: "bar"      as EquipmentTag, label: "BAR" },
+            { col: COL.SPEC_RINGS, tag: "rings"    as EquipmentTag, label: "RNG" },
+            { col: COL.SPEC_WGT,   tag: "weighted" as EquipmentTag, label: "WGT" },
+          ]).map(({ col, tag, label }) => (
+            <text key={label} x={col} y={ROW_Y[2] - SPEC_R - 7}
+              textAnchor="middle" fontSize={6.5} fontWeight="700"
+              fill={SPEC_COLOR[tag]}
+              fontFamily="ui-sans-serif, system-ui, sans-serif"
+              letterSpacing="0.04em">
+              {label}
+            </text>
+          ))}
+
+          {/* ── PULL specialty nodes ─────────────────────────────────────────── */}
+          {pullSpecBar.map((skill, si) => (
+            <SpecialtyNodeSvg key={skill.id} skill={skill}
+              cx={COL.SPEC_BAR} cy={ROW_Y[si + 2]} equipmentTag="bar"
+              onHover={() => handleHover(skill, COL.SPEC_BAR, ROW_Y[si + 2])}
+              onLeave={handleLeave}
+              onTap={() => handleTap(skill, COL.SPEC_BAR, ROW_Y[si + 2])} />
+          ))}
+          {pullSpecRings.map((skill, si) => (
+            <SpecialtyNodeSvg key={skill.id} skill={skill}
+              cx={COL.SPEC_RINGS} cy={ROW_Y[si + 2]} equipmentTag="rings"
+              onHover={() => handleHover(skill, COL.SPEC_RINGS, ROW_Y[si + 2])}
+              onLeave={handleLeave}
+              onTap={() => handleTap(skill, COL.SPEC_RINGS, ROW_Y[si + 2])} />
+          ))}
+          {pullSpecWgt.map((skill, si) => (
+            <SpecialtyNodeSvg key={skill.id} skill={skill}
+              cx={COL.SPEC_WGT} cy={ROW_Y[si + 2]} equipmentTag="weighted"
+              onHover={() => handleHover(skill, COL.SPEC_WGT, ROW_Y[si + 2])}
+              onLeave={handleLeave}
+              onTap={() => handleTap(skill, COL.SPEC_WGT, ROW_Y[si + 2])} />
           ))}
 
           {/* ── CORE nodes ───────────────────────────────────────────────── */}

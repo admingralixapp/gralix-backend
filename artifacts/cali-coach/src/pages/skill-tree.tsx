@@ -3,10 +3,13 @@ import { useListSessions } from "@workspace/api-client-react";
 import {
   SKILL_TREE_BRANCHES,
   TOTAL_SKILL_COUNT,
+  EQUIPMENT_SPECIALTIES,
   evaluateSkillTree,
+  getEquipmentMasteriesForLevel,
   type EvaluatedSkill,
   type SkillBranch,
   type SkillType,
+  type EquipmentTag,
 } from "@/lib/skill-tree";
 import { cn } from "@/lib/utils";
 import { Lock, Star, ChevronUp, Zap, ArrowUp, Dumbbell, Circle, Play } from "lucide-react";
@@ -311,6 +314,255 @@ function BranchColumn({
   );
 }
 
+// ─── Equipment Specialty Components ──────────────────────────────────────────
+
+function EquipmentTagIcon({ tag, color, size = 18 }: { tag: EquipmentTag; color: string; size?: number }) {
+  if (tag === "rings") {
+    return (
+      <svg width={size} height={size} viewBox="-10 -10 20 20" aria-hidden="true">
+        <circle cx={0} cy={0} r={8} fill="none" stroke={color} strokeWidth={2.5} />
+      </svg>
+    );
+  }
+  if (tag === "weighted") {
+    return (
+      <svg width={size} height={size} viewBox="-10 -10 20 20" aria-hidden="true">
+        <circle cx={-5.5} cy={0} r={3.5} fill={color} />
+        <rect x={-2} y={-1.5} width={4} height={3} fill={color} />
+        <circle cx={5.5} cy={0} r={3.5} fill={color} />
+      </svg>
+    );
+  }
+  return (
+    <svg width={size} height={size} viewBox="-10 -10 20 20" aria-hidden="true">
+      <line x1={-9} y1={0} x2={9} y2={0} stroke={color} strokeWidth={2.5} strokeLinecap="round" />
+      <rect x={-9} y={-4} width={3} height={8} rx={1} fill={color} />
+      <rect x={6} y={-4} width={3} height={8} rx={1} fill={color} />
+    </svg>
+  );
+}
+
+function SpecialtyNodeCard({ skill, isLast }: { skill: EvaluatedSkill; isLast: boolean }) {
+  const tag  = skill.equipmentTag!;
+  const spec = EQUIPMENT_SPECIALTIES[tag];
+  const req  = skill.masteryRequirement;
+  const { qualifyingSessions, bestReps, bestFormScore } = skill.progress;
+  const progressPct = Math.min(100, (qualifyingSessions / req.minQualifyingSessions) * 100);
+  const isLocked   = skill.status === "locked";
+  const isMastered = skill.status === "mastered";
+  const workoutUrl = `/workout?exercise=${encodeURIComponent(skill.exercises[0])}`;
+
+  return (
+    <div className="relative flex flex-col items-center">
+      {!isLast && (
+        <div
+          className="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-5 z-0"
+          style={{ backgroundColor: isMastered ? spec.color : "hsl(var(--border))" }}
+        />
+      )}
+      <div
+        className={cn(
+          "relative w-full rounded-xl border p-3 transition-all z-10",
+          isLocked && "border border-border/40 bg-card/30 opacity-60",
+          !isLocked && !isMastered && "border border-border bg-card hover:border-primary/20",
+        )}
+        style={isMastered ? { borderWidth: 2, borderColor: spec.color, backgroundColor: spec.bgColor } : {}}
+      >
+        <div className="flex items-start justify-between gap-2 mb-1.5">
+          <div className="flex items-center gap-2 min-w-0">
+            {isMastered
+              ? <Star className="w-4 h-4 fill-current shrink-0" style={{ color: spec.color }} />
+              : isLocked
+              ? <Lock className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+              : <Circle className="w-4 h-4 shrink-0" style={{ color: spec.color }} />
+            }
+            <span className={cn("font-semibold text-[13px] leading-tight", isLocked && "text-muted-foreground")}>
+              {skill.title}
+            </span>
+          </div>
+          <Badge className={cn("text-[10px] px-1.5 py-0.5 shrink-0 font-medium", LEVEL_COLORS[skill.levelName])}>
+            {skill.levelName}
+          </Badge>
+        </div>
+
+        <p className="text-xs text-muted-foreground mb-2 leading-relaxed line-clamp-2">
+          {isLocked ? "🔒 Master the previous skill to unlock." : skill.description}
+        </p>
+
+        {!isLocked && (
+          <div className="mb-2 rounded-md bg-secondary/50 px-2 py-1.5">
+            <p className="text-[11px] font-medium text-foreground/80">{req.description}</p>
+          </div>
+        )}
+
+        {!isLocked && (
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">
+                Sessions
+              </span>
+              <span
+                className="text-[11px] font-bold tabular-nums"
+                style={{ color: isMastered ? spec.color : undefined }}
+              >
+                {qualifyingSessions}/{req.minQualifyingSessions}
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${progressPct}%`, backgroundColor: spec.color }}
+              />
+            </div>
+            {(bestReps > 0 || bestFormScore > 0) && (
+              <div className="flex gap-3 mt-1.5">
+                {bestReps > 0 && (
+                  <span className="text-[10px] text-muted-foreground">
+                    Best:{" "}
+                    <span className="text-foreground font-medium">
+                      {(skill.type as SkillType) === "static" ? `${bestReps}s hold` : `${bestReps} reps`}
+                    </span>
+                  </span>
+                )}
+                {bestFormScore > 0 && (
+                  <span className="text-[10px] text-muted-foreground">
+                    Form: <span className="text-foreground font-medium">{Math.round(bestFormScore)}%</span>
+                  </span>
+                )}
+              </div>
+            )}
+            {isMastered && (
+              <div className="mt-1.5 text-[11px] font-semibold flex items-center gap-1" style={{ color: spec.color }}>
+                <Star className="w-3 h-3 fill-current" /> Mastered
+              </div>
+            )}
+          </div>
+        )}
+
+        {!isLocked && (
+          <Button
+            asChild size="sm" variant="outline"
+            className="mt-2.5 w-full h-7 text-[11px] gap-1.5"
+            style={isMastered ? { borderColor: spec.color, color: spec.color } : {}}
+          >
+            <Link href={workoutUrl}>
+              <Play className="w-3 h-3 fill-current" />
+              Start Workout
+            </Link>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DoubleMasteryBanner({ evaluated }: { evaluated: EvaluatedSkill[] }) {
+  const doubleMasteries = useMemo(() => {
+    const result: Array<{ branch: SkillBranch; level: number; tags: EquipmentTag[] }> = [];
+    const branches: SkillBranch[] = ["PUSH", "PULL"];
+    for (const branch of branches) {
+      for (let level = 1; level <= 5; level++) {
+        const tags = getEquipmentMasteriesForLevel(branch, level, evaluated);
+        if (tags.length >= 2) result.push({ branch, level, tags });
+      }
+    }
+    return result;
+  }, [evaluated]);
+
+  if (doubleMasteries.length === 0) return null;
+
+  return (
+    <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 px-4 py-3 flex flex-wrap items-center gap-3">
+      <Star className="w-5 h-5 fill-amber-400 text-amber-400 shrink-0" />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-amber-300">
+          Double {doubleMasteries.length === 1 ? "Mastery" : "Masteries"} Achieved!
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {doubleMasteries
+            .map(({ branch, level, tags }) =>
+              `${branch} L${level}: ${tags.map((t) => EQUIPMENT_SPECIALTIES[t].shortLabel).join(" + ")}`,
+            )
+            .join("  ·  ")}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function EquipmentSpecialtyColumn({ tag, skills }: { tag: EquipmentTag; skills: EvaluatedSkill[] }) {
+  const spec         = EQUIPMENT_SPECIALTIES[tag];
+  const masteredCount = skills.filter((s) => s.status === "mastered").length;
+
+  return (
+    <div className="flex flex-col gap-0">
+      <div
+        className="rounded-xl border-2 p-3 mb-5 flex items-center justify-between"
+        style={{ borderColor: spec.color, backgroundColor: spec.bgColor }}
+      >
+        <div className="flex items-center gap-2">
+          <EquipmentTagIcon tag={tag} color={spec.color} />
+          <span className="font-bold text-base" style={{ color: spec.color }}>
+            {spec.label}
+          </span>
+        </div>
+        <span className="text-xs text-muted-foreground font-medium tabular-nums">
+          {masteredCount}/{skills.length}
+        </span>
+      </div>
+      <div className="flex flex-col gap-5">
+        {skills.map((skill, i) => (
+          <SpecialtyNodeCard key={skill.id} skill={skill} isLast={i === skills.length - 1} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EquipmentSpecialtySection({ evaluated }: { evaluated: EvaluatedSkill[] }) {
+  const specialtyGroups = useMemo(() => {
+    const tags: EquipmentTag[] = ["bar", "rings", "weighted"];
+    return tags.map((tag) => ({
+      tag,
+      skills: evaluated
+        .filter((s) => s.equipmentSpecialty && s.equipmentTag === tag)
+        .sort((a, b) => a.branch.localeCompare(b.branch) || a.level - b.level),
+    }));
+  }, [evaluated]);
+
+  const masteredSpecialty = evaluated.filter((s) => s.equipmentSpecialty && s.status === "mastered").length;
+  const totalSpecialty    = evaluated.filter((s) => s.equipmentSpecialty).length;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Equipment Specialty Paths</h2>
+          <p className="text-muted-foreground text-sm mt-1">
+            Parallel paths that unlock after mastering foundational movements. Complete the same
+            level across multiple paths to earn Double Mastery.
+          </p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="text-xl font-bold tabular-nums">
+            {masteredSpecialty}
+            <span className="text-muted-foreground text-base font-normal">/{totalSpecialty}</span>
+          </p>
+          <p className="text-xs text-muted-foreground">Specialty Mastered</p>
+        </div>
+      </div>
+
+      <DoubleMasteryBanner evaluated={evaluated} />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {specialtyGroups.map(({ tag, skills }) => (
+          <EquipmentSpecialtyColumn key={tag} tag={tag} skills={skills} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
 function SkillTreeSkeleton() {
@@ -342,17 +594,18 @@ export function SkillTreePage() {
     return evaluateSkillTree(sessions);
   }, [sessions]);
 
-  // Group by branch, preserving level order (already sorted in config)
+  // Group by branch — specialty nodes are rendered in the dedicated section below
   const byBranch = useMemo(() => {
     if (!evaluated) return null;
     const branches = Object.keys(SKILL_TREE_BRANCHES) as SkillBranch[];
     return branches.map((branch) => ({
       branch,
-      skills: evaluated.filter((s) => s.branch === branch),
+      skills: evaluated.filter((s) => s.branch === branch && !s.equipmentSpecialty),
     }));
   }, [evaluated]);
 
-  const totalMastered = evaluated?.filter((s) => s.status === "mastered").length ?? 0;
+  // Core skills only (excludes equipment specialty paths)
+  const totalMastered = evaluated?.filter((s) => s.status === "mastered" && !s.equipmentSpecialty).length ?? 0;
   const totalSkills = TOTAL_SKILL_COUNT;
 
   return (
@@ -402,11 +655,17 @@ export function SkillTreePage() {
       {isLoading || !byBranch ? (
         <SkillTreeSkeleton />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {byBranch.map(({ branch, skills }) => (
-            <BranchColumn key={branch} branch={branch} skills={skills} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {byBranch.map(({ branch, skills }) => (
+              <BranchColumn key={branch} branch={branch} skills={skills} />
+            ))}
+          </div>
+
+          <div className="border-t border-border/40 pt-8">
+            <EquipmentSpecialtySection evaluated={evaluated!} />
+          </div>
+        </>
       )}
     </div>
   );

@@ -57,6 +57,10 @@ export interface SkillNode {
   path?: string;
   /** Human-readable path label shown in the UI */
   pathLabel?: string;
+  /** Equipment this specialty node requires (bar / rings / weighted) */
+  equipmentTag?: EquipmentTag;
+  /** True for nodes that belong to an equipment specialty path, not the core tree */
+  equipmentSpecialty?: boolean;
 }
 
 // ─── PUSH Branch ──────────────────────────────────────────────────────────────
@@ -521,11 +525,270 @@ const LEGS_NODES: SkillNode[] = [
   },
 ];
 
+// ─── Equipment Specialty Nodes ────────────────────────────────────────────────
+
+// ── PULL — Bar Specialist (branches from pull-2) ──────────────────────────────
+const PULL_BAR_NODES: SkillNode[] = [
+  {
+    id: "pull-bar-1",
+    branch: "PULL",
+    level: 3,
+    levelName: "Intermediate",
+    type: "standard",
+    title: "Bar Pull-Up Volume",
+    description: "Build exceptional volume on the straight bar. Consistent sets of 12+ reps with textbook form lay the foundation for all bar-specific explosive skills.",
+    exercises: ["Pull-Up"],
+    masteryRequirement: {
+      description: "Complete 12 reps with ≥80% form score in 4 sessions",
+      minReps: 12, minFormScore: 80, minQualifyingSessions: 4,
+    },
+    prerequisiteId: "pull-2",
+    path: "bar-specialist",
+    pathLabel: "Bar Specialist",
+    equipmentTag: "bar",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "pull-bar-2",
+    branch: "PULL",
+    level: 4,
+    levelName: "Advanced",
+    type: "explosive",
+    title: "Explosive Bar Pull-Up",
+    description: "Accelerate through every rep until your chest clears the bar. This bar-specific power training is the direct gateway to the strict bar muscle-up.",
+    exercises: ["Explosive Pull-Up"],
+    masteryRequirement: {
+      description: "Complete 6 reps with ≥82% form score in 5 sessions",
+      minReps: 6, minFormScore: 82, minQualifyingSessions: 5,
+    },
+    prerequisiteId: "pull-bar-1",
+    path: "bar-specialist",
+    pathLabel: "Bar Specialist",
+    equipmentTag: "bar",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "pull-bar-3",
+    branch: "PULL",
+    level: 5,
+    levelName: "Elite",
+    type: "explosive",
+    title: "Strict Bar Muscle-Up",
+    description: "Zero swing, zero kip — pull through and press above the bar with pure upper-body strength. The gold standard of bar pulling excellence.",
+    exercises: ["Muscle-Up"],
+    masteryRequirement: {
+      description: "Complete 3 reps with ≥88% form score in 5 sessions",
+      minReps: 3, minFormScore: 88, minQualifyingSessions: 5,
+    },
+    prerequisiteId: "pull-bar-2",
+    path: "bar-specialist",
+    pathLabel: "Bar Specialist",
+    equipmentTag: "bar",
+    equipmentSpecialty: true,
+  },
+];
+
+// ── PULL — Rings Specialist (branches from pull-2) ────────────────────────────
+const PULL_RINGS_NODES: SkillNode[] = [
+  {
+    id: "pull-rings-1",
+    branch: "PULL",
+    level: 3,
+    levelName: "Intermediate",
+    type: "static",
+    title: "Ring Support Hold",
+    description: "Hold an active support on the rings — arms extended, body upright. This foundational position demands wrist, elbow and shoulder stability before any ring pulling work.",
+    exercises: ["Ring Support Hold"],
+    masteryRequirement: {
+      description: "Hold 10 s with ≥70% form score in 3 sessions",
+      minReps: 10, minFormScore: 70, minQualifyingSessions: 3,
+    },
+    prerequisiteId: "pull-2",
+    path: "rings-specialist",
+    pathLabel: "Rings Specialist",
+    equipmentTag: "rings",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "pull-rings-2",
+    branch: "PULL",
+    level: 4,
+    levelName: "Advanced",
+    type: "standard",
+    title: "Ring Pull-Up",
+    description: "Full pull-ups on gymnastic rings demand grip stability and shoulder control that no fixed bar can replicate. The instability makes every rep harder.",
+    exercises: ["Ring Pull-Up"],
+    masteryRequirement: {
+      description: "Complete 8 reps with ≥80% form score in 5 sessions",
+      minReps: 8, minFormScore: 80, minQualifyingSessions: 5,
+    },
+    prerequisiteId: "pull-rings-1",
+    path: "rings-specialist",
+    pathLabel: "Rings Specialist",
+    equipmentTag: "rings",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "pull-rings-3",
+    branch: "PULL",
+    level: 5,
+    levelName: "Elite",
+    type: "explosive",
+    title: "Ring Muscle-Up",
+    description: "The pinnacle of ring pulling: a strict muscle-up on gymnastic rings demands elite transition power, shoulder stability, and wrist control under instability.",
+    exercises: ["Ring Muscle-Up"],
+    masteryRequirement: {
+      description: "Complete 3 reps with ≥85% form score in 5 sessions",
+      minReps: 3, minFormScore: 85, minQualifyingSessions: 5,
+    },
+    prerequisiteId: "pull-rings-2",
+    path: "rings-specialist",
+    pathLabel: "Rings Specialist",
+    equipmentTag: "rings",
+    equipmentSpecialty: true,
+  },
+];
+
+// ── PULL — Weighted Specialist (branches from pull-2) ─────────────────────────
+const PULL_WEIGHTED_NODES: SkillNode[] = [
+  {
+    id: "pull-weighted-1",
+    branch: "PULL",
+    level: 3,
+    levelName: "Intermediate",
+    type: "standard",
+    title: "Weighted Pull-Up",
+    description: "Add a vest or belt and perform strict pull-ups under load. Starting at 10–20% bodyweight, the added resistance accelerates strength gains beyond pure bodyweight training.",
+    exercises: ["Weighted Pull-Up"],
+    masteryRequirement: {
+      description: "Complete 5 reps with ≥80% form score in 4 sessions",
+      minReps: 5, minFormScore: 80, minQualifyingSessions: 4,
+    },
+    prerequisiteId: "pull-2",
+    path: "weighted-specialist",
+    pathLabel: "Weighted Specialist",
+    equipmentTag: "weighted",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "pull-weighted-2",
+    branch: "PULL",
+    level: 4,
+    levelName: "Advanced",
+    type: "standard",
+    title: "Weighted Pull-Up Volume",
+    description: "Sustain high-rep weighted pull-up sets. Volume under load builds the raw pulling strength needed for the weighted muscle-up and heavier loading.",
+    exercises: ["Weighted Pull-Up"],
+    masteryRequirement: {
+      description: "Complete 8 reps with ≥82% form score in 5 sessions",
+      minReps: 8, minFormScore: 82, minQualifyingSessions: 5,
+    },
+    prerequisiteId: "pull-weighted-1",
+    path: "weighted-specialist",
+    pathLabel: "Weighted Specialist",
+    equipmentTag: "weighted",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "pull-weighted-3",
+    branch: "PULL",
+    level: 5,
+    levelName: "Elite",
+    type: "explosive",
+    title: "Weighted Muscle-Up",
+    description: "A muscle-up with added load — one of the most powerful feats in calisthenics. Demands explosive pulling, precise transition timing, and total-body tension.",
+    exercises: ["Weighted Muscle-Up"],
+    masteryRequirement: {
+      description: "Complete 2 reps with ≥85% form score in 4 sessions",
+      minReps: 2, minFormScore: 85, minQualifyingSessions: 4,
+    },
+    prerequisiteId: "pull-weighted-2",
+    path: "weighted-specialist",
+    pathLabel: "Weighted Specialist",
+    equipmentTag: "weighted",
+    equipmentSpecialty: true,
+  },
+];
+
+// ── PUSH — Rings Specialist (branches from push-3 Dip Introduction) ───────────
+const PUSH_RINGS_NODES: SkillNode[] = [
+  {
+    id: "push-rings-1",
+    branch: "PUSH",
+    level: 4,
+    levelName: "Advanced",
+    type: "standard",
+    title: "Ring Dip",
+    description: "Dip on gymnastic rings with controlled RTO (Rings Turned Out) at lockout. The instability demands elite tricep, chest, and shoulder stabilisation on every rep.",
+    exercises: ["Ring Dip"],
+    masteryRequirement: {
+      description: "Complete 8 reps with ≥82% form score in 4 sessions",
+      minReps: 8, minFormScore: 82, minQualifyingSessions: 4,
+    },
+    prerequisiteId: "push-3",
+    path: "push-rings-specialist",
+    pathLabel: "Rings Specialist",
+    equipmentTag: "rings",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "push-rings-2",
+    branch: "PUSH",
+    level: 5,
+    levelName: "Elite",
+    type: "explosive",
+    title: "Ring Muscle-Up",
+    description: "Combine ring pulling and pressing power in a single explosive movement above the rings. The ultimate ring skill requires elite stability across the entire kinetic chain.",
+    exercises: ["Ring Muscle-Up"],
+    masteryRequirement: {
+      description: "Complete 3 reps with ≥85% form score in 5 sessions",
+      minReps: 3, minFormScore: 85, minQualifyingSessions: 5,
+    },
+    prerequisiteId: "push-rings-1",
+    path: "push-rings-specialist",
+    pathLabel: "Rings Specialist",
+    equipmentTag: "rings",
+    equipmentSpecialty: true,
+  },
+];
+
+// ── PUSH — Weighted Specialist (branches from push-3 Dip Introduction) ────────
+const PUSH_WEIGHTED_NODES: SkillNode[] = [
+  {
+    id: "push-weighted-1",
+    branch: "PUSH",
+    level: 4,
+    levelName: "Advanced",
+    type: "standard",
+    title: "Weighted Dip",
+    description: "Add a vest or belt and dip under load. Weighted dips build elite pressing strength faster than any other bodyweight compound movement.",
+    exercises: ["Weighted Dip"],
+    masteryRequirement: {
+      description: "Complete 6 reps with ≥84% form score in 4 sessions",
+      minReps: 6, minFormScore: 84, minQualifyingSessions: 4,
+    },
+    prerequisiteId: "push-3",
+    path: "push-weighted-specialist",
+    pathLabel: "Weighted Specialist",
+    equipmentTag: "weighted",
+    equipmentSpecialty: true,
+  },
+];
+
+export const EQUIPMENT_SPECIALTY_NODES: SkillNode[] = [
+  ...PULL_BAR_NODES,
+  ...PULL_RINGS_NODES,
+  ...PULL_WEIGHTED_NODES,
+  ...PUSH_RINGS_NODES,
+  ...PUSH_WEIGHTED_NODES,
+];
+
 // ─── Full registry ─────────────────────────────────────────────────────────────
 
 /**
  * All nodes grouped by branch. Nodes within each array are ordered so that
  * prerequisites always appear before their dependents (important for evaluateSkillTree).
+ * Note: specialty nodes are NOT included here — use EQUIPMENT_SPECIALTY_NODES directly.
  */
 export const SKILL_TREE_BRANCHES: Record<SkillBranch, SkillNode[]> = {
   PUSH: PUSH_NODES,
@@ -539,14 +802,32 @@ export const ALL_SKILL_NODES: SkillNode[] = [
   ...PULL_NODES,
   ...CORE_NODES,
   ...LEGS_NODES,
+  ...EQUIPMENT_SPECIALTY_NODES,
 ];
 
-/** Total skill count (all paths) */
-export const TOTAL_SKILL_COUNT = ALL_SKILL_NODES.length;
+/** Core skill count (excludes equipment specialty paths) */
+export const TOTAL_SKILL_COUNT = ALL_SKILL_NODES.filter(n => !n.equipmentSpecialty).length;
+/** Equipment specialty skill count */
+export const TOTAL_SPECIALTY_COUNT = EQUIPMENT_SPECIALTY_NODES.length;
 
 // ─── Evaluation ───────────────────────────────────────────────────────────────
 
 export type SkillStatus = "locked" | "unlocked" | "mastered";
+
+// ─── Equipment Specialty ───────────────────────────────────────────────────────
+
+export type EquipmentTag = "bar" | "rings" | "weighted";
+
+export const EQUIPMENT_SPECIALTIES: Record<EquipmentTag, {
+  label: string;
+  shortLabel: string;
+  color: string;
+  bgColor: string;
+}> = {
+  bar:      { label: "Bar Specialist",      shortLabel: "Bar",      color: "#f97316", bgColor: "rgba(249,115,22,0.12)" },
+  rings:    { label: "Rings Specialist",    shortLabel: "Rings",    color: "#06b6d4", bgColor: "rgba(6,182,212,0.12)"  },
+  weighted: { label: "Weighted Specialist", shortLabel: "Weighted", color: "#8b5cf6", bgColor: "rgba(139,92,246,0.12)" },
+};
 
 export interface SessionSummary {
   exerciseName: string;
@@ -562,6 +843,27 @@ export interface EvaluatedSkill extends SkillNode {
     bestReps: number;
     bestFormScore: number;
   };
+}
+
+/**
+ * Returns which equipment tags have been mastered at a given branch + level.
+ * Used to detect "double mastery" across equipment specialty paths.
+ */
+export function getEquipmentMasteriesForLevel(
+  branch: SkillBranch,
+  level: number,
+  allEvaluated: EvaluatedSkill[],
+): EquipmentTag[] {
+  return allEvaluated
+    .filter(
+      s =>
+        s.branch === branch &&
+        s.level === level &&
+        s.equipmentSpecialty === true &&
+        s.status === "mastered" &&
+        s.equipmentTag !== undefined,
+    )
+    .map(s => s.equipmentTag!);
 }
 
 /**

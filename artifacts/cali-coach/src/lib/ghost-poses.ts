@@ -544,6 +544,44 @@ const PUSH_HIGH_PARALLETTES_CONFIG: GhostExerciseConfig = {
   ],
 };
 
+/**
+ * RTO (Rings Turned Out) Ghost Config.
+ * Used when gymnastic rings are selected and the exercise is Dip or Ring Dip.
+ *
+ * Key differences from the standard parallette dip:
+ *   - "Down" phase is slightly shallower (65° vs 55°) to account for ring travel.
+ *   - "Up" phase adds an elbows-in correction that cues the RTO lockout: elbows
+ *     stay close to the body as the wrists rotate outward.
+ */
+const RTO_RING_DIP_CONFIG: GhostExerciseConfig = {
+  phases: [
+    {
+      phase: "up",
+      corrections: [
+        // Near-lockout elbow extension (same as high parallettes)
+        { a: L_SH, vertex: L_EL, b: L_WR, targetDeg: 162 },
+        { a: R_SH, vertex: R_EL, b: R_WR, targetDeg: 162 },
+        // RTO cue: pull elbows toward each other at lockout
+        { a: L_EL, vertex: L_SH, b: R_SH, targetDeg: 42 },
+        { a: R_EL, vertex: R_SH, b: L_SH, targetDeg: 42 },
+        // Keep torso upright throughout
+        { a: L_SH, vertex: L_HI, b: L_AN, targetDeg: 175 },
+      ],
+      keyLandmarks: [L_WR, R_WR, L_EL, R_EL, L_AN],
+    },
+    {
+      phase: "down",
+      corrections: [
+        // Slightly shallower than bar dips (65° vs 55°) — rings travel further forward
+        { a: L_SH, vertex: L_EL, b: L_WR, targetDeg: 65 },
+        { a: R_SH, vertex: R_EL, b: R_WR, targetDeg: 65 },
+        { a: L_SH, vertex: L_HI, b: L_AN, targetDeg: 175 },
+      ],
+      keyLandmarks: [L_WR, R_WR, L_AN],
+    },
+  ],
+};
+
 // ─── Registry ─────────────────────────────────────────────────────────────────
 
 const GHOST_CONFIGS: Record<string, GhostExerciseConfig> = {
@@ -569,8 +607,15 @@ const GHOST_CONFIGS: Record<string, GhostExerciseConfig> = {
   "Plank":       PLANK_CONFIG,
   "Dragon Flag": DRAGON_FLAG_CONFIG,
   "Human Flag":  HUMAN_FLAG_CONFIG,
-  "Dip":         DIP_CONFIG,
-  "Lunge":       LUNGE_CONFIG,
+  "Dip":             DIP_CONFIG,
+  "Ring Dip":        RTO_RING_DIP_CONFIG,
+  "Ring Pull-Up":    PULL_CONFIG,
+  "Ring Muscle-Up":  PULL_CONFIG,
+  "Ring Support Hold": PULL_CONFIG,
+  "Weighted Pull-Up":  PULL_CONFIG,
+  "Weighted Muscle-Up": PULL_CONFIG,
+  "Weighted Dip":    DIP_CONFIG,
+  "Lunge":           LUNGE_CONFIG,
 };
 
 /**
@@ -596,9 +641,15 @@ export function getGhostConfig(name: string): GhostExerciseConfig | null {
 export function getEquipmentGhostConfig(
   name: string,
   pushGear: string,
-  _pullGear: string,
+  pullGear: string,
 ): GhostExerciseConfig | null {
   const norm = name.toLowerCase();
+
+  // Gymnastic rings selected → use RTO ghost for any dip movement
+  if (pullGear === "gymnastic-rings" || pushGear === "gymnastic-rings") {
+    if (norm === "dip" || norm === "ring dip") return RTO_RING_DIP_CONFIG;
+  }
+
   const parallettesPushSet = new Set([
     "wall push-up", "incline push-up", "knee push-up",
     "push-up", "diamond push-up",
