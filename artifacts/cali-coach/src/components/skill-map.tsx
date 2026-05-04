@@ -22,6 +22,7 @@ import { useListSessions } from "@workspace/api-client-react";
 import {
   SKILL_TREE_BRANCHES,
   TOTAL_SKILL_COUNT,
+  ALL_SKILL_NODES,
   evaluateSkillTree,
   type SkillBranch,
   type EvaluatedSkill,
@@ -120,15 +121,14 @@ function SkillNodeSvg({
   const isMastered = status === "mastered";
   const hasProgress = status === "unlocked" && progress.qualifyingSessions > 0;
   const isUnlocked  = status === "unlocked";
-  const clickable   = !isLocked;
 
   return (
     <g
-      onMouseEnter={clickable ? () => onHover(cx, cy) : undefined}
-      onMouseLeave={clickable ? onLeave : undefined}
-      onClick={clickable ? (e) => { e.stopPropagation(); onTap(cx, cy); } : undefined}
-      style={{ cursor: clickable ? "pointer" : "default" }}
-      role={clickable ? "button" : undefined}
+      onMouseEnter={() => onHover(cx, cy)}
+      onMouseLeave={onLeave}
+      onClick={(e) => { e.stopPropagation(); onTap(cx, cy); }}
+      style={{ cursor: "pointer" }}
+      role="button"
       aria-label={skill.title}
     >
       {/* Enlarged hit area */}
@@ -185,45 +185,63 @@ function Connector({
 
 // ─── Tooltip pop-up ───────────────────────────────────────────────────────────
 
-const TOOLTIP_W = 180;
+const TOOLTIP_W = 192;
 
 function SkillTooltip({
   tooltip,
   containerW,
   containerH,
+  allSkills,
   onClose,
   onStart,
 }: {
   tooltip: TooltipState;
   containerW: number;
   containerH: number;
+  allSkills: EvaluatedSkill[];
   onClose: () => void;
-  onStart:  () => void;
+  onStart: () => void;
 }) {
   const { skill, branch, left, top, pinned } = tooltip;
-  const color = BRANCH_COLOR[branch];
-  const req   = skill.masteryRequirement;
-  const prog  = skill.progress;
-  const masteryPct = Math.min(100, req.minQualifyingSessions > 0
-    ? Math.round((prog.qualifyingSessions / req.minQualifyingSessions) * 100) : 100);
-
+  const color      = BRANCH_COLOR[branch];
+  const req        = skill.masteryRequirement;
+  const prog       = skill.progress;
+  const isLocked   = skill.status === "locked";
   const isMastered = skill.status === "mastered";
   const isStatic   = (skill.type as SkillType) === "static";
+  const isExplosive = (skill.type as SkillType) === "explosive";
+
+  const masteryPct = Math.min(
+    100,
+    req.minQualifyingSessions > 0
+      ? Math.round((prog.qualifyingSessions / req.minQualifyingSessions) * 100)
+      : 100,
+  );
+
+  // Resolve prerequisite node for locked skills
+  const prereqNode = isLocked && skill.prerequisiteId
+    ? ALL_SKILL_NODES.find((n) => n.id === skill.prerequisiteId) ?? null
+    : null;
+  const prereqEvaluated = prereqNode
+    ? allSkills.find((s) => s.id === prereqNode.id) ?? null
+    : null;
 
   // Flip horizontally if too close to right edge
   const flipX = left + TOOLTIP_W + 16 > containerW;
-  // Flip vertically if too close to bottom
-  const tooltipEstH = pinned ? 180 : 130;
+  // Estimate tooltip height for vertical flip
+  const tooltipEstH = isLocked ? 170 : pinned ? 195 : 150;
   const flipY = top + tooltipEstH > containerH;
 
   const style: React.CSSProperties = {
-    position:    "absolute",
-    width:       TOOLTIP_W,
-    zIndex:      50,
-    left:        flipX ? left - TOOLTIP_W - 12 : left + 20,
-    top:         flipY ? top  - tooltipEstH + 10 : top - 10,
+    position:      "absolute",
+    width:         TOOLTIP_W,
+    zIndex:        50,
+    left:          flipX ? left - TOOLTIP_W - 12 : left + 20,
+    top:           flipY ? top - tooltipEstH + 10 : top - 10,
     pointerEvents: pinned ? "auto" : "none",
-    boxShadow:   `0 0 14px 3px ${color}33, 0 4px 20px rgba(0,0,0,0.6)`,
+    boxShadow:     isLocked
+      ? `0 0 10px 2px #52525233, 0 4px 16px rgba(0,0,0,0.7)`
+      : `0 0 14px 3px ${color}33, 0 4px 20px rgba(0,0,0,0.6)`,
   };
 
   return (
@@ -232,40 +250,95 @@ function SkillTooltip({
       className="bg-zinc-900 border border-zinc-700/60 rounded-xl p-3 select-none"
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Branch dot + level */}
-      <div className="flex items-center gap-1.5 mb-1">
-        <span
-          className="inline-block w-2 h-2 rounded-full shrink-0"
-          style={{ backgroundColor: color }}
-        />
-        <span className="text-[10px] font-semibold uppercase tracking-wide"
-          style={{ color }}>
-          Level {skill.level} · {skill.levelName}
-          {isStatic ? " · Static" : ""}
-        </span>
+      {/* ── Header: branch dot + level + type tag ── */}
+      <div className="flex items-center justify-between gap-1 mb-1">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span
+            className="inline-block w-2 h-2 rounded-full shrink-0"
+            style={{ backgroundColor: isLocked ? MUTED : color }}
+          />
+          <span
+            className="text-[10px] font-semibold uppercase tracking-wide truncate"
+            style={{ color: isLocked ? MUTED : color }}
+          >
+            Level {skill.level} · {skill.levelName}
+          </span>
+        </div>
+        {isStatic && (
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-900/60 text-cyan-300 border border-cyan-700/40 shrink-0">
+            🧲 Static
+          </span>
+        )}
+        {isExplosive && (
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-orange-900/60 text-orange-300 border border-orange-700/40 shrink-0">
+            ⚡ Explosive
+          </span>
+        )}
+        {isLocked && (
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-500 border border-zinc-700/60 shrink-0">
+            🔒 Locked
+          </span>
+        )}
       </div>
 
-      {/* Title */}
+      {/* ── Title ── */}
       <p className="text-xs font-bold text-white leading-tight mb-1">
         {skill.title}
       </p>
 
-      {/* Description */}
+      {/* ── Description (always shown) ── */}
       <p className="text-[10px] text-zinc-400 leading-relaxed mb-2 line-clamp-2">
-        {skill.status === "locked"
-          ? "Master the previous skill to unlock."
-          : skill.description}
+        {skill.description}
       </p>
 
-      {/* Mastery progress */}
-      {skill.status !== "locked" && (
+      {/* ── LOCKED: prerequisite requirement ── */}
+      {isLocked && prereqNode && (
+        <div className="rounded-lg bg-zinc-800/80 border border-zinc-700/50 px-2.5 py-2 mb-2">
+          <p className="text-[9px] text-zinc-500 uppercase tracking-wide mb-0.5">
+            Prerequisite
+          </p>
+          <p className="text-[10px] font-semibold text-zinc-200 leading-snug">
+            {prereqNode.title}
+          </p>
+          <p className="text-[9px] text-zinc-500 mt-0.5">
+            {prereqNode.masteryRequirement.description}
+          </p>
+          {prereqEvaluated && (
+            <div className="mt-1.5">
+              <div className="flex justify-between text-[9px] mb-0.5">
+                <span className="text-zinc-600">Their progress</span>
+                <span className="font-medium"
+                  style={{ color: prereqEvaluated.status === "mastered" ? GOLD : MUTED }}>
+                  {prereqEvaluated.status === "mastered"
+                    ? "✓ Mastered"
+                    : `${Math.min(100, Math.round((prereqEvaluated.progress.qualifyingSessions / prereqEvaluated.masteryRequirement.minQualifyingSessions) * 100))}%`}
+                </span>
+              </div>
+              <div className="h-0.5 rounded-full bg-zinc-700 overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.min(100, Math.round((prereqEvaluated.progress.qualifyingSessions / prereqEvaluated.masteryRequirement.minQualifyingSessions) * 100))}%`,
+                    backgroundColor: prereqEvaluated.status === "mastered" ? GOLD : MUTED,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── UNLOCKED / MASTERED: mastery progress bar ── */}
+      {!isLocked && (
         <div className="mb-2">
           <div className="flex justify-between items-center mb-1">
             <span className="text-[9px] text-zinc-500 uppercase tracking-wide">
               Mastery
             </span>
-            <span className="text-[10px] font-bold tabular-nums"
-              style={{ color: isMastered ? GOLD : color }}>
+            <span
+              className="text-[10px] font-bold tabular-nums"
+              style={{ color: isMastered ? GOLD : color }}
+            >
               {isMastered ? "✓ Mastered" : `${masteryPct}%`}
             </span>
           </div>
@@ -278,22 +351,65 @@ function SkillTooltip({
               }}
             />
           </div>
-          <div className="flex justify-between text-[9px] text-zinc-600 mt-0.5">
-            <span>
-              {prog.qualifyingSessions}/{req.minQualifyingSessions} sessions
-            </span>
-            {prog.bestReps > 0 && (
-              <span>
-                Best: {isStatic ? `${prog.bestReps}s` : `${prog.bestReps} reps`}
-              </span>
-            )}
+          <div className="text-[9px] text-zinc-600 mt-0.5">
+            {prog.qualifyingSessions}/{req.minQualifyingSessions} qualifying sessions
           </div>
         </div>
       )}
 
-      {/* Pinned actions */}
-      {pinned && skill.status !== "locked" && (
-        <div className="flex gap-1 mt-1">
+      {/* ── Context-aware stats ── */}
+      {!isLocked && (isStatic || isExplosive || prog.bestReps > 0 || prog.bestFormScore > 0) && (
+        <div className="rounded-lg bg-zinc-800/60 border border-zinc-700/40 px-2.5 py-1.5 mb-2 space-y-1">
+          {isStatic && (
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-cyan-400/80 font-medium">⏱ Best Hold Time</span>
+              <span className="text-[10px] font-bold text-cyan-300 tabular-nums">
+                {prog.bestReps > 0 ? `${prog.bestReps}s` : "—"}
+              </span>
+            </div>
+          )}
+          {isExplosive && (
+            <>
+              <div className="flex justify-between items-center">
+                <span className="text-[9px] text-orange-400/80 font-medium">💥 Highest Reps</span>
+                <span className="text-[10px] font-bold text-orange-300 tabular-nums">
+                  {prog.bestReps > 0 ? `${prog.bestReps} reps` : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[9px] text-cyan-400/80 font-medium">👻 Ghost Sync</span>
+                <span className="text-[10px] font-bold text-cyan-300 tabular-nums">
+                  {prog.bestFormScore > 0 ? `${Math.round(prog.bestFormScore)}%` : "—"}
+                </span>
+              </div>
+            </>
+          )}
+          {!isStatic && !isExplosive && prog.bestReps > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-zinc-400 font-medium">🏆 Best Reps</span>
+              <span className="text-[10px] font-bold text-zinc-200 tabular-nums">
+                {prog.bestReps} reps
+              </span>
+            </div>
+          )}
+          {!isStatic && prog.bestFormScore > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-[9px] text-zinc-400 font-medium">
+                {isExplosive ? "" : "🎯 Form Score"}
+              </span>
+              {!isExplosive && (
+                <span className="text-[10px] font-bold text-zinc-200 tabular-nums">
+                  {Math.round(prog.bestFormScore)}%
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Pinned actions: Start Workout (not for locked) ── */}
+      {pinned && !isLocked && (
+        <div className="flex gap-1">
           <button
             onClick={onStart}
             className="flex-1 text-[10px] font-semibold py-1.5 rounded-lg text-white transition-opacity hover:opacity-90 active:opacity-75"
@@ -308,6 +424,16 @@ function SkillTooltip({
             ✕
           </button>
         </div>
+      )}
+
+      {/* ── Pinned close for locked ── */}
+      {pinned && isLocked && (
+        <button
+          onClick={onClose}
+          className="w-full text-[10px] font-medium py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition-colors"
+        >
+          Close
+        </button>
       )}
     </div>
   );
@@ -387,12 +513,12 @@ export function SkillMap() {
   }
 
   function handleTap(skill: EvaluatedSkill, cx: number, cy: number) {
-    if (skill.status === "locked") return;
-    // If this skill is already pinned → navigate
-    if (tooltip?.pinned && tooltip.skill.id === skill.id) {
+    // If already pinned on same unlocked/mastered skill → navigate
+    if (tooltip?.pinned && tooltip.skill.id === skill.id && skill.status !== "locked") {
       navigate(`/workout?exercise=${encodeURIComponent(skill.exercises[0])}`);
       return;
     }
+    // Pin the tooltip for all statuses (locked shows prereq info)
     const pos = getPixelPos(cx, cy);
     setTooltip({ skill, branch: branchOf(skill), ...pos, pinned: true });
   }
@@ -621,6 +747,7 @@ export function SkillMap() {
             tooltip={tooltip}
             containerW={containerSize.w}
             containerH={containerSize.h}
+            allSkills={evaluated.current ?? []}
             onClose={() => setTooltip(null)}
             onStart={handleStart}
           />
