@@ -24,6 +24,8 @@ import {
 } from "@/lib/equipment";
 import { evaluateSkillTree, type EvaluatedSkill, type SessionSummary } from "@/lib/skill-tree";
 import { SessionResults, type SessionResultsProps } from "@/components/session-results";
+import { PovReview }                                from "@/components/pov-review";
+import { RepRecorder, type BestRepData, type RepReviewPayload } from "@/lib/rep-recorder";
 import {
   getGhostConfig,
   getEquipmentGhostConfig,
@@ -303,6 +305,7 @@ export function Workout() {
 
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>("");
   const [sessionResults, setSessionResults] = useState<Omit<SessionResultsProps, "onClose"> | null>(null);
+  const [povReview,      setPovReview]      = useState<{ payload: RepReviewPayload; results: Omit<SessionResultsProps, "onClose"> } | null>(null);
 
   const { data: sessionHistory } = useListSessions(
     { limit: 500, offset: 0 },
@@ -365,6 +368,11 @@ export function Workout() {
     holdStartMs: number;
     userScale: { wingspan: number; height: number } | null;
   }>({ holdStartMs: 0, userScale: null });
+
+  /** RepRecorder instance — active for the duration of a workout set. */
+  const recorderRef     = useRef<RepRecorder | null>(null);
+  /** Tracks the best sync % seen across reps (for deciding when to log a new best rep). */
+  const bestRepSyncRef  = useRef<number>(0);
 
   /** Wrist positions over the last N frames — used for rings jitter detection. */
   const wristHistoryRef = useRef<Array<{ lx: number; ly: number; rx: number; ry: number }>>([]);
@@ -556,6 +564,19 @@ export function Workout() {
         const duration = now - stateRef.current.lastRepTime;
         stateRef.current.lastRepTime = now;
         stateRef.current.repFormScores.push(blendedScore);
+
+        // ── Log best rep for POV review ───────────────────────────────────
+        if (currentSyncPct > bestRepSyncRef.current) {
+          bestRepSyncRef.current = currentSyncPct;
+          const repData: BestRepData = {
+            repNumber:     newRepCount,
+            syncPct:       Math.round(currentSyncPct),
+            formScore:     blendedScore,
+            userLandmarks: landmarks.map(l => ({ ...l })),
+            ghostLandmarks: ghostLandmarks.map(l => ({ ...l })),
+          };
+          recorderRef.current?.logBestRep(repData);
+        }
 
         createRep.mutate({
           sessionId: stateRef.current.sessionId,
@@ -832,9 +853,26 @@ export function Workout() {
       cancelAnimationFrame(requestRef.current);
       return;
     }
+
+    // Start canvas recording for POV review
+    if (videoRef.current && canvasRef.current) {
+      const recorder = new RepRecorder();
+      if (recorder.isSupported) {
+        recorder.attach(videoRef.current, canvasRef.current);
+        recorder.start();
+        recorderRef.current = recorder;
+        bestRepSyncRef.current = 0;
+      }
+    }
+
     // Camera is already running (started during calibration)
     requestRef.current = requestAnimationFrame(predictWebcam);
-    return () => { cancelAnimationFrame(requestRef.current); };
+    return () => {
+      cancelAnimationFrame(requestRef.current);
+      // Destroy recorder if workout stops without handleStop (e.g. navigate away)
+      recorderRef.current?.destroy();
+      recorderRef.current = null;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWorkoutActive]);
 
@@ -888,7 +926,14 @@ export function Workout() {
     setIsCalibrating(false);
     voiceSpeak("Workout complete.");
 
-    if (!stateRef.current.sessionId) return;
+    // Grab and detach the recorder before any awaits so it stops capturing immediately
+    const recorder = recorderRef.current;
+    recorderRef.current = null;
+
+    if (!stateRef.current.sessionId) {
+      recorder?.destroy();
+      return;
+    }
 
     const avgScore =
       stateRef.current.repFormScores.length > 0
@@ -931,7 +976,7 @@ export function Workout() {
       };
       const nextEvaluated = evaluateSkillTree([...history, newSession]);
 
-      setSessionResults({
+      const resultsProps: Omit<SessionResultsProps, "onClose"> = {
         exerciseName,
         totalReps:    finalReps,
         avgFormScore: finalFormScore,
@@ -939,8 +984,23 @@ export function Workout() {
         bestSyncPct:  bestSync,
         prevEvaluated,
         nextEvaluated,
-      });
+      };
+
+      // ── Try to show POV review first (only for non-static exercises with reps) ──
+      if (recorder && !isStatic && finalReps > 0) {
+        const reviewPayload = await recorder.stopAsync(exerciseName);
+        if (reviewPayload) {
+          setPovReview({ payload: reviewPayload, results: resultsProps });
+          return; // Session results shown after the user dismisses POV review
+        }
+      } else {
+        recorder?.destroy();
+      }
+
+      // No recording available → go straight to session results
+      setSessionResults(resultsProps);
     } catch {
+      recorder?.destroy();
       toast({ title: "Save error", description: "Failed to save session.", variant: "destructive" });
     }
   };
@@ -1047,8 +1107,20 @@ export function Workout() {
   return (
     <div className="flex flex-col h-screen bg-black text-white relative">
 
+      {/* POV Performance Review — shown before SessionResults when recording available */}
+      {povReview && (
+        <PovReview
+          {...povReview.payload}
+          onComplete={() => {
+            const results = povReview.results;
+            setPovReview(null);
+            setSessionResults(results);
+          }}
+        />
+      )}
+
       {/* Session Results overlay */}
-      {sessionResults && (
+      {sessionResults && !povReview && (
         <SessionResults
           {...sessionResults}
           onClose={() => setSessionResults(null)}
