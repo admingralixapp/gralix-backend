@@ -36,6 +36,7 @@ A calisthenics motion capture coaching app. Uses the device camera with MediaPip
 - Session tracking: create, log reps, complete sessions
 - Progress dashboard: form score timeline, per-exercise progress, streaks
 - **Social layer**: friends (search by username, send/accept/reject requests), shared profiles (skill tree + form mastery), privacy controls (Public / Friends Only / Private)
+- **Leaderboard**: Global top-100, National (country auto-detected via CF-IPCountry or Accept-Language), Friends-only — mastery points computed from skill tree (L1=100 pts … L5=500 pts, max 6,000). Sticky "Your Rank" bar always visible at bottom of the page.
 
 ## Exercises
 
@@ -54,7 +55,7 @@ Push-Up, Squat, Pull-Up, Dip, Lunge, Burpee — each with coaching cues and targ
 - `exercises` — exercise definitions with coaching cues
 - `sessions` — workout sessions (exerciseId, userId FK, reps, form score, timestamps)
 - `reps` — individual rep logs (formScore, durationMs, feedbackGiven)
-- `users` — Clerk-linked profiles (clerkId, username, displayName, avatarUrl, privacyLevel)
+- `users` — Clerk-linked profiles (clerkId, username, displayName, avatarUrl, privacyLevel, country varchar(2))
 - `friendRequests` — friendship edges (fromUserId, toUserId, status: pending/accepted/rejected)
 
 ## API Routes
@@ -93,5 +94,20 @@ Push-Up, Squat, Pull-Up, Dip, Lunge, Burpee — each with coaching cues and targ
 - `/friends` — search athletes, manage requests, friend list
 - `/profile/:username` — public profile with skill tree + form mastery ring
 - `/settings` — edit display name/username, privacy toggle, sign out
+- `/leaderboard` — Global / National / Friends tabs; sticky rank footer
+
+### Leaderboard API
+
+- `GET /api/leaderboard/global` — top-100 by mastery points (all users)
+- `GET /api/leaderboard/national` — top-100 in detected country (CF-IPCountry → Accept-Language fallback)
+- `GET /api/leaderboard/friends` — friends-only ranking (auth required)
+- Each response: `{ entries[], myRank, myPoints, myMasteredSkills, country }`
+
+### Mastery Points
+
+Computed in `artifacts/api-server/src/lib/skillTree.ts` — mirrors frontend `evaluateSkillTree`:
+- A skill is mastered when qualifying sessions ≥ minQualifyingSessions (no prerequisite check, same as frontend)
+- Points: level × 100 per mastered skill (L1=100, L2=200, L3=300, L4=400, L5=500)
+- 20 skills across 4 branches → max 6,000 pts
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

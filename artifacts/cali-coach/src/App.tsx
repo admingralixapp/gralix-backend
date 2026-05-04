@@ -22,6 +22,7 @@ import { Exercises } from "@/pages/exercises";
 import { SkillTreePage } from "@/pages/skill-tree";
 import { Friends } from "@/pages/friends";
 import { ProfilePage } from "@/pages/profile";
+import { Leaderboard } from "@/pages/leaderboard";
 import { Settings } from "@/pages/settings";
 import { SignInPage } from "@/pages/sign-in";
 import { SignUpPage } from "@/pages/sign-up";
@@ -223,6 +224,7 @@ function AppRouter() {
               <Route path="/progress" component={Progress} />
               <Route path="/exercises" component={Exercises} />
               <Route path="/skill-tree" component={SkillTreePage} />
+              <Route path="/leaderboard" component={Leaderboard} />
               <Route path="/friends" component={Friends} />
               <Route path="/profile/:username" component={ProfilePage} />
               <Route path="/settings" component={Settings} />

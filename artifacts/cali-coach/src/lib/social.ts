@@ -171,6 +171,44 @@ export function useRespondToRequest() {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Leaderboard
+// ---------------------------------------------------------------------------
+export interface LeaderboardEntry {
+  rank: number;
+  userId: number;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  country: string | null;
+  masteryPoints: number;
+  masteredSkills: number;
+}
+
+export interface LeaderboardData {
+  entries: LeaderboardEntry[];
+  myRank: number | null;
+  myPoints: number;
+  myMasteredSkills: number;
+  country?: string | null;
+}
+
+export function useLeaderboard(tab: "global" | "national" | "friends") {
+  return useQuery<LeaderboardData>({
+    queryKey: ["/api/leaderboard", tab],
+    queryFn: () =>
+      apiFetch<LeaderboardData>(`/api/leaderboard/${tab}`).catch(() => ({
+        entries: [],
+        myRank: null,
+        myPoints: 0,
+        myMasteredSkills: 0,
+        country: null,
+      })),
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
 export function useRemoveFriend() {
   const qc = useQueryClient();
   return useMutation({

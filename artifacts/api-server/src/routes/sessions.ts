@@ -84,7 +84,7 @@ router.get("/sessions/:id", async (req, res) => {
     .from(sessionsTable)
     .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
     .where(eq(sessionsTable.id, id));
-  if (!session) return res.status(404).json({ error: "Session not found" });
+  if (!session) { res.status(404).json({ error: "Session not found" }); return; }
 
   const reps = await db
     .select()
@@ -109,7 +109,7 @@ router.patch("/sessions/:id", async (req, res) => {
     .set(updateData)
     .where(eq(sessionsTable.id, id))
     .returning();
-  if (!updated) return res.status(404).json({ error: "Session not found" });
+  if (!updated) { res.status(404).json({ error: "Session not found" }); return; }
 
   const [exercise] = await db
     .select({ name: exercisesTable.name })

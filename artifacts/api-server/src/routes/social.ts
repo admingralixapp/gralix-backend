@@ -42,6 +42,20 @@ function requireAuthMiddleware(
 }
 
 // ---------------------------------------------------------------------------
+// Detect country from request headers (no external package needed)
+// ---------------------------------------------------------------------------
+function detectCountry(req: Request): string | null {
+  const cf = req.headers["cf-ipcountry"] as string | undefined;
+  if (cf && cf.length === 2 && !["XX", "T1"].includes(cf)) return cf.toUpperCase();
+  const lang = req.headers["accept-language"] as string | undefined;
+  if (lang) {
+    const match = lang.match(/[a-z]{2}-([A-Z]{2})/i);
+    if (match) return match[1].toUpperCase();
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // GET /api/users/me — return current user's DB profile (null → not set up yet)
 // ---------------------------------------------------------------------------
 router.get("/users/me", requireAuthMiddleware, async (req: Request, res: Response) => {
@@ -81,6 +95,7 @@ router.post("/users/me", requireAuthMiddleware, async (req: Request, res: Respon
   }
 
   try {
+    const country = detectCountry(req);
     const [user] = await db
       .insert(usersTable)
       .values({
@@ -88,12 +103,14 @@ router.post("/users/me", requireAuthMiddleware, async (req: Request, res: Respon
         username: safeUsername,
         displayName: displayName.slice(0, 128),
         avatarUrl: avatarUrl ?? null,
+        country,
       })
       .onConflictDoUpdate({
         target: usersTable.clerkId,
         set: {
           displayName: displayName.slice(0, 128),
           avatarUrl: avatarUrl ?? null,
+          country,
         },
       })
       .returning();
@@ -242,7 +259,7 @@ router.get(
     const [targetUser] = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.username, username));
+      .where(eq(usersTable.username, String(username)));
 
     if (!targetUser) {
       res.status(404).json({ error: "User not found" });
@@ -498,7 +515,7 @@ router.post(
     const [targetUser] = await db
       .select()
       .from(usersTable)
-      .where(eq(usersTable.username, username));
+      .where(eq(usersTable.username, String(username)));
 
     if (!targetUser) {
       res.status(404).json({ error: "User not found" });

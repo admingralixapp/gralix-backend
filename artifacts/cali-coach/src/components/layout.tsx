@@ -11,6 +11,7 @@ import {
   Settings,
   LogIn,
   LogOut,
+  Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMyProfile, useFriendRequests } from "@/lib/social";
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { href: "/progress", label: "Progress", icon: TrendingUp },
   { href: "/exercises", label: "Exercises", icon: Dumbbell },
   { href: "/skill-tree", label: "Skill Tree", icon: GitBranch },
+  { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
   { href: "/friends", label: "Friends", icon: Users, requireAuth: true },
   { href: "/settings", label: "Settings", icon: Settings, requireAuth: true },
 ];

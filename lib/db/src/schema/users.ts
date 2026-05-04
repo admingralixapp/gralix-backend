@@ -17,6 +17,8 @@ export const usersTable = pgTable("users", {
   avatarUrl:    text("avatar_url"),
   /** "public" | "friends" | "private" */
   privacyLevel: varchar("privacy_level", { length: 16  }).notNull().default("friends"),
+  /** ISO 3166-1 alpha-2 country code, e.g. "US", "GB" — detected on profile create */
+  country:      varchar("country",       { length: 2   }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

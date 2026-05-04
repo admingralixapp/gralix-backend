@@ -15,7 +15,8 @@ router.get("/exercises/:id", async (req, res) => {
   const { id } = GetExerciseParams.parse(req.params);
   const [exercise] = await db.select().from(exercisesTable).where(eq(exercisesTable.id, id));
   if (!exercise) {
-    return res.status(404).json({ error: "Exercise not found" });
+    res.status(404).json({ error: "Exercise not found" });
+    return;
   }
   const data = GetExerciseResponse.parse(exercise);
   res.json(data);
