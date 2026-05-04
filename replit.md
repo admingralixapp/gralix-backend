@@ -37,6 +37,7 @@ A calisthenics motion capture coaching app. Uses the device camera with MediaPip
 - Progress dashboard: form score timeline, per-exercise progress, streaks
 - **Social layer**: friends (search by username, send/accept/reject requests), shared profiles (skill tree + form mastery), privacy controls (Public / Friends Only / Private)
 - **Leaderboard**: Global top-100, National (country auto-detected via CF-IPCountry or Accept-Language), Friends-only — mastery points computed from skill tree (L1=100 pts … L5=500 pts, max 6,000). Sticky "Your Rank" bar always visible at bottom of the page.
+- **Level Up Celebration**: When a user masters an Elite (level 5) skill → full-screen gold confetti animation (canvas-confetti), a Mastery Badge on their profile, and a shoutout auto-posted to the Social Feed visible to friends.
 
 ## Exercises
 
@@ -57,6 +58,7 @@ Push-Up, Squat, Pull-Up, Dip, Lunge, Burpee — each with coaching cues and targ
 - `reps` — individual rep logs (formScore, durationMs, feedbackGiven)
 - `users` — Clerk-linked profiles (clerkId, username, displayName, avatarUrl, privacyLevel, country varchar(2))
 - `friendRequests` — friendship edges (fromUserId, toUserId, status: pending/accepted/rejected)
+- `shoutouts` — elite skill mastery announcements (userId FK, skillId, skillTitle, branch, createdAt). Unique constraint on (userId, skillId) prevents duplicates.
 
 ## API Routes
 
@@ -95,6 +97,35 @@ Push-Up, Squat, Pull-Up, Dip, Lunge, Burpee — each with coaching cues and targ
 - `/profile/:username` — public profile with skill tree + form mastery ring
 - `/settings` — edit display name/username, privacy toggle, sign out
 - `/leaderboard` — Global / National / Friends tabs; sticky rank footer
+- `/` (dashboard) — includes Friends Activity feed showing Elite shoutouts from self + friends
+
+### Level Up System
+
+**Detection** (`SkillWatcher` component, mounted in Layout):
+- Polls `GET /api/skills/mastered` on window focus + 15s stale time
+- First load: marks ALL mastered skills as "seen" in `localStorage['celebrated:${userId}']` — no false celebrations
+- Subsequent loads: new elite (level 5) skills not in localStorage → enqueues celebration
+
+**Celebration** (`CelebrationOverlay` component):
+- `canvas-confetti` fired in three waves (0s, 1.6s, 3.2s) — gold/amber palette
+- React portal renders modal over entire viewport (z-9999)
+- Branch-colored badge circle, skill title, countdown bar (7s auto-close)
+- On close → POSTs shoutout to `/api/shoutouts` (idempotent)
+
+**Social Feed** (`SocialFeed` component on Dashboard):
+- `GET /api/feed` returns last 30 shoutouts from self + friends
+- Each entry: avatar, "[Name] just mastered [SkillTitle] 🏆", time-ago
+- Refetches on window focus
+
+**Profile Mastery Badges**:
+- Elite skills (level 5) with `status === "mastered"` shown as gold-bordered pills on profile page
+- Branch-colored (orange/blue/violet/emerald) with star ★ indicator
+
+### Feed API
+
+- `GET /api/skills/mastered` — auth required; returns mastered skills with full metadata (id, level, levelName, title, branch)
+- `POST /api/shoutouts` — auth required; idempotent (ON CONFLICT DO NOTHING)
+- `GET /api/feed` — returns shoutouts from self + friends; empty array for unauthenticated users
 
 ### Leaderboard API
 

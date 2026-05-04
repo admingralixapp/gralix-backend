@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMyProfile, useFriendRequests } from "@/lib/social";
+import { SkillWatcher } from "./skill-watcher";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -183,6 +184,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 pb-20 md:pb-0 overflow-y-auto">
         <div className="max-w-6xl mx-auto">{children}</div>
       </main>
+
+      {/* Global skill watcher — detects new Elite masteries and fires celebration */}
+      <SkillWatcher />
     </div>
   );
 }

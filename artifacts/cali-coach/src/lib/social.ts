@@ -220,3 +220,66 @@ export function useRemoveFriend() {
     },
   });
 }
+
+// ---------------------------------------------------------------------------
+// Feed & Shoutouts
+// ---------------------------------------------------------------------------
+export interface FeedEntry {
+  id: number;
+  skillId: string;
+  skillTitle: string;
+  branch: string;
+  createdAt: string;
+  userId: number;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+export interface MasteredSkillInfo {
+  id: string;
+  level: number;
+  levelName: string;
+  title: string;
+  branch: string;
+}
+
+export function useFeed() {
+  return useQuery<{ entries: FeedEntry[] }>({
+    queryKey: ["/api/feed"],
+    queryFn: () =>
+      apiFetch<{ entries: FeedEntry[] }>("/api/feed").catch(() => ({
+        entries: [],
+      })),
+    staleTime: 30_000,
+    retry: false,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useCreateShoutout() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { skillId: string; skillTitle: string; branch: string }) =>
+      apiFetch("/api/shoutouts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/feed"] }),
+  });
+}
+
+export function useMasteredSkills(enabled: boolean) {
+  return useQuery<{ mastered: MasteredSkillInfo[] }>({
+    queryKey: ["/api/skills/mastered"],
+    queryFn: () =>
+      apiFetch<{ mastered: MasteredSkillInfo[] }>("/api/skills/mastered").catch(
+        () => ({ mastered: [] }),
+      ),
+    enabled,
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+    retry: false,
+  });
+}

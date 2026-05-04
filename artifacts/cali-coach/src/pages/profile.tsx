@@ -148,6 +148,7 @@ export function ProfilePage() {
       : null;
 
   const masteredSkills = skillTree?.filter((s) => s.status === "mastered") ?? [];
+  const eliteBadges = skillTree?.filter((s) => s.level === 5 && s.status === "mastered") ?? [];
   const inProgressSkills =
     skillTree?.filter(
       (s) =>
@@ -279,6 +280,47 @@ export function ProfilePage() {
                 </p>
               </div>
             </div>
+          )}
+
+          {/* ── Elite Mastery Badges ──────────────────────────────── */}
+          {eliteBadges.length > 0 && (
+            <section className="mb-4">
+              <div className="rounded-xl border border-yellow-500/30 bg-yellow-950/20 p-4">
+                <h2 className="text-sm font-bold text-yellow-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  🏆 Elite Mastery Badges
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {eliteBadges.map((skill) => {
+                    const pillClass =
+                      skill.branch === "PUSH"
+                        ? "bg-orange-500/20 text-orange-300 border-orange-500/40 shadow-orange-500/20"
+                        : skill.branch === "PULL"
+                          ? "bg-blue-500/20 text-blue-300 border-blue-500/40 shadow-blue-500/20"
+                          : skill.branch === "CORE"
+                            ? "bg-violet-500/20 text-violet-300 border-violet-500/40 shadow-violet-500/20"
+                            : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-emerald-500/20";
+                    const emoji =
+                      skill.branch === "PUSH" ? "💪"
+                      : skill.branch === "PULL" ? "🔵"
+                      : skill.branch === "CORE" ? "⚡"
+                      : "🟢";
+                    return (
+                      <div
+                        key={skill.id}
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold border shadow-md",
+                          pillClass,
+                        )}
+                      >
+                        <span>{emoji}</span>
+                        {skill.title}
+                        <span className="text-yellow-400">★</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
           )}
 
           {/* Mastered skills */}

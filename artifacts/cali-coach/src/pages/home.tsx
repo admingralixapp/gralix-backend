@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SkillMap } from "@/components/skill-map";
+import { SocialFeed } from "@/components/social-feed";
 
 function StatCard({
   icon,
@@ -107,6 +108,7 @@ export function Home() {
         </CardContent>
       </Card>
 
+      {/* ── Recent Sessions ───────────────────────────────────────── */}
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Recent Sessions</h2>
@@ -169,6 +171,19 @@ export function Home() {
           </div>
         )}
       </div>
+
+      {/* ── Friends Activity ──────────────────────────────────────── */}
+      <Card className="border-border bg-card">
+        <CardHeader className="pb-3 border-b border-border">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-yellow-400" />
+            Friends Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <SocialFeed />
+        </CardContent>
+      </Card>
     </div>
   );
 }

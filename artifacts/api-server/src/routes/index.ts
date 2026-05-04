@@ -6,12 +6,14 @@ import repsRouter from "./reps";
 import progressRouter from "./progress";
 import socialRouter from "./social";
 import leaderboardRouter from "./leaderboard";
+import feedRouter from "./feed";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(socialRouter);
 router.use(leaderboardRouter);
+router.use(feedRouter);
 router.use(exercisesRouter);
 router.use(sessionsRouter);
 router.use(repsRouter);
