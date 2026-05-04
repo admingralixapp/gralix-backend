@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Activity, LayoutDashboard, History, TrendingUp, Dumbbell } from "lucide-react";
+import { Activity, LayoutDashboard, History, TrendingUp, Dumbbell, GitBranch } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: "/history", label: "History", icon: History },
   { href: "/progress", label: "Progress", icon: TrendingUp },
   { href: "/exercises", label: "Exercises", icon: Dumbbell },
+  { href: "/skill-tree", label: "Skill Tree", icon: GitBranch },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

@@ -9,6 +9,7 @@ import { History } from "@/pages/history";
 import { SessionDetail } from "@/pages/session-detail";
 import { Progress } from "@/pages/progress";
 import { Exercises } from "@/pages/exercises";
+import { SkillTreePage } from "@/pages/skill-tree";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ function Router() {
         <Route path="/session/:id" component={SessionDetail} />
         <Route path="/progress" component={Progress} />
         <Route path="/exercises" component={Exercises} />
+        <Route path="/skill-tree" component={SkillTreePage} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
