@@ -1,11 +1,24 @@
 import { useGetProgressSummary, useGetRecentSessions } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Activity, Flame, Trophy, Target, ArrowRight, Dumbbell, GitBranch } from "lucide-react";
+import {
+  Activity,
+  Flame,
+  Trophy,
+  Target,
+  ArrowRight,
+  Dumbbell,
+  GitBranch,
+  Sparkles,
+  CheckCircle2,
+  ChevronRight,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SkillMap } from "@/components/skill-map";
 import { SocialFeed } from "@/components/social-feed";
+import { useMobilityStatus, useNotificationScheduler } from "@/lib/use-mobility";
+import { GOAL_LABELS, type MobilityGoal } from "@/lib/mobility-service";
 
 function StatCard({
   icon,
@@ -43,6 +56,12 @@ function StatCard({
 export function Home() {
   const { data: summary, isLoading: loadingSummary } = useGetProgressSummary();
   const { data: recentSessions, isLoading: loadingSessions } = useGetRecentSessions({ limit: 5 });
+  const { data: mobilityStatus, isLoading: loadingMobility } = useMobilityStatus();
+
+  useNotificationScheduler(mobilityStatus);
+
+  const mobilityGoal = (mobilityStatus?.settings.mobilityGoal ?? "general") as MobilityGoal;
+  const goalLabel = GOAL_LABELS[mobilityGoal];
 
   return (
     <div className="p-6 md:p-8 space-y-8">
@@ -59,10 +78,11 @@ export function Home() {
         </Button>
       </header>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* ── Stats Grid (5 cards) ───────────────────────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
           icon={<Flame className="w-4 h-4 text-orange-500" />}
-          label="Current Streak"
+          label="Workout Streak"
           value={summary?.currentStreak ?? 0}
           sub="days in a row"
           isLoading={loadingSummary}
@@ -70,7 +90,11 @@ export function Home() {
         <StatCard
           icon={<Target className="w-4 h-4 text-primary" />}
           label="Avg Form"
-          value={summary?.avgFormScore != null ? Math.round(summary.avgFormScore) : "--"}
+          value={
+            summary?.avgFormScore != null
+              ? Math.round(summary.avgFormScore)
+              : "--"
+          }
           sub="out of 100"
           isLoading={loadingSummary}
         />
@@ -88,7 +112,63 @@ export function Home() {
           sub="completed"
           isLoading={loadingSummary}
         />
+        <StatCard
+          icon={<Sparkles className="w-4 h-4 text-violet-400" />}
+          label="Mobility Streak"
+          value={loadingMobility ? "--" : (mobilityStatus?.currentStreak ?? 0)}
+          sub="stretch days"
+          isLoading={loadingMobility}
+        />
       </div>
+
+      {/* ── Daily Mobility Card ────────────────────────────────────── */}
+      <Card className="border-border bg-card overflow-hidden">
+        <div className="flex items-stretch">
+          {/* Accent bar */}
+          <div className="w-1 bg-gradient-to-b from-violet-500 to-primary shrink-0" />
+
+          <div className="flex-1 p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="w-4 h-4 text-violet-400" />
+                  <span className="text-sm font-semibold text-violet-400">
+                    Daily Mobility
+                  </span>
+                  {mobilityStatus?.completedToday && (
+                    <span className="flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Done
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-lg font-bold leading-tight">
+                  {goalLabel}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  5 stretches · ~5 min ·{" "}
+                  {loadingMobility ? (
+                    "loading…"
+                  ) : mobilityStatus?.currentStreak ? (
+                    <span className="text-orange-400 font-medium">
+                      🔥 {mobilityStatus.currentStreak}-day streak
+                    </span>
+                  ) : (
+                    "Start your streak today"
+                  )}
+                </p>
+              </div>
+
+              <Button asChild size="sm" variant={mobilityStatus?.completedToday ? "outline" : "default"}>
+                <Link href="/mobility">
+                  {mobilityStatus?.completedToday ? "Repeat" : "Begin"}
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       {/* ── Skill Map ─────────────────────────────────────────────── */}
       <Card className="border-border bg-card">
@@ -160,7 +240,9 @@ export function Home() {
                         <span className="text-sm text-muted-foreground">reps</span>
                       </div>
                       <div className="text-sm text-primary font-medium">
-                        {session.avgFormScore != null ? Math.round(session.avgFormScore) : "--"}{" "}
+                        {session.avgFormScore != null
+                          ? Math.round(session.avgFormScore)
+                          : "--"}{" "}
                         avg form
                       </div>
                     </div>

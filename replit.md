@@ -36,6 +36,7 @@ A calisthenics motion capture coaching app. Uses the device camera with MediaPip
 - Session tracking: create, log reps, complete sessions
 - Progress dashboard: form score timeline, per-exercise progress, streaks
 - **Social layer**: friends (search by username, send/accept/reject requests), shared profiles (skill tree + form mastery), privacy controls (Public / Friends Only / Private)
+- **Daily Mobility System**: 5-stretch guided routine (60s holds) with Ghost Mode SVG overlay, goal-based routine selection from 8 skill-tree goals, Mobility Streak counter on dashboard, browser notification opt-in (user-specified time) in Settings
 - **Leaderboard**: Global top-100, National (country auto-detected via CF-IPCountry or Accept-Language), Friends-only — mastery points computed from skill tree (L1=100 pts … L5=500 pts, max 6,000). Sticky "Your Rank" bar always visible at bottom of the page.
 - **Level Up Celebration**: When a user masters an Elite (level 5) skill → full-screen gold confetti animation (canvas-confetti), a Mastery Badge on their profile, and a shoutout auto-posted to the Social Feed visible to friends.
 
@@ -95,6 +96,8 @@ Static exercises (`isStatic: true` in `ExerciseConfig`) use a Hold Timer instead
 - `users` — Clerk-linked profiles (clerkId, username, displayName, avatarUrl, privacyLevel, country varchar(2))
 - `friendRequests` — friendship edges (fromUserId, toUserId, status: pending/accepted/rejected)
 - `shoutouts` — elite skill mastery announcements (userId FK, skillId, skillTitle, branch, createdAt). Unique constraint on (userId, skillId) prevents duplicates.
+- `mobility_completions` — daily completion log (userId, completedDate DATE, routineGoal). Unique on (userId, completedDate).
+- `user_notification_settings` — per-user notification prefs (userId unique, enabled bool, notificationTime "HH:MM", mobilityGoal).
 
 ## API Routes
 

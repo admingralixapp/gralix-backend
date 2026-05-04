@@ -27,6 +27,7 @@ import { Settings } from "@/pages/settings";
 import { SignInPage } from "@/pages/sign-in";
 import { SignUpPage } from "@/pages/sign-up";
 import { Landing } from "@/pages/landing";
+import { MobilityPage } from "@/pages/mobility";
 import NotFound from "@/pages/not-found";
 import { useMyProfile, useUpsertProfile } from "@/lib/social";
 
@@ -228,6 +229,7 @@ function AppRouter() {
               <Route path="/friends" component={Friends} />
               <Route path="/profile/:username" component={ProfilePage} />
               <Route path="/settings" component={Settings} />
+              <Route path="/mobility" component={MobilityPage} />
               <Route component={NotFound} />
             </Switch>
           </Layout>

@@ -1,8 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/react";
-import { Shield, LogOut, User, CheckCircle2 } from "lucide-react";
+import { Bell, Shield, LogOut, User, CheckCircle2, BellOff } from "lucide-react";
 import { useMyProfile, useUpdatePrivacy, useUpsertProfile } from "@/lib/social";
 import { useToast } from "@/hooks/use-toast";
+import {
+  useMobilityStatus,
+  useUpdateMobilitySettings,
+  requestNotificationPermission,
+} from "@/lib/use-mobility";
+import { GOAL_OPTIONS, type MobilityGoal } from "@/lib/mobility-service";
 
 type PrivacyLevel = "public" | "friends" | "private";
 
@@ -32,9 +38,34 @@ export function Settings() {
   const upsertProfile = useUpsertProfile();
   const { toast } = useToast();
 
+  const { data: mobilityStatus } = useMobilityStatus();
+  const updateMobilitySettings = useUpdateMobilitySettings();
+
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [editing, setEditing] = useState(false);
+
+  // Notification settings local state
+  const [notifEnabled, setNotifEnabled] = useState(false);
+  const [notifTime, setNotifTime] = useState("08:00");
+  const [notifGoal, setNotifGoal] = useState<MobilityGoal>("general");
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
+  const [savingNotif, setSavingNotif] = useState(false);
+
+  // Sync local state from server data
+  useEffect(() => {
+    if (!mobilityStatus?.settings) return;
+    setNotifEnabled(mobilityStatus.settings.enabled);
+    setNotifTime(mobilityStatus.settings.notificationTime);
+    setNotifGoal((mobilityStatus.settings.mobilityGoal as MobilityGoal) ?? "general");
+  }, [mobilityStatus?.settings]);
+
+  // Check notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window) {
+      setNotifPermission(Notification.permission);
+    }
+  }, []);
 
   if (!isLoaded || profileLoading) {
     return (
@@ -88,6 +119,48 @@ export function Settings() {
         },
         onError: (err: Error) =>
           toast({ title: err.message, variant: "destructive" }),
+      },
+    );
+  }
+
+  async function handleNotifToggle() {
+    const next = !notifEnabled;
+
+    if (next && notifPermission !== "granted") {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        toast({
+          title: "Notifications blocked",
+          description:
+            "Please allow notifications in your browser settings, then try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setNotifPermission("granted");
+    }
+
+    setNotifEnabled(next);
+  }
+
+  async function saveNotificationSettings() {
+    setSavingNotif(true);
+    updateMobilitySettings.mutate(
+      { enabled: notifEnabled, notificationTime: notifTime, mobilityGoal: notifGoal },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Notification settings saved",
+            description: notifEnabled
+              ? `You'll be reminded at ${notifTime} each day.`
+              : "Daily reminders disabled.",
+          });
+          setSavingNotif(false);
+        },
+        onError: () => {
+          toast({ title: "Failed to save settings", variant: "destructive" });
+          setSavingNotif(false);
+        },
       },
     );
   }
@@ -148,7 +221,9 @@ export function Settings() {
                 </label>
                 <input
                   value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+                  onChange={(e) =>
+                    setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))
+                  }
                   className="w-full px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. john_doe"
                 />
@@ -180,6 +255,95 @@ export function Settings() {
               Edit profile
             </button>
           )}
+        </div>
+      </section>
+
+      {/* Daily Mobility Notifications */}
+      <section className="mb-6">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+          <Bell className="w-4 h-4" />
+          Daily Mobility Reminders
+        </h2>
+        <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+          {/* Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium text-sm">Enable daily reminders</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Get a browser notification at your chosen time each day.
+              </div>
+            </div>
+            <button
+              onClick={handleNotifToggle}
+              className={[
+                "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
+                notifEnabled ? "bg-primary" : "bg-muted",
+              ].join(" ")}
+              role="switch"
+              aria-checked={notifEnabled}
+            >
+              <span
+                className={[
+                  "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg transform transition duration-200",
+                  notifEnabled ? "translate-x-5" : "translate-x-0",
+                ].join(" ")}
+              />
+            </button>
+          </div>
+
+          {/* Permission warning */}
+          {notifEnabled && notifPermission === "denied" && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
+              <BellOff className="w-4 h-4 shrink-0" />
+              Notifications are blocked in your browser. Please allow them in your
+              browser/OS settings and reload the page.
+            </div>
+          )}
+
+          {/* Reminder time */}
+          {notifEnabled && (
+            <div className="space-y-3 pt-1">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">
+                  Reminder time
+                </label>
+                <input
+                  type="time"
+                  value={notifTime}
+                  onChange={(e) => setNotifTime(e.target.value)}
+                  className="px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary w-full sm:w-auto"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">
+                  Mobility goal
+                </label>
+                <select
+                  value={notifGoal}
+                  onChange={(e) => setNotifGoal(e.target.value as MobilityGoal)}
+                  className="w-full px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  {GOAL_OPTIONS.map(({ value, label }) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  The routine on your /mobility page will be tailored to this goal.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={saveNotificationSettings}
+            disabled={savingNotif || updateMobilitySettings.isPending}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {savingNotif || updateMobilitySettings.isPending ? "Saving…" : "Save"}
+          </button>
         </div>
       </section>
 

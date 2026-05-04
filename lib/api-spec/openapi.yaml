@@ -18,6 +18,8 @@ tags:
     description: Rep tracking within sessions
   - name: progress
     description: Progress and analytics
+  - name: mobility
+    description: Daily mobility routines and notifications
 
 paths:
   /healthz:
@@ -273,6 +275,70 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/SessionSummary"
+
+  /mobility/status:
+    get:
+      operationId: getMobilityStatus
+      tags: [mobility]
+      summary: Get today's mobility completion status and streak
+      responses:
+        "200":
+          description: Mobility status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MobilityStatus"
+        "401":
+          description: Unauthorized
+
+  /mobility/complete:
+    post:
+      operationId: completeMobilitySession
+      tags: [mobility]
+      summary: Mark today's mobility session as complete
+      responses:
+        "200":
+          description: Updated streak info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MobilityCompletionResult"
+        "401":
+          description: Unauthorized
+
+  /mobility/settings:
+    get:
+      operationId: getMobilitySettings
+      tags: [mobility]
+      summary: Get user notification and goal settings
+      responses:
+        "200":
+          description: Mobility settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MobilitySettings"
+        "401":
+          description: Unauthorized
+    post:
+      operationId: updateMobilitySettings
+      tags: [mobility]
+      summary: Create or update notification and goal settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMobilitySettingsBody"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MobilitySettings"
+        "401":
+          description: Unauthorized
 
 components:
   schemas:
@@ -541,3 +607,54 @@ components:
         - totalReps
         - avgFormScore
         - durationMinutes
+
+    MobilitySettings:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        notificationTime:
+          type: string
+          description: "HH:MM format, e.g. '08:00'"
+        mobilityGoal:
+          type: string
+          description: "Goal key, e.g. 'pull', 'push', 'handstand'"
+      required:
+        - enabled
+        - notificationTime
+        - mobilityGoal
+
+    MobilityStatus:
+      type: object
+      properties:
+        completedToday:
+          type: boolean
+        currentStreak:
+          type: integer
+        settings:
+          $ref: "#/components/schemas/MobilitySettings"
+      required:
+        - completedToday
+        - currentStreak
+        - settings
+
+    MobilityCompletionResult:
+      type: object
+      properties:
+        completedToday:
+          type: boolean
+        currentStreak:
+          type: integer
+      required:
+        - completedToday
+        - currentStreak
+
+    UpdateMobilitySettingsBody:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        notificationTime:
+          type: string
+        mobilityGoal:
+          type: string
