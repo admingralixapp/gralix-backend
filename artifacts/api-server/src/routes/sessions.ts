@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
-import { db, sessionsTable, exercisesTable, repsTable } from "@workspace/db";
+import { getAuth } from "@clerk/express";
+import { db, sessionsTable, exercisesTable, repsTable, usersTable } from "@workspace/db";
 import {
   CreateSessionBody,
   GetSessionParams,
@@ -37,9 +38,25 @@ router.get("/sessions", async (req, res) => {
 
 router.post("/sessions", async (req, res) => {
   const body = CreateSessionBody.parse(req.body);
+
+  // Associate with authenticated user if possible
+  let userId: number | null = null;
+  try {
+    const auth = getAuth(req as any);
+    if (auth?.userId) {
+      const [user] = await db
+        .select({ id: usersTable.id })
+        .from(usersTable)
+        .where(eq(usersTable.clerkId, auth.userId));
+      userId = user?.id ?? null;
+    }
+  } catch {
+    // unauthenticated — fine
+  }
+
   const [session] = await db
     .insert(sessionsTable)
-    .values({ exerciseId: body.exerciseId, notes: body.notes ?? null })
+    .values({ exerciseId: body.exerciseId, notes: body.notes ?? null, userId })
     .returning();
   const [exercise] = await db
     .select({ name: exercisesTable.name })

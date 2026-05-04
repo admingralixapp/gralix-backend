@@ -1,0 +1,644 @@
+import { Router, type Request, type Response } from "express";
+import { getAuth } from "@clerk/express";
+import { db } from "@workspace/db";
+import {
+  usersTable,
+  friendRequestsTable,
+  sessionsTable,
+  exercisesTable,
+} from "@workspace/db";
+import { eq, ilike, or, and, desc, inArray } from "drizzle-orm";
+
+const router = Router();
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+function getClerkId(req: Request): string | null {
+  const auth = getAuth(req as any);
+  return auth?.userId ?? null;
+}
+
+async function getMe(clerkId: string) {
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.clerkId, clerkId));
+  return user ?? null;
+}
+
+function requireAuthMiddleware(
+  req: Request,
+  res: Response,
+  next: () => void,
+): void {
+  const clerkId = getClerkId(req);
+  if (!clerkId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  (req as any).clerkId = clerkId;
+  next();
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/users/me — return current user's DB profile (null → not set up yet)
+// ---------------------------------------------------------------------------
+router.get("/users/me", requireAuthMiddleware, async (req: Request, res: Response) => {
+  const me = await getMe((req as any).clerkId);
+  if (!me) {
+    res.status(404).json({ error: "Profile not found" });
+    return;
+  }
+  res.json(me);
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/users/me — create / upsert profile (called after first sign-in)
+// ---------------------------------------------------------------------------
+router.post("/users/me", requireAuthMiddleware, async (req: Request, res: Response) => {
+  const clerkId = (req as any).clerkId as string;
+  const { username, displayName, avatarUrl } = req.body as {
+    username: string;
+    displayName: string;
+    avatarUrl?: string;
+  };
+
+  if (!username || !displayName) {
+    res.status(400).json({ error: "username and displayName are required" });
+    return;
+  }
+
+  // Sanitise username: lowercase alphanumeric + underscores only
+  const safeUsername = username
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "")
+    .slice(0, 32);
+
+  if (!safeUsername) {
+    res.status(400).json({ error: "Invalid username" });
+    return;
+  }
+
+  try {
+    const [user] = await db
+      .insert(usersTable)
+      .values({
+        clerkId,
+        username: safeUsername,
+        displayName: displayName.slice(0, 128),
+        avatarUrl: avatarUrl ?? null,
+      })
+      .onConflictDoUpdate({
+        target: usersTable.clerkId,
+        set: {
+          displayName: displayName.slice(0, 128),
+          avatarUrl: avatarUrl ?? null,
+        },
+      })
+      .returning();
+    res.json(user);
+  } catch {
+    // Unique violation on username
+    res.status(409).json({ error: "Username already taken" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PUT /api/users/me/privacy — update privacy level
+// ---------------------------------------------------------------------------
+router.put(
+  "/users/me/privacy",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const { privacyLevel } = req.body as { privacyLevel: string };
+
+    if (!["public", "friends", "private"].includes(privacyLevel)) {
+      res.status(400).json({ error: "Invalid privacyLevel" });
+      return;
+    }
+
+    const me = await getMe(clerkId);
+    if (!me) {
+      res.status(404).json({ error: "Profile not found" });
+      return;
+    }
+
+    const [updated] = await db
+      .update(usersTable)
+      .set({ privacyLevel: privacyLevel as "public" | "friends" | "private" })
+      .where(eq(usersTable.id, me.id))
+      .returning();
+
+    res.json(updated);
+  },
+);
+
+// ---------------------------------------------------------------------------
+// PUT /api/users/me — update username / displayName
+// ---------------------------------------------------------------------------
+router.put(
+  "/users/me",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const { username, displayName } = req.body as {
+      username?: string;
+      displayName?: string;
+    };
+
+    const me = await getMe(clerkId);
+    if (!me) {
+      res.status(404).json({ error: "Profile not found" });
+      return;
+    }
+
+    const updateFields: Partial<typeof usersTable.$inferSelect> = {};
+    if (displayName) updateFields.displayName = displayName.slice(0, 128);
+    if (username) {
+      const safeUsername = username
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, "")
+        .slice(0, 32);
+      if (!safeUsername) {
+        res.status(400).json({ error: "Invalid username" });
+        return;
+      }
+      updateFields.username = safeUsername;
+    }
+
+    try {
+      const [updated] = await db
+        .update(usersTable)
+        .set(updateFields)
+        .where(eq(usersTable.id, me.id))
+        .returning();
+      res.json(updated);
+    } catch {
+      res.status(409).json({ error: "Username already taken" });
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// GET /api/users/search?q= — search by username or display name
+// ---------------------------------------------------------------------------
+router.get(
+  "/users/search",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const q = ((req.query.q as string) || "").trim();
+    if (q.length < 2) {
+      res.json([]);
+      return;
+    }
+
+    const clerkId = (req as any).clerkId as string;
+    const me = await getMe(clerkId);
+
+    const results = await db
+      .select({
+        id: usersTable.id,
+        username: usersTable.username,
+        displayName: usersTable.displayName,
+        avatarUrl: usersTable.avatarUrl,
+      })
+      .from(usersTable)
+      .where(
+        and(
+          or(
+            ilike(usersTable.username, `%${q}%`),
+            ilike(usersTable.displayName, `%${q}%`),
+          ),
+          // Exclude self
+          me ? eq(usersTable.id, usersTable.id) : undefined,
+        ),
+      )
+      .limit(20);
+
+    // Remove self from results
+    const filtered = me ? results.filter((u) => u.id !== me.id) : results;
+    res.json(filtered);
+  },
+);
+
+// ---------------------------------------------------------------------------
+// GET /api/users/:username — public profile (skill tree + form mastery)
+// ---------------------------------------------------------------------------
+router.get(
+  "/users/:username",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const { username } = req.params;
+    const clerkId = (req as any).clerkId as string;
+
+    const me = await getMe(clerkId);
+    if (!me) {
+      res.status(403).json({ error: "Complete your profile first" });
+      return;
+    }
+
+    const [targetUser] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, username));
+
+    if (!targetUser) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    // Same user = always allowed
+    const isSelf = targetUser.id === me.id;
+
+    // Privacy check
+    let canView = isSelf || targetUser.privacyLevel === "public";
+
+    if (!canView && targetUser.privacyLevel === "friends") {
+      const [friendship] = await db
+        .select()
+        .from(friendRequestsTable)
+        .where(
+          and(
+            eq(friendRequestsTable.status, "accepted"),
+            or(
+              and(
+                eq(friendRequestsTable.fromUserId, me.id),
+                eq(friendRequestsTable.toUserId, targetUser.id),
+              ),
+              and(
+                eq(friendRequestsTable.fromUserId, targetUser.id),
+                eq(friendRequestsTable.toUserId, me.id),
+              ),
+            ),
+          ),
+        );
+      canView = !!friendship;
+    }
+
+    // Also check if there's a pending/accepted request between them
+    const [existingRequest] = await db
+      .select()
+      .from(friendRequestsTable)
+      .where(
+        or(
+          and(
+            eq(friendRequestsTable.fromUserId, me.id),
+            eq(friendRequestsTable.toUserId, targetUser.id),
+          ),
+          and(
+            eq(friendRequestsTable.fromUserId, targetUser.id),
+            eq(friendRequestsTable.toUserId, me.id),
+          ),
+        ),
+      );
+
+    const userInfo = {
+      id: targetUser.id,
+      username: targetUser.username,
+      displayName: targetUser.displayName,
+      avatarUrl: targetUser.avatarUrl,
+      privacyLevel: targetUser.privacyLevel,
+    };
+
+    if (!canView) {
+      res.json({
+        user: userInfo,
+        hidden: true,
+        friendRequestStatus: existingRequest?.status ?? null,
+        friendRequestId: existingRequest?.id ?? null,
+        friendRequestFromMe: existingRequest?.fromUserId === me.id,
+        sessions: null,
+        formMastery: null,
+        totalSessions: 0,
+        totalReps: 0,
+      });
+      return;
+    }
+
+    const sessions = await db
+      .select({
+        exerciseName: exercisesTable.name,
+        totalReps: sessionsTable.totalReps,
+        avgFormScore: sessionsTable.avgFormScore,
+        completedAt: sessionsTable.completedAt,
+      })
+      .from(sessionsTable)
+      .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
+      .where(eq(sessionsTable.userId, targetUser.id))
+      .orderBy(desc(sessionsTable.startedAt));
+
+    const completedSessions = sessions.filter(
+      (s) => s.completedAt && s.avgFormScore != null,
+    );
+    const formMastery =
+      completedSessions.length > 0
+        ? Math.round(
+            completedSessions.reduce((sum, s) => sum + (s.avgFormScore ?? 0), 0) /
+              completedSessions.length,
+          )
+        : null;
+
+    res.json({
+      user: userInfo,
+      hidden: false,
+      friendRequestStatus: existingRequest?.status ?? null,
+      friendRequestId: existingRequest?.id ?? null,
+      friendRequestFromMe: existingRequest?.fromUserId === me.id,
+      sessions,
+      formMastery,
+      totalSessions: completedSessions.length,
+      totalReps: sessions.reduce((sum, s) => sum + (s.totalReps ?? 0), 0),
+    });
+  },
+);
+
+// ---------------------------------------------------------------------------
+// GET /api/friends — list accepted friends
+// ---------------------------------------------------------------------------
+router.get("/friends", requireAuthMiddleware, async (req: Request, res: Response) => {
+  const clerkId = (req as any).clerkId as string;
+  const me = await getMe(clerkId);
+  if (!me) {
+    res.json([]);
+    return;
+  }
+
+  const rows = await db
+    .select({
+      fromUserId: friendRequestsTable.fromUserId,
+      toUserId: friendRequestsTable.toUserId,
+    })
+    .from(friendRequestsTable)
+    .where(
+      and(
+        eq(friendRequestsTable.status, "accepted"),
+        or(
+          eq(friendRequestsTable.fromUserId, me.id),
+          eq(friendRequestsTable.toUserId, me.id),
+        ),
+      ),
+    );
+
+  const friendIds = rows.map((r) =>
+    r.fromUserId === me.id ? r.toUserId : r.fromUserId,
+  );
+
+  if (friendIds.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  const friends = await db
+    .select({
+      id: usersTable.id,
+      username: usersTable.username,
+      displayName: usersTable.displayName,
+      avatarUrl: usersTable.avatarUrl,
+    })
+    .from(usersTable)
+    .where(inArray(usersTable.id, friendIds));
+
+  res.json(friends);
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/friends/requests — incoming + outgoing pending requests
+// ---------------------------------------------------------------------------
+router.get(
+  "/friends/requests",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const me = await getMe(clerkId);
+    if (!me) {
+      res.json({ incoming: [], outgoing: [] });
+      return;
+    }
+
+    const allRequests = await db
+      .select({
+        id: friendRequestsTable.id,
+        fromUserId: friendRequestsTable.fromUserId,
+        toUserId: friendRequestsTable.toUserId,
+        status: friendRequestsTable.status,
+        createdAt: friendRequestsTable.createdAt,
+      })
+      .from(friendRequestsTable)
+      .where(
+        and(
+          eq(friendRequestsTable.status, "pending"),
+          or(
+            eq(friendRequestsTable.fromUserId, me.id),
+            eq(friendRequestsTable.toUserId, me.id),
+          ),
+        ),
+      );
+
+    const incoming = allRequests.filter((r) => r.toUserId === me.id);
+    const outgoing = allRequests.filter((r) => r.fromUserId === me.id);
+
+    const relevantIds = [
+      ...incoming.map((r) => r.fromUserId),
+      ...outgoing.map((r) => r.toUserId),
+    ];
+
+    let userMap: Map<
+      number,
+      { id: number; username: string; displayName: string; avatarUrl: string | null }
+    > = new Map();
+
+    if (relevantIds.length > 0) {
+      const users = await db
+        .select({
+          id: usersTable.id,
+          username: usersTable.username,
+          displayName: usersTable.displayName,
+          avatarUrl: usersTable.avatarUrl,
+        })
+        .from(usersTable)
+        .where(inArray(usersTable.id, relevantIds));
+      userMap = new Map(users.map((u) => [u.id, u]));
+    }
+
+    res.json({
+      incoming: incoming.map((r) => ({
+        ...r,
+        user: userMap.get(r.fromUserId),
+      })),
+      outgoing: outgoing.map((r) => ({
+        ...r,
+        user: userMap.get(r.toUserId),
+      })),
+    });
+  },
+);
+
+// ---------------------------------------------------------------------------
+// POST /api/friends/requests — send a friend request
+// ---------------------------------------------------------------------------
+router.post(
+  "/friends/requests",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const me = await getMe(clerkId);
+    if (!me) {
+      res.status(403).json({ error: "Complete your profile first" });
+      return;
+    }
+
+    const { username } = req.body as { username: string };
+    if (!username) {
+      res.status(400).json({ error: "username is required" });
+      return;
+    }
+
+    const [targetUser] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, username));
+
+    if (!targetUser) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    if (targetUser.id === me.id) {
+      res.status(400).json({ error: "Cannot add yourself" });
+      return;
+    }
+
+    // Check for existing request in either direction
+    const [existing] = await db
+      .select()
+      .from(friendRequestsTable)
+      .where(
+        or(
+          and(
+            eq(friendRequestsTable.fromUserId, me.id),
+            eq(friendRequestsTable.toUserId, targetUser.id),
+          ),
+          and(
+            eq(friendRequestsTable.fromUserId, targetUser.id),
+            eq(friendRequestsTable.toUserId, me.id),
+          ),
+        ),
+      );
+
+    if (existing) {
+      if (existing.status === "accepted") {
+        res.status(409).json({ error: "Already friends" });
+      } else if (existing.status === "pending") {
+        res.status(409).json({ error: "Request already pending" });
+      } else {
+        // Rejected — allow re-sending by resetting
+        const [updated] = await db
+          .update(friendRequestsTable)
+          .set({ status: "pending", fromUserId: me.id, toUserId: targetUser.id })
+          .where(eq(friendRequestsTable.id, existing.id))
+          .returning();
+        res.status(201).json(updated);
+      }
+      return;
+    }
+
+    const [request] = await db
+      .insert(friendRequestsTable)
+      .values({ fromUserId: me.id, toUserId: targetUser.id })
+      .returning();
+
+    res.status(201).json(request);
+  },
+);
+
+// ---------------------------------------------------------------------------
+// PUT /api/friends/requests/:id — accept or reject
+// ---------------------------------------------------------------------------
+router.put(
+  "/friends/requests/:id",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const me = await getMe(clerkId);
+    if (!me) {
+      res.status(403).json({ error: "Complete your profile first" });
+      return;
+    }
+
+    const id = Number(req.params.id);
+    const { action } = req.body as { action: "accept" | "reject" };
+
+    if (!["accept", "reject"].includes(action)) {
+      res.status(400).json({ error: "action must be accept or reject" });
+      return;
+    }
+
+    const [request] = await db
+      .select()
+      .from(friendRequestsTable)
+      .where(eq(friendRequestsTable.id, id));
+
+    if (!request) {
+      res.status(404).json({ error: "Request not found" });
+      return;
+    }
+
+    if (request.toUserId !== me.id) {
+      res.status(403).json({ error: "Not your request to respond to" });
+      return;
+    }
+
+    const [updated] = await db
+      .update(friendRequestsTable)
+      .set({
+        status: action === "accept" ? "accepted" : "rejected",
+        updatedAt: new Date(),
+      })
+      .where(eq(friendRequestsTable.id, id))
+      .returning();
+
+    res.json(updated);
+  },
+);
+
+// ---------------------------------------------------------------------------
+// DELETE /api/friends/:friendId — remove a friend
+// ---------------------------------------------------------------------------
+router.delete(
+  "/friends/:friendId",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const me = await getMe(clerkId);
+    if (!me) {
+      res.status(403).json({ error: "Profile not found" });
+      return;
+    }
+
+    const friendId = Number(req.params.friendId);
+
+    await db
+      .delete(friendRequestsTable)
+      .where(
+        and(
+          eq(friendRequestsTable.status, "accepted"),
+          or(
+            and(
+              eq(friendRequestsTable.fromUserId, me.id),
+              eq(friendRequestsTable.toUserId, friendId),
+            ),
+            and(
+              eq(friendRequestsTable.fromUserId, friendId),
+              eq(friendRequestsTable.toUserId, me.id),
+            ),
+          ),
+        ),
+      );
+
+    res.json({ success: true });
+  },
+);
+
+export default router;

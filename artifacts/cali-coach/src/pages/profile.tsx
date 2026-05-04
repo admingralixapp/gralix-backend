@@ -1,0 +1,362 @@
+import { useParams, Link } from "wouter";
+import { Show } from "@clerk/react";
+import {
+  ArrowLeft,
+  Lock,
+  Globe,
+  Users,
+  UserPlus,
+  UserCheck,
+  Trophy,
+  Dumbbell,
+} from "lucide-react";
+import {
+  useFriendProfile,
+  useSendFriendRequest,
+  useRespondToRequest,
+} from "@/lib/social";
+import { evaluateSkillTree, type SessionSummary } from "@/lib/skill-tree";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+
+const BRANCH_COLORS: Record<string, string> = {
+  PUSH: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+  PULL: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  CORE: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  LEGS: "bg-green-500/20 text-green-400 border-green-500/30",
+};
+
+function PrivacyBadge({ level }: { level: string }) {
+  if (level === "public")
+    return (
+      <span className="flex items-center gap-1 text-xs text-emerald-400">
+        <Globe className="w-3 h-3" /> Public
+      </span>
+    );
+  if (level === "friends")
+    return (
+      <span className="flex items-center gap-1 text-xs text-blue-400">
+        <Users className="w-3 h-3" /> Friends Only
+      </span>
+    );
+  return (
+    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+      <Lock className="w-3 h-3" /> Private
+    </span>
+  );
+}
+
+function FormMasteryRing({ score }: { score: number }) {
+  const r = 36;
+  const circ = 2 * Math.PI * r;
+  const dash = (score / 100) * circ;
+  return (
+    <svg width="96" height="96" viewBox="0 0 96 96" className="shrink-0">
+      <circle
+        cx="48"
+        cy="48"
+        r={r}
+        fill="none"
+        stroke="hsl(var(--border))"
+        strokeWidth="8"
+      />
+      <circle
+        cx="48"
+        cy="48"
+        r={r}
+        fill="none"
+        stroke="hsl(var(--primary))"
+        strokeWidth="8"
+        strokeDasharray={`${dash} ${circ - dash}`}
+        strokeLinecap="round"
+        strokeDashoffset={circ / 4}
+        transform="rotate(-90 48 48)"
+      />
+      <text
+        x="48"
+        y="44"
+        textAnchor="middle"
+        className="fill-foreground"
+        fontSize="18"
+        fontWeight="bold"
+      >
+        {score}%
+      </text>
+      <text
+        x="48"
+        y="60"
+        textAnchor="middle"
+        className="fill-muted-foreground"
+        fontSize="10"
+      >
+        Mastery
+      </text>
+    </svg>
+  );
+}
+
+export function ProfilePage() {
+  const params = useParams<{ username: string }>();
+  const username = params.username ?? "";
+  const { toast } = useToast();
+
+  const { data: profile, isLoading, error } = useFriendProfile(username);
+  const sendRequest = useSendFriendRequest();
+  const respondRequest = useRespondToRequest();
+
+  function handleSendRequest() {
+    sendRequest.mutate(username, {
+      onSuccess: () => toast({ title: "Friend request sent!" }),
+      onError: (err: Error) =>
+        toast({ title: err.message, variant: "destructive" }),
+    });
+  }
+
+  function handleAccept(id: number) {
+    respondRequest.mutate(
+      { id, action: "accept" },
+      { onSuccess: () => toast({ title: "Friend added!" }) },
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-muted-foreground">User not found.</p>
+        <Link href="/friends" className="text-primary text-sm mt-2 inline-block hover:underline">
+          ← Back to Friends
+        </Link>
+      </div>
+    );
+  }
+
+  const { user, hidden, sessions, formMastery, totalSessions, totalReps } =
+    profile;
+
+  // Compute skill tree from the friend's sessions
+  const skillTree =
+    sessions && !hidden
+      ? evaluateSkillTree(sessions as SessionSummary[])
+      : null;
+
+  const masteredSkills = skillTree?.filter((s) => s.status === "mastered") ?? [];
+  const inProgressSkills =
+    skillTree?.filter(
+      (s) =>
+        s.status === "unlocked" && s.progress.qualifyingSessions > 0,
+    ) ?? [];
+
+  // Friend request controls
+  const { friendRequestStatus, friendRequestId, friendRequestFromMe } = profile as any;
+
+  return (
+    <div className="p-6 max-w-2xl">
+      {/* Back */}
+      <Link
+        href="/friends"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors w-fit"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Friends
+      </Link>
+
+      {/* User header */}
+      <div className="rounded-xl border border-border bg-card p-5 mb-4 flex items-center gap-4">
+        {user.avatarUrl ? (
+          <img
+            src={user.avatarUrl}
+            alt={user.displayName}
+            className="w-16 h-16 rounded-full object-cover shrink-0"
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary shrink-0">
+            {user.displayName[0]?.toUpperCase() ?? "?"}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl font-bold">{user.displayName}</h1>
+          <div className="text-sm text-muted-foreground">@{user.username}</div>
+          <div className="mt-1">
+            <PrivacyBadge level={user.privacyLevel} />
+          </div>
+        </div>
+
+        {/* Friend request button */}
+        <Show when="signed-in">
+          {!friendRequestStatus && (
+            <button
+              onClick={handleSendRequest}
+              disabled={sendRequest.isPending}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              <UserPlus className="w-4 h-4" />
+              Add Friend
+            </button>
+          )}
+          {friendRequestStatus === "pending" && friendRequestFromMe && (
+            <span className="text-xs text-muted-foreground px-3 py-2 rounded-lg border border-border">
+              Request Sent
+            </span>
+          )}
+          {friendRequestStatus === "pending" && !friendRequestFromMe && (
+            <button
+              onClick={() => handleAccept(friendRequestId)}
+              disabled={respondRequest.isPending}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              <UserCheck className="w-4 h-4" />
+              Accept Request
+            </button>
+          )}
+          {friendRequestStatus === "accepted" && (
+            <span className="text-xs text-primary font-medium flex items-center gap-1">
+              <UserCheck className="w-3.5 h-3.5" />
+              Friends
+            </span>
+          )}
+        </Show>
+      </div>
+
+      {/* Hidden profile */}
+      {hidden && (
+        <div className="rounded-xl border border-border bg-card p-10 text-center">
+          <Lock className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <h3 className="font-semibold mb-1">Profile is private</h3>
+          <p className="text-sm text-muted-foreground">
+            {user.privacyLevel === "private"
+              ? "This user has set their profile to private."
+              : "You need to be friends to view this profile."}
+          </p>
+        </div>
+      )}
+
+      {/* Stats */}
+      {!hidden && (
+        <>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="rounded-xl border border-border bg-card p-4 text-center">
+              <div className="text-2xl font-bold text-primary">
+                {totalSessions}
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">Sessions</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4 text-center">
+              <div className="text-2xl font-bold">{totalReps}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Total Reps</div>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4 text-center">
+              <div className="text-2xl font-bold text-amber-400">
+                {masteredSkills.length}
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Skills Mastered
+              </div>
+            </div>
+          </div>
+
+          {/* Form mastery ring */}
+          {formMastery !== null && (
+            <div className="rounded-xl border border-border bg-card p-5 mb-4 flex items-center gap-6">
+              <FormMasteryRing score={formMastery} />
+              <div>
+                <h2 className="font-semibold mb-1">Overall Form Mastery</h2>
+                <p className="text-sm text-muted-foreground">
+                  {formMastery >= 90
+                    ? "Outstanding form across all exercises."
+                    : formMastery >= 75
+                      ? "Strong, consistent form quality."
+                      : formMastery >= 60
+                        ? "Good form with room to improve."
+                        : "Still developing form consistency."}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Mastered skills */}
+          {masteredSkills.length > 0 && (
+            <section className="mb-4">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-amber-400" />
+                Mastered Skills ({masteredSkills.length})
+              </h2>
+              <div className="grid grid-cols-2 gap-2">
+                {masteredSkills.map((skill) => (
+                  <div
+                    key={skill.id}
+                    className={cn(
+                      "rounded-lg border px-3 py-2 text-sm font-medium flex items-center gap-2",
+                      BRANCH_COLORS[skill.branch] ?? "",
+                    )}
+                  >
+                    <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span className="truncate">{skill.title}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* In-progress skills */}
+          {inProgressSkills.length > 0 && (
+            <section>
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
+                <Dumbbell className="w-4 h-4 text-primary" />
+                In Progress ({inProgressSkills.length})
+              </h2>
+              <div className="rounded-xl border border-border bg-card overflow-hidden">
+                {inProgressSkills.map((skill, i) => {
+                  const pct =
+                    (skill.progress.qualifyingSessions /
+                      skill.masteryRequirement.minQualifyingSessions) *
+                    100;
+                  return (
+                    <div
+                      key={skill.id}
+                      className={cn(
+                        "p-3",
+                        i !== 0 && "border-t border-border",
+                      )}
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-medium">{skill.title}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {skill.progress.qualifyingSessions}/
+                          {skill.masteryRequirement.minQualifyingSessions}
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all"
+                          style={{ width: `${Math.min(100, pct)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {!skillTree?.length ||
+            (masteredSkills.length === 0 && inProgressSkills.length === 0 && (
+              <div className="rounded-xl border border-border bg-card p-8 text-center">
+                <Dumbbell className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  No workout data to display yet.
+                </p>
+              </div>
+            ))}
+        </>
+      )}
+    </div>
+  );
+}
