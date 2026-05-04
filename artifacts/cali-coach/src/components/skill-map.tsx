@@ -10,10 +10,13 @@
  *  unlocked     → branch-coloured hollow circle; progress ring if sessions > 0
  *  mastered     → gold-filled circle + star
  *
- * Clicking an unlocked/mastered node navigates to /workout?exercise=<name>.
+ * Tooltip behaviour:
+ *  Desktop hover  → floating info tooltip (unpinned)
+ *  Click / Tap    → pins tooltip; shows "Start Workout" + "Close" buttons
+ *  Click-away     → unpins / hides tooltip
  */
 
-import { useMemo } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useListSessions } from "@workspace/api-client-react";
 import {
@@ -22,6 +25,7 @@ import {
   evaluateSkillTree,
   type SkillBranch,
   type EvaluatedSkill,
+  type SkillType,
 } from "@/lib/skill-tree";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -29,28 +33,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const BRANCHES: SkillBranch[] = ["PUSH", "PULL", "CORE", "LEGS"];
 
-/**
- * Custom layout positions.
- * PULL gets a wide split column (shared + two sub-paths).
- * PUSH gets a satellite for HSPU.
- */
-
-// Column centre-x values:
-//   PUSH shared:    75
-//   PUSH HSPU:     110  (satellite, parallel to push-5)
-//   PULL shared:   225
-//   PULL FL (static):  195
-//   PULL MU (explo):   255
-//   CORE:           395
-//   LEGS:           530
 const COL = {
-  PUSH:      75,
-  PUSH_HSPU: 110,
+  PUSH:        75,
+  PUSH_HSPU:  110,
   PULL_SHARED: 225,
-  PULL_FL:   195,
-  PULL_MU:   255,
-  CORE:      395,
-  LEGS:      530,
+  PULL_FL:    195,
+  PULL_MU:    255,
+  CORE:       395,
+  LEGS:       530,
 } as const;
 
 const ROW_Y = [52, 114, 176, 238, 300] as const;
@@ -76,6 +66,18 @@ const GOLD  = "#eab308";
 const GRAY  = "#374151";
 const MUTED = "#6b7280";
 
+// ─── Tooltip state ────────────────────────────────────────────────────────────
+
+interface TooltipState {
+  skill: EvaluatedSkill;
+  branch: SkillBranch;
+  /** Pixel offset from wrapper top-left */
+  left: number;
+  top: number;
+  /** true = pinned (tap/click); false = hover-only */
+  pinned: boolean;
+}
+
 // ─── SVG helpers ──────────────────────────────────────────────────────────────
 
 function StarShape({ cx, cy }: { cx: number; cy: number }) {
@@ -100,11 +102,15 @@ function LockShape({ cx, cy }: { cx: number; cy: number }) {
   );
 }
 
-function SkillNode({
-  skill, cx, cy, branchColor, onNavigate,
+function SkillNodeSvg({
+  skill, cx, cy, branchColor,
+  onHover, onLeave, onTap,
 }: {
   skill: EvaluatedSkill; cx: number; cy: number;
-  branchColor: string; onNavigate: () => void;
+  branchColor: string;
+  onHover: (cx: number, cy: number) => void;
+  onLeave: () => void;
+  onTap:   (cx: number, cy: number) => void;
 }) {
   const { status, progress, masteryRequirement: req } = skill;
   const pct = Math.min(1, req.minQualifyingSessions > 0
@@ -117,10 +123,15 @@ function SkillNode({
   const clickable   = !isLocked;
 
   return (
-    <g onClick={clickable ? onNavigate : undefined}
+    <g
+      onMouseEnter={clickable ? () => onHover(cx, cy) : undefined}
+      onMouseLeave={clickable ? onLeave : undefined}
+      onClick={clickable ? (e) => { e.stopPropagation(); onTap(cx, cy); } : undefined}
       style={{ cursor: clickable ? "pointer" : "default" }}
       role={clickable ? "button" : undefined}
-      aria-label={skill.title}>
+      aria-label={skill.title}
+    >
+      {/* Enlarged hit area */}
       <circle cx={cx} cy={cy} r={RING_R + 6} fill="transparent" />
 
       {isUnlocked && (
@@ -164,22 +175,141 @@ function Connector({
 }) {
   const dy1 = y1 + NODE_R;
   const dy2 = y2 - NODE_R;
-  const isStraight = x1 === x2;
-
-  if (isStraight) {
-    return (
-      <line x1={x1} y1={dy1} x2={x2} y2={dy2}
-        stroke={mastered ? branchColor : "#1e293b"}
-        strokeWidth={mastered ? 2 : 1.5}
-        strokeDasharray={mastered ? undefined : "4 3"} />
-    );
-  }
-  // Diagonal connector for fork transitions
   return (
     <line x1={x1} y1={dy1} x2={x2} y2={dy2}
       stroke={mastered ? branchColor : "#1e293b"}
       strokeWidth={mastered ? 2 : 1.5}
       strokeDasharray={mastered ? undefined : "4 3"} />
+  );
+}
+
+// ─── Tooltip pop-up ───────────────────────────────────────────────────────────
+
+const TOOLTIP_W = 180;
+
+function SkillTooltip({
+  tooltip,
+  containerW,
+  containerH,
+  onClose,
+  onStart,
+}: {
+  tooltip: TooltipState;
+  containerW: number;
+  containerH: number;
+  onClose: () => void;
+  onStart:  () => void;
+}) {
+  const { skill, branch, left, top, pinned } = tooltip;
+  const color = BRANCH_COLOR[branch];
+  const req   = skill.masteryRequirement;
+  const prog  = skill.progress;
+  const masteryPct = Math.min(100, req.minQualifyingSessions > 0
+    ? Math.round((prog.qualifyingSessions / req.minQualifyingSessions) * 100) : 100);
+
+  const isMastered = skill.status === "mastered";
+  const isStatic   = (skill.type as SkillType) === "static";
+
+  // Flip horizontally if too close to right edge
+  const flipX = left + TOOLTIP_W + 16 > containerW;
+  // Flip vertically if too close to bottom
+  const tooltipEstH = pinned ? 180 : 130;
+  const flipY = top + tooltipEstH > containerH;
+
+  const style: React.CSSProperties = {
+    position:    "absolute",
+    width:       TOOLTIP_W,
+    zIndex:      50,
+    left:        flipX ? left - TOOLTIP_W - 12 : left + 20,
+    top:         flipY ? top  - tooltipEstH + 10 : top - 10,
+    pointerEvents: pinned ? "auto" : "none",
+    boxShadow:   `0 0 14px 3px ${color}33, 0 4px 20px rgba(0,0,0,0.6)`,
+  };
+
+  return (
+    <div
+      style={style}
+      className="bg-zinc-900 border border-zinc-700/60 rounded-xl p-3 select-none"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Branch dot + level */}
+      <div className="flex items-center gap-1.5 mb-1">
+        <span
+          className="inline-block w-2 h-2 rounded-full shrink-0"
+          style={{ backgroundColor: color }}
+        />
+        <span className="text-[10px] font-semibold uppercase tracking-wide"
+          style={{ color }}>
+          Level {skill.level} · {skill.levelName}
+          {isStatic ? " · Static" : ""}
+        </span>
+      </div>
+
+      {/* Title */}
+      <p className="text-xs font-bold text-white leading-tight mb-1">
+        {skill.title}
+      </p>
+
+      {/* Description */}
+      <p className="text-[10px] text-zinc-400 leading-relaxed mb-2 line-clamp-2">
+        {skill.status === "locked"
+          ? "Master the previous skill to unlock."
+          : skill.description}
+      </p>
+
+      {/* Mastery progress */}
+      {skill.status !== "locked" && (
+        <div className="mb-2">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-[9px] text-zinc-500 uppercase tracking-wide">
+              Mastery
+            </span>
+            <span className="text-[10px] font-bold tabular-nums"
+              style={{ color: isMastered ? GOLD : color }}>
+              {isMastered ? "✓ Mastered" : `${masteryPct}%`}
+            </span>
+          </div>
+          <div className="h-1 rounded-full bg-zinc-700 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{
+                width:           `${masteryPct}%`,
+                backgroundColor: isMastered ? GOLD : color,
+              }}
+            />
+          </div>
+          <div className="flex justify-between text-[9px] text-zinc-600 mt-0.5">
+            <span>
+              {prog.qualifyingSessions}/{req.minQualifyingSessions} sessions
+            </span>
+            {prog.bestReps > 0 && (
+              <span>
+                Best: {isStatic ? `${prog.bestReps}s` : `${prog.bestReps} reps`}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Pinned actions */}
+      {pinned && skill.status !== "locked" && (
+        <div className="flex gap-1 mt-1">
+          <button
+            onClick={onStart}
+            className="flex-1 text-[10px] font-semibold py-1.5 rounded-lg text-white transition-opacity hover:opacity-90 active:opacity-75"
+            style={{ backgroundColor: color }}
+          >
+            Start Workout
+          </button>
+          <button
+            onClick={onClose}
+            className="text-[10px] font-medium py-1.5 px-2 rounded-lg bg-zinc-700 text-zinc-300 hover:bg-zinc-600 transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -204,25 +334,79 @@ export function SkillMapSkeleton() {
 
 export function SkillMap() {
   const [, navigate] = useLocation();
+  const svgRef     = useRef<SVGSVGElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const [containerSize, setContainerSize] = useState({ w: 600, h: 355 });
 
   const { data: sessions, isLoading } = useListSessions(
     { limit: 500, offset: 0 },
     { query: { queryKey: ["/api/sessions", { limit: 500 }] } },
   );
 
-  const evaluated = useMemo(() => {
-    if (!sessions) return null;
-    return evaluateSkillTree(sessions);
-  }, [sessions]);
+  const evaluated = useRef<EvaluatedSkill[] | null>(null);
+  evaluated.current = sessions ? evaluateSkillTree(sessions) : null;
 
-  const byBranch = useMemo(() => {
-    if (!evaluated) return null;
-    return BRANCHES.map((branch) => ({
-      branch,
-      color: BRANCH_COLOR[branch],
-      skills: evaluated.filter((s) => s.branch === branch),
-    }));
-  }, [evaluated]);
+  const byBranch = evaluated.current
+    ? BRANCHES.map((branch) => ({
+        branch,
+        color: BRANCH_COLOR[branch],
+        skills: evaluated.current!.filter((s) => s.branch === branch),
+      }))
+    : null;
+
+  // Convert SVG coordinate → pixel offset relative to wrapper
+  const getPixelPos = useCallback((cx: number, cy: number) => {
+    const svg     = svgRef.current;
+    const wrapper = wrapperRef.current;
+    if (!svg || !wrapper) return { left: cx, top: cy };
+    const pt  = svg.createSVGPoint();
+    pt.x = cx; pt.y = cy;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return { left: cx, top: cy };
+    const screen = pt.matrixTransform(ctm);
+    const rect   = wrapper.getBoundingClientRect();
+    setContainerSize({ w: rect.width, h: rect.height });
+    return { left: screen.x - rect.left, top: screen.y - rect.top };
+  }, []);
+
+  function branchOf(skill: EvaluatedSkill): SkillBranch {
+    return skill.branch as SkillBranch;
+  }
+
+  function handleHover(skill: EvaluatedSkill, cx: number, cy: number) {
+    if (tooltip?.pinned) return; // don't override a pinned tooltip
+    const pos = getPixelPos(cx, cy);
+    setTooltip({ skill, branch: branchOf(skill), ...pos, pinned: false });
+  }
+
+  function handleLeave() {
+    if (tooltip?.pinned) return;
+    setTooltip(null);
+  }
+
+  function handleTap(skill: EvaluatedSkill, cx: number, cy: number) {
+    if (skill.status === "locked") return;
+    // If this skill is already pinned → navigate
+    if (tooltip?.pinned && tooltip.skill.id === skill.id) {
+      navigate(`/workout?exercise=${encodeURIComponent(skill.exercises[0])}`);
+      return;
+    }
+    const pos = getPixelPos(cx, cy);
+    setTooltip({ skill, branch: branchOf(skill), ...pos, pinned: true });
+  }
+
+  function handleStart() {
+    if (!tooltip) return;
+    navigate(`/workout?exercise=${encodeURIComponent(tooltip.skill.exercises[0])}`);
+    setTooltip(null);
+  }
+
+  function handleClickAway() {
+    if (tooltip?.pinned) setTooltip(null);
+    else setTooltip(null);
+  }
 
   if (isLoading || !byBranch) return <SkillMapSkeleton />;
 
@@ -230,21 +414,16 @@ export function SkillMap() {
     (sum, b) => sum + b.skills.filter((s) => s.status === "mastered").length, 0);
 
   // ── PULL sub-paths ──────────────────────────────────────────────────────────
-  const pullAll   = byBranch.find((b) => b.branch === "PULL")!.skills;
-  const pullColor = BRANCH_COLOR.PULL;
-  // Shared: first 2 nodes (Lv.1 Lv.2)
+  const pullAll    = byBranch.find((b) => b.branch === "PULL")!.skills;
+  const pullColor  = BRANCH_COLOR.PULL;
   const pullShared = pullAll.filter((s) => !s.path || s.path === "shared").slice(0, 2);
-  // Front Lever static path
   const pullFL     = pullAll.filter((s) => s.path === "front-lever");
-  // Muscle-Up explosive path
   const pullMU     = pullAll.filter((s) => s.path === "muscle-up");
 
   // ── PUSH sub-paths ──────────────────────────────────────────────────────────
   const pushAll   = byBranch.find((b) => b.branch === "PUSH")!.skills;
   const pushColor = BRANCH_COLOR.PUSH;
-  // Standard path: first 5 (Lv.1–5)
   const pushMain  = pushAll.filter((s) => !s.path || s.path === "main").slice(0, 5);
-  // HSPU satellite (parallel elite skill)
   const pushHSPU  = pushAll.filter((s) => s.path === "hspu").slice(0, 1);
 
   // ── CORE & LEGS (linear) ────────────────────────────────────────────────────
@@ -253,9 +432,16 @@ export function SkillMap() {
   const coreColor  = BRANCH_COLOR.CORE;
   const legsColor  = BRANCH_COLOR.LEGS;
 
-  function goTo(skill: EvaluatedSkill) {
-    const dest = `/workout?exercise=${encodeURIComponent(skill.exercises[0])}`;
-    navigate(dest);
+  function nodeProps(skill: EvaluatedSkill, cx: number, cy: number) {
+    return {
+      skill,
+      cx,
+      cy,
+      branchColor: BRANCH_COLOR[skill.branch as SkillBranch],
+      onHover: () => handleHover(skill, cx, cy),
+      onLeave: handleLeave,
+      onTap:   () => handleTap(skill, cx, cy),
+    };
   }
 
   return (
@@ -279,175 +465,167 @@ export function SkillMap() {
         </span>
       </div>
 
-      {/* SVG skill tree */}
-      <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-        style={{ width: "100%", height: "auto" }}
-        aria-label="Skill map" className="overflow-visible">
-
-        {/* ── Column headers ───────────────────────────────────────────── */}
-        <text x={COL.PUSH} y={22} textAnchor="middle" fontSize={10} fontWeight="700"
-          fill={pushColor} fontFamily="ui-sans-serif, system-ui, sans-serif" letterSpacing="0.08em">
-          PUSH
-        </text>
-        <text x={COL.PULL_SHARED} y={22} textAnchor="middle" fontSize={10} fontWeight="700"
-          fill={pullColor} fontFamily="ui-sans-serif, system-ui, sans-serif" letterSpacing="0.08em">
-          PULL
-        </text>
-        <text x={COL.CORE} y={22} textAnchor="middle" fontSize={10} fontWeight="700"
-          fill={coreColor} fontFamily="ui-sans-serif, system-ui, sans-serif" letterSpacing="0.08em">
-          CORE
-        </text>
-        <text x={COL.LEGS} y={22} textAnchor="middle" fontSize={10} fontWeight="700"
-          fill={legsColor} fontFamily="ui-sans-serif, system-ui, sans-serif" letterSpacing="0.08em">
-          LEGS
-        </text>
-
-        {/* ── PUSH connectors ──────────────────────────────────────────── */}
-        {pushMain.slice(0, -1).map((skill, si) => (
-          <Connector key={`push-conn-${si}`}
-            x1={COL.PUSH} y1={ROW_Y[si]} x2={COL.PUSH} y2={ROW_Y[si + 1]}
-            mastered={skill.status === "mastered"} branchColor={pushColor} />
-        ))}
-        {/* HSPU satellite: fork from push-4 (index 3) to HSPU column at row 4 */}
-        {pushHSPU.length > 0 && pushMain.length >= 5 && (
-          <Connector
-            x1={COL.PUSH} y1={ROW_Y[3]} x2={COL.PUSH_HSPU} y2={ROW_Y[4]}
-            mastered={pushMain[3]?.status === "mastered"} branchColor={pushColor} />
-        )}
-
-        {/* ── PULL shared connectors (Lv.1 → Lv.2) ────────────────────── */}
-        {pullShared.slice(0, -1).map((skill, si) => (
-          <Connector key={`pull-shared-conn-${si}`}
-            x1={COL.PULL_SHARED} y1={ROW_Y[si]} x2={COL.PULL_SHARED} y2={ROW_Y[si + 1]}
-            mastered={skill.status === "mastered"} branchColor={pullColor} />
-        ))}
-        {/* Fork from shared Lv.2 (row 1) to FL (row 2) */}
-        {pullShared.length >= 2 && (
-          <Connector
-            x1={COL.PULL_SHARED} y1={ROW_Y[1]} x2={COL.PULL_FL} y2={ROW_Y[2]}
-            mastered={pullShared[1]?.status === "mastered"} branchColor={pullColor} />
-        )}
-        {/* Fork from shared Lv.2 (row 1) to MU (row 2) */}
-        {pullShared.length >= 2 && (
-          <Connector
-            x1={COL.PULL_SHARED} y1={ROW_Y[1]} x2={COL.PULL_MU} y2={ROW_Y[2]}
-            mastered={pullShared[1]?.status === "mastered"} branchColor={pullColor} />
-        )}
-        {/* FL vertical connectors (rows 2-4) */}
-        {pullFL.slice(0, -1).map((skill, si) => (
-          <Connector key={`pull-fl-conn-${si}`}
-            x1={COL.PULL_FL} y1={ROW_Y[si + 2]} x2={COL.PULL_FL} y2={ROW_Y[si + 3]}
-            mastered={skill.status === "mastered"} branchColor={pullColor} />
-        ))}
-        {/* MU vertical connectors (rows 2-4) */}
-        {pullMU.slice(0, -1).map((skill, si) => (
-          <Connector key={`pull-mu-conn-${si}`}
-            x1={COL.PULL_MU} y1={ROW_Y[si + 2]} x2={COL.PULL_MU} y2={ROW_Y[si + 3]}
-            mastered={skill.status === "mastered"} branchColor={pullColor} />
-        ))}
-
-        {/* ── CORE connectors ───────────────────────────────────────────── */}
-        {coreSkills.slice(0, -1).map((skill, si) => (
-          <Connector key={`core-conn-${si}`}
-            x1={COL.CORE} y1={ROW_Y[si]} x2={COL.CORE} y2={ROW_Y[si + 1]}
-            mastered={skill.status === "mastered"} branchColor={coreColor} />
-        ))}
-
-        {/* ── LEGS connectors ───────────────────────────────────────────── */}
-        {legsSkills.slice(0, -1).map((skill, si) => (
-          <Connector key={`legs-conn-${si}`}
-            x1={COL.LEGS} y1={ROW_Y[si]} x2={COL.LEGS} y2={ROW_Y[si + 1]}
-            mastered={skill.status === "mastered"} branchColor={legsColor} />
-        ))}
-
-        {/* ── PUSH nodes ───────────────────────────────────────────────── */}
-        {pushMain.map((skill, si) => (
-          <SkillNode key={skill.id} skill={skill}
-            cx={COL.PUSH} cy={ROW_Y[si]}
-            branchColor={pushColor} onNavigate={() => goTo(skill)} />
-        ))}
-        {pushHSPU.map((skill) => (
-          <SkillNode key={skill.id} skill={skill}
-            cx={COL.PUSH_HSPU} cy={ROW_Y[4]}
-            branchColor={pushColor} onNavigate={() => goTo(skill)} />
-        ))}
-
-        {/* ── PULL shared nodes ────────────────────────────────────────── */}
-        {pullShared.map((skill, si) => (
-          <SkillNode key={skill.id} skill={skill}
-            cx={COL.PULL_SHARED} cy={ROW_Y[si]}
-            branchColor={pullColor} onNavigate={() => goTo(skill)} />
-        ))}
-
-        {/* Path labels at fork */}
-        {pullShared.length >= 2 && (
-          <>
-            <text x={COL.PULL_FL} y={ROW_Y[2] - NODE_R - 6}
-              textAnchor="middle" fontSize={7} fill={MUTED}
-              fontFamily="ui-sans-serif, system-ui, sans-serif">
-              🧲 Static
-            </text>
-            <text x={COL.PULL_MU} y={ROW_Y[2] - NODE_R - 6}
-              textAnchor="middle" fontSize={7} fill={MUTED}
-              fontFamily="ui-sans-serif, system-ui, sans-serif">
-              ⚡ Explo.
-            </text>
-          </>
-        )}
-
-        {/* ── PULL FL nodes (rows 2-4) ──────────────────────────────────── */}
-        {pullFL.map((skill, si) => (
-          <SkillNode key={skill.id} skill={skill}
-            cx={COL.PULL_FL} cy={ROW_Y[si + 2]}
-            branchColor={pullColor} onNavigate={() => goTo(skill)} />
-        ))}
-
-        {/* ── PULL MU nodes (rows 2-4) ──────────────────────────────────── */}
-        {pullMU.map((skill, si) => (
-          <SkillNode key={skill.id} skill={skill}
-            cx={COL.PULL_MU} cy={ROW_Y[si + 2]}
-            branchColor={pullColor} onNavigate={() => goTo(skill)} />
-        ))}
-
-        {/* ── CORE nodes ───────────────────────────────────────────────── */}
-        {coreSkills.map((skill, si) => (
-          <SkillNode key={skill.id} skill={skill}
-            cx={COL.CORE} cy={ROW_Y[si]}
-            branchColor={coreColor} onNavigate={() => goTo(skill)} />
-        ))}
-
-        {/* ── LEGS nodes ───────────────────────────────────────────────── */}
-        {legsSkills.map((skill, si) => (
-          <SkillNode key={skill.id} skill={skill}
-            cx={COL.LEGS} cy={ROW_Y[si]}
-            branchColor={legsColor} onNavigate={() => goTo(skill)} />
-        ))}
-
-        {/* ── Legend ───────────────────────────────────────────────────── */}
-        {(
-          [
-            { x: 20,  label: "Mastered",    fill: GOLD,      stroke: "none",    opacity: 1    },
-            { x: 100, label: "In progress", fill: "#0f172a", stroke: "#3b82f6", opacity: 1    },
-            { x: 195, label: "Locked",      fill: GRAY,      stroke: "none",    opacity: 0.55 },
-          ] satisfies { x: number; label: string; fill: string; stroke: string; opacity: number }[]
-        ).map(({ x, label, fill, stroke, opacity }) => (
-          <g key={label} transform={`translate(${x}, ${SVG_H - 16})`}>
-            <circle r={5} fill={fill} stroke={stroke}
-              strokeWidth={stroke !== "none" ? 1.5 : 0} opacity={opacity} />
-            <text x={9} y={0} dominantBaseline="central" fontSize={8}
-              fill={MUTED} fontFamily="ui-sans-serif, system-ui, sans-serif">
+      {/* SVG + tooltip wrapper */}
+      <div ref={wrapperRef} className="relative" onClick={handleClickAway}>
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+          style={{ width: "100%", height: "auto" }}
+          aria-label="Skill map"
+          className="overflow-visible"
+        >
+          {/* ── Column headers ──────────────────────────────────────────── */}
+          {(
+            [
+              { x: COL.PUSH,        label: "PUSH", color: pushColor  },
+              { x: COL.PULL_SHARED, label: "PULL", color: pullColor  },
+              { x: COL.CORE,        label: "CORE", color: coreColor  },
+              { x: COL.LEGS,        label: "LEGS", color: legsColor  },
+            ] as const
+          ).map(({ x, label, color }) => (
+            <text key={label} x={x} y={22} textAnchor="middle" fontSize={10} fontWeight="700"
+              fill={color} fontFamily="ui-sans-serif, system-ui, sans-serif" letterSpacing="0.08em">
               {label}
             </text>
-          </g>
-        ))}
+          ))}
 
-        {/* ── "View full tree" link ─────────────────────────────────────── */}
-        <text x={SVG_W - 10} y={SVG_H - 16} textAnchor="end" fontSize={8}
-          fill="#3b82f6" fontFamily="ui-sans-serif, system-ui, sans-serif"
-          style={{ cursor: "pointer" }} onClick={() => navigate("/skill-tree")}>
-          View full tree →
-        </text>
-      </svg>
+          {/* ── PUSH connectors ──────────────────────────────────────────── */}
+          {pushMain.slice(0, -1).map((skill, si) => (
+            <Connector key={`push-conn-${si}`}
+              x1={COL.PUSH} y1={ROW_Y[si]} x2={COL.PUSH} y2={ROW_Y[si + 1]}
+              mastered={skill.status === "mastered"} branchColor={pushColor} />
+          ))}
+          {pushHSPU.length > 0 && pushMain.length >= 5 && (
+            <Connector
+              x1={COL.PUSH} y1={ROW_Y[3]} x2={COL.PUSH_HSPU} y2={ROW_Y[4]}
+              mastered={pushMain[3]?.status === "mastered"} branchColor={pushColor} />
+          )}
+
+          {/* ── PULL connectors ──────────────────────────────────────────── */}
+          {pullShared.slice(0, -1).map((skill, si) => (
+            <Connector key={`pull-shared-conn-${si}`}
+              x1={COL.PULL_SHARED} y1={ROW_Y[si]} x2={COL.PULL_SHARED} y2={ROW_Y[si + 1]}
+              mastered={skill.status === "mastered"} branchColor={pullColor} />
+          ))}
+          {pullShared.length >= 2 && (
+            <>
+              <Connector x1={COL.PULL_SHARED} y1={ROW_Y[1]} x2={COL.PULL_FL} y2={ROW_Y[2]}
+                mastered={pullShared[1]?.status === "mastered"} branchColor={pullColor} />
+              <Connector x1={COL.PULL_SHARED} y1={ROW_Y[1]} x2={COL.PULL_MU} y2={ROW_Y[2]}
+                mastered={pullShared[1]?.status === "mastered"} branchColor={pullColor} />
+            </>
+          )}
+          {pullFL.slice(0, -1).map((skill, si) => (
+            <Connector key={`pull-fl-conn-${si}`}
+              x1={COL.PULL_FL} y1={ROW_Y[si + 2]} x2={COL.PULL_FL} y2={ROW_Y[si + 3]}
+              mastered={skill.status === "mastered"} branchColor={pullColor} />
+          ))}
+          {pullMU.slice(0, -1).map((skill, si) => (
+            <Connector key={`pull-mu-conn-${si}`}
+              x1={COL.PULL_MU} y1={ROW_Y[si + 2]} x2={COL.PULL_MU} y2={ROW_Y[si + 3]}
+              mastered={skill.status === "mastered"} branchColor={pullColor} />
+          ))}
+
+          {/* ── CORE connectors ───────────────────────────────────────────── */}
+          {coreSkills.slice(0, -1).map((skill, si) => (
+            <Connector key={`core-conn-${si}`}
+              x1={COL.CORE} y1={ROW_Y[si]} x2={COL.CORE} y2={ROW_Y[si + 1]}
+              mastered={skill.status === "mastered"} branchColor={coreColor} />
+          ))}
+
+          {/* ── LEGS connectors ───────────────────────────────────────────── */}
+          {legsSkills.slice(0, -1).map((skill, si) => (
+            <Connector key={`legs-conn-${si}`}
+              x1={COL.LEGS} y1={ROW_Y[si]} x2={COL.LEGS} y2={ROW_Y[si + 1]}
+              mastered={skill.status === "mastered"} branchColor={legsColor} />
+          ))}
+
+          {/* ── PUSH nodes ───────────────────────────────────────────────── */}
+          {pushMain.map((skill, si) => (
+            <SkillNodeSvg key={skill.id} {...nodeProps(skill, COL.PUSH, ROW_Y[si])} />
+          ))}
+          {pushHSPU.map((skill) => (
+            <SkillNodeSvg key={skill.id} {...nodeProps(skill, COL.PUSH_HSPU, ROW_Y[4])} />
+          ))}
+
+          {/* ── PULL shared nodes ────────────────────────────────────────── */}
+          {pullShared.map((skill, si) => (
+            <SkillNodeSvg key={skill.id} {...nodeProps(skill, COL.PULL_SHARED, ROW_Y[si])} />
+          ))}
+
+          {/* Path labels at fork */}
+          {pullShared.length >= 2 && (
+            <>
+              <text x={COL.PULL_FL} y={ROW_Y[2] - NODE_R - 6}
+                textAnchor="middle" fontSize={7} fill={MUTED}
+                fontFamily="ui-sans-serif, system-ui, sans-serif">
+                🧲 Static
+              </text>
+              <text x={COL.PULL_MU} y={ROW_Y[2] - NODE_R - 6}
+                textAnchor="middle" fontSize={7} fill={MUTED}
+                fontFamily="ui-sans-serif, system-ui, sans-serif">
+                ⚡ Explo.
+              </text>
+            </>
+          )}
+
+          {/* ── PULL FL nodes ─────────────────────────────────────────────── */}
+          {pullFL.map((skill, si) => (
+            <SkillNodeSvg key={skill.id} {...nodeProps(skill, COL.PULL_FL, ROW_Y[si + 2])} />
+          ))}
+
+          {/* ── PULL MU nodes ─────────────────────────────────────────────── */}
+          {pullMU.map((skill, si) => (
+            <SkillNodeSvg key={skill.id} {...nodeProps(skill, COL.PULL_MU, ROW_Y[si + 2])} />
+          ))}
+
+          {/* ── CORE nodes ───────────────────────────────────────────────── */}
+          {coreSkills.map((skill, si) => (
+            <SkillNodeSvg key={skill.id} {...nodeProps(skill, COL.CORE, ROW_Y[si])} />
+          ))}
+
+          {/* ── LEGS nodes ───────────────────────────────────────────────── */}
+          {legsSkills.map((skill, si) => (
+            <SkillNodeSvg key={skill.id} {...nodeProps(skill, COL.LEGS, ROW_Y[si])} />
+          ))}
+
+          {/* ── Legend ───────────────────────────────────────────────────── */}
+          {(
+            [
+              { x: 20,  label: "Mastered",    fill: GOLD,      stroke: "none",    opacity: 1    },
+              { x: 100, label: "In progress", fill: "#0f172a", stroke: "#3b82f6", opacity: 1    },
+              { x: 195, label: "Locked",      fill: GRAY,      stroke: "none",    opacity: 0.55 },
+            ] satisfies { x: number; label: string; fill: string; stroke: string; opacity: number }[]
+          ).map(({ x, label, fill, stroke, opacity }) => (
+            <g key={label} transform={`translate(${x}, ${SVG_H - 16})`}>
+              <circle r={5} fill={fill} stroke={stroke}
+                strokeWidth={stroke !== "none" ? 1.5 : 0} opacity={opacity} />
+              <text x={9} y={0} dominantBaseline="central" fontSize={8}
+                fill={MUTED} fontFamily="ui-sans-serif, system-ui, sans-serif">
+                {label}
+              </text>
+            </g>
+          ))}
+
+          {/* ── "View full tree" link ─────────────────────────────────────── */}
+          <text x={SVG_W - 10} y={SVG_H - 16} textAnchor="end" fontSize={8}
+            fill="#3b82f6" fontFamily="ui-sans-serif, system-ui, sans-serif"
+            style={{ cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); navigate("/skill-tree"); }}>
+            View full tree →
+          </text>
+        </svg>
+
+        {/* ── Floating tooltip ──────────────────────────────────────────────── */}
+        {tooltip && (
+          <SkillTooltip
+            tooltip={tooltip}
+            containerW={containerSize.w}
+            containerH={containerSize.h}
+            onClose={() => setTooltip(null)}
+            onStart={handleStart}
+          />
+        )}
+      </div>
     </div>
   );
 }

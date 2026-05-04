@@ -9,7 +9,7 @@ import {
   type SkillType,
 } from "@/lib/skill-tree";
 import { cn } from "@/lib/utils";
-import { Lock, Star, ChevronUp, Zap, ArrowUp, Dumbbell, Circle } from "lucide-react";
+import { Lock, Star, ChevronUp, Zap, ArrowUp, Dumbbell, Circle, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -102,6 +102,7 @@ function SkillNodeCard({
 
   const isLocked = skill.status === "locked";
   const isMastered = skill.status === "mastered";
+  const workoutUrl = `/workout?exercise=${encodeURIComponent(skill.exercises[0])}`;
 
   return (
     <div className="relative flex flex-col items-center">
@@ -237,6 +238,26 @@ function SkillNodeCard({
               </div>
             )}
           </div>
+        )}
+
+        {/* Start Workout CTA */}
+        {!isLocked && (
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className={cn(
+              "mt-3 w-full h-7 text-[11px] gap-1.5 border transition-colors",
+              isMastered
+                ? cn(meta.borderColor, meta.color, "hover:opacity-80")
+                : "border-border hover:border-primary/40",
+            )}
+          >
+            <Link href={workoutUrl}>
+              <Play className="w-3 h-3 fill-current" />
+              Start Workout
+            </Link>
+          </Button>
         )}
       </div>
     </div>
