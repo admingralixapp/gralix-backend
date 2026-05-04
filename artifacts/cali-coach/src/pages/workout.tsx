@@ -5,14 +5,28 @@ import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Activity, Play, Square, FlaskConical, Ghost } from "lucide-react";
+import { Activity, Play, Square, FlaskConical, Ghost, Settings2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, cancelSpeech } from "@/lib/voice-service";
+import {
+  type EquipmentSelection,
+  DEFAULT_EQUIPMENT,
+  PUSH_GEAR_OPTIONS,
+  PULL_GEAR_OPTIONS,
+  ADD_ON_OPTIONS,
+  isPushExercise,
+  isPullExercise,
+  getPushDepthThreshold,
+  getGhostGripLabel,
+  RINGS_STABILITY_BONUS,
+  RINGS_JITTER_THRESHOLD,
+} from "@/lib/equipment";
 import { evaluateSkillTree, type EvaluatedSkill, type SessionSummary } from "@/lib/skill-tree";
 import { SessionResults, type SessionResultsProps } from "@/components/session-results";
 import {
   getGhostConfig,
+  getEquipmentGhostConfig,
   getPhaseConfig,
   computeGhostLandmarks,
   computeAnimatedGhostLandmarks,
@@ -314,6 +328,9 @@ export function Workout() {
   const [isModelLoading, setIsModelLoading] = useState(false);
   const [isSavingTest, setIsSavingTest] = useState(false);
 
+  // ── Equipment selection ────────────────────────────────────────────────────
+  const [equipment, setEquipment] = useState<EquipmentSelection>(DEFAULT_EQUIPMENT);
+
   // ── Calibration state ──────────────────────────────────────────────────────
   const [isCalibrating, setIsCalibrating] = useState(false);
   const [calibPhase, setCalibPhase] = useState<CalibPhase>("idle");
@@ -348,6 +365,12 @@ export function Workout() {
     holdStartMs: number;
     userScale: { wingspan: number; height: number } | null;
   }>({ holdStartMs: 0, userScale: null });
+
+  /** Wrist positions over the last N frames — used for rings jitter detection. */
+  const wristHistoryRef = useRef<Array<{ lx: number; ly: number; rx: number; ry: number }>>([]);
+
+  /** Per-frame equipment modifier data shared between predictWebcam and processFrame. */
+  const equipModRef = useRef({ wristJitter: 0, wristOverextended: false });
 
   const createSession = useCreateSession();
   const updateSession = useUpdateSession();
@@ -444,12 +467,32 @@ export function Workout() {
     const config = getExerciseConfig(exercise.name);
     if (!config) return;
 
-    const result = config.processFrame(landmarks, stateRef.current.phase as Phase);
+    const result = config.processFrame(landmarks, stateRef.current.phase as Phase, {
+      pushDepthThreshold: isPushExercise(exercise.name)
+        ? getPushDepthThreshold(equipment.pushGear)
+        : undefined,
+    });
     stateRef.current.phase = result.newPhase;
 
+    // ── Equipment modifier: rings stability bonus ──────────────────────────
+    let equipBonus = 0;
+    let equipCue: string | null = null;
+    if (isPullExercise(exercise.name) && equipment.pullGear === "gymnastic-rings") {
+      const jitter = equipModRef.current.wristJitter;
+      if (jitter < RINGS_JITTER_THRESHOLD) {
+        equipBonus = RINGS_STABILITY_BONUS;
+      } else if (jitter > RINGS_JITTER_THRESHOLD * 2) {
+        equipCue = "Steady the rings — control the swing.";
+      }
+    }
+    if (isPushExercise(exercise.name) && equipment.pushGear === "floor" && equipModRef.current.wristOverextended) {
+      equipCue = "Neutral wrists — don't let them bend back.";
+    }
+
+    const adjustedFormScore = Math.min(100, result.formScore + equipBonus);
     const blendedScore = ghostConfig
-      ? Math.round((result.formScore + currentSyncPct) / 2)
-      : result.formScore;
+      ? Math.round((adjustedFormScore + currentSyncPct) / 2)
+      : adjustedFormScore;
 
     const synced = currentSyncPct >= SYNC_GATE;
     const now    = Date.now();
@@ -520,7 +563,7 @@ export function Workout() {
             repNumber:    newRepCount,
             formScore:    blendedScore,
             durationMs:   duration > 0 ? duration : null,
-            feedbackGiven: audioCue ?? null,
+            feedbackGiven: audioCue ?? equipCue ?? null,
           },
         });
 
@@ -533,13 +576,15 @@ export function Workout() {
         }
       } else if (repCounted && !synced) {
         speak("Match the ghost to earn that rep.");
+      } else if (equipCue) {
+        speak(equipCue);
       } else if (audioCue) {
         speak(audioCue);
       }
 
       setFormScore(prev => prev * 0.9 + blendedScore * 0.1);
     }
-  }, [exercises, selectedExerciseId, speak, speakSyncDrop, createRep]);
+  }, [exercises, selectedExerciseId, speak, speakSyncDrop, createRep, equipment]);
 
   // ── Main camera loop ───────────────────────────────────────────────────────
   const predictWebcam = useCallback(() => {
@@ -578,8 +623,31 @@ export function Workout() {
       if (results.landmarks?.length > 0) {
         const userLandmarks = results.landmarks[0];
 
+        // ── Track wrist history for rings jitter detection ─────────────────
+        const lWrist = userLandmarks[15];
+        const rWrist = userLandmarks[16];
+        const lElbow = userLandmarks[13];
+        if (lWrist && rWrist) {
+          wristHistoryRef.current.push({ lx: lWrist.x, ly: lWrist.y, rx: rWrist.x, ry: rWrist.y });
+          if (wristHistoryRef.current.length > 12) wristHistoryRef.current.shift();
+          const hist = wristHistoryRef.current;
+          if (hist.length >= 4) {
+            const meanLx = hist.reduce((s, h) => s + h.lx, 0) / hist.length;
+            const meanRx = hist.reduce((s, h) => s + h.rx, 0) / hist.length;
+            equipModRef.current.wristJitter =
+              hist.reduce((s, h) => s + Math.abs(h.lx - meanLx) + Math.abs(h.rx - meanRx), 0)
+              / hist.length / 2;
+          }
+          // Floor wrist extension: wrist z significantly > elbow z indicates hyperextension
+          if (lElbow) {
+            equipModRef.current.wristOverextended = (lWrist.z - lElbow.z) > 0.10;
+          }
+        }
+
         const exerciseName  = exercises?.find(e => e.id.toString() === selectedExerciseId)?.name ?? "";
-        const ghostConfig   = exerciseName ? getGhostConfig(exerciseName) : null;
+        const ghostConfig   = exerciseName
+          ? getEquipmentGhostConfig(exerciseName, equipment.pushGear, equipment.pullGear)
+          : null;
         const currentPhase  = stateRef.current.phase;
 
         let phasedGhostLandmarks: Landmark[] = userLandmarks;
@@ -613,7 +681,7 @@ export function Workout() {
     }
 
     requestRef.current = requestAnimationFrame(predictWebcam);
-  }, [exercises, selectedExerciseId, processFrame]);
+  }, [exercises, selectedExerciseId, processFrame, equipment]);
 
   // ── Calibration loop ───────────────────────────────────────────────────────
   const calibrationLoop = useCallback(() => {
@@ -1066,11 +1134,24 @@ export function Workout() {
           />
         )}
 
-        {/* Ghost Mode badge */}
+        {/* Ghost Mode badge + grip label */}
         {isWorkoutActive && hasGhostConfig && (
-          <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 border border-cyan-500/40 text-xs font-semibold text-cyan-300 select-none">
-            <Ghost className="w-3.5 h-3.5" />
-            Ghost Mode
+          <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5 select-none">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 border border-cyan-500/40 text-xs font-semibold text-cyan-300">
+              <Ghost className="w-3.5 h-3.5" />
+              Ghost Mode
+            </div>
+            {(() => {
+              const ex = exercises?.find(e => e.id.toString() === selectedExerciseId);
+              if (!ex) return null;
+              const label = getGhostGripLabel(equipment, isPushExercise(ex.name), isPullExercise(ex.name));
+              if (!label) return null;
+              return (
+                <div className="px-2 py-0.5 rounded text-[9px] font-medium text-white/45 bg-black/50 border border-white/10">
+                  {label}
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -1163,6 +1244,42 @@ export function Workout() {
                 <p className="text-muted-foreground text-sm">
                   A Ghost Skeleton will show perfect form — sync your body with it to earn reps and hold time.
                 </p>
+              </div>
+
+              {/* ── Gear Check ──────────────────────────────────────────── */}
+              <div className="w-full text-left space-y-3">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/40">
+                  <Settings2 className="w-3 h-3" />
+                  Gear Check
+                </div>
+                <div className="space-y-2">
+                  {([
+                    { label: "Push", options: PUSH_GEAR_OPTIONS as Array<{ value: string; label: string }>, current: equipment.pushGear, onChange: (v: string) => setEquipment(e => ({ ...e, pushGear: v as EquipmentSelection["pushGear"] })) },
+                    { label: "Pull", options: PULL_GEAR_OPTIONS as Array<{ value: string; label: string }>, current: equipment.pullGear, onChange: (v: string) => setEquipment(e => ({ ...e, pullGear: v as EquipmentSelection["pullGear"] })) },
+                    { label: "Add-on", options: ADD_ON_OPTIONS as Array<{ value: string; label: string }>, current: equipment.addOn, onChange: (v: string) => setEquipment(e => ({ ...e, addOn: v as EquipmentSelection["addOn"] })) },
+                  ]).map(row => (
+                    <div key={row.label} className="flex items-start gap-3">
+                      <span className="text-[10px] text-white/30 uppercase tracking-wider w-12 pt-1.5 shrink-0 text-right">
+                        {row.label}
+                      </span>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {row.options.map(opt => (
+                          <button
+                            key={opt.value}
+                            onClick={() => row.onChange(opt.value)}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-all ${
+                              row.current === opt.value
+                                ? "bg-primary/20 border-primary/60 text-primary"
+                                : "bg-white/5 border-white/15 text-white/55 hover:border-white/35"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <Button

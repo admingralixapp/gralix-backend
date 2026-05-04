@@ -494,6 +494,56 @@ const HUMAN_FLAG_CONFIG: GhostExerciseConfig = {
   ],
 };
 
+// ── Equipment-specific push ghost configs ─────────────────────────────────────
+
+/** Low parallettes: same lock-out at top, deeper elbow angle in down phase. */
+const PUSH_LOW_PARALLETTES_CONFIG: GhostExerciseConfig = {
+  phases: [
+    {
+      phase: "up",
+      corrections: [
+        { a: L_SH, vertex: L_EL, b: L_WR, targetDeg: 165 },
+        { a: R_SH, vertex: R_EL, b: R_WR, targetDeg: 165 },
+        { a: L_SH, vertex: L_HI, b: L_AN, targetDeg: 175 },
+      ],
+      keyLandmarks: [L_WR, R_WR, L_AN],
+    },
+    {
+      phase: "down",
+      corrections: [
+        { a: L_SH, vertex: L_EL, b: L_WR, targetDeg: 65 },
+        { a: R_SH, vertex: R_EL, b: R_WR, targetDeg: 65 },
+        { a: L_SH, vertex: L_HI, b: L_AN, targetDeg: 175 },
+      ],
+      keyLandmarks: [L_WR, R_WR, L_AN],
+    },
+  ],
+};
+
+/** High parallettes / dip bars: maximum ROM — chest drops well below hand level. */
+const PUSH_HIGH_PARALLETTES_CONFIG: GhostExerciseConfig = {
+  phases: [
+    {
+      phase: "up",
+      corrections: [
+        { a: L_SH, vertex: L_EL, b: L_WR, targetDeg: 165 },
+        { a: R_SH, vertex: R_EL, b: R_WR, targetDeg: 165 },
+        { a: L_SH, vertex: L_HI, b: L_AN, targetDeg: 175 },
+      ],
+      keyLandmarks: [L_WR, R_WR, L_AN],
+    },
+    {
+      phase: "down",
+      corrections: [
+        { a: L_SH, vertex: L_EL, b: L_WR, targetDeg: 55 },
+        { a: R_SH, vertex: R_EL, b: R_WR, targetDeg: 55 },
+        { a: L_SH, vertex: L_HI, b: L_AN, targetDeg: 175 },
+      ],
+      keyLandmarks: [L_WR, R_WR, L_AN],
+    },
+  ],
+};
+
 // ─── Registry ─────────────────────────────────────────────────────────────────
 
 const GHOST_CONFIGS: Record<string, GhostExerciseConfig> = {
@@ -532,6 +582,32 @@ export function getGhostConfig(name: string): GhostExerciseConfig | null {
     k => k.toLowerCase() === name.toLowerCase(),
   );
   return key ? GHOST_CONFIGS[key] : null;
+}
+
+/**
+ * Equipment-aware ghost config lookup.
+ *
+ * Push exercises (Push-Up, Incline, Knee, Diamond) use a deeper elbow-angle
+ * correction in the "down" phase when the user has parallettes selected — the
+ * ghost skeleton shows how low the chest should actually go.
+ *
+ * All other exercises fall through to the standard getGhostConfig lookup.
+ */
+export function getEquipmentGhostConfig(
+  name: string,
+  pushGear: string,
+  _pullGear: string,
+): GhostExerciseConfig | null {
+  const norm = name.toLowerCase();
+  const parallettesPushSet = new Set([
+    "wall push-up", "incline push-up", "knee push-up",
+    "push-up", "diamond push-up",
+  ]);
+  if (parallettesPushSet.has(norm)) {
+    if (pushGear === "high-parallettes") return PUSH_HIGH_PARALLETTES_CONFIG;
+    if (pushGear === "low-parallettes")  return PUSH_LOW_PARALLETTES_CONFIG;
+  }
+  return getGhostConfig(name);
 }
 
 /**

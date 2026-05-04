@@ -70,6 +70,18 @@ export interface CriticalJoint {
   description: string;
 }
 
+/**
+ * Optional equipment context — passed from the workout page to processFrame.
+ * Exercises use this to adjust thresholds based on the user's selected gear.
+ */
+export interface EquipmentContext {
+  /**
+   * Override elbow angle threshold for rep completion in push / dip exercises.
+   * Floor default: 150°.  Low parallettes: 135°.  High parallettes: 120°.
+   */
+  pushDepthThreshold?: number;
+}
+
 export interface ExerciseConfig {
   displayName: string;
   criticalJoints: CriticalJoint[];
@@ -79,7 +91,7 @@ export interface ExerciseConfig {
    * processFrame will return isHoldActive to drive the timer.
    */
   isStatic: boolean;
-  processFrame(landmarks: Landmark[], currentPhase: Phase): FrameResult;
+  processFrame(landmarks: Landmark[], currentPhase: Phase, equipment?: EquipmentContext): FrameResult;
 }
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
@@ -119,14 +131,14 @@ const WALL_PUSH_UP: ExerciseConfig = {
     { label: "Elbow alignment", description: "Keep elbows pointed downward, not flaring wide." },
   ],
   initialPhase: "up",
-  processFrame(lm, phase) {
+  processFrame(lm, phase, equipment) {
     const elbowAngle = calcAngle(lm[LM.LEFT_SHOULDER], lm[LM.LEFT_ELBOW], lm[LM.LEFT_WRIST]);
     let newPhase = phase;
     let repCounted = false;
     let repQuality: RepQuality | null = null;
 
     if (phase === "up" && elbowAngle < 100) newPhase = "down";
-    else if (phase === "down" && elbowAngle > 155) {
+    else if (phase === "down" && elbowAngle > (equipment?.pushDepthThreshold ?? 155)) {
       newPhase = "up"; repCounted = true; repQuality = "complete";
     }
 
@@ -146,14 +158,14 @@ const INCLINE_PUSH_UP: ExerciseConfig = {
     { label: "Shoulder–Hip–Ankle line", description: "Body must stay in a straight plank line throughout." },
   ],
   initialPhase: "up",
-  processFrame(lm, phase) {
+  processFrame(lm, phase, equipment) {
     const elbowAngle = calcAngle(lm[LM.LEFT_SHOULDER], lm[LM.LEFT_ELBOW], lm[LM.LEFT_WRIST]);
     let newPhase = phase;
     let repCounted = false;
     let repQuality: RepQuality | null = null;
 
     if (phase === "up" && elbowAngle < 95) newPhase = "down";
-    else if (phase === "down" && elbowAngle > 150) {
+    else if (phase === "down" && elbowAngle > (equipment?.pushDepthThreshold ?? 150)) {
       newPhase = "up"; repCounted = true; repQuality = "complete";
     }
 
@@ -180,14 +192,14 @@ const KNEE_PUSH_UP: ExerciseConfig = {
     { label: "Shoulder–Hip–Knee line", description: "Body must stay straight from shoulder to knee — ankles are ignored." },
   ],
   initialPhase: "up",
-  processFrame(lm, phase) {
+  processFrame(lm, phase, equipment) {
     const elbowAngle = calcAngle(lm[LM.LEFT_SHOULDER], lm[LM.LEFT_ELBOW], lm[LM.LEFT_WRIST]);
     let newPhase = phase;
     let repCounted = false;
     let repQuality: RepQuality | null = null;
 
     if (phase === "up" && elbowAngle < 90) newPhase = "down";
-    else if (phase === "down" && elbowAngle > 150) {
+    else if (phase === "down" && elbowAngle > (equipment?.pushDepthThreshold ?? 150)) {
       newPhase = "up"; repCounted = true; repQuality = "complete";
     }
 
@@ -206,6 +218,8 @@ const KNEE_PUSH_UP: ExerciseConfig = {
   },
 };
 
+// Knee push-up depth uses equipment?.pushDepthThreshold, injected above.
+
 const PUSH_UP: ExerciseConfig = {
   displayName: "Push-Up",
   isStatic: false,
@@ -214,14 +228,14 @@ const PUSH_UP: ExerciseConfig = {
     { label: "Shoulder–Hip–Ankle line", description: "Body must stay in a straight plank line throughout." },
   ],
   initialPhase: "up",
-  processFrame(lm, phase) {
+  processFrame(lm, phase, equipment) {
     const elbowAngle = calcAngle(lm[LM.LEFT_SHOULDER], lm[LM.LEFT_ELBOW], lm[LM.LEFT_WRIST]);
     let newPhase = phase;
     let repCounted = false;
     let repQuality: RepQuality | null = null;
 
     if (phase === "up" && elbowAngle < 90) newPhase = "down";
-    else if (phase === "down" && elbowAngle > 150) {
+    else if (phase === "down" && elbowAngle > (equipment?.pushDepthThreshold ?? 150)) {
       newPhase = "up"; repCounted = true; repQuality = "complete";
     }
 
@@ -235,6 +249,7 @@ const PUSH_UP: ExerciseConfig = {
       audioCue = hipMid.y < shoulderMid.y
         ? "Keep your hips down — maintain a straight line"
         : "Hips are dropping — tighten your core";
+      // (wrist extension monitoring injected by workout.tsx when pushGear=floor)
     }
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
@@ -248,14 +263,14 @@ const DIAMOND_PUSH_UP: ExerciseConfig = {
     { label: "Shoulder–Hip–Ankle line", description: "Maintain a rigid plank throughout — no hip sagging." },
   ],
   initialPhase: "up",
-  processFrame(lm, phase) {
+  processFrame(lm, phase, equipment) {
     const elbowAngle = calcAngle(lm[LM.LEFT_SHOULDER], lm[LM.LEFT_ELBOW], lm[LM.LEFT_WRIST]);
     let newPhase = phase;
     let repCounted = false;
     let repQuality: RepQuality | null = null;
 
     if (phase === "up" && elbowAngle < 90) newPhase = "down";
-    else if (phase === "down" && elbowAngle > 150) {
+    else if (phase === "down" && elbowAngle > (equipment?.pushDepthThreshold ?? 150)) {
       newPhase = "up"; repCounted = true; repQuality = "complete";
     }
 
@@ -979,14 +994,14 @@ const DIP: ExerciseConfig = {
     { label: "Torso lean", description: "Slight forward lean shifts emphasis to the chest." },
   ],
   initialPhase: "up",
-  processFrame(lm, phase) {
+  processFrame(lm, phase, equipment) {
     const elbowAngle = calcAngle(lm[LM.LEFT_SHOULDER], lm[LM.LEFT_ELBOW], lm[LM.LEFT_WRIST]);
     let newPhase = phase;
     let repCounted = false;
     let repQuality: RepQuality | null = null;
 
     if (phase === "up" && elbowAngle < 90) newPhase = "down";
-    else if (phase === "down" && elbowAngle > 150) {
+    else if (phase === "down" && elbowAngle > (equipment?.pushDepthThreshold ?? 150)) {
       newPhase = "up"; repCounted = true; repQuality = "complete";
     }
 
