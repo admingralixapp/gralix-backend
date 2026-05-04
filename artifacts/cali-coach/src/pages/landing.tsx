@@ -66,7 +66,7 @@ export function Landing() {
             {
               icon: Activity,
               title: "Skill Tree",
-              desc: "Unlock 20 exercises across 4 progressive branches as you master each movement.",
+              desc: "Unlock 24 skills across 4 progressive branches — including static holds and explosive moves.",
             },
             {
               icon: Users,

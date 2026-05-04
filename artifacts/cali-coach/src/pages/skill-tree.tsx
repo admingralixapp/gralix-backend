@@ -2,9 +2,11 @@ import { useMemo } from "react";
 import { useListSessions } from "@workspace/api-client-react";
 import {
   SKILL_TREE_BRANCHES,
+  TOTAL_SKILL_COUNT,
   evaluateSkillTree,
   type EvaluatedSkill,
   type SkillBranch,
+  type SkillType,
 } from "@/lib/skill-tree";
 import { cn } from "@/lib/utils";
 import { Lock, Star, ChevronUp, Zap, ArrowUp, Dumbbell, Circle } from "lucide-react";
@@ -127,23 +129,43 @@ function SkillNodeCard({
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 min-w-0">
             <StatusIcon status={skill.status} color={meta.color} />
-            <span
+            <div className="min-w-0">
+              <span
+                className={cn(
+                  "font-semibold text-sm leading-tight block",
+                  isLocked ? "text-muted-foreground" : "text-foreground",
+                )}
+              >
+                {skill.title}
+              </span>
+              {/* Path + Type badge */}
+              {skill.pathLabel && (
+                <span className="text-[10px] text-muted-foreground font-medium">
+                  {skill.pathLabel}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <Badge
               className={cn(
-                "font-semibold text-sm leading-tight",
-                isLocked ? "text-muted-foreground" : "text-foreground",
+                "text-[10px] px-1.5 py-0.5 font-medium",
+                LEVEL_COLORS[skill.levelName],
               )}
             >
-              {skill.title}
-            </span>
-          </div>
-          <Badge
-            className={cn(
-              "shrink-0 text-[10px] px-1.5 py-0.5 font-medium",
-              LEVEL_COLORS[skill.levelName],
+              {skill.levelName}
+            </Badge>
+            {(skill.type as SkillType) === "static" && (
+              <Badge className="text-[9px] px-1.5 py-0.5 bg-cyan-900/60 text-cyan-300 border border-cyan-700/40">
+                🧲 Static Hold
+              </Badge>
             )}
-          >
-            {skill.levelName}
-          </Badge>
+            {(skill.type as SkillType) === "explosive" && (
+              <Badge className="text-[9px] px-1.5 py-0.5 bg-orange-900/60 text-orange-300 border border-orange-700/40">
+                ⚡ Explosive
+              </Badge>
+            )}
+          </div>
         </div>
 
         {/* Description */}
@@ -188,7 +210,12 @@ function SkillNodeCard({
               <div className="flex gap-3 mt-2">
                 {bestReps > 0 && (
                   <span className="text-[10px] text-muted-foreground">
-                    Best: <span className="text-foreground font-medium">{bestReps} reps</span>
+                    Best:{" "}
+                    <span className="text-foreground font-medium">
+                      {(skill.type as SkillType) === "static"
+                        ? `${bestReps}s hold`
+                        : `${bestReps} reps`}
+                    </span>
                   </span>
                 )}
                 {bestFormScore > 0 && (
@@ -244,7 +271,7 @@ function BranchColumn({
           <span className={cn("font-bold text-base", meta.color)}>{meta.label}</span>
         </div>
         <span className="text-xs text-muted-foreground font-medium tabular-nums">
-          {masteredCount}/5
+          {masteredCount}/{skills.length}
         </span>
       </div>
 
@@ -305,7 +332,7 @@ export function SkillTreePage() {
   }, [evaluated]);
 
   const totalMastered = evaluated?.filter((s) => s.status === "mastered").length ?? 0;
-  const totalSkills = 20;
+  const totalSkills = TOTAL_SKILL_COUNT;
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">

@@ -39,9 +39,32 @@ A calisthenics motion capture coaching app. Uses the device camera with MediaPip
 - **Leaderboard**: Global top-100, National (country auto-detected via CF-IPCountry or Accept-Language), Friends-only — mastery points computed from skill tree (L1=100 pts … L5=500 pts, max 6,000). Sticky "Your Rank" bar always visible at bottom of the page.
 - **Level Up Celebration**: When a user masters an Elite (level 5) skill → full-screen gold confetti animation (canvas-confetti), a Mastery Badge on their profile, and a shoutout auto-posted to the Social Feed visible to friends.
 
-## Exercises
+## Exercises & Skill Tree
 
-Push-Up, Squat, Pull-Up, Dip, Lunge, Burpee — each with coaching cues and target joints.
+**24 skills across 4 branches** (previously 20). Each skill has a `type`: `standard | static | explosive`.
+
+### PUSH (6 skills)
+Wall Push-Up → Incline → Knee → Push-Up → Diamond Push-Up → **Handstand Push-Up** (satellite, parallel L5)
+
+### PULL (8 skills — forked after L2)
+Scapular Shrugs → Australian Rows → Negative Pull-Ups → Pull-Up, then forks into:
+- **Front Lever Path** (static): Tuck Front Lever → Straddle Front Lever → Full Front Lever
+- **Muscle-Up Path** (explosive): Explosive Pull-Up → Muscle-Up (x2 nodes)
+
+### CORE (5 skills)
+Plank (static) → Burpee Basics → Burpee Conditioning → **Dragon Flag** (static) → **Human Flag** (static)
+
+### LEGS (5 skills)
+Assisted Squat → Squat → Archer Squat → **Nordic Curls** → Pistol Squat
+
+### Static Hold Timer
+Static exercises (`isStatic: true` in `ExerciseConfig`) use a Hold Timer instead of a rep counter:
+- `processFrame` returns `isHoldActive: boolean` — true when all joints are within ±10° of target
+- Timer only ticks while `isHoldActive === true` ("Active Zone")
+- Green glow border + "Zone Active" badge when in zone; red border + "Adjust Position" when not
+- TTS milestone coaching every 5 seconds held
+- `totalReps` saved to DB = seconds held (integer)
+- Session Results shows formatted hold time (e.g. "45s" or "1m 30s") instead of "reps"
 
 ## Key Commands
 
@@ -139,6 +162,6 @@ Push-Up, Squat, Pull-Up, Dip, Lunge, Burpee — each with coaching cues and targ
 Computed in `artifacts/api-server/src/lib/skillTree.ts` — mirrors frontend `evaluateSkillTree`:
 - A skill is mastered when qualifying sessions ≥ minQualifyingSessions (no prerequisite check, same as frontend)
 - Points: level × 100 per mastered skill (L1=100, L2=200, L3=300, L4=400, L5=500)
-- 20 skills across 4 branches → max 6,000 pts
+- 24 skills across 4 branches → max 6,000 pts
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

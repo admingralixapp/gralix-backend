@@ -14,6 +14,7 @@ import { useLocation } from "wouter";
 import { Trophy, Star, ChevronRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type EvaluatedSkill } from "@/lib/skill-tree";
+import { getExerciseConfig } from "@/lib/exercise-registry";
 
 // ─── Thresholds ───────────────────────────────────────────────────────────────
 
@@ -255,7 +256,18 @@ export function SessionResults({
 }: SessionResultsProps) {
   const [, navigate] = useLocation();
 
+  const exerciseConfig = getExerciseConfig(exerciseName);
+  const isStatic = exerciseConfig?.isStatic === true;
+
+  /** Format seconds as "Xs" or "Xm Ys" */
+  function formatHold(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m > 0 ? `${m}m ${s}s` : `${seconds}s`;
+  }
+
   const isPerfectSet =
+    !isStatic &&
     totalReps    >= PERFECT_SET_MIN_REPS &&
     avgFormScore >= PERFECT_SET_MIN_FORM;
 
@@ -336,7 +348,7 @@ export function SessionResults({
               {skillUnlocked ? "Skill Unlocked!" : "Set Complete"}
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {exerciseName} · {totalReps} rep{totalReps !== 1 ? "s" : ""}
+              {exerciseName} · {isStatic ? formatHold(totalReps) : `${totalReps} rep${totalReps !== 1 ? "s" : ""}`}
             </p>
           </div>
 

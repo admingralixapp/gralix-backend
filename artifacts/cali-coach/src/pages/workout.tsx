@@ -27,7 +27,7 @@ const EXERCISE_CATEGORIES = [
     ],
   },
   {
-    label: "Pull",
+    label: "Pull — Foundation",
     exercises: [
       { dbName: "Scapular Shrugs",   label: "Scapular Shrugs (Lv.1)" },
       { dbName: "Australian Rows",   label: "Australian Rows (Lv.2)" },
@@ -36,21 +36,40 @@ const EXERCISE_CATEGORIES = [
     ],
   },
   {
+    label: "Pull — Static Path 🧲",
+    exercises: [
+      { dbName: "Tuck Front Lever",     label: "Tuck Front Lever (Lv.3)" },
+      { dbName: "Straddle Front Lever", label: "Straddle Front Lever (Lv.4)" },
+      { dbName: "Full Front Lever",     label: "Full Front Lever (Lv.5)" },
+    ],
+  },
+  {
+    label: "Pull — Explosive Path ⚡",
+    exercises: [
+      { dbName: "Explosive Pull-Up", label: "Explosive Pull-Ups (Lv.3)" },
+      { dbName: "Muscle-Up",         label: "Muscle-Up (Lv.4–5)" },
+    ],
+  },
+  {
     label: "Legs",
     exercises: [
       { dbName: "Assisted Squat", label: "Assisted Squat (Lv.1)" },
       { dbName: "Squat",          label: "Air Squat (Lv.2)" },
       { dbName: "Archer Squat",   label: "Archer Squat (Lv.3)" },
-      { dbName: "Pistol Squat",   label: "Pistol Squat (Lv.4)" },
+      { dbName: "Nordic Curls",   label: "Nordic Curls (Lv.4)" },
+      { dbName: "Pistol Squat",   label: "Pistol Squat (Lv.5)" },
     ],
   },
   {
     label: "Core",
     exercises: [
-      { dbName: "Plank",   label: "Plank" },
-      { dbName: "Lunge",   label: "Lunge" },
-      { dbName: "Burpee",  label: "Burpee" },
-      { dbName: "Dip",     label: "Dip" },
+      { dbName: "Plank",       label: "Plank (Static)" },
+      { dbName: "Dragon Flag", label: "Dragon Flag (Static, Lv.4)" },
+      { dbName: "Human Flag",  label: "Human Flag (Static, Lv.5)" },
+      { dbName: "Lunge",       label: "Lunge" },
+      { dbName: "Burpee",      label: "Burpee" },
+      { dbName: "Dip",               label: "Dip" },
+      { dbName: "Handstand Push-Up", label: "Handstand Push-Up (Lv.5)" },
     ],
   },
 ] as const;
@@ -84,6 +103,8 @@ export function Workout() {
 
   const [isWorkoutActive, setIsWorkoutActive] = useState(false);
   const [reps, setReps] = useState(0);
+  const [holdSeconds, setHoldSeconds] = useState(0);
+  const [isInActiveZone, setIsInActiveZone] = useState(false);
   const [formScore, setFormScore] = useState(100);
   const [isModelLoading, setIsModelLoading] = useState(false);
   const [isSavingTest, setIsSavingTest] = useState(false);
@@ -102,6 +123,11 @@ export function Workout() {
     sessionId: 0,
     repFormScores: [] as number[],
     lastRepTime: 0,
+    // Static hold timer fields
+    holdSeconds: 0,
+    lastHoldTickMs: 0,   // ms timestamp of last active-zone tick; 0 = not ticking
+    holdActive: false,
+    lastHoldSpeakSec: -1, // last milestone second at which TTS fired
   });
 
   const createSession = useCreateSession();
@@ -260,47 +286,81 @@ export function Workout() {
     const config = getExerciseConfig(exercise.name);
     if (!config) return;
 
-    const {
-      newPhase,
-      repCounted,
-      repQuality,
-      formScore: rawScore,
-      audioCue,
-    } = config.processFrame(landmarks, stateRef.current.phase as Phase);
+    const result = config.processFrame(landmarks, stateRef.current.phase as Phase);
+    stateRef.current.phase = result.newPhase;
 
-    stateRef.current.phase = newPhase;
+    if (config.isStatic) {
+      // ── Static Hold Timer mode ─────────────────────────────────────────────
+      const holdNow = result.isHoldActive === true;
+      const now = Date.now();
 
-    if (repCounted) {
-      const newRepCount = stateRef.current.repCount + 1;
-      stateRef.current.repCount = newRepCount;
-      setReps(newRepCount);
+      if (holdNow && stateRef.current.lastHoldTickMs > 0) {
+        const delta = (now - stateRef.current.lastHoldTickMs) / 1000;
+        stateRef.current.holdSeconds += delta;
+        const totalSec = Math.floor(stateRef.current.holdSeconds);
+        setHoldSeconds(totalSec);
 
-      const duration = Date.now() - stateRef.current.lastRepTime;
-      stateRef.current.lastRepTime = Date.now();
-      stateRef.current.repFormScores.push(rawScore);
-
-      createRep.mutate({
-        sessionId: stateRef.current.sessionId,
-        data: {
-          repNumber: newRepCount,
-          formScore: Math.round(rawScore),
-          durationMs: duration > 0 ? duration : null,
-          feedbackGiven: audioCue ?? null,
-        },
-      });
-
-      if (repQuality === "incomplete") {
-        speak("Incomplete rep — go deeper next time");
-      } else if (newRepCount % 5 === 0) {
-        speak(`${newRepCount} reps. Keep it up!`);
-      } else {
-        speak("Good rep");
+        // Speak milestone every 5 seconds
+        if (
+          totalSec > 0 &&
+          totalSec % 5 === 0 &&
+          totalSec !== stateRef.current.lastHoldSpeakSec
+        ) {
+          stateRef.current.lastHoldSpeakSec = totalSec;
+          speak(`${totalSec} seconds. Stay strong.`);
+        }
       }
-    } else if (audioCue) {
-      speak(audioCue);
-    }
 
-    setFormScore((prev) => prev * 0.9 + rawScore * 0.1);
+      // State transitions: entering / leaving active zone
+      if (holdNow && !stateRef.current.holdActive) {
+        speak("Good position — hold it.");
+      } else if (!holdNow && stateRef.current.holdActive) {
+        speak(result.audioCue ?? "Adjust your position.");
+      }
+
+      stateRef.current.holdActive = holdNow;
+      stateRef.current.lastHoldTickMs = holdNow ? now : 0;
+      setIsInActiveZone(holdNow);
+
+      // Accumulate form scores for post-session average
+      stateRef.current.repFormScores.push(result.formScore);
+      setFormScore((prev) => prev * 0.9 + result.formScore * 0.1);
+    } else {
+      // ── Standard rep-counting mode ─────────────────────────────────────────
+      const { repCounted, repQuality, formScore: rawScore, audioCue } = result;
+
+      if (repCounted) {
+        const newRepCount = stateRef.current.repCount + 1;
+        stateRef.current.repCount = newRepCount;
+        setReps(newRepCount);
+
+        const duration = Date.now() - stateRef.current.lastRepTime;
+        stateRef.current.lastRepTime = Date.now();
+        stateRef.current.repFormScores.push(rawScore);
+
+        createRep.mutate({
+          sessionId: stateRef.current.sessionId,
+          data: {
+            repNumber: newRepCount,
+            formScore: Math.round(rawScore),
+            durationMs: duration > 0 ? duration : null,
+            feedbackGiven: audioCue ?? null,
+          },
+        });
+
+        if (repQuality === "incomplete") {
+          speak("Incomplete rep — go deeper next time");
+        } else if (newRepCount % 5 === 0) {
+          speak(`${newRepCount} reps. Keep it up!`);
+        } else {
+          speak("Good rep");
+        }
+      } else if (audioCue) {
+        speak(audioCue);
+      }
+
+      setFormScore((prev) => prev * 0.9 + rawScore * 0.1);
+    }
   };
 
   useEffect(() => {
@@ -340,8 +400,14 @@ export function Workout() {
         sessionId: session.id,
         repFormScores: [],
         lastRepTime: Date.now(),
+        holdSeconds: 0,
+        lastHoldTickMs: 0,
+        holdActive: false,
+        lastHoldSpeakSec: -1,
       };
       setReps(0);
+      setHoldSeconds(0);
+      setIsInActiveZone(false);
       setFormScore(100);
       setIsWorkoutActive(true);
       speak("Workout started. Let's go.");
@@ -362,13 +428,19 @@ export function Workout() {
           stateRef.current.repFormScores.length
         : formScore;
 
-    const finalReps      = stateRef.current.repCount;
-    const finalFormScore = Math.round(avgScore);
-    const finalSessionId = stateRef.current.sessionId;
-
     const selectedExercise = exercises?.find(
       (e) => e.id.toString() === selectedExerciseId,
     );
+    const exerciseConfig = selectedExercise
+      ? getExerciseConfig(selectedExercise.name)
+      : null;
+    const isStatic = exerciseConfig?.isStatic === true;
+
+    // For static exercises, totalReps = seconds held (integer)
+    const finalReps      = isStatic ? Math.round(stateRef.current.holdSeconds) : stateRef.current.repCount;
+    const finalFormScore = Math.round(avgScore);
+    const finalSessionId = stateRef.current.sessionId;
+
     const exerciseName = selectedExercise?.name ?? "Exercise";
 
     // Snapshot skill tree BEFORE saving this session
@@ -490,6 +562,20 @@ export function Workout() {
     }
   };
 
+  // Derive static-mode flag from the selected exercise
+  const selectedExerciseConfig = (() => {
+    const exercise = exercises?.find((e) => e.id.toString() === selectedExerciseId);
+    return exercise ? getExerciseConfig(exercise.name) : null;
+  })();
+  const isStaticExercise = selectedExerciseConfig?.isStatic === true;
+
+  /** Format seconds as M:SS (e.g. 75 → "1:15") or just SS (e.g. 8 → "8"). */
+  function formatHoldTime(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m > 0 ? `${m}:${s.toString().padStart(2, "0")}` : `${s}`;
+  }
+
   return (
     <div className="flex flex-col h-screen bg-black text-white relative">
       {/* Session Results overlay — shown after every workout */}
@@ -568,17 +654,57 @@ export function Workout() {
           className="absolute inset-0 w-full h-full object-cover -scale-x-100 pointer-events-none"
         />
 
+        {/* Active zone border glow for static exercises */}
+        {isWorkoutActive && isStaticExercise && (
+          <div
+            className="absolute inset-0 pointer-events-none rounded-none transition-all duration-300"
+            style={{
+              boxShadow: isInActiveZone
+                ? "inset 0 0 0 5px rgba(34,197,94,0.75)"
+                : "inset 0 0 0 5px rgba(239,68,68,0.55)",
+            }}
+          />
+        )}
+
         {/* Live HUD */}
         {isWorkoutActive && (
           <div className="absolute bottom-24 left-0 right-0 px-8 flex justify-between items-end pointer-events-none">
-            <div className="flex flex-col items-center">
-              <span className="text-sm font-mono text-white/70 uppercase tracking-widest">
-                Reps
-              </span>
-              <span className="text-8xl font-black text-primary leading-none tracking-tighter drop-shadow-lg">
-                {reps}
-              </span>
-            </div>
+
+            {isStaticExercise ? (
+              /* ── Static hold timer ── */
+              <div className="flex flex-col items-start gap-2">
+                <span className="text-sm font-mono text-white/70 uppercase tracking-widest">
+                  Hold Time
+                </span>
+                <span className="text-8xl font-black leading-none tracking-tighter drop-shadow-lg"
+                  style={{ color: isInActiveZone ? "#22c55e" : "#ef4444" }}>
+                  {formatHoldTime(holdSeconds)}
+                </span>
+                {/* Active zone badge */}
+                <div
+                  className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest"
+                  style={{
+                    backgroundColor: isInActiveZone
+                      ? "rgba(34,197,94,0.25)"
+                      : "rgba(239,68,68,0.25)",
+                    color: isInActiveZone ? "#86efac" : "#fca5a5",
+                    border: `1px solid ${isInActiveZone ? "rgba(34,197,94,0.5)" : "rgba(239,68,68,0.5)"}`,
+                  }}
+                >
+                  {isInActiveZone ? "● Zone Active" : "○ Adjust Position"}
+                </div>
+              </div>
+            ) : (
+              /* ── Rep counter ── */
+              <div className="flex flex-col items-center">
+                <span className="text-sm font-mono text-white/70 uppercase tracking-widest">
+                  Reps
+                </span>
+                <span className="text-8xl font-black text-primary leading-none tracking-tighter drop-shadow-lg">
+                  {reps}
+                </span>
+              </div>
+            )}
 
             <div className="flex flex-col items-center w-28">
               <span className="text-sm font-mono text-white/70 uppercase tracking-widest mb-2">

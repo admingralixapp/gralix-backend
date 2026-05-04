@@ -1,14 +1,26 @@
 /**
- * Skill Tree Configuration
+ * Skill Tree Configuration — v2 (with Static / Explosive branching)
  *
- * Four branches — PUSH, PULL, CORE, LEGS — each with 5 levels (Beginner → Elite).
+ * Four branches — PUSH, PULL, CORE, LEGS.
+ * After Level 2, PULL forks into:
+ *   • Front Lever Path  (static holds)
+ *   • Muscle-Up Path    (explosive power reps)
+ * PUSH adds a parallel Handstand Push-Up skill at Elite level.
+ * CORE gains Dragon Flag (L4, static) and Human Flag (L5, static).
+ * LEGS gains Nordic Curls (L4) and Pistol Squat (L5).
+ *
  * Each SkillNode defines:
- *   - which exercises count toward mastery
- *   - masteryRequirement: the bar a user must clear
- *   - prerequisiteId: the node that must be MASTERED before this one UNLOCKS
+ *   - type:              'standard' | 'static' | 'explosive'
+ *   - exercises:         which exercise names (from DB) count toward mastery
+ *   - masteryRequirement the bar a user must clear
+ *       → for 'static' nodes, minReps means "minimum seconds held" per session
+ *   - prerequisiteId:    the node that must be MASTERED first
+ *   - path / pathLabel:  optional — used when multiple paths fork from same prereq
  */
 
 export type SkillBranch = "PUSH" | "PULL" | "CORE" | "LEGS";
+
+export type SkillType = "standard" | "static" | "explosive";
 
 export type SkillLevelName =
   | "Beginner"
@@ -18,45 +30,44 @@ export type SkillLevelName =
   | "Elite";
 
 export interface MasteryRequirement {
-  /** Human-readable description shown in the UI */
   description: string;
   /**
-   * A session "qualifies" when the user completes at least this many reps.
-   * For Plank (no rep counting), 1 is sufficient — form score carries the weight.
+   * For standard / explosive nodes: minimum reps per qualifying session.
+   * For static nodes:               minimum seconds held per qualifying session.
    */
   minReps: number;
-  /** Minimum avgFormScore (0–100) for a session to qualify */
   minFormScore: number;
-  /** Number of qualifying sessions needed to MASTER this skill */
   minQualifyingSessions: number;
 }
 
 export interface SkillNode {
   id: string;
   branch: SkillBranch;
-  /** 1 = Beginner, 5 = Elite */
+  /** 1 = Beginner … 5 = Elite */
   level: number;
   levelName: SkillLevelName;
   title: string;
   description: string;
-  /**
-   * Exercise names (from the DB) that count toward mastery.
-   * A session qualifies if it matches ANY exercise in this list.
-   */
+  type: SkillType;
   exercises: string[];
   masteryRequirement: MasteryRequirement;
   /** id of the SkillNode that must be mastered first. null = always unlocked. */
   prerequisiteId: string | null;
+  /** Identifies which fork a node belongs to (e.g. 'front-lever', 'muscle-up') */
+  path?: string;
+  /** Human-readable path label shown in the UI */
+  pathLabel?: string;
 }
 
 // ─── PUSH Branch ──────────────────────────────────────────────────────────────
-// Horizontal pressing movements: Push-Up → Dip
+
 const PUSH_NODES: SkillNode[] = [
   {
     id: "push-1",
     branch: "PUSH",
     level: 1,
     levelName: "Beginner",
+    type: "standard",
     title: "Push-Up Foundation",
     description: "Build the foundational pressing pattern with a standard push-up.",
     exercises: ["Push-Up"],
@@ -73,6 +84,7 @@ const PUSH_NODES: SkillNode[] = [
     branch: "PUSH",
     level: 2,
     levelName: "Novice",
+    type: "standard",
     title: "Push-Up Strength",
     description: "Double your push-up capacity and tighten your form.",
     exercises: ["Push-Up"],
@@ -89,6 +101,7 @@ const PUSH_NODES: SkillNode[] = [
     branch: "PUSH",
     level: 3,
     levelName: "Intermediate",
+    type: "standard",
     title: "Dip Introduction",
     description: "Transition to parallel-bar dips for deeper chest and tricep strength.",
     exercises: ["Dip"],
@@ -105,6 +118,7 @@ const PUSH_NODES: SkillNode[] = [
     branch: "PUSH",
     level: 4,
     levelName: "Advanced",
+    type: "standard",
     title: "Dip Mastery",
     description: "Command the dip with high volume and elite technique.",
     exercises: ["Dip"],
@@ -121,6 +135,7 @@ const PUSH_NODES: SkillNode[] = [
     branch: "PUSH",
     level: 5,
     levelName: "Elite",
+    type: "standard",
     title: "Push Elite",
     description: "Demonstrate elite-level pressing endurance across both movements.",
     exercises: ["Push-Up", "Dip"],
@@ -132,16 +147,41 @@ const PUSH_NODES: SkillNode[] = [
     },
     prerequisiteId: "push-4",
   },
+  {
+    id: "push-hs",
+    branch: "PUSH",
+    level: 5,
+    levelName: "Elite",
+    type: "explosive",
+    title: "Handstand Push-Up",
+    description:
+      "Invert against the wall and press your full bodyweight overhead — the pinnacle of calisthenics pressing strength.",
+    exercises: ["Handstand Push-Up"],
+    masteryRequirement: {
+      description: "Complete 3 HSPU with ≥85% form score in 5 sessions",
+      minReps: 3,
+      minFormScore: 85,
+      minQualifyingSessions: 5,
+    },
+    prerequisiteId: "push-4",
+    path: "hspu",
+    pathLabel: "Handstand Path",
+  },
 ];
 
 // ─── PULL Branch ──────────────────────────────────────────────────────────────
-// Vertical pulling: first rep → 20-rep dead-hang sets
+// L1–L2 are shared. After L2 the branch forks into:
+//   Front Lever Path  (static holds, pull-fl-*)
+//   Muscle-Up Path    (explosive power reps, pull-mu-*)
+
 const PULL_NODES: SkillNode[] = [
+  // ── Shared foundation ──
   {
     id: "pull-1",
     branch: "PULL",
     level: 1,
     levelName: "Beginner",
+    type: "standard",
     title: "First Pull-Up",
     description: "Achieve your first clean, full-range pull-up from a dead hang.",
     exercises: ["Pull-Up"],
@@ -158,8 +198,10 @@ const PULL_NODES: SkillNode[] = [
     branch: "PULL",
     level: 2,
     levelName: "Novice",
+    type: "standard",
     title: "Pull-Up Consistency",
-    description: "Develop reliable pull-up strength across multiple reps.",
+    description:
+      "Develop reliable pull-up strength across multiple reps. Choose your path: Front Lever (static strength) or Muscle-Up (explosive power).",
     exercises: ["Pull-Up"],
     masteryRequirement: {
       description: "Complete 5 reps with ≥75% form score in 3 sessions",
@@ -169,70 +211,147 @@ const PULL_NODES: SkillNode[] = [
     },
     prerequisiteId: "pull-1",
   },
+
+  // ── Front Lever Path (static) ──
   {
-    id: "pull-3",
+    id: "pull-fl-1",
     branch: "PULL",
     level: 3,
     levelName: "Intermediate",
-    title: "Pull-Up Strength",
-    description: "Build serious lat and bicep strength with quality sets of 8.",
-    exercises: ["Pull-Up"],
+    type: "static",
+    title: "Tuck Front Lever",
+    description:
+      "Hang from the bar, tuck your knees to your chest and hold your body horizontal. Builds the scapular depression and lat strength needed for the full lever.",
+    exercises: ["Tuck Front Lever"],
     masteryRequirement: {
-      description: "Complete 8 reps with ≥80% form score in 5 sessions",
+      description: "Hold 10 s with ≥75% form score in 4 sessions",
+      minReps: 10,
+      minFormScore: 75,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "pull-2",
+    path: "front-lever",
+    pathLabel: "Front Lever Path",
+  },
+  {
+    id: "pull-fl-2",
+    branch: "PULL",
+    level: 4,
+    levelName: "Advanced",
+    type: "static",
+    title: "Straddle Front Lever",
+    description:
+      "Extend your legs out in a wide straddle and hold horizontal. Dramatically harder than the tuck — demands total-body tension.",
+    exercises: ["Straddle Front Lever"],
+    masteryRequirement: {
+      description: "Hold 8 s with ≥80% form score in 5 sessions",
       minReps: 8,
       minFormScore: 80,
       minQualifyingSessions: 5,
     },
-    prerequisiteId: "pull-2",
+    prerequisiteId: "pull-fl-1",
+    path: "front-lever",
+    pathLabel: "Front Lever Path",
   },
   {
-    id: "pull-4",
-    branch: "PULL",
-    level: 4,
-    levelName: "Advanced",
-    title: "Pull-Up Power",
-    description: "Reach sets of 12+ with near-perfect form and zero swing.",
-    exercises: ["Pull-Up"],
-    masteryRequirement: {
-      description: "Complete 12 reps with ≥85% form score in 5 sessions",
-      minReps: 12,
-      minFormScore: 85,
-      minQualifyingSessions: 5,
-    },
-    prerequisiteId: "pull-3",
-  },
-  {
-    id: "pull-5",
+    id: "pull-fl-3",
     branch: "PULL",
     level: 5,
     levelName: "Elite",
-    title: "Pull Elite",
-    description: "Demonstrate elite pulling endurance with 20-rep dead-hang sets.",
-    exercises: ["Pull-Up"],
+    type: "static",
+    title: "Full Front Lever",
+    description:
+      "Body perfectly horizontal, arms straight, legs locked together — one of calisthenics' most iconic elite skills.",
+    exercises: ["Full Front Lever"],
     masteryRequirement: {
-      description: "Complete 20 reps with ≥90% form score in 7 sessions",
-      minReps: 20,
-      minFormScore: 90,
-      minQualifyingSessions: 7,
+      description: "Hold 5 s with ≥85% form score in 5 sessions",
+      minReps: 5,
+      minFormScore: 85,
+      minQualifyingSessions: 5,
     },
-    prerequisiteId: "pull-4",
+    prerequisiteId: "pull-fl-2",
+    path: "front-lever",
+    pathLabel: "Front Lever Path",
+  },
+
+  // ── Muscle-Up Path (explosive) ──
+  {
+    id: "pull-mu-1",
+    branch: "PULL",
+    level: 3,
+    levelName: "Intermediate",
+    type: "explosive",
+    title: "Explosive Pull-Ups",
+    description:
+      "Accelerate powerfully through the pull-up until your chest clears the bar. Essential momentum training for the muscle-up transition.",
+    exercises: ["Explosive Pull-Up"],
+    masteryRequirement: {
+      description: "Complete 5 reps with ≥78% form score in 4 sessions",
+      minReps: 5,
+      minFormScore: 78,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "pull-2",
+    path: "muscle-up",
+    pathLabel: "Muscle-Up Path",
+  },
+  {
+    id: "pull-mu-2",
+    branch: "PULL",
+    level: 4,
+    levelName: "Advanced",
+    type: "explosive",
+    title: "Kipping Muscle-Up",
+    description:
+      "Use a controlled hip kip to generate momentum through the bar transition. Master the timing before eliminating the kip.",
+    exercises: ["Muscle-Up"],
+    masteryRequirement: {
+      description: "Complete 3 reps with ≥80% form score in 4 sessions",
+      minReps: 3,
+      minFormScore: 80,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "pull-mu-1",
+    path: "muscle-up",
+    pathLabel: "Muscle-Up Path",
+  },
+  {
+    id: "pull-mu-3",
+    branch: "PULL",
+    level: 5,
+    levelName: "Elite",
+    type: "explosive",
+    title: "Strict Muscle-Up",
+    description:
+      "Zero swing, zero kip — pull through and press above the bar with pure upper-body strength. The gold standard of pulling power.",
+    exercises: ["Muscle-Up"],
+    masteryRequirement: {
+      description: "Complete 5 reps with ≥88% form score in 5 sessions",
+      minReps: 5,
+      minFormScore: 88,
+      minQualifyingSessions: 5,
+    },
+    prerequisiteId: "pull-mu-2",
+    path: "muscle-up",
+    pathLabel: "Muscle-Up Path",
   },
 ];
 
 // ─── CORE Branch ──────────────────────────────────────────────────────────────
-// Isometric holding + explosive full-body conditioning
+
 const CORE_NODES: SkillNode[] = [
   {
     id: "core-1",
     branch: "CORE",
     level: 1,
     levelName: "Beginner",
+    type: "static",
     title: "Plank Foundation",
-    description: "Build a solid isometric core base with consistent plank holds.",
+    description: "Build a solid isometric core base. Hold a perfect plank — body straight from head to heels, glutes and abs braced.",
     exercises: ["Plank"],
     masteryRequirement: {
-      description: "Hold a plank with ≥70% form score in 3 sessions",
-      minReps: 1,
+      description: "Hold 20 s with ≥70% form score in 3 sessions",
+      minReps: 20,
       minFormScore: 70,
       minQualifyingSessions: 3,
     },
@@ -243,6 +362,7 @@ const CORE_NODES: SkillNode[] = [
     branch: "CORE",
     level: 2,
     levelName: "Novice",
+    type: "standard",
     title: "Burpee Basics",
     description: "Introduce explosive full-body conditioning with burpees.",
     exercises: ["Burpee"],
@@ -259,6 +379,7 @@ const CORE_NODES: SkillNode[] = [
     branch: "CORE",
     level: 3,
     levelName: "Intermediate",
+    type: "standard",
     title: "Burpee Conditioning",
     description: "Sustain higher-volume burpee sets with consistent mechanics.",
     exercises: ["Burpee"],
@@ -275,14 +396,16 @@ const CORE_NODES: SkillNode[] = [
     branch: "CORE",
     level: 4,
     levelName: "Advanced",
-    title: "Burpee Power",
-    description: "Chain powerful burpees with explosive hip extension every rep.",
-    exercises: ["Burpee"],
+    type: "static",
+    title: "Dragon Flag",
+    description:
+      "Lie on a bench, grip behind your head, and hold your body perfectly horizontal — only your shoulders touch the surface. Total anti-extension strength.",
+    exercises: ["Dragon Flag"],
     masteryRequirement: {
-      description: "Complete 12 burpees with ≥85% form score in 5 sessions",
-      minReps: 12,
-      minFormScore: 85,
-      minQualifyingSessions: 5,
+      description: "Hold 5 s with ≥78% form score in 4 sessions",
+      minReps: 5,
+      minFormScore: 78,
+      minQualifyingSessions: 4,
     },
     prerequisiteId: "core-3",
   },
@@ -291,27 +414,30 @@ const CORE_NODES: SkillNode[] = [
     branch: "CORE",
     level: 5,
     levelName: "Elite",
-    title: "Core Elite",
-    description: "Demonstrate elite conditioning with high-volume explosive sets.",
-    exercises: ["Burpee", "Plank"],
+    type: "static",
+    title: "Human Flag",
+    description:
+      "Grip a vertical pole and hold your entire body horizontal — a legendary feat that demands elite lateral core and shoulder strength.",
+    exercises: ["Human Flag"],
     masteryRequirement: {
-      description: "Complete 15 reps with ≥90% form score in 7 sessions",
-      minReps: 15,
-      minFormScore: 90,
-      minQualifyingSessions: 7,
+      description: "Hold 3 s with ≥80% form score in 4 sessions",
+      minReps: 3,
+      minFormScore: 80,
+      minQualifyingSessions: 4,
     },
     prerequisiteId: "core-4",
   },
 ];
 
 // ─── LEGS Branch ──────────────────────────────────────────────────────────────
-// Bilateral squat → unilateral lunge progression
+
 const LEGS_NODES: SkillNode[] = [
   {
     id: "legs-1",
     branch: "LEGS",
     level: 1,
     levelName: "Beginner",
+    type: "standard",
     title: "Squat Foundation",
     description: "Build the bilateral squat pattern with full depth and upright posture.",
     exercises: ["Squat"],
@@ -328,6 +454,7 @@ const LEGS_NODES: SkillNode[] = [
     branch: "LEGS",
     level: 2,
     levelName: "Novice",
+    type: "standard",
     title: "Squat Strength",
     description: "Increase squat volume and dial in knee tracking and depth.",
     exercises: ["Squat"],
@@ -344,6 +471,7 @@ const LEGS_NODES: SkillNode[] = [
     branch: "LEGS",
     level: 3,
     levelName: "Intermediate",
+    type: "standard",
     title: "Lunge Balance",
     description: "Develop unilateral leg strength and coordination with lunges.",
     exercises: ["Lunge"],
@@ -360,14 +488,16 @@ const LEGS_NODES: SkillNode[] = [
     branch: "LEGS",
     level: 4,
     levelName: "Advanced",
-    title: "Lunge Mastery",
-    description: "Build high-volume lunge capacity with a perfectly upright torso.",
-    exercises: ["Lunge"],
+    type: "standard",
+    title: "Nordic Curls",
+    description:
+      "Anchor your ankles, kneel tall and lower yourself slowly under control. The single best bodyweight hamstring exercise — brutal but effective.",
+    exercises: ["Nordic Curls"],
     masteryRequirement: {
-      description: "Complete 15 lunges with ≥85% form score in 5 sessions",
-      minReps: 15,
-      minFormScore: 85,
-      minQualifyingSessions: 5,
+      description: "Complete 3 reps with ≥80% form score in 4 sessions",
+      minReps: 3,
+      minFormScore: 80,
+      minQualifyingSessions: 4,
     },
     prerequisiteId: "legs-3",
   },
@@ -376,14 +506,16 @@ const LEGS_NODES: SkillNode[] = [
     branch: "LEGS",
     level: 5,
     levelName: "Elite",
-    title: "Legs Elite",
-    description: "Demonstrate elite lower-body mastery across both movement patterns.",
-    exercises: ["Squat", "Lunge"],
+    type: "standard",
+    title: "Pistol Squat",
+    description:
+      "Full-depth single-leg squat with the free leg extended — demands quad strength, ankle mobility and total-body balance.",
+    exercises: ["Pistol Squat"],
     masteryRequirement: {
-      description: "Complete 20 reps with ≥90% form score in 7 sessions",
-      minReps: 20,
-      minFormScore: 90,
-      minQualifyingSessions: 7,
+      description: "Complete 5 reps per side with ≥85% form score in 5 sessions",
+      minReps: 5,
+      minFormScore: 85,
+      minQualifyingSessions: 5,
     },
     prerequisiteId: "legs-4",
   },
@@ -391,6 +523,10 @@ const LEGS_NODES: SkillNode[] = [
 
 // ─── Full registry ─────────────────────────────────────────────────────────────
 
+/**
+ * All nodes grouped by branch. Nodes within each array are ordered so that
+ * prerequisites always appear before their dependents (important for evaluateSkillTree).
+ */
 export const SKILL_TREE_BRANCHES: Record<SkillBranch, SkillNode[]> = {
   PUSH: PUSH_NODES,
   PULL: PULL_NODES,
@@ -404,6 +540,9 @@ export const ALL_SKILL_NODES: SkillNode[] = [
   ...CORE_NODES,
   ...LEGS_NODES,
 ];
+
+/** Total skill count (all paths) */
+export const TOTAL_SKILL_COUNT = ALL_SKILL_NODES.length;
 
 // ─── Evaluation ───────────────────────────────────────────────────────────────
 
@@ -431,23 +570,24 @@ export interface EvaluatedSkill extends SkillNode {
  * Rules:
  *   - A session QUALIFIES if: completedAt set, exerciseName matches,
  *     totalReps >= minReps, avgFormScore >= minFormScore.
+ *   - For 'static' nodes, totalReps represents seconds held.
  *   - A skill is MASTERED when qualifyingSessions >= minQualifyingSessions.
  *   - A skill is UNLOCKED when its prerequisite is MASTERED (or it has none).
  *   - Otherwise the skill is LOCKED.
+ *
+ * Because ALL_SKILL_NODES is ordered prerequisites-first, prerequisites will
+ * always be resolved before their dependents — including forked branches.
  */
 export function evaluateSkillTree(
   sessions: SessionSummary[],
 ): EvaluatedSkill[] {
   const completedSessions = sessions.filter((s) => s.completedAt !== null);
 
-  // Build a Map from id → EvaluatedSkill so we can resolve prerequisites
   const evaluated = new Map<string, EvaluatedSkill>();
 
-  // Process each branch level by level (nodes are already ordered 1→5)
   for (const node of ALL_SKILL_NODES) {
     const req = node.masteryRequirement;
 
-    // Count qualifying sessions
     const qualifying = completedSessions.filter(
       (s) =>
         node.exercises.some(
@@ -469,7 +609,7 @@ export function evaluateSkillTree(
     if (mastered) {
       status = "mastered";
     } else if (node.prerequisiteId === null) {
-      status = "unlocked"; // L1 nodes are always available
+      status = "unlocked";
     } else {
       const prereq = evaluated.get(node.prerequisiteId);
       status = prereq?.status === "mastered" ? "unlocked" : "locked";
