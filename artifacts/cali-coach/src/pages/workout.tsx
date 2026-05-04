@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useSearch } from "wouter";
-import { useListExercises, useCreateSession, useUpdateSession, useCreateRep } from "@workspace/api-client-react";
+import { useListExercises, useListSessions, useCreateSession, useUpdateSession, useCreateRep } from "@workspace/api-client-react";
 import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-vision";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Activity, Play, Square, FlaskConical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
+import { evaluateSkillTree, type EvaluatedSkill, type SessionSummary } from "@/lib/skill-tree";
+import { SessionResults, type SessionResultsProps } from "@/components/session-results";
 
 export function Workout() {
   const [, setLocation] = useLocation();
@@ -16,6 +18,13 @@ export function Workout() {
   const { data: exercises } = useListExercises();
 
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>("");
+  const [sessionResults, setSessionResults] = useState<Omit<SessionResultsProps, "onClose"> | null>(null);
+
+  // Session history used for skill-tree before/after diff
+  const { data: sessionHistory } = useListSessions(
+    { limit: 500, offset: 0 },
+    { query: { queryKey: ["/api/sessions", { limit: 500 }] } },
+  );
 
   // Pre-select exercise from query param: /workout?exercise=Push-Up
   useEffect(() => {
@@ -304,26 +313,61 @@ export function Workout() {
     setIsWorkoutActive(false);
     speak("Workout complete.");
 
-    if (stateRef.current.sessionId) {
-      const avgScore =
-        stateRef.current.repFormScores.length > 0
-          ? stateRef.current.repFormScores.reduce((a, b) => a + b, 0) /
-            stateRef.current.repFormScores.length
-          : formScore;
+    if (!stateRef.current.sessionId) return;
 
-      try {
-        await updateSession.mutateAsync({
-          id: stateRef.current.sessionId,
-          data: {
-            completedAt: new Date().toISOString(),
-            totalReps: stateRef.current.repCount,
-            avgFormScore: Math.round(avgScore),
-          },
-        });
-        setLocation(`/session/${stateRef.current.sessionId}`);
-      } catch {
-        toast({ title: "Save error", description: "Failed to save session.", variant: "destructive" });
-      }
+    const avgScore =
+      stateRef.current.repFormScores.length > 0
+        ? stateRef.current.repFormScores.reduce((a, b) => a + b, 0) /
+          stateRef.current.repFormScores.length
+        : formScore;
+
+    const finalReps      = stateRef.current.repCount;
+    const finalFormScore = Math.round(avgScore);
+    const finalSessionId = stateRef.current.sessionId;
+
+    const selectedExercise = exercises?.find(
+      (e) => e.id.toString() === selectedExerciseId,
+    );
+    const exerciseName = selectedExercise?.name ?? "Exercise";
+
+    // Snapshot skill tree BEFORE saving this session
+    const history: SessionSummary[] = (sessionHistory ?? []).map((s) => ({
+      exerciseName: s.exerciseName ?? "",
+      totalReps:    s.totalReps    ?? null,
+      avgFormScore: s.avgFormScore ?? null,
+      completedAt:  s.completedAt  ?? null,
+    }));
+    const prevEvaluated = evaluateSkillTree(history);
+
+    try {
+      await updateSession.mutateAsync({
+        id: finalSessionId,
+        data: {
+          completedAt:  new Date().toISOString(),
+          totalReps:    finalReps,
+          avgFormScore: finalFormScore,
+        },
+      });
+
+      // Build virtual "after" history and evaluate again
+      const newSession: SessionSummary = {
+        exerciseName,
+        totalReps:    finalReps,
+        avgFormScore: finalFormScore,
+        completedAt:  new Date().toISOString(),
+      };
+      const nextEvaluated = evaluateSkillTree([...history, newSession]);
+
+      setSessionResults({
+        exerciseName,
+        totalReps:    finalReps,
+        avgFormScore: finalFormScore,
+        sessionId:    finalSessionId,
+        prevEvaluated,
+        nextEvaluated,
+      });
+    } catch {
+      toast({ title: "Save error", description: "Failed to save session.", variant: "destructive" });
     }
   };
 
@@ -361,18 +405,43 @@ export function Workout() {
         });
       }
 
-      const avgScore = baseScore + Math.random() * 5;
+      const avgScore      = baseScore + Math.random() * 5;
+      const finalFormScore = Math.round(avgScore * 10) / 10;
+
+      const history: SessionSummary[] = (sessionHistory ?? []).map((s) => ({
+        exerciseName: s.exerciseName ?? "",
+        totalReps:    s.totalReps    ?? null,
+        avgFormScore: s.avgFormScore ?? null,
+        completedAt:  s.completedAt  ?? null,
+      }));
+      const prevEvaluated = evaluateSkillTree(history);
+
       await updateSession.mutateAsync({
         id: session.id,
         data: {
-          completedAt: new Date().toISOString(),
-          totalReps: repCount,
-          avgFormScore: Math.round(avgScore * 10) / 10,
+          completedAt:  new Date().toISOString(),
+          totalReps:    repCount,
+          avgFormScore: finalFormScore,
         },
       });
 
-      toast({ title: "Workout saved!", description: `${repCount} reps logged with ${Math.round(avgScore)} avg form.` });
-      setLocation(`/session/${session.id}`);
+      const exerciseName   = exercise?.name ?? "Exercise";
+      const newSession: SessionSummary = {
+        exerciseName,
+        totalReps:    repCount,
+        avgFormScore: finalFormScore,
+        completedAt:  new Date().toISOString(),
+      };
+      const nextEvaluated = evaluateSkillTree([...history, newSession]);
+
+      setSessionResults({
+        exerciseName,
+        totalReps:    repCount,
+        avgFormScore: finalFormScore,
+        sessionId:    session.id,
+        prevEvaluated,
+        nextEvaluated,
+      });
     } catch {
       toast({ title: "Error", description: "Could not save test workout.", variant: "destructive" });
     } finally {
@@ -382,6 +451,14 @@ export function Workout() {
 
   return (
     <div className="flex flex-col h-screen bg-black text-white relative">
+      {/* Session Results overlay — shown after every workout */}
+      {sessionResults && (
+        <SessionResults
+          {...sessionResults}
+          onClose={() => setSessionResults(null)}
+        />
+      )}
+
       {/* Top Bar */}
       <div className="absolute top-0 left-0 right-0 z-10 p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
         <Button
