@@ -4,13 +4,56 @@ import { useListExercises, useListSessions, useCreateSession, useUpdateSession, 
 import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-vision";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Activity, Play, Square, FlaskConical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, cancelSpeech } from "@/lib/voice-service";
 import { evaluateSkillTree, type EvaluatedSkill, type SessionSummary } from "@/lib/skill-tree";
 import { SessionResults, type SessionResultsProps } from "@/components/session-results";
+
+// ─── Two-tier exercise menu definition ───────────────────────────────────────
+// `dbName` must exactly match the exercise name in the database.
+// `label` is what the user sees in the dropdown.
+const EXERCISE_CATEGORIES = [
+  {
+    label: "Push",
+    exercises: [
+      { dbName: "Wall Push-Up",    label: "Wall Push-Up (Lv.1)" },
+      { dbName: "Incline Push-Up", label: "Incline Push-Up (Lv.2)" },
+      { dbName: "Knee Push-Up",    label: "Knee Push-Up (Lv.3)" },
+      { dbName: "Push-Up",         label: "Full Push-Up (Lv.4)" },
+      { dbName: "Diamond Push-Up", label: "Diamond Push-Up (Lv.5)" },
+    ],
+  },
+  {
+    label: "Pull",
+    exercises: [
+      { dbName: "Scapular Shrugs",   label: "Scapular Shrugs (Lv.1)" },
+      { dbName: "Australian Rows",   label: "Australian Rows (Lv.2)" },
+      { dbName: "Negative Pull-Ups", label: "Negative Pull-Ups (Lv.3)" },
+      { dbName: "Pull-Up",           label: "Full Pull-Ups (Lv.4)" },
+    ],
+  },
+  {
+    label: "Legs",
+    exercises: [
+      { dbName: "Assisted Squat", label: "Assisted Squat (Lv.1)" },
+      { dbName: "Squat",          label: "Air Squat (Lv.2)" },
+      { dbName: "Archer Squat",   label: "Archer Squat (Lv.3)" },
+      { dbName: "Pistol Squat",   label: "Pistol Squat (Lv.4)" },
+    ],
+  },
+  {
+    label: "Core",
+    exercises: [
+      { dbName: "Plank",   label: "Plank" },
+      { dbName: "Lunge",   label: "Lunge" },
+      { dbName: "Burpee",  label: "Burpee" },
+      { dbName: "Dip",     label: "Dip" },
+    ],
+  },
+] as const;
 
 export function Workout() {
   const [, setLocation] = useLocation();
@@ -467,7 +510,7 @@ export function Workout() {
           Cancel
         </Button>
         {!isWorkoutActive && (
-          <div className="w-56">
+          <div className="w-64">
             <Select
               value={selectedExerciseId}
               onValueChange={setSelectedExerciseId}
@@ -478,12 +521,32 @@ export function Workout() {
                   placeholder={isModelLoading ? "Loading model..." : "Select Exercise"}
                 />
               </SelectTrigger>
-              <SelectContent>
-                {exercises?.map((ex) => (
-                  <SelectItem key={ex.id} value={ex.id.toString()}>
-                    {ex.name}
-                  </SelectItem>
-                ))}
+              <SelectContent className="max-h-96">
+                {EXERCISE_CATEGORIES.map((cat) => {
+                  const items = cat.exercises
+                    .map((entry) => {
+                      const dbEx = exercises?.find((e) => e.name === entry.dbName);
+                      return dbEx ? { ...entry, id: dbEx.id } : null;
+                    })
+                    .filter(Boolean) as Array<{ dbName: string; label: string; id: number }>;
+                  if (items.length === 0) return null;
+                  return (
+                    <SelectGroup key={cat.label}>
+                      <SelectLabel className="text-xs font-bold uppercase tracking-widest text-primary/80 px-2 py-1.5">
+                        {cat.label}
+                      </SelectLabel>
+                      {items.map((item) => (
+                        <SelectItem
+                          key={item.id}
+                          value={item.id.toString()}
+                          className="pl-4"
+                        >
+                          {item.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
