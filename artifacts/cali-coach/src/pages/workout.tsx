@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useListExercises, useCreateSession, useUpdateSession, useCreateRep } from "@workspace/api-client-react";
 import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-vision";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,24 @@ import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-reg
 
 export function Workout() {
   const [, setLocation] = useLocation();
+  const search = useSearch();
   const { toast } = useToast();
   const { data: exercises } = useListExercises();
 
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>("");
+
+  // Pre-select exercise from query param: /workout?exercise=Push-Up
+  useEffect(() => {
+    if (!exercises || selectedExerciseId) return;
+    const params = new URLSearchParams(search);
+    const name = params.get("exercise");
+    if (!name) return;
+    const match = exercises.find(
+      (e) => e.name.toLowerCase() === name.toLowerCase(),
+    );
+    if (match) setSelectedExerciseId(match.id.toString());
+  }, [exercises, search, selectedExerciseId]);
+
   const [isWorkoutActive, setIsWorkoutActive] = useState(false);
   const [reps, setReps] = useState(0);
   const [formScore, setFormScore] = useState(100);

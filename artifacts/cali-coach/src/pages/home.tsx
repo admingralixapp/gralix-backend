@@ -1,9 +1,10 @@
 import { useGetProgressSummary, useGetRecentSessions } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Activity, Flame, Trophy, Target, ArrowRight, Dumbbell } from "lucide-react";
+import { Activity, Flame, Trophy, Target, ArrowRight, Dumbbell, GitBranch } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SkillMap } from "@/components/skill-map";
 
 function StatCard({
   icon,
@@ -87,6 +88,24 @@ export function Home() {
           isLoading={loadingSummary}
         />
       </div>
+
+      {/* ── Skill Map ─────────────────────────────────────────────── */}
+      <Card className="border-border bg-card">
+        <CardHeader className="pb-3 border-b border-border">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <GitBranch className="w-4 h-4 text-primary" />
+              Skill Map
+            </CardTitle>
+            <Button variant="ghost" size="sm" asChild className="text-xs text-primary h-7 px-2">
+              <Link href="/skill-tree">Full tree →</Link>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-4 pb-2">
+          <SkillMap />
+        </CardContent>
+      </Card>
 
       <div>
         <div className="flex justify-between items-center mb-4">
