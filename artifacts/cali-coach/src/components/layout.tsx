@@ -6,7 +6,6 @@ import {
   motion,
   useMotionValue,
   useTransform,
-  animate,
 } from "framer-motion";
 import {
   Activity,
@@ -49,43 +48,55 @@ const SWIPEABLE_ROUTES = ["/", "/workout", "/skill-tree"] as const;
 
 // ─── Animation config ─────────────────────────────────────────────────────────
 
-const springTransition = { type: "spring" as const, stiffness: 300, damping: 30 };
-
 /**
  * Layered Zoom variants.
  *
- * Outgoing page:
- *   • Scales down to 0.95 and dims to 80% brightness — looks like it's
- *     receding into the background.
- *   • Gets zIndex: 1 so the incoming layer slides over it.
+ * Outgoing page  → scales down, dims, and fades out quickly so it never
+ *   visually stacks behind the incoming layer.  zIndex: 1 (behind).
  *
- * Incoming page:
- *   • Enters at scale 1.05, slides to scale 1.
- *   • Gets zIndex: 2 — always on top.
+ * Incoming page  → slides in from off-screen at a slight over-scale then
+ *   settles to 1:1.  zIndex: 2 (always on top).
  *
- * dir ≥ 0  → moving right in nav  → enter from right, exit to left
- * dir < 0  → moving left in nav   → enter from left,  exit to right
+ * dir ≥ 0  → moving right in nav  → enter from right, exit pushed left
+ * dir < 0  → moving left in nav   → enter from left,  exit pushed right
  */
 const pageVariants = {
   enter: (dir: number) => ({
-    x:      dir >= 0 ? "100%" : "-100%",
-    scale:  1.05,
-    filter: "brightness(1)",
-    zIndex: 2,
+    x:       dir >= 0 ? "100%" : "-100%",
+    scale:   1.04,
+    opacity: 1,               // always opaque as it slides in
+    filter:  "brightness(1)",
+    zIndex:  2,
   }),
   center: {
-    x:      0,
-    scale:  1,
-    filter: "brightness(1)",
-    zIndex: 2,
+    x:       0,
+    scale:   1,
+    opacity: 1,
+    filter:  "brightness(1)",
+    zIndex:  2,
   },
   exit: (dir: number) => ({
-    x:      dir >= 0 ? "-8%" : "8%",   // subtle push — mimics iOS card stack
-    scale:  0.95,
-    filter: "brightness(0.8)",
-    zIndex: 1,
+    x:       dir >= 0 ? "-22%" : "22%",  // pushed slightly behind incoming
+    scale:   0.93,
+    opacity: 0,               // fade to invisible — eliminates stacking
+    filter:  "brightness(0.75)",
+    zIndex:  1,
   }),
 };
+
+/**
+ * Spring drives x + scale; opacity uses a fast tween so the old page
+ * disappears well before the spring settles — no visible overlap.
+ */
+const pageTransition = {
+  type:      "spring" as const,
+  stiffness: 320,
+  damping:   32,
+  opacity:   { duration: 0.18, ease: "easeOut" as const },
+};
+
+/** Shared spring used for non-page-transition elements (nav dot, etc.) */
+const springTransition = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -199,8 +210,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
     const nextIdx    = getNavIndex(href);
     setDirection(nextIdx >= currentIdx ? 1 : -1);
     triggerHaptic();
-    // Snap the drag wrapper back to idle before the new page enters
-    animate(dragProgress, 0, { duration: 0.15 });
+    // Reset drag wrapper INSTANTLY so its scale doesn't compound with
+    // the entering page's scale variant at the start of the transition.
+    dragProgress.set(0);
     setLocation(href);
   }, [location, setLocation, dragProgress]);
 
@@ -242,8 +254,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
 
     function onTouchEnd(e: TouchEvent) {
-      // Animate back to 0 before (possibly) triggering navigate
-      animate(dragProgress, 0, { duration: 0.2, ease: "easeOut" });
+      // Reset instantly — navigateTo (if called) also resets, this handles the cancel case
+      dragProgress.set(0);
 
       if (!isDraggingRef.current) return;
       isDraggingRef.current = false;
@@ -371,13 +383,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/*
           Drag-responsive wrapper — applies live scale + brightness as the
-          user's finger moves, before navigation commits. Once the user lifts
-          their finger and the route changes, AnimatePresence takes over with
-          the full layered zoom variant animation.
+          user's finger moves before navigation commits.  Resets instantly to
+          1/brightness(1) on commit so its transform never compounds with the
+          entering page's variant scale.
+
+          overflow-hidden + isolation: isolate  ensure:
+            • clipped content (exiting/entering pages at x offsets) never
+              bleeds outside the main content area.
+            • zIndex values in the variants are scoped to THIS stacking context
+              so the outgoing page can never render above the incoming one.
         */}
         <motion.div
-          className="absolute inset-0"
-          style={{ scale: contentScale, filter: contentFilter }}
+          className="absolute inset-0 overflow-hidden"
+          style={{
+            scale:     contentScale,
+            filter:    contentFilter,
+            isolation: "isolate",   // new stacking context for zIndex variants
+          }}
         >
           <AnimatePresence initial={false} custom={direction} mode="sync">
             <motion.div
@@ -387,8 +409,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               initial="enter"
               animate="center"
               exit="exit"
-              transition={springTransition}
-              className="absolute inset-0 overflow-y-auto"
+              transition={pageTransition}
+              className="absolute inset-0 top-0 left-0 w-full h-full overflow-y-auto"
             >
               <div className="max-w-6xl mx-auto">
                 {children}
