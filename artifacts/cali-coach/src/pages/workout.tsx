@@ -1589,6 +1589,7 @@ export function Workout() {
       {povReview && (
         <PovReview
           {...povReview.payload}
+          sessionId={povReview.results.sessionId}
           onComplete={() => {
             const results = povReview.results;
             setPovReview(null);

@@ -1,64 +1,77 @@
 /**
- * ShareToFeedSheet — bottom sheet that appears after POV Review,
- * letting the user add a caption and share the video clip to the Community Feed.
+ * ShareToFeedSheet — bottom sheet for sharing a workout clip to the Community Feed.
+ *
+ * Supports two modes:
+ *  1. blob mode   — user has a fresh Blob; uses BackgroundUploadManager for
+ *                   non-blocking upload that survives tab navigation.
+ *  2. repost mode — clip already uploaded (objectPath provided); skips the
+ *                   upload step and posts directly.
  */
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Share2, X, Loader2, CheckCircle2, Upload } from "lucide-react";
+import { Share2, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { uploadVideoBlob, useCreatePost } from "@/lib/community-feed";
+import { useCreatePost } from "@/lib/community-feed";
+import { useUploadManager } from "@/lib/upload-manager";
 import { useUser } from "@clerk/react";
 
 interface ShareToFeedSheetProps {
-  blob: Blob;
-  exerciseName: string;
-  isAiVerified: boolean;
-  sessionId?: number;
-  onClose: () => void;
+  exerciseName:       string;
+  isAiVerified:       boolean;
+  sessionId?:         number;
+  onClose:            () => void;
+  /** Fresh recording blob — triggers upload via BackgroundUploadManager. */
+  blob?:              Blob;
+  /** Existing storage path — skips re-upload, posts immediately. */
+  existingObjectPath?: string;
 }
 
 export function ShareToFeedSheet({
-  blob,
   exerciseName,
   isAiVerified,
   sessionId,
   onClose,
+  blob,
+  existingObjectPath,
 }: ShareToFeedSheetProps) {
-  const { user } = useUser();
+  const { user }         = useUser();
   const [caption, setCaption] = useState("");
-  const [stage, setStage] = useState<"idle" | "uploading" | "posting" | "done">("idle");
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const createPost = useCreatePost();
+  const [stage, setStage]     = useState<"idle" | "posting" | "done">("idle");
+  const { enqueue }      = useUploadManager();
+  const createPost       = useCreatePost();
 
   const handleShare = async () => {
     if (!user) return;
-    setStage("uploading");
 
-    // Simulate upload progress ticks while the real upload runs
-    const ticker = setInterval(() => {
-      setUploadProgress((p) => Math.min(p + 8, 88));
-    }, 250);
-
-    try {
-      const objectPath = await uploadVideoBlob(blob, exerciseName);
-      clearInterval(ticker);
-      setUploadProgress(100);
+    if (existingObjectPath) {
+      // ── Repost mode: clip already in storage, just create the post ──────────
       setStage("posting");
-
-      await createPost.mutateAsync({
+      try {
+        await createPost.mutateAsync({
+          exerciseName,
+          caption:         caption.trim(),
+          videoObjectPath: existingObjectPath,
+          isAiVerified,
+          sessionId,
+        });
+        setStage("done");
+        setTimeout(onClose, 1_800);
+      } catch {
+        setStage("idle");
+      }
+    } else if (blob) {
+      // ── Upload mode: hand off to BackgroundUploadManager and close ───────────
+      enqueue({
+        blob,
+        sessionId:    sessionId ?? 0,
         exerciseName,
-        caption: caption.trim(),
-        videoObjectPath: objectPath,
         isAiVerified,
-        sessionId,
+        mode:         "feed",
+        caption:      caption.trim(),
       });
-
       setStage("done");
-      setTimeout(onClose, 1800);
-    } catch {
-      clearInterval(ticker);
-      setStage("idle");
+      setTimeout(onClose, 900);
     }
   };
 
@@ -78,7 +91,8 @@ export function ShareToFeedSheet({
           transition={{ type: "spring", stiffness: 340, damping: 32 }}
           className="w-full max-w-lg rounded-t-3xl border border-white/[0.08] overflow-hidden"
           style={{
-            background: "linear-gradient(160deg, rgba(12,18,36,0.98) 0%, rgba(8,12,24,0.99) 100%)",
+            background:
+              "linear-gradient(160deg, rgba(12,18,36,0.98) 0%, rgba(8,12,24,0.99) 100%)",
           }}
         >
           {/* Handle */}
@@ -102,7 +116,7 @@ export function ShareToFeedSheet({
 
           {/* Body */}
           <div className="px-5 pb-6 space-y-4">
-            {/* Exercise tag */}
+            {/* Tags */}
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-primary bg-primary/10 border border-primary/30 px-2.5 py-1 rounded-full">
                 {exerciseName}
@@ -113,9 +127,14 @@ export function ShareToFeedSheet({
                   AI Verified
                 </span>
               )}
+              {existingObjectPath && (
+                <span className="text-[10px] text-white/40 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                  Saved clip
+                </span>
+              )}
             </div>
 
-            {/* Caption input */}
+            {/* Caption */}
             <div>
               <textarea
                 value={caption}
@@ -131,38 +150,24 @@ export function ShareToFeedSheet({
               </div>
             </div>
 
-            {/* Upload progress bar */}
-            {(stage === "uploading" || stage === "posting") && (
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs text-white/50">
-                  <span className="flex items-center gap-1.5">
-                    {stage === "uploading" ? (
-                      <>
-                        <Upload className="w-3 h-3 animate-bounce" />
-                        Uploading clip…
-                      </>
-                    ) : (
-                      <>
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        Publishing post…
-                      </>
-                    )}
-                  </span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${uploadProgress}%` }}
-                    animate={{ width: `${uploadProgress}%` }}
-                    transition={{ duration: 0.25 }}
-                  />
-                </div>
+            {/* Upload starting info for blob mode */}
+            {blob && stage === "done" && (
+              <div className="flex items-center gap-2 text-emerald-400 py-1">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-medium">Upload started — you can browse freely!</span>
               </div>
             )}
 
-            {/* Done state */}
-            {stage === "done" && (
+            {/* Posting state */}
+            {stage === "posting" && (
+              <div className="flex items-center gap-2 text-white/50 py-1">
+                <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin shrink-0" />
+                <span className="text-sm">Publishing post…</span>
+              </div>
+            )}
+
+            {/* Done state (repost mode) */}
+            {stage === "done" && existingObjectPath && (
               <div className="flex items-center justify-center gap-2 text-emerald-400 py-2">
                 <CheckCircle2 className="w-5 h-5" />
                 <span className="font-semibold">Posted to Community!</span>
@@ -185,7 +190,7 @@ export function ShareToFeedSheet({
                   disabled={!user}
                 >
                   <Share2 className="w-4 h-4" />
-                  Share Clip
+                  {existingObjectPath ? "Post Clip" : "Share Clip"}
                 </Button>
               </div>
             )}

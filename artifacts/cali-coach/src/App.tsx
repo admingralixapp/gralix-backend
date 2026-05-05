@@ -7,6 +7,8 @@ import {
   useClerk,
   useUser,
 } from "@clerk/react";
+import { purgeExpiredClips } from "@/lib/clip-store";
+import { UploadManagerProvider } from "@/lib/upload-manager";
 import { dark } from "@clerk/themes";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
@@ -215,30 +217,32 @@ function AppRouter() {
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
         <ProfileSync />
-        <TooltipProvider>
-          <Layout>
-            <Switch>
-              <Route path="/" component={HomeRoute} />
-              <Route path="/sign-in/*?" component={SignInPage} />
-              <Route path="/sign-up/*?" component={SignUpPage} />
-              <Route path="/workout" component={Workout} />
-              <Route path="/history" component={History} />
-              <Route path="/session/:id" component={SessionDetail} />
-              <Route path="/progress" component={Progress} />
-              <Route path="/exercises" component={Exercises} />
-              <Route path="/community" component={CommunityFeedPage} />
-              <Route path="/skill-tree" component={SkillTreePage} />
-              <Route path="/leaderboard" component={Leaderboard} />
-              <Route path="/friends" component={Friends} />
-              <Route path="/profile/:username" component={ProfilePage} />
-              <Route path="/settings" component={Settings} />
-              <Route path="/mobility" component={MobilityPage} />
-              <Route path="/daily-tasks" component={DailyTasksPage} />
-              <Route component={NotFound} />
-            </Switch>
-          </Layout>
-          <Toaster />
-        </TooltipProvider>
+        <UploadManagerProvider>
+          <TooltipProvider>
+            <Layout>
+              <Switch>
+                <Route path="/" component={HomeRoute} />
+                <Route path="/sign-in/*?" component={SignInPage} />
+                <Route path="/sign-up/*?" component={SignUpPage} />
+                <Route path="/workout" component={Workout} />
+                <Route path="/history" component={History} />
+                <Route path="/session/:id" component={SessionDetail} />
+                <Route path="/progress" component={Progress} />
+                <Route path="/exercises" component={Exercises} />
+                <Route path="/community" component={CommunityFeedPage} />
+                <Route path="/skill-tree" component={SkillTreePage} />
+                <Route path="/leaderboard" component={Leaderboard} />
+                <Route path="/friends" component={Friends} />
+                <Route path="/profile/:username" component={ProfilePage} />
+                <Route path="/settings" component={Settings} />
+                <Route path="/mobility" component={MobilityPage} />
+                <Route path="/daily-tasks" component={DailyTasksPage} />
+                <Route component={NotFound} />
+              </Switch>
+            </Layout>
+            <Toaster />
+          </TooltipProvider>
+        </UploadManagerProvider>
       </QueryClientProvider>
     </ClerkProvider>
   );
@@ -247,6 +251,9 @@ function AppRouter() {
 // ---------------------------------------------------------------------------
 // Root
 // ---------------------------------------------------------------------------
+// Purge expired clips once on startup (sync localStorage call, negligible cost)
+purgeExpiredClips();
+
 function App() {
   return (
     <WouterRouter base={basePath}>

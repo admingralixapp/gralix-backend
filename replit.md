@@ -66,6 +66,8 @@ Required Environment Variables:
 - Global, national, and friends leaderboards based on mastery points.
 - Level-up celebration with confetti and social shoutouts for elite skill mastery.
 - Community video feed for sharing and interacting with workout posts.
+- Video history: clips saved to device storage (7-day TTL), viewable from History and Session Detail.
+- Background upload manager: uploads persist across tab navigation with a floating progress toast.
 
 ## User preferences
 
@@ -77,6 +79,8 @@ _Populate as you build_
 - **API Spec Regeneration**: If the OpenAPI spec changes, regenerate client hooks and Zod schemas with `pnpm --filter @workspace/api-spec run codegen`.
 - **Verified Sessions**: Only `isVerified: true` sessions contribute to leaderboard mastery points. Manual logs are always unverified.
 - **Ghost Sync Gating**: Rep counting and hold timers are gated by Ghost Sync; ensure you are within 85% sync for progress to register.
+- **Clip Store**: Video clips are stored in localStorage (key `calicoach_clips_v1`), keyed by sessionId. 7-day TTL. `purgeExpiredClips()` runs on app startup in App.tsx.
+- **UploadManagerProvider**: Must be inside `QueryClientProvider`. Manages background uploads (history saves + feed posts) with a floating toast that persists across navigation.
 
 ## Pointers
 

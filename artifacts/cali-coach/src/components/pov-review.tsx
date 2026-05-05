@@ -9,13 +9,16 @@
  *  │  [video + red circles] │  [ghost skeleton canvas]     │
  *  ├────────────────────────┴─────────────────────────────┤
  *  │  Joint deviations bar                                │
- *  │  Coach speaking... [Save Clip]  [Continue →]         │
+ *  │  Coach speaking… [Save to History] [Post to Feed]  [Continue →]│
  *  └──────────────────────────────────────────────────────┘
+ *
+ * "Save to History": uploads clip via BackgroundUploadManager (survives nav).
+ * "Post to Feed":    opens ShareToFeedSheet for caption + community post.
+ * Video loops by default so users can analyse form repeatedly.
  */
 
 import { useEffect, useRef, useState } from "react";
 import {
-  Download,
   SkipForward,
   Play,
   Pause,
@@ -23,15 +26,18 @@ import {
   ChevronRight,
   Mic,
   Share2,
+  History,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { drawGhostSkeleton } from "@/lib/ghost-poses";
 import { speak as voiceSpeak } from "@/lib/voice-service";
 import { ShareToFeedSheet } from "./share-to-feed-sheet";
+import { useUploadManager } from "@/lib/upload-manager";
 import type { BestRepData, RepReviewPayload } from "@/lib/rep-recorder";
 import type { Landmark } from "@/lib/exercise-registry";
 
-// ─── Joint name map (MediaPipe 33-point model) ────────────────────────────────
+// ─── Joint name map ───────────────────────────────────────────────────────────
 
 const JOINT_NAMES: Record<number, string> = {
   11: "left shoulder",
@@ -51,9 +57,9 @@ const JOINT_NAMES: Record<number, string> = {
 // ─── Deviation analysis ───────────────────────────────────────────────────────
 
 interface JointDelta {
-  index: number;
-  name: string;
-  dist: number;
+  index:    number;
+  name:     string;
+  dist:     number;
   severity: "high" | "medium" | "low";
 }
 
@@ -75,31 +81,31 @@ function computeDeviations(user: Landmark[], ghost: Landmark[]): JointDelta[] {
   );
 }
 
-// ─── Narration text ───────────────────────────────────────────────────────────
+// ─── Narration ────────────────────────────────────────────────────────────────
 
 const JOINT_ADVICE: Record<string, string> = {
-  "left elbow":      "focus on full elbow extension",
-  "right elbow":     "focus on full elbow extension",
-  "left hip":        "squeeze your glutes to keep your hips aligned",
-  "right hip":       "squeeze your glutes to keep your hips aligned",
-  "left shoulder":   "keep your shoulder packed and stable",
-  "right shoulder":  "keep your shoulder packed and stable",
-  "left knee":       "drive that knee outward to stay in line",
-  "right knee":      "drive that knee outward to stay in line",
-  "left wrist":      "maintain neutral wrists throughout the rep",
-  "right wrist":     "maintain neutral wrists throughout the rep",
-  "left ankle":      "plant your foot firmly for a stable base",
-  "right ankle":     "plant your foot firmly for a stable base",
+  "left elbow":     "focus on full elbow extension",
+  "right elbow":    "focus on full elbow extension",
+  "left hip":       "squeeze your glutes to keep your hips aligned",
+  "right hip":      "squeeze your glutes to keep your hips aligned",
+  "left shoulder":  "keep your shoulder packed and stable",
+  "right shoulder": "keep your shoulder packed and stable",
+  "left knee":      "drive that knee outward to stay in line",
+  "right knee":     "drive that knee outward to stay in line",
+  "left wrist":     "maintain neutral wrists throughout the rep",
+  "right wrist":    "maintain neutral wrists throughout the rep",
+  "left ankle":     "plant your foot firmly for a stable base",
+  "right ankle":    "plant your foot firmly for a stable base",
 };
 
 function buildNarration(
   exerciseName: string,
-  repNumber: number,
-  syncPct: number,
-  deviations: JointDelta[],
+  repNumber:    number,
+  syncPct:      number,
+  deviations:   JointDelta[],
 ): string {
-  const repLabel   = repNumber > 0 ? `rep number ${repNumber}` : "your best hold";
-  const quality    = syncPct >= 90 ? "excellent" : syncPct >= 75 ? "solid" : "developing";
+  const repLabel  = repNumber > 0 ? `rep number ${repNumber}` : "your best hold";
+  const quality   = syncPct >= 90 ? "excellent" : syncPct >= 75 ? "solid" : "developing";
   const significant = deviations.filter(d => d.severity !== "low");
 
   if (significant.length === 0) {
@@ -110,7 +116,7 @@ function buildNarration(
     );
   }
 
-  const top = significant.slice(0, 2);
+  const top      = significant.slice(0, 2);
   const jointText =
     top.length === 1 ? top[0].name : `${top[0].name} and ${top[1].name}`;
   const adviceText = top
@@ -124,9 +130,8 @@ function buildNarration(
   );
 }
 
-// ─── Canvas drawing helpers ───────────────────────────────────────────────────
+// ─── Canvas helpers ───────────────────────────────────────────────────────────
 
-/** Draws the ghost skeleton on the right-panel canvas (full cyan, pulsing alpha). */
 function drawProGhost(
   canvas: HTMLCanvasElement,
   landmarks: Landmark[],
@@ -140,11 +145,10 @@ function drawProGhost(
   ctx.globalAlpha = 1;
 }
 
-/** Draws red glow circles on the overlay canvas at deviant joint positions. */
 function drawDeviationCircles(
   canvas: HTMLCanvasElement,
   userLandmarks: Landmark[],
-  deviations: JointDelta[],
+  deviations:    JointDelta[],
 ): void {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -155,37 +159,31 @@ function drawDeviationCircles(
     const lm = userLandmarks[dev.index];
     if (!lm) continue;
 
-    // Recording is already horizontally mirrored → display X as (1 - lm.x)
-    const x      = (1 - lm.x) * canvas.width;
-    const y      = lm.y * canvas.height;
-    const r      = dev.severity === "high" ? 28 : 20;
-    const alpha  = dev.severity === "high" ? 0.85 : 0.6;
+    const x     = (1 - lm.x) * canvas.width;
+    const y     = lm.y * canvas.height;
+    const r     = dev.severity === "high" ? 28 : 20;
+    const alpha = dev.severity === "high" ? 0.85 : 0.6;
 
     ctx.save();
-
-    // Outer soft glow
-    ctx.globalAlpha = alpha * 0.28;
+    ctx.globalAlpha  = alpha * 0.28;
     ctx.strokeStyle  = "#ef4444";
     ctx.lineWidth    = 8;
     ctx.beginPath();
     ctx.arc(x, y, r + 12, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Main ring
-    ctx.globalAlpha = alpha;
+    ctx.globalAlpha  = alpha;
     ctx.strokeStyle  = "#ef4444";
     ctx.lineWidth    = 2.5;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Translucent fill
-    ctx.globalAlpha  = alpha * 0.18;
-    ctx.fillStyle    = "#ef4444";
+    ctx.globalAlpha = alpha * 0.18;
+    ctx.fillStyle   = "#ef4444";
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
-
     ctx.restore();
   }
 }
@@ -193,18 +191,22 @@ function drawDeviationCircles(
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface PovReviewProps extends RepReviewPayload {
+  /** DB session id — needed for clip storage and community sharing. */
+  sessionId?: number;
   onComplete: () => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 type NarrationState = "idle" | "speaking" | "done";
+type SaveState      = "idle" | "saving" | "saved";
 
 export function PovReview({
   blob,
   bestRepTime,
   bestRepData,
   exerciseName,
+  sessionId,
   onComplete,
 }: PovReviewProps) {
   const videoRef   = useRef<HTMLVideoElement>(null);
@@ -213,38 +215,39 @@ export function PovReview({
   const ghostRafId = useRef(0);
   const blobUrl    = useRef("");
 
-  const [blobReady,      setBlobReady]      = useState(false);
-  const [isPlaying,      setIsPlaying]      = useState(false);
-  const [narration,      setNarration]      = useState<NarrationState>("idle");
-  const [videoError,     setVideoError]     = useState(false);
-  const [showShare,      setShowShare]      = useState(false);
+  const [blobReady,  setBlobReady]  = useState(false);
+  const [isPlaying,  setIsPlaying]  = useState(false);
+  const [narration,  setNarration]  = useState<NarrationState>("idle");
+  const [videoError, setVideoError] = useState(false);
+  const [showShare,  setShowShare]  = useState(false);
+  const [saveState,  setSaveState]  = useState<SaveState>("idle");
+
+  const { enqueue } = useUploadManager();
 
   const deviations    = computeDeviations(bestRepData.userLandmarks, bestRepData.ghostLandmarks);
   const narrationText = buildNarration(exerciseName, bestRepData.repNumber, bestRepData.syncPct, deviations);
   const significant   = deviations.filter(d => d.severity !== "low");
 
-  // ── Create blob URL ─────────────────────────────────────────────────────────
+  // ── Blob URL ─────────────────────────────────────────────────────────────────
   useEffect(() => {
-    const url    = URL.createObjectURL(blob);
+    const url       = URL.createObjectURL(blob);
     blobUrl.current = url;
     setBlobReady(true);
     return () => URL.revokeObjectURL(url);
   }, [blob]);
 
-  // ── Video setup & auto-seek ─────────────────────────────────────────────────
+  // ── Video setup + auto-seek ──────────────────────────────────────────────────
   useEffect(() => {
     if (!blobReady) return;
     const video = videoRef.current;
     if (!video) return;
 
-    const handleMeta = () => {
-      // Seek to 5 s before the best rep (if the recording is long enough)
+    const handleMeta  = () => {
       if (bestRepTime > 1 && video.duration > bestRepTime) {
         video.currentTime = bestRepTime;
       }
       video.play().catch(() => setIsPlaying(false));
     };
-
     const handlePlay  = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handleError = () => setVideoError(true);
@@ -265,7 +268,7 @@ export function PovReview({
     };
   }, [blobReady, bestRepTime]);
 
-  // ── Deviation overlay on left panel ─────────────────────────────────────────
+  // ── Deviation overlay ────────────────────────────────────────────────────────
   useEffect(() => {
     const video   = videoRef.current;
     const overlay = overlayRef.current;
@@ -276,9 +279,7 @@ export function PovReview({
       overlay.height = video.videoHeight || 720;
       drawDeviationCircles(overlay, bestRepData.userLandmarks, deviations);
     };
-
     video.addEventListener("loadedmetadata", resize);
-    // Draw immediately with default dimensions
     overlay.width  = 1280;
     overlay.height = 720;
     drawDeviationCircles(overlay, bestRepData.userLandmarks, deviations);
@@ -286,7 +287,7 @@ export function PovReview({
     return () => video.removeEventListener("loadedmetadata", resize);
   }, [bestRepData.userLandmarks, deviations]);
 
-  // ── Ghost animation on right panel ──────────────────────────────────────────
+  // ── Ghost animation ──────────────────────────────────────────────────────────
   useEffect(() => {
     const canvas = ghostRef.current;
     if (!canvas) return;
@@ -303,43 +304,46 @@ export function PovReview({
       drawProGhost(canvas, bestRepData.ghostLandmarks, alpha);
       ghostRafId.current = requestAnimationFrame(animate);
     };
-
     ghostRafId.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(ghostRafId.current);
   }, [bestRepData.ghostLandmarks]);
 
-  // ── Auto-narrate on mount ───────────────────────────────────────────────────
+  // ── Auto-narrate ─────────────────────────────────────────────────────────────
   useEffect(() => {
     const timer = setTimeout(() => {
       setNarration("speaking");
       voiceSpeak(narrationText);
-      // Mark done after estimated speech duration (≈ 140 wpm)
-      const words    = narrationText.split(" ").length;
+      const words      = narrationText.split(" ").length;
       const durationMs = Math.max(4000, (words / 140) * 60_000);
-      const doneTimer = setTimeout(() => setNarration("done"), durationMs);
+      const doneTimer  = setTimeout(() => setNarration("done"), durationMs);
       return () => clearTimeout(doneTimer);
     }, 900);
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Handlers ────────────────────────────────────────────────────────────────
+  // ── Handlers ─────────────────────────────────────────────────────────────────
   const togglePlay = () => {
     const v = videoRef.current;
     if (!v) return;
     if (v.paused) { v.play().catch(() => {}); } else { v.pause(); }
   };
 
-  const handleSave = () => {
-    const a   = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    a.href     = url;
-    a.download = `calicoach-${exerciseName.toLowerCase().replace(/\s+/g, "-")}-review.webm`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  const handleSaveToHistory = () => {
+    if (saveState !== "idle") return;
+    setSaveState("saving");
+    enqueue({
+      blob,
+      sessionId:    sessionId ?? 0,
+      exerciseName,
+      isAiVerified: true,
+      mode:         "history",
+      onDone: () => setSaveState("saved"),
+    });
+    // Show "saving" briefly then let the floating toast take over
+    setTimeout(() => setSaveState("saved"), 1_200);
   };
 
-  // ── Colour helpers ──────────────────────────────────────────────────────────
   const syncColor =
     bestRepData.syncPct >= 90 ? "#86efac" :
     bestRepData.syncPct >= 75 ? "#fde047" : "#fca5a5";
@@ -347,11 +351,10 @@ export function PovReview({
   const severityColor = (s: JointDelta["severity"]) =>
     s === "high" ? "#ef4444" : "#f97316";
 
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col overflow-hidden">
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 shrink-0">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
@@ -361,17 +364,11 @@ export function PovReview({
           <div className="h-4 w-px bg-white/15" />
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-white/40">Best Rep</span>
-            <span
-              className="text-sm font-black tabular-nums"
-              style={{ color: syncColor }}
-            >
+            <span className="text-sm font-black tabular-nums" style={{ color: syncColor }}>
               #{bestRepData.repNumber}
             </span>
             <span className="text-xs text-white/40">·</span>
-            <span
-              className="text-sm font-black tabular-nums"
-              style={{ color: syncColor }}
-            >
+            <span className="text-sm font-black tabular-nums" style={{ color: syncColor }}>
               {bestRepData.syncPct}%
             </span>
             <span className="text-xs text-white/40">Ghost Sync</span>
@@ -387,7 +384,7 @@ export function PovReview({
         </button>
       </div>
 
-      {/* ── Main panels ────────────────────────────────────────────────────── */}
+      {/* ── Main panels ─────────────────────────────────────────────────────── */}
       <div className="flex-1 grid grid-cols-2 gap-px bg-white/[0.06] min-h-0">
 
         {/* Left — User form video */}
@@ -417,12 +414,10 @@ export function PovReview({
                   loop
                   playsInline
                 />
-                {/* Deviation circles overlay */}
                 <canvas
                   ref={overlayRef}
                   className="absolute inset-0 w-full h-full object-contain pointer-events-none"
                 />
-                {/* Play / pause button */}
                 <button
                   onClick={togglePlay}
                   className="absolute bottom-3 right-3 bg-black/70 hover:bg-black/90 rounded-full p-2 text-white transition-colors"
@@ -446,13 +441,11 @@ export function PovReview({
           </div>
 
           <div className="flex-1 relative overflow-hidden">
-            {/* Mirror the canvas to match the "mirror mode" of the video panel */}
             <canvas
               ref={ghostRef}
               className="absolute inset-0 w-full h-full object-contain"
               style={{ transform: "scaleX(-1)" }}
             />
-            {/* Overlay label */}
             <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-black/50 rounded-full px-3 py-1">
               <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
               <span className="text-[10px] font-semibold text-cyan-300">Perfect sync target</span>
@@ -461,7 +454,7 @@ export function PovReview({
         </div>
       </div>
 
-      {/* ── Deviation breakdown ─────────────────────────────────────────────── */}
+      {/* ── Deviation breakdown ──────────────────────────────────────────────── */}
       {significant.length > 0 && (
         <div className="px-5 py-2.5 border-t border-white/[0.07] bg-black/60 shrink-0">
           <p className="text-[9px] uppercase tracking-widest text-white/25 font-semibold mb-2">
@@ -493,11 +486,11 @@ export function PovReview({
         </div>
       )}
 
-      {/* ── Bottom action bar ───────────────────────────────────────────────── */}
-      <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between gap-4 shrink-0">
+      {/* ── Bottom action bar ────────────────────────────────────────────────── */}
+      <div className="px-5 py-3 border-t border-white/10 flex items-center justify-between gap-3 shrink-0">
 
         {/* Narration status */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <Mic
             className={`w-3.5 h-3.5 transition-colors ${
               narration === "speaking" ? "text-cyan-400" :
@@ -505,7 +498,7 @@ export function PovReview({
                                          "text-white/20"
             }`}
           />
-          <span className="text-xs text-white/40">
+          <span className="text-xs text-white/40 hidden sm:inline">
             {narration === "idle"     && "Preparing coach…"}
             {narration === "speaking" && "Coach narrating…"}
             {narration === "done"     && "Narration complete"}
@@ -515,12 +508,8 @@ export function PovReview({
               {[0, 1, 2].map(i => (
                 <span
                   key={i}
-                  className="w-1 h-3 rounded-full bg-cyan-400"
-                  style={{
-                    animation:      `pulse 0.9s ease-in-out ${i * 0.15}s infinite`,
-                    animationName:  "bounceBar",
-                    display:        "inline-block",
-                  }}
+                  className="w-1 h-3 rounded-full bg-cyan-400 inline-block"
+                  style={{ animation: `pulse 0.9s ease-in-out ${i * 0.15}s infinite` }}
                 />
               ))}
             </span>
@@ -528,17 +517,36 @@ export function PovReview({
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Save to History */}
           <Button
             variant="outline"
             size="sm"
-            onClick={handleSave}
-            className="border-white/20 text-white hover:bg-white/10 gap-1.5"
+            onClick={handleSaveToHistory}
+            disabled={saveState !== "idle"}
+            className={`border-white/20 hover:bg-white/10 gap-1.5 transition-all ${
+              saveState === "saved" ? "text-emerald-400 border-emerald-400/30" : "text-white"
+            }`}
           >
-            <Download className="w-3.5 h-3.5" />
-            Save Clip
+            {saveState === "saved" ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Saved
+              </>
+            ) : saveState === "saving" ? (
+              <>
+                <div className="w-3 h-3 rounded-full border border-white/40 border-t-white animate-spin" />
+                Saving…
+              </>
+            ) : (
+              <>
+                <History className="w-3.5 h-3.5" />
+                Save to History
+              </>
+            )}
           </Button>
 
+          {/* Post to Feed */}
           <Button
             variant="outline"
             size="sm"
@@ -546,9 +554,10 @@ export function PovReview({
             className="border-primary/40 text-primary hover:bg-primary/10 gap-1.5"
           >
             <Share2 className="w-3.5 h-3.5" />
-            Share to Feed
+            Post to Feed
           </Button>
 
+          {/* Continue */}
           <Button
             size="sm"
             onClick={onComplete}
@@ -560,12 +569,13 @@ export function PovReview({
         </div>
       </div>
 
-      {/* Share to feed sheet */}
+      {/* Share sheet */}
       {showShare && (
         <ShareToFeedSheet
           blob={blob}
           exerciseName={exerciseName}
           isAiVerified={true}
+          sessionId={sessionId}
           onClose={() => setShowShare(false)}
         />
       )}
