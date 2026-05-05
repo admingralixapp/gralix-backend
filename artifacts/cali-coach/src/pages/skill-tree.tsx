@@ -176,10 +176,11 @@ function LockShape({ cx, cy }: { cx: number; cy: number }) {
 // ─── ConnectorPath ────────────────────────────────────────────────────────────
 
 function ConnectorPath({
-  fromId, toId, skillMap,
+  fromId, toId, skillMap, hoveredId,
 }: {
   fromId: string; toId: string;
   skillMap: Map<string, EvaluatedSkill>;
+  hoveredId: string | null;
 }) {
   const p1 = NODE_POS[fromId];
   const p2 = NODE_POS[toId];
@@ -188,6 +189,9 @@ function ConnectorPath({
   const fromSkill = skillMap.get(fromId);
   const mastered  = fromSkill?.status === "mastered";
   const color     = nodeColor(fromId);
+
+  // Brighten this edge when either endpoint is hovered
+  const lit = hoveredId === fromId || hoveredId === toId;
 
   // Start below source node, end above target node
   const x1 = p1.x; const y1 = p1.y + NODE_R + 2;
@@ -198,31 +202,45 @@ function ConnectorPath({
 
   if (mastered) {
     return (
-      <g>
-        {/* Outer glow */}
-        <path d={d} fill="none" stroke={color} strokeWidth={12} opacity={0.06} strokeLinecap="round" />
+      <g style={{ transition: "opacity 0.15s" }}>
+        {/* Outer glow — expands on hover */}
+        <path d={d} fill="none" stroke={color} strokeWidth={lit ? 20 : 12}
+          opacity={lit ? 0.18 : 0.06} strokeLinecap="round"
+          style={{ transition: "stroke-width 0.15s, opacity 0.15s" }} />
         {/* Inner glow */}
-        <path d={d} fill="none" stroke={color} strokeWidth={6}  opacity={0.18} strokeLinecap="round" />
+        <path d={d} fill="none" stroke={color} strokeWidth={lit ? 8 : 6}
+          opacity={lit ? 0.55 : 0.18} strokeLinecap="round"
+          style={{ transition: "stroke-width 0.15s, opacity 0.15s" }} />
         {/* Solid line */}
-        <path d={d} fill="none" stroke={color} strokeWidth={2.5} opacity={0.9} strokeLinecap="round" />
+        <path d={d} fill="none" stroke={color} strokeWidth={lit ? 3.5 : 2.5}
+          opacity={lit ? 1 : 0.9} strokeLinecap="round"
+          style={{ transition: "stroke-width 0.15s" }} />
       </g>
     );
   }
 
   return (
-    <path d={d} fill="none" stroke="#1e293b" strokeWidth={1.5}
-      strokeDasharray="9 5" opacity={0.85} strokeLinecap="round" />
+    <path d={d} fill="none"
+      stroke={lit ? color : "#1e293b"}
+      strokeWidth={lit ? 2 : 1.5}
+      strokeDasharray="9 5"
+      opacity={lit ? 0.55 : 0.85}
+      strokeLinecap="round"
+      style={{ transition: "stroke 0.15s, opacity 0.15s" }}
+    />
   );
 }
 
 // ─── GlassNode ────────────────────────────────────────────────────────────────
 
 function GlassNode({
-  nodeId, skill, onClick,
+  nodeId, skill, isHovered, onClick, onHover,
 }: {
   nodeId: string;
   skill: EvaluatedSkill;
+  isHovered: boolean;
   onClick: (skill: EvaluatedSkill, e: React.MouseEvent) => void;
+  onHover: (id: string | null) => void;
 }) {
   const pos = NODE_POS[nodeId];
   if (!pos) return null;
@@ -243,21 +261,45 @@ function GlassNode({
   // Clamp title length for the label below
   const shortTitle = skill.title.length > 13 ? skill.title.slice(0, 12) + "…" : skill.title;
 
+  // CSS scale-around-center via transformOrigin
+  const scale = isHovered ? "scale(1.12)" : "scale(1)";
+
   return (
     <g
       onClick={(e) => { e.stopPropagation(); onClick(skill, e); }}
-      style={{ cursor: "pointer" }}
+      onMouseEnter={() => onHover(nodeId)}
+      onMouseLeave={() => onHover(null)}
+      style={{
+        cursor: "pointer",
+        transformOrigin: `${x}px ${y}px`,
+        transform: scale,
+        transition: "transform 0.14s cubic-bezier(0.34,1.56,0.64,1)",
+      }}
       role="button"
       aria-label={skill.title}
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick(skill, e as unknown as React.MouseEvent); }}
     >
-      {/* Enlarged invisible hit area */}
+      {/* Enlarged invisible hit area — ≥44px touch target */}
       <circle cx={x} cy={y} r={NODE_R + 16} fill="transparent" />
+
+      {/* Hover outer pulse ring */}
+      {isHovered && (
+        <circle cx={x} cy={y} r={NODE_R + 20}
+          fill="none"
+          stroke={isMastered ? GOLD : color}
+          strokeWidth={1.5}
+          opacity={0.22}
+        />
+      )}
 
       {/* Mastered: double gold glow rings */}
       {isMastered && (
         <>
-          <circle cx={x} cy={y} r={NODE_R + 14} fill="none" stroke={GOLD} strokeWidth={1} opacity={0.12} />
-          <circle cx={x} cy={y} r={NODE_R + 7}  fill="none" stroke={GOLD} strokeWidth={1.5} opacity={0.35} />
+          <circle cx={x} cy={y} r={NODE_R + 14} fill="none" stroke={GOLD}
+            strokeWidth={isHovered ? 2 : 1} opacity={isHovered ? 0.28 : 0.12} />
+          <circle cx={x} cy={y} r={NODE_R + 7}  fill="none" stroke={GOLD}
+            strokeWidth={isHovered ? 2.5 : 1.5} opacity={isHovered ? 0.65 : 0.35} />
         </>
       )}
 
@@ -265,14 +307,14 @@ function GlassNode({
       {isUnlocked && (
         <>
           <circle cx={x} cy={y} r={RING_R}
-            fill="none" stroke={color} strokeWidth={3} opacity={0.15} />
+            fill="none" stroke={color} strokeWidth={3} opacity={isHovered ? 0.3 : 0.15} />
           {pct > 0 && (
             <circle cx={x} cy={y} r={RING_R}
               fill="none" stroke={color} strokeWidth={3}
               strokeDasharray={`${pct * CIRC} ${CIRC}`}
               strokeLinecap="round"
               transform={`rotate(-90 ${x} ${y})`}
-              opacity={0.9}
+              opacity={isHovered ? 1 : 0.9}
             />
           )}
         </>
@@ -282,7 +324,7 @@ function GlassNode({
       <circle cx={x} cy={y} r={NODE_R}
         fill={isMastered ? GOLD : isLocked ? "#080f1a" : "rgba(15,23,42,0.92)"}
         stroke={isMastered ? "#f59e0b" : isLocked ? "#1e293b" : color}
-        strokeWidth={isMastered ? 2 : isLocked ? 1.5 : 2.5}
+        strokeWidth={isMastered ? (isHovered ? 3 : 2) : isLocked ? 1.5 : (isHovered ? 3.5 : 2.5)}
         opacity={isLocked ? 0.5 : 1}
       />
 
@@ -291,7 +333,7 @@ function GlassNode({
         <ellipse
           cx={x} cy={y - NODE_R * 0.3}
           rx={NODE_R * 0.44} ry={NODE_R * 0.2}
-          fill="white" opacity={0.07}
+          fill="white" opacity={isHovered ? 0.14 : 0.07}
         />
       )}
 
@@ -308,8 +350,9 @@ function GlassNode({
 
       {/* Label below node */}
       <text x={x} y={y + NODE_R + 14} textAnchor="middle"
-        fontSize={8} fill={isLocked ? "#374151" : "#9ca3af"}
-        fontWeight={isUnlocked ? "600" : "400"}
+        fontSize={8}
+        fill={isLocked ? "#374151" : isHovered ? (isMastered ? GOLD : color) : "#9ca3af"}
+        fontWeight={isUnlocked || isHovered ? "600" : "400"}
         fontFamily="ui-sans-serif, system-ui, sans-serif">
         {shortTitle}
       </text>
@@ -410,15 +453,27 @@ function SkillOverlay({
         )}
       </div>
 
-      <p className="font-bold text-sm text-white mb-1 leading-tight">{skill.title}</p>
+      <p className="font-bold text-sm text-white mb-0.5 leading-tight">{skill.title}</p>
       {skill.pathLabel && (
-        <p className="text-[10px] text-zinc-500 mb-1.5">{skill.pathLabel}</p>
+        <p className="text-[10px] text-zinc-500 mb-2">{skill.pathLabel}</p>
       )}
-      <p className="text-[11px] text-zinc-400 leading-relaxed mb-3 line-clamp-2">
-        {isLocked
-          ? "Master the prerequisite skill to unlock this node."
-          : skill.description}
-      </p>
+
+      {/* "Why" section — always visible */}
+      <div className="rounded-lg px-2.5 py-2 mb-3 border"
+        style={{
+          borderColor: isLocked ? "#27272a" : `${color}30`,
+          backgroundColor: isLocked ? "rgba(39,39,42,0.4)" : `${color}0d`,
+        }}>
+        <p className="text-[9px] font-bold uppercase tracking-widest mb-1"
+          style={{ color: isLocked ? "#6b7280" : color }}>
+          {isLocked ? "🔒 Locked" : "Why train this?"}
+        </p>
+        <p className="text-[11px] text-zinc-300 leading-relaxed">
+          {isLocked
+            ? "Master the prerequisite skill to unlock this node."
+            : skill.description}
+        </p>
+      </div>
 
       {/* Mastery progress */}
       {!isLocked && (
@@ -508,6 +563,7 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
   const [zoom, setZoom] = useState(0.85);
   const [overlay, setOverlay] = useState<OverlayState | null>(null);
   const [containerSize, setContainerSize] = useState({ w: 900, h: 560 });
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const isPanning     = useRef(false);
   const lastPos       = useRef({ x: 0, y: 0 });
@@ -692,7 +748,13 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
 
             {/* ── Edges (drawn first, under nodes) ── */}
             {EDGES.map(([from, to]) => (
-              <ConnectorPath key={`${from}-${to}`} fromId={from} toId={to} skillMap={skillMap} />
+              <ConnectorPath
+                key={`${from}-${to}`}
+                fromId={from}
+                toId={to}
+                skillMap={skillMap}
+                hoveredId={hoveredId}
+              />
             ))}
 
             {/* ── Nodes ── */}
@@ -704,7 +766,9 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
                   key={nodeId}
                   nodeId={nodeId}
                   skill={skill}
+                  isHovered={hoveredId === nodeId}
                   onClick={handleNodeClick}
+                  onHover={setHoveredId}
                 />
               );
             })}
