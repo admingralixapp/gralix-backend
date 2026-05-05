@@ -59,6 +59,27 @@ function writeLocalPrefs(p: LocalPrefs) {
   } catch { /* storage full — ignore */ }
 }
 
+// ─── Notification localStorage helpers ───────────────────────────────────────
+
+const NOTIF_LS_KEY = "calicoach:notifPrefs";
+
+interface NotifPrefs { enabled: boolean; time: string }
+
+function readNotifPrefs(): NotifPrefs | null {
+  try {
+    const raw = localStorage.getItem(NOTIF_LS_KEY);
+    return raw ? (JSON.parse(raw) as NotifPrefs) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeNotifPrefs(p: NotifPrefs) {
+  try {
+    localStorage.setItem(NOTIF_LS_KEY, JSON.stringify(p));
+  } catch { /* ignore */ }
+}
+
 // ─── Questionnaire Modal ──────────────────────────────────────────────────────
 
 interface QuestionnaireProps {
@@ -298,6 +319,7 @@ function TaskCard({
 
 function NotificationCard({
   enabled,
+  blocked,
   notificationTime,
   goalLabel,
   stiffnessAreas,
@@ -306,6 +328,7 @@ function NotificationCard({
   onTimeChange,
 }: {
   enabled: boolean;
+  blocked: boolean;
   notificationTime: string;
   goalLabel: string;
   stiffnessAreas: string;
@@ -348,6 +371,16 @@ function NotificationCard({
           />
         </button>
       </div>
+
+      {/* Blocked warning — shown when browser has denied permission */}
+      {blocked && !enabled && (
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+          <BellOff className="w-3.5 h-3.5 text-destructive shrink-0 mt-px" />
+          <p className="text-xs text-destructive leading-relaxed">
+            Notifications are blocked. Please enable them in your browser settings to receive reminders.
+          </p>
+        </div>
+      )}
 
       {enabled && (
         <>
@@ -411,14 +444,43 @@ export function DailyTasksPage() {
     serverSettings?.dailyTimeMinutes,
   ]);
 
+  // ── Notification local state ───────────────────────────────────────────────
+  // Persisted to localStorage so the toggle state survives page refresh without
+  // waiting for the server query to resolve.
+  const [localNotif, setLocalNotif] = useState<NotifPrefs>(() => {
+    const cached = readNotifPrefs();
+    if (cached) return cached;
+    return {
+      enabled: serverSettings?.enabled          ?? false,
+      time:    serverSettings?.notificationTime ?? "08:00",
+    };
+  });
+
+  // Track whether the browser has actively denied permission so we can show
+  // the "blocked" warning without hiding the toggle.
+  const [notifBlocked, setNotifBlocked] = useState(
+    () => "Notification" in window && Notification.permission === "denied",
+  );
+
+  // Sync server notification settings into local state once loaded
+  useEffect(() => {
+    if (!serverSettings) return;
+    const synced: NotifPrefs = {
+      enabled: serverSettings.enabled          ?? false,
+      time:    serverSettings.notificationTime ?? "08:00",
+    };
+    setLocalNotif(synced);
+    writeNotifPrefs(synced);
+  }, [serverSettings?.enabled, serverSettings?.notificationTime]);
+
   useNotificationScheduler(status);
 
-  const goal     = localPrefs.mobilityGoal as MobilityGoal;
-  const goalLabel = GOAL_LABELS[goal] ?? goal;
+  const goal             = localPrefs.mobilityGoal as MobilityGoal;
+  const goalLabel        = GOAL_LABELS[goal] ?? goal;
   const stiffnessAreas   = localPrefs.stiffnessAreas;
   const dailyTimeMinutes = localPrefs.dailyTimeMinutes;
-  const enabled          = serverSettings?.enabled          ?? false;
-  const notificationTime = serverSettings?.notificationTime ?? "08:00";
+  const enabled          = localNotif.enabled;
+  const notificationTime = localNotif.time;
 
   const areasArray = stiffnessAreas
     ? (stiffnessAreas.split(",").filter(Boolean) as StiffnessArea[])
@@ -459,17 +521,68 @@ export function DailyTasksPage() {
     updateSettings.mutate(newPrefs);
   }
 
-  function handleToggleNotification() {
-    if (!enabled) {
-      requestNotificationPermission().then(granted => {
-        if (granted) updateSettings.mutate({ enabled: true });
-      });
-    } else {
+  async function handleToggleNotification() {
+    if (enabled) {
+      // Turning off — no permission needed
+      const updated: NotifPrefs = { enabled: false, time: notificationTime };
+      setLocalNotif(updated);
+      writeNotifPrefs(updated);
       updateSettings.mutate({ enabled: false });
+      return;
+    }
+
+    // Turning on — check / request browser permission first
+    if (!("Notification" in window)) {
+      toast({
+        title: "Not Supported",
+        description: "Your browser does not support notifications.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Already hard-denied — show the blocked warning immediately
+    if (Notification.permission === "denied") {
+      setNotifBlocked(true);
+      toast({
+        title: "Notifications Blocked",
+        description:
+          "Notifications are blocked. Please enable them in your browser settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Request permission (shows the browser prompt if still "default")
+    const granted = await requestNotificationPermission();
+    // Re-read after the async call so TypeScript doesn't narrow away "denied"
+    const permissionAfter = (window as typeof window & { Notification: { permission: string } })
+      .Notification.permission;
+
+    if (granted) {
+      setNotifBlocked(false);
+      const updated: NotifPrefs = { enabled: true, time: notificationTime };
+      setLocalNotif(updated);
+      writeNotifPrefs(updated);
+      updateSettings.mutate({ enabled: true });
+    } else {
+      const isDenied = permissionAfter === "denied";
+      setNotifBlocked(isDenied);
+      if (isDenied) {
+        toast({
+          title: "Notifications Blocked",
+          description:
+            "Notifications are blocked. Please enable them in your browser settings.",
+          variant: "destructive",
+        });
+      }
     }
   }
 
   function handleTimeChange(time: string) {
+    const updated: NotifPrefs = { enabled, time };
+    setLocalNotif(updated);
+    writeNotifPrefs(updated);
     updateSettings.mutate({ notificationTime: time });
   }
 
@@ -586,6 +699,7 @@ export function DailyTasksPage() {
       {/* Notification card */}
       <NotificationCard
         enabled={enabled}
+        blocked={notifBlocked}
         notificationTime={notificationTime}
         goalLabel={goalLabel}
         stiffnessAreas={stiffnessAreas}

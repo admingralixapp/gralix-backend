@@ -4,12 +4,13 @@ import { ArrowLeft, CheckCircle2, Flame, Play, SkipForward } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  getRoutineForGoal,
+  getTasksForPreferences,
   routineDurationMinutes,
   GOAL_LABELS,
   type GhostPose,
   type MobilityGoal,
   type Stretch,
+  type StiffnessArea,
 } from "@/lib/mobility-service";
 import {
   useMobilityStatus,
@@ -217,6 +218,15 @@ function ProgressDots({
 
 type PageState = "ready" | "active" | "done";
 
+// Read the same localStorage key that DailyTasksPage writes so the session
+// always reflects the latest user preferences even before the server responds.
+const LS_PREFS_KEY = "calicoach:dailyPrefs";
+interface CachedPrefs { mobilityGoal: string; stiffnessAreas: string; dailyTimeMinutes: number }
+function readCachedPrefs(): CachedPrefs | null {
+  try { const r = localStorage.getItem(LS_PREFS_KEY); return r ? JSON.parse(r) as CachedPrefs : null; }
+  catch { return null; }
+}
+
 export function MobilityPage() {
   const [, setLocation] = useLocation();
   const { data: status } = useMobilityStatus();
@@ -224,9 +234,17 @@ export function MobilityPage() {
 
   useNotificationScheduler(status);
 
-  const goal = (status?.settings.mobilityGoal ?? "general") as MobilityGoal;
-  const routine = getRoutineForGoal(goal);
-  const goalLabel = GOAL_LABELS[goal];
+  // Derive goal + preferences: server settings first, localStorage as instant fallback
+  const cached = readCachedPrefs();
+  const goal = ((status?.settings.mobilityGoal ?? cached?.mobilityGoal ?? "general")) as MobilityGoal;
+  const goalLabel = GOAL_LABELS[goal] ?? goal;
+
+  const rawAreas = status?.settings.stiffnessAreas ?? cached?.stiffnessAreas ?? "";
+  const areasArray = rawAreas ? (rawAreas.split(",").filter(Boolean) as StiffnessArea[]) : [];
+  const dailyTimeMinutes = status?.settings.dailyTimeMinutes ?? cached?.dailyTimeMinutes ?? 10;
+
+  // Use the same personalised routine the DailyTasks tab shows
+  const routine = getTasksForPreferences(goal, areasArray, dailyTimeMinutes);
 
   const [pageState, setPageState] = useState<PageState>("ready");
   const [stretchIndex, setStretchIndex] = useState(0);
