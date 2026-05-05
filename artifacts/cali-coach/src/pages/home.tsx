@@ -34,9 +34,9 @@ function StatCard({
   isLoading: boolean;
 }) {
   return (
-    <Card className="bg-card border-border">
+    <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm text-muted-foreground font-medium flex items-center gap-2">
+        <CardTitle className="text-sm text-muted-foreground font-light opacity-80 flex items-center gap-2">
           {icon}
           {label}
         </CardTitle>
@@ -45,9 +45,9 @@ function StatCard({
         {isLoading ? (
           <Skeleton className="h-9 w-16 mb-1" />
         ) : (
-          <div className="text-3xl font-bold">{value}</div>
+          <div className="text-3xl font-extrabold">{value}</div>
         )}
-        <p className="text-xs text-muted-foreground mt-1">{sub}</p>
+        <p className="text-xs text-muted-foreground font-light opacity-80 mt-1">{sub}</p>
       </CardContent>
     </Card>
   );
@@ -67,10 +67,10 @@ export function Home() {
     <div className="p-6 md:p-8 space-y-8">
       <header className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Welcome back. Ready to train?</p>
+          <h1 className="text-3xl font-extrabold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-1 font-light opacity-80">Welcome back. Ready to train?</p>
         </div>
-        <Button asChild size="lg" className="font-bold">
+        <Button asChild size="lg" className="font-extrabold">
           <Link href="/workout">
             <Activity className="w-5 h-5 mr-2" />
             Start Workout
@@ -191,7 +191,7 @@ export function Home() {
       {/* ── Recent Sessions ───────────────────────────────────────── */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Recent Sessions</h2>
+          <h2 className="text-xl font-extrabold">Recent Sessions</h2>
           <Button variant="link" asChild className="text-primary">
             <Link href="/history">
               View All <ArrowRight className="w-4 h-4 ml-1" />
@@ -206,9 +206,9 @@ export function Home() {
             ))}
           </div>
         ) : !recentSessions || recentSessions.length === 0 ? (
-          <div className="text-center py-12 border border-dashed border-border rounded-lg bg-card/50">
+          <div className="text-center py-12 border border-dashed border-white/10 rounded-[20px] bg-white/[0.02]">
             <Dumbbell className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-30" />
-            <p className="text-muted-foreground mb-4">No sessions recorded yet.</p>
+            <p className="text-muted-foreground font-light opacity-80 mb-4">No sessions recorded yet.</p>
             <Button asChild variant="outline">
               <Link href="/workout">Start your first workout</Link>
             </Button>
@@ -217,11 +217,11 @@ export function Home() {
           <div className="grid gap-3">
             {recentSessions.map((session) => (
               <Link key={session.id} href={`/session/${session.id}`}>
-                <Card className="hover:bg-secondary transition-colors cursor-pointer border-border">
+                <Card className="hover:bg-white/[0.04] transition-all cursor-pointer">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
-                      <div className="font-bold text-lg">{session.exerciseName}</div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="font-extrabold text-lg">{session.exerciseName}</div>
+                      <div className="text-sm text-muted-foreground font-light opacity-80">
                         {new Date(session.startedAt).toLocaleDateString(undefined, {
                           weekday: "short",
                           month: "short",

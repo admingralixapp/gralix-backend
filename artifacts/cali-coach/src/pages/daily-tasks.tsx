@@ -119,7 +119,7 @@ function Questionnaire({
       onClick={onClose}
     >
       <motion.div
-        className="w-full sm:max-w-lg bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-y-auto max-h-[92vh]"
+        className="w-full sm:max-w-lg glass-card rounded-t-[20px] sm:rounded-[20px] shadow-2xl overflow-y-auto max-h-[92vh] border-0"
         initial={{ y: 40, opacity: 0 }}
         animate={{ y: 0,  opacity: 1 }}
         exit={{ y: 40,  opacity: 0 }}
@@ -127,10 +127,10 @@ function Questionnaire({
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-border">
+        <div className="flex items-center justify-between p-5 border-b border-white/[0.08]">
           <div>
-            <h2 className="text-lg font-bold">Update My Goals</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-lg font-extrabold">Update My Goals</h2>
+            <p className="text-sm text-muted-foreground font-light opacity-80">
               Personalise your daily mobility tasks
             </p>
           </div>
@@ -268,7 +268,7 @@ function TaskCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card transition-all",
+        "glass-card transition-all",
         expanded ? "border-primary/40" : "",
       )}
     >
@@ -280,8 +280,8 @@ function TaskCard({
           {index + 1}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm truncate">{name}</div>
-          <div className="text-xs text-muted-foreground">
+          <div className="font-bold text-sm truncate">{name}</div>
+          <div className="text-xs text-muted-foreground font-light opacity-80">
             {muscles.slice(0, 2).join(" · ")}
           </div>
         </div>
@@ -343,7 +343,7 @@ function NotificationCard({
   const preview = `Ready to work toward your ${goalLabel}? Your ${dailyTimeMinutes}-min mobility prep is waiting${areas ? `. Focus: ${areas}` : ""}.`;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+    <div className="glass-card p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {enabled ? (
@@ -594,8 +594,8 @@ export function DailyTasksPage() {
       {/* Page header */}
       <div className="flex items-start justify-between pt-1">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Daily Tasks</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h1 className="text-2xl font-extrabold tracking-tight">Daily Tasks</h1>
+          <p className="text-sm text-muted-foreground font-light opacity-80 mt-0.5">
             Your personalised mobility plan
           </p>
         </div>
@@ -608,13 +608,13 @@ export function DailyTasksPage() {
       </div>
 
       {/* Goal + preferences summary */}
-      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+      <div className="glass-card p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <div className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">
               Current Goal
             </div>
-            <div className="font-bold text-lg leading-tight">{goalLabel}</div>
+            <div className="font-extrabold text-lg leading-tight">{goalLabel}</div>
             {areasArray.length > 0 && (
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {areasArray.map(a => (

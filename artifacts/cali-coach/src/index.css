@@ -116,7 +116,7 @@
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-mono: 'Space Mono', monospace;
-  --radius: 0.5rem;
+  --radius: 1.25rem;
 }
 
 @layer base {
@@ -127,4 +127,37 @@
     @apply font-sans antialiased bg-background text-foreground;
     color-scheme: dark;
   }
+}
+
+/* ── Glassmorphism card ───────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(25, 25, 25, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+}
+
+/* ── Neon-green CTA glow ──────────────────────────────────────────────────── */
+.neon-glow {
+  box-shadow:
+    0 0 20px rgba(0, 255, 100, 0.30),
+    0 0 8px  rgba(0, 255, 100, 0.18);
+}
+.neon-glow:hover {
+  box-shadow:
+    0 0 28px rgba(0, 255, 100, 0.45),
+    0 0 12px rgba(0, 255, 100, 0.28);
+}
+
+/* ── Active nav icon glow ─────────────────────────────────────────────────── */
+.nav-icon-active {
+  filter: drop-shadow(0 0 6px rgba(0, 255, 100, 0.70));
+}
+
+/* ── Glass sidebar / bottom nav ──────────────────────────────────────────── */
+.glass-nav {
+  background: rgba(15, 15, 15, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }

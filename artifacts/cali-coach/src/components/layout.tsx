@@ -241,34 +241,35 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card shrink-0">
+      <aside className="hidden md:flex w-64 flex-col border-r border-white/[0.06] glass-nav shrink-0">
         <div className="p-6">
           <button
             onClick={() => navigateTo("/")}
             className="flex items-center gap-2"
           >
-            <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center neon-glow">
               <Activity className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-xl tracking-tight">CaliCoach</span>
+            <span className="font-extrabold text-xl tracking-tight">CaliCoach</span>
           </button>
         </div>
 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
+            const active = isActive(item.href);
             return (
               <button
                 key={item.href}
                 onClick={() => navigateTo(item.href)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-md transition-colors font-medium text-sm text-left",
-                  isActive(item.href)
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-left",
+                  active
                     ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
                 )}
               >
-                <Icon className="w-5 h-5 shrink-0" />
+                <Icon className={cn("w-5 h-5 shrink-0", active && "nav-icon-active")} />
                 {item.label}
               </button>
             );
@@ -279,7 +280,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border bg-card z-50 flex justify-around p-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/[0.06] glass-nav z-50 flex justify-around p-2">
         {NAV_ITEMS.filter(item => !item.requireAuth).map(item => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -288,17 +289,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
               key={item.href}
               onClick={() => navigateTo(item.href)}
               className={cn(
-                "flex flex-col items-center justify-center p-2 rounded-md relative transition-colors",
+                "flex flex-col items-center justify-center p-2 rounded-xl relative transition-all",
                 active ? "text-primary" : "text-muted-foreground",
               )}
             >
-              <Icon className="w-5 h-5" />
-              <span className="text-[9px] mt-0.5 font-medium">{item.label}</span>
+              <Icon className={cn("w-5 h-5", active && "nav-icon-active")} />
+              <span className={cn(
+                "text-[9px] mt-0.5",
+                active ? "font-bold" : "font-light opacity-80",
+              )}>
+                {item.label}
+              </span>
               {/* Active indicator dot */}
               {active && (
                 <motion.div
                   layoutId="mobile-nav-indicator"
                   className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
+                  style={{ boxShadow: "0 0 6px rgba(0,255,100,0.8)" }}
                   transition={springTransition}
                 />
               )}
