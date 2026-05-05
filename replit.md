@@ -1,8 +1,18 @@
 # CaliCoach
 
-## Overview
+CaliCoach is a calisthenics motion capture coaching app that provides real-time feedback, rep counting, and workout tracking to help users improve their form and achieve their fitness goals.
 
-A calisthenics motion capture coaching app. Uses the device camera with MediaPipe Pose for real-time body tracking, counts reps automatically based on joint angles, speaks audio coaching cues via Web Speech API, and tracks workout history and form scores over time.
+## Run & Operate
+
+- `pnpm run typecheck`: Typecheck all packages.
+- `pnpm run build`: Typecheck and build all packages.
+- `pnpm --filter @workspace/api-spec run codegen`: Regenerate API hooks and Zod schemas from OpenAPI spec.
+- `pnpm --filter @workspace/db run push`: Push database schema changes (development only).
+- `pnpm --filter @workspace/api-server run dev`: Run the API server locally.
+
+Required Environment Variables:
+- `VITE_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
 
 ## Stack
 
@@ -10,203 +20,68 @@ A calisthenics motion capture coaching app. Uses the device camera with MediaPip
 - **Node.js version**: 24
 - **Package manager**: pnpm
 - **TypeScript version**: 5.9
-- **Frontend**: React + Vite (artifacts/cali-coach), served at `/`
-- **API framework**: Express 5 (artifacts/api-server), served at `/api`
+- **Frontend**: React + Vite
+- **API framework**: Express 5
 - **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
-- **Pose detection**: MediaPipe Tasks Vision (`@mediapipe/tasks-vision`)
+- **Validation**: Zod, `drizzle-zod`
+- **API codegen**: Orval
+- **Build**: esbuild
+- **Pose detection**: MediaPipe Tasks Vision
 - **Charts**: Recharts
-- **Styling**: Tailwind CSS v4, dark athletic theme (neon green `#00FF00` primary)
+- **Styling**: Tailwind CSS v4, dark athletic theme (neon green primary)
+- **Auth**: Clerk
 
-## Authentication
+## Where things live
 
-- **Provider**: Clerk (whitelabel, dev keys in `VITE_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY`)
-- Sign-in/sign-up pages at `/sign-in` and `/sign-up` with dark Clerk theme
-- `ProfileSync` component auto-creates a DB profile on first sign-in
-- Server-side: `@clerk/express` middleware via `clerkMiddleware()` in `app.ts`
+- `artifacts/cali-coach`: Frontend application (React + Vite).
+- `artifacts/api-server`: Backend API (Express 5).
+- `artifacts/api-spec`: OpenAPI specification for API codegen.
+- `artifacts/cali-coach/src/lib/ghost-poses.ts`: Ghost Mode AR Overlay configurations.
+- `artifacts/api-server/src/lib/skillTree.ts`: Logic for skill tree evaluation and mastery points.
+- `artifacts/cali-coach/src/lib/skill-tree.ts`: All 32 skill node definitions, `evaluateSkillTree()`, `ALL_SKILL_NODES`.
+- `artifacts/cali-coach/src/components/skill-map.tsx`: Dashboard Dynamic Window (3 nodes/branch).
+- `artifacts/cali-coach/src/pages/skill-tree.tsx`: SVG pan/zoom tech-tree (NODE_POS, EDGES, TreeCanvas, SkillOverlay).
+- `exercise-registry.ts`: AI coaching configurations and exercise definitions.
+- Database Schema: Defined in Drizzle ORM, consult the `artifacts/db` package for the schema.
+- API Routes: Detailed within `artifacts/api-server/src/routes`.
+- Frontend Pages: Organized in `artifacts/cali-coach/src/pages`.
 
-## Key Features
+## Architecture decisions
 
-- Real-time pose detection via MediaPipe Pose Landmarker
-- Rep counting from joint angle analysis (elbow, knee, hip angles)
-- Live form score (0-100) with exponential moving average smoothing
-- Audio coaching cues via Web Speech API, throttled to 4s intervals
-- Session tracking: create, log reps, complete sessions
-- Progress dashboard: form score timeline, per-exercise progress, streaks
-- **Manual Log (No AI)**: Pre-start overlay button opens a reps+RPE input screen (no camera required). Sessions saved with `logType: "manual"` and `isVerified: false`. History shows a gray "Self-Reported" badge. Manual sessions do NOT count toward leaderboard mastery points.
-- **Anti-Cheat / Verification System**: Every session has an `isVerified` boolean (DB column `is_verified`, default `true`). Manual logs are always `isVerified: false`. During AI-coached sessions, frozen-frame detection compares `video.currentTime` each animation frame — if it stops advancing for >3 seconds, the session is flagged as `isVerified: false` and the user is notified. Leaderboard mastery points only aggregate `isVerified: true` sessions (`computeMasteryPoints(sessions, verifiedOnly=true)`). History shows a glowing green "AI Verified" badge for verified sets, a gray "Self-Reported" badge for manual/unverified. Leaderboard footer shows "Only AI-Verified reps count toward global rankings."
-- **Social layer**: friends (search by username, send/accept/reject requests), shared profiles (skill tree + form mastery), privacy controls (Public / Friends Only / Private)
-- **Daily Mobility System**: 5-stretch guided routine (60s holds) with Ghost Mode SVG overlay, goal-based routine selection from 8 skill-tree goals, Mobility Streak counter on dashboard, browser notification opt-in (user-specified time) in Settings
-- **Leaderboard**: Global top-100, National (country auto-detected via CF-IPCountry or Accept-Language), Friends-only — mastery points computed from skill tree (L1=100 pts … L5=500 pts, max 6,000). Sticky "Your Rank" bar always visible at bottom of the page.
-- **Level Up Celebration**: When a user masters an Elite (level 5) skill → full-screen gold confetti animation (canvas-confetti), a Mastery Badge on their profile, and a shoutout auto-posted to the Social Feed visible to friends.
+- **Monorepo with pnpm workspaces**: Enables shared code and consistent dependency management across frontend and backend.
+- **MediaPipe for real-time pose detection**: Chosen for its on-device processing capabilities, ensuring low latency and privacy.
+- **Drizzle ORM**: Provides a type-safe interface for database interactions, leveraging TypeScript benefits.
+- **Clerk for authentication**: Offloads authentication complexities, providing a robust and customizable user management system.
+- **Blended form score**: Combines joint angle form score with Ghost Sync percentage to ensure comprehensive form evaluation, encouraging both correct movement and adherence to the visual guide.
 
-## Exercises & Skill Tree
+## Product
 
-**32 skills across 4 branches** (expanded from 24). Each skill has a `type`: `standard | static | explosive`.
-New category paths added: Overhead Pressing (PUSH), Explosive Pull (PULL), Static Holds (CORE), Unilateral Legs (LEGS).
+- Real-time calisthenics coaching with rep counting and form scoring.
+- Audio coaching cues.
+- Workout history and progress tracking with a dashboard.
+- Manual logging option for sessions without camera use.
+- Anti-cheat/verification system for AI-coached sessions.
+- Social features: friend management, shared profiles with skill trees and mastery.
+- Daily Mobility System with guided routines and streak tracking.
+- Global, national, and friends leaderboards based on mastery points.
+- Level-up celebration with confetti and social shoutouts for elite skill mastery.
+- Community video feed for sharing and interacting with workout posts.
 
-### PUSH (8 skills)
-- **Main path**: Push-Up Foundation → Push-Up Strength → Dip Introduction → Dip Mastery → Push Elite (L5)
-- **Overhead Path** (branches from L1): Pike Push-Up → Elevated Pike Push-Up
-- **Handstand Path** (parallel L5): Handstand Push-Up
+## User preferences
 
-### PULL (10 skills — forked after L2)
-Scapular Shrugs → Australian Rows → Negative Pull-Ups → Pull-Up, then forks into:
-- **Front Lever Path** (static): Tuck Front Lever → Straddle Front Lever → Full Front Lever
-- **Muscle-Up Path** (explosive): Explosive Pull-Up → Muscle-Up (x2 nodes)
-- **Explosive Pull Path** (branches from L2): Chest-to-Bar Pull-Up → Archer Pull-Up
+_Populate as you build_
 
-### CORE (7 skills)
-- **Main path**: Plank → Burpee Basics → Burpee Conditioning → Dragon Flag (static) → Human Flag (static)
-- **Static Holds Path** (branches from Plank): Hollow Body Hold → Tuck L-Sit
+## Gotchas
 
-### LEGS (7 skills)
-- **Main path**: Squat Foundation → Squat Strength → Lunge Balance → Nordic Curls → Pistol Squat
-- **Unilateral Path** (branches from L2): Bulgarian Split Squat → Shrimp Squat
+- **DB Schema Changes**: Always run `pnpm --filter @workspace/db run push` after making changes to the Drizzle schema.
+- **API Spec Regeneration**: If the OpenAPI spec changes, regenerate client hooks and Zod schemas with `pnpm --filter @workspace/api-spec run codegen`.
+- **Verified Sessions**: Only `isVerified: true` sessions contribute to leaderboard mastery points. Manual logs are always unverified.
+- **Ghost Sync Gating**: Rep counting and hold timers are gated by Ghost Sync; ensure you are within 85% sync for progress to register.
 
-### Exercise Registry (34 exercises in DB)
-All 34 exercises have AI coaching configs in `exercise-registry.ts` with:
-- Target joints / critical joint pairs for the AI coach
-- State-machine processFrame (standard/explosive: rep counting; static: hold timer)
-- 3 specific audio coaching cues per exercise
+## Pointers
 
-### Ghost Mode AR Overlay
-Active during every live camera workout. Defined in `artifacts/cali-coach/src/lib/ghost-poses.ts`.
-
-- **Visual ghost**: semi-transparent cyan skeleton drawn on the same canvas as the user, animated at an independent 4-second rep cycle (smoothly cycling between phase keyframes) so the user can follow along
-- **Color**: cyan (`#00D4FF`) when synced (≥85%), amber when not synced
-- **Sync calculation**: `calcSyncPct()` — for each key landmark in the exercise config, checks if the Euclidean distance between user landmark and ideal ghost landmark is within 0.15 (15% of the 0–1 normalised space). Returns 0–100.
-- **Phase-matched ghost**: `computeGhostLandmarks()` applies `AngleCorrection` entries to the user's detected body (anchored to their scale and position) to show ideal joint angles for the current exercise phase.
-- **Gating**: rep counter and hold timer only advance when `syncPct >= 85`. If sync drops, a throttled voice says "Get back into position to continue."
-- **Blended form score**: `(angleFormScore + syncPct) / 2` — stored as `avgFormScore` in DB, ensuring mastery requires both good angles AND ghost sync.
-- **HUD**: "Ghost Sync XX%" badge in the centre (green ≥90%, yellow ≥75%, red <75%), border glow changes cyan when synced / amber when not.
-- **Session Results**: shows "Best Ghost Sync: XX%" with Elite badge at ≥90%.
-- Covered exercises: all Push, Pull, Squat, Lunge, Nordic Curls, Dip, all static holds. Unconfigured exercises (Burpee, Muscle-Up) default to 100% sync.
-
-### Static Hold Timer
-Static exercises (`isStatic: true` in `ExerciseConfig`) use a Hold Timer instead of a rep counter:
-- `processFrame` returns `isHoldActive: boolean` — true when all joints are within ±10° of target
-- Timer only ticks while `isHoldActive === true` ("Active Zone")
-- Green glow border + "Zone Active" badge when in zone; red border + "Adjust Position" when not
-- TTS milestone coaching every 5 seconds held
-- `totalReps` saved to DB = seconds held (integer)
-- Session Results shows formatted hold time (e.g. "45s" or "1m 30s") instead of "reps"
-
-## Key Commands
-
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
-
-## DB Schema
-
-- `exercises` — exercise definitions with coaching cues
-- `sessions` — workout sessions (exerciseId, userId FK, reps, form score, timestamps)
-- `reps` — individual rep logs (formScore, durationMs, feedbackGiven)
-- `users` — Clerk-linked profiles (clerkId, username, displayName, avatarUrl, privacyLevel, country varchar(2))
-- `friendRequests` — friendship edges (fromUserId, toUserId, status: pending/accepted/rejected)
-- `shoutouts` — elite skill mastery announcements (userId FK, skillId, skillTitle, branch, createdAt). Unique constraint on (userId, skillId) prevents duplicates.
-- `mobility_completions` — daily completion log (userId, completedDate DATE, routineGoal). Unique on (userId, completedDate).
-- `user_notification_settings` — per-user notification prefs (userId unique, enabled bool, notificationTime "HH:MM", mobilityGoal).
-- `feed_posts` — community video posts (userId, exerciseName, caption, videoObjectPath, isAiVerified, sessionId FK, likeCount, createdAt).
-- `feed_post_likes` — toggle likes on posts (postId, userId). Unique on (postId, userId).
-- `feed_post_comments` — comments on posts (postId, userId, content, createdAt).
-
-## API Routes
-
-- `GET /api/exercises` — list exercises
-- `GET /api/exercises/:id` — exercise detail
-- `GET /api/sessions` — list sessions (paginated)
-- `POST /api/sessions` — create session
-- `GET /api/sessions/:id` — session detail with reps
-- `PATCH /api/sessions/:id` — complete/update session
-- `GET /api/sessions/:sessionId/reps` — list reps
-- `POST /api/sessions/:sessionId/reps` — log a rep
-- `GET /api/progress/summary` — overall stats
-- `GET /api/progress/by-exercise` — per-exercise breakdown
-- `GET /api/progress/timeline` — form score over time
-- `GET /api/progress/recent-sessions` — recent sessions summary
-
-### Social API Routes
-
-- `GET /api/users/me` — current user's profile
-- `POST /api/users/me` — create/upsert profile (username, displayName, avatarUrl)
-- `PUT /api/users/me` — update username/displayName
-- `PUT /api/users/me/privacy` — update privacy level (public/friends/private)
-- `GET /api/users/search?q=` — search users by username or display name
-- `GET /api/users/:username` — public profile (privacy-aware; includes skill tree sessions)
-- `GET /api/friends` — list accepted friends
-- `GET /api/friends/requests` — incoming + outgoing pending requests
-- `POST /api/friends/requests` — send friend request (body: { username })
-- `PUT /api/friends/requests/:id` — accept or reject a request
-- `DELETE /api/friends/:friendId` — remove a friend
-
-### Frontend Pages
-
-- `/` — landing (signed-out) or dashboard (signed-in)
-- `/sign-in`, `/sign-up` — Clerk auth pages (no sidebar)
-- `/community` — Community Feed: scrollable video post feed with exercise filter chips, fire/comment interactions, glassmorphism cards. "Share to Feed" button in POV Review uploads clip to GCS + creates post.
-- `/friends` — search athletes, manage requests, friend list
-- `/profile/:username` — public profile with skill tree + form mastery ring
-- `/settings` — edit display name/username, privacy toggle, sign out
-- `/leaderboard` — Global / National / Friends tabs; sticky rank footer
-- `/` (dashboard) — includes Friends Activity feed showing Elite shoutouts from self + friends
-
-### Level Up System
-
-**Detection** (`SkillWatcher` component, mounted in Layout):
-- Polls `GET /api/skills/mastered` on window focus + 15s stale time
-- First load: marks ALL mastered skills as "seen" in `localStorage['celebrated:${userId}']` — no false celebrations
-- Subsequent loads: new elite (level 5) skills not in localStorage → enqueues celebration
-
-**Celebration** (`CelebrationOverlay` component):
-- `canvas-confetti` fired in three waves (0s, 1.6s, 3.2s) — gold/amber palette
-- React portal renders modal over entire viewport (z-9999)
-- Branch-colored badge circle, skill title, countdown bar (7s auto-close)
-- On close → POSTs shoutout to `/api/shoutouts` (idempotent)
-
-**Social Feed** (`SocialFeed` component on Dashboard):
-- `GET /api/feed` returns last 30 shoutouts from self + friends
-- Each entry: avatar, "[Name] just mastered [SkillTitle] 🏆", time-ago
-- Refetches on window focus
-
-**Profile Mastery Badges**:
-- Elite skills (level 5) with `status === "mastered"` shown as gold-bordered pills on profile page
-- Branch-colored (orange/blue/violet/emerald) with star ★ indicator
-
-### Feed API
-
-- `GET /api/skills/mastered` — auth required; returns mastered skills with full metadata (id, level, levelName, title, branch)
-- `POST /api/shoutouts` — auth required; idempotent (ON CONFLICT DO NOTHING)
-- `GET /api/feed` — returns shoutouts from self + friends; empty array for unauthenticated users
-
-### Community Feed API
-
-- `GET /api/community-feed` — paginated video post feed (optional `?exercise=` filter, `?limit=`, `?offset=`). Returns `likedByMe` boolean and `videoUrl` serving path.
-- `POST /api/community-feed` — create a post (auth required; body: exerciseName, caption, videoObjectPath, isAiVerified, sessionId)
-- `POST /api/community-feed/:id/like` — toggle like (auth required; returns `{ liked, likeCount }`)
-- `GET /api/community-feed/:id/comments` — get comments for a post
-- `POST /api/community-feed/:id/comments` — add comment (auth required; body: { content })
-- `POST /api/storage/uploads/request-url` — request presigned GCS upload URL (body: name, size, contentType → returns uploadURL + objectPath)
-- `GET /api/storage/objects/*` — serve uploaded video objects
-- `GET /api/storage/public-objects/*` — serve public assets
-
-### Leaderboard API
-
-- `GET /api/leaderboard/global` — top-100 by mastery points (all users)
-- `GET /api/leaderboard/national` — top-100 in detected country (CF-IPCountry → Accept-Language fallback)
-- `GET /api/leaderboard/friends` — friends-only ranking (auth required)
-- Each response: `{ entries[], myRank, myPoints, myMasteredSkills, country }`
-
-### Mastery Points
-
-Computed in `artifacts/api-server/src/lib/skillTree.ts` — mirrors frontend `evaluateSkillTree`:
-- A skill is mastered when qualifying sessions ≥ minQualifyingSessions (no prerequisite check, same as frontend)
-- Points: level × 100 per mastered skill (L1=100, L2=200, L3=300, L4=400, L5=500)
-- 24 skills across 4 branches → max 6,000 pts
-
-See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+- **MediaPipe Pose**: Refer to the official MediaPipe documentation for pose detection details.
+- **Clerk**: Consult Clerk documentation for advanced authentication features and customization.
+- **Drizzle ORM**: See Drizzle ORM documentation for database query patterns and schema migrations.
+- **Tailwind CSS**: For styling customizations, refer to the Tailwind CSS v4 documentation.
+- **Orval**: Documentation for API client generation from OpenAPI specifications.
