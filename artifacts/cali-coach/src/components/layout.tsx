@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { Show, useUser, useClerk } from "@clerk/react";
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useTransform,
+  animate,
+} from "framer-motion";
 import {
   Activity,
   LayoutDashboard,
@@ -46,14 +52,39 @@ const SWIPEABLE_ROUTES = ["/", "/workout", "/skill-tree"] as const;
 const springTransition = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 /**
- * Slide variants.
- *   dir ≥ 0  →  moving right in nav  →  enter from right, exit to left
- *   dir < 0  →  moving left  in nav  →  enter from left,  exit to right
+ * Layered Zoom variants.
+ *
+ * Outgoing page:
+ *   • Scales down to 0.95 and dims to 80% brightness — looks like it's
+ *     receding into the background.
+ *   • Gets zIndex: 1 so the incoming layer slides over it.
+ *
+ * Incoming page:
+ *   • Enters at scale 1.05, slides to scale 1.
+ *   • Gets zIndex: 2 — always on top.
+ *
+ * dir ≥ 0  → moving right in nav  → enter from right, exit to left
+ * dir < 0  → moving left in nav   → enter from left,  exit to right
  */
 const pageVariants = {
-  enter: (dir: number) => ({ x: dir >= 0 ? "100%" : "-100%" }),
-  center: { x: 0 },
-  exit:   (dir: number) => ({ x: dir >= 0 ? "-100%" : "100%" }),
+  enter: (dir: number) => ({
+    x:      dir >= 0 ? "100%" : "-100%",
+    scale:  1.05,
+    filter: "brightness(1)",
+    zIndex: 2,
+  }),
+  center: {
+    x:      0,
+    scale:  1,
+    filter: "brightness(1)",
+    zIndex: 2,
+  },
+  exit: (dir: number) => ({
+    x:      dir >= 0 ? "-8%" : "8%",   // subtle push — mimics iOS card stack
+    scale:  0.95,
+    filter: "brightness(0.8)",
+    zIndex: 1,
+  }),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -72,14 +103,14 @@ function getNavIndex(path: string): number {
   );
 }
 
-// ─── UserSection (unchanged from original) ────────────────────────────────────
+// ─── UserSection ──────────────────────────────────────────────────────────────
 
 function UserSection() {
   const { user, isLoaded } = useUser();
   const { signOut }        = useClerk();
   const { data: profile }  = useMyProfile();
   const { data: requests } = useFriendRequests();
-  void requests; // pending badge reserved for future use
+  void requests;
 
   if (!isLoaded) return null;
 
@@ -142,52 +173,89 @@ function UserSection() {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
-
-  /**
-   * Direction of the navigation:
-   *   +1  → moving to a higher-indexed tab (slide in from right)
-   *   -1  → moving to a lower-indexed tab  (slide in from left)
-   *    0  → initial load (no slide)
-   */
   const [direction, setDirection] = useState(0);
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
+
+  // Touch tracking refs
+  const touchStartX    = useRef(0);
+  const touchStartY    = useRef(0);
+  const isDraggingRef  = useRef(false);
+
+  // ── Live drag MotionValues ────────────────────────────────────────────────
+  //
+  // `dragProgress` is a 0→1 value representing how far the user has dragged
+  // relative to half the viewport width. We use this to proportionally shrink
+  // and dim the current page while the finger is moving — giving tactile
+  // feedback before the committed navigation animates in.
+  //
+  const dragProgress  = useMotionValue(0);
+  const contentScale  = useTransform(dragProgress, [0, 1], [1, 0.95]);
+  const contentBright = useTransform(dragProgress, [0, 1], [1, 0.8]);
+  const contentFilter = useTransform(contentBright, (b) => `brightness(${b})`);
 
   // ── Core navigation fn ───────────────────────────────────────────────────
   const navigateTo = useCallback((href: string) => {
     if (href === location) return;
     const currentIdx = getNavIndex(location);
     const nextIdx    = getNavIndex(href);
-    // Set direction AND location in the same React 18 batch
     setDirection(nextIdx >= currentIdx ? 1 : -1);
     triggerHaptic();
+    // Snap the drag wrapper back to idle before the new page enters
+    animate(dragProgress, 0, { duration: 0.15 });
     setLocation(href);
-  }, [location, setLocation]);
+  }, [location, setLocation, dragProgress]);
 
   // ── Swipe gesture ────────────────────────────────────────────────────────
   useEffect(() => {
-    const MIN_SWIPE_X = 60;   // px
-    const MAX_Y_RATIO = 0.65; // swipe must be mostly horizontal
+    const MIN_SWIPE_X = 60;
+    const MAX_Y_RATIO = 0.65;
 
     function onTouchStart(e: TouchEvent) {
       touchStartX.current = e.touches[0].clientX;
       touchStartY.current = e.touches[0].clientY;
+      isDraggingRef.current = false;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      const deltaX = e.touches[0].clientX - touchStartX.current;
+      const deltaY = e.touches[0].clientY - touchStartY.current;
+
+      // Only apply drag effect for mostly-horizontal swipes on swipeable routes
+      if (Math.abs(deltaY) / Math.abs(deltaX) > MAX_Y_RATIO) return;
+
+      const target = e.target as HTMLElement;
+      if (target.closest('input, textarea, select, [role="slider"], video, canvas, [data-no-swipe]')) return;
+
+      const swipeIdx = SWIPEABLE_ROUTES.findIndex(r =>
+        r === "/" ? location === "/" : location.startsWith(r),
+      );
+      if (swipeIdx === -1) return;
+
+      // Only apply if dragging toward a valid tab
+      const canGoNext = deltaX < 0 && swipeIdx < SWIPEABLE_ROUTES.length - 1;
+      const canGoPrev = deltaX > 0 && swipeIdx > 0;
+      if (!canGoNext && !canGoPrev) return;
+
+      isDraggingRef.current = true;
+      const halfW   = window.innerWidth / 2;
+      const progress = Math.min(1, Math.abs(deltaX) / halfW);
+      dragProgress.set(progress);
     }
 
     function onTouchEnd(e: TouchEvent) {
+      // Animate back to 0 before (possibly) triggering navigate
+      animate(dragProgress, 0, { duration: 0.2, ease: "easeOut" });
+
+      if (!isDraggingRef.current) return;
+      isDraggingRef.current = false;
+
       const deltaX = e.changedTouches[0].clientX - touchStartX.current;
       const deltaY = e.changedTouches[0].clientY - touchStartY.current;
 
       if (Math.abs(deltaX) < MIN_SWIPE_X) return;
       if (Math.abs(deltaY) / Math.abs(deltaX) > MAX_Y_RATIO) return;
 
-      // Skip if touch target is an interactive element
       const target = e.target as HTMLElement;
-      if (
-        target.closest(
-          'input, textarea, select, [role="slider"], video, canvas, [data-no-swipe]',
-        )
-      ) return;
+      if (target.closest('input, textarea, select, [role="slider"], video, canvas, [data-no-swipe]')) return;
 
       const currentSwipeIdx = SWIPEABLE_ROUTES.findIndex(r =>
         r === "/" ? location === "/" : location.startsWith(r),
@@ -195,21 +263,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
       if (currentSwipeIdx === -1) return;
 
       if (deltaX < 0 && currentSwipeIdx < SWIPEABLE_ROUTES.length - 1) {
-        // Swipe left → next swipeable tab
         navigateTo(SWIPEABLE_ROUTES[currentSwipeIdx + 1]);
       } else if (deltaX > 0 && currentSwipeIdx > 0) {
-        // Swipe right → previous swipeable tab
         navigateTo(SWIPEABLE_ROUTES[currentSwipeIdx - 1]);
       }
     }
 
     document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchmove",  onTouchMove,  { passive: true });
     document.addEventListener("touchend",   onTouchEnd,   { passive: true });
     return () => {
       document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchmove",  onTouchMove);
       document.removeEventListener("touchend",   onTouchEnd);
     };
-  }, [location, navigateTo]);
+  }, [location, navigateTo, dragProgress]);
 
   // ── Full-screen pages (workout, sign-in, sign-up) ────────────────────────
   const isFullscreen =
@@ -225,7 +293,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // ── Active item helper ───────────────────────────────────────────────────
   const isActive = (href: string) =>
     href === "/" ? location === "/" : location.startsWith(href);
 
@@ -287,7 +354,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               <Icon className="w-5 h-5" />
               <span className="text-[9px] mt-0.5 font-medium">{item.label}</span>
-              {/* Active indicator dot */}
               {active && (
                 <motion.div
                   layoutId="mobile-nav-indicator"
@@ -302,22 +368,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Animated Main Content */}
       <main className="flex-1 pb-20 md:pb-0 overflow-hidden relative">
-        <AnimatePresence initial={false} custom={direction} mode="sync">
-          <motion.div
-            key={location}
-            custom={direction}
-            variants={pageVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={springTransition}
-            className="absolute inset-0 overflow-y-auto"
-          >
-            <div className="max-w-6xl mx-auto">
-              {children}
-            </div>
-          </motion.div>
-        </AnimatePresence>
+
+        {/*
+          Drag-responsive wrapper — applies live scale + brightness as the
+          user's finger moves, before navigation commits. Once the user lifts
+          their finger and the route changes, AnimatePresence takes over with
+          the full layered zoom variant animation.
+        */}
+        <motion.div
+          className="absolute inset-0"
+          style={{ scale: contentScale, filter: contentFilter }}
+        >
+          <AnimatePresence initial={false} custom={direction} mode="sync">
+            <motion.div
+              key={location}
+              custom={direction}
+              variants={pageVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={springTransition}
+              className="absolute inset-0 overflow-y-auto"
+            >
+              <div className="max-w-6xl mx-auto">
+                {children}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
       </main>
 
       <SkillWatcher />
