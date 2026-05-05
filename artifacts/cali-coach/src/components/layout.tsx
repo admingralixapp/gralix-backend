@@ -26,20 +26,19 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  requireAuth?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/",            label: "Dashboard",   icon: LayoutDashboard },
-  { href: "/workout",     label: "Workout",      icon: Activity },
-  { href: "/daily-tasks", label: "Daily Tasks",  icon: ClipboardList },
-  { href: "/community",   label: "Community",    icon: Rss },
-  { href: "/history",     label: "History",      icon: History },
-  { href: "/progress",    label: "Progress",     icon: TrendingUp },
-  { href: "/skill-tree",  label: "Skill Tree",   icon: GitBranch },
-  { href: "/leaderboard", label: "Leaderboard",  icon: Trophy },
-  { href: "/friends",     label: "Friends",      icon: Users,    requireAuth: true },
-  { href: "/settings",    label: "Settings",     icon: Settings, requireAuth: true },
+  { href: "/",            label: "Dashboard",  icon: LayoutDashboard },
+  { href: "/workout",     label: "Workout",    icon: Activity },
+  { href: "/daily-tasks", label: "Daily",      icon: ClipboardList },
+  { href: "/community",   label: "Community",  icon: Rss },
+  { href: "/history",     label: "History",    icon: History },
+  { href: "/progress",    label: "Progress",   icon: TrendingUp },
+  { href: "/skill-tree",  label: "Skill Tree", icon: GitBranch },
+  { href: "/leaderboard", label: "Leaderboard",icon: Trophy },
+  { href: "/friends",     label: "Friends",    icon: Users },
+  { href: "/settings",    label: "Settings",   icon: Settings },
 ];
 
 /** The three tabs reachable by swiping left / right. */
@@ -49,16 +48,6 @@ const SWIPEABLE_ROUTES = ["/", "/workout", "/skill-tree"] as const;
 
 const springTransition = { type: "spring" as const, stiffness: 300, damping: 30 };
 
-/**
- * Slide variants.
- *   dir ≥ 0  →  moving right in nav  →  enter from right, exit to left
- *   dir < 0  →  moving left  in nav  →  enter from left,  exit to right
- *
- * opacity: 0 on enter/exit ensures the tab is invisible while fully off-screen,
- * preventing any "preview frame" flash before the spring starts.
- * zIndex keeps the active (center) tab painted above the departing one so there
- * are no layer-swap flickers mid-transition.
- */
 const pageVariants = {
   enter:  (dir: number) => ({ x: dir >= 0 ? "100%" : "-100%", opacity: 0, zIndex: 0 }),
   center:                   { x: 0,                             opacity: 1, zIndex: 1 },
@@ -72,7 +61,7 @@ function triggerHaptic() {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       (navigator as Navigator & { vibrate(pattern: number | number[]): boolean }).vibrate(10);
     }
-  } catch { /* not supported, silently ignore */ }
+  } catch { /* not supported */ }
 }
 
 function getNavIndex(path: string): number {
@@ -81,14 +70,14 @@ function getNavIndex(path: string): number {
   );
 }
 
-// ─── UserSection (unchanged from original) ────────────────────────────────────
+// ─── UserSection ──────────────────────────────────────────────────────────────
 
 function UserSection() {
   const { user, isLoaded } = useUser();
   const { signOut }        = useClerk();
   const { data: profile }  = useMyProfile();
   const { data: requests } = useFriendRequests();
-  void requests; // pending badge reserved for future use
+  void requests;
 
   if (!isLoaded) return null;
 
@@ -101,11 +90,7 @@ function UserSection() {
             className="w-full flex items-center gap-3 group hover:bg-secondary/50 rounded-md p-2 transition-colors text-left"
           >
             {user?.imageUrl ? (
-              <img
-                src={user.imageUrl}
-                alt="avatar"
-                className="w-8 h-8 rounded-full object-cover shrink-0"
-              />
+              <img src={user.imageUrl} alt="avatar" className="w-8 h-8 rounded-full object-cover shrink-0" />
             ) : (
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
                 {(profile?.displayName ?? user?.firstName ?? "U")[0]?.toUpperCase()}
@@ -151,32 +136,41 @@ function UserSection() {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
-
-  /**
-   * Direction of the navigation:
-   *   +1  → moving to a higher-indexed tab (slide in from right)
-   *   -1  → moving to a lower-indexed tab  (slide in from left)
-   *    0  → initial load (no slide)
-   */
   const [direction, setDirection] = useState(0);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
+
+  // Refs for mobile nav auto-centering
+  const mobileNavRef = useRef<HTMLElement>(null);
+  const navItemRefs  = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   // ── Core navigation fn ───────────────────────────────────────────────────
   const navigateTo = useCallback((href: string) => {
     if (href === location) return;
     const currentIdx = getNavIndex(location);
     const nextIdx    = getNavIndex(href);
-    // Set direction AND location in the same React 18 batch
     setDirection(nextIdx >= currentIdx ? 1 : -1);
     triggerHaptic();
     setLocation(href);
   }, [location, setLocation]);
 
+  // ── Auto-center active tab in mobile nav ─────────────────────────────────
+  useEffect(() => {
+    const activeItem = NAV_ITEMS.find(item =>
+      item.href === "/" ? location === "/" : location.startsWith(item.href),
+    );
+    if (!activeItem) return;
+
+    const el = navItemRefs.current.get(activeItem.href);
+    if (el && mobileNavRef.current) {
+      el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    }
+  }, [location]);
+
   // ── Swipe gesture ────────────────────────────────────────────────────────
   useEffect(() => {
-    const MIN_SWIPE_X = 60;   // px
-    const MAX_Y_RATIO = 0.65; // swipe must be mostly horizontal
+    const MIN_SWIPE_X = 60;
+    const MAX_Y_RATIO = 0.65;
 
     function onTouchStart(e: TouchEvent) {
       touchStartX.current = e.touches[0].clientX;
@@ -190,13 +184,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       if (Math.abs(deltaX) < MIN_SWIPE_X) return;
       if (Math.abs(deltaY) / Math.abs(deltaX) > MAX_Y_RATIO) return;
 
-      // Skip if touch target is an interactive element
       const target = e.target as HTMLElement;
-      if (
-        target.closest(
-          'input, textarea, select, [role="slider"], video, canvas, [data-no-swipe]',
-        )
-      ) return;
+      if (target.closest('input, textarea, select, [role="slider"], video, canvas, [data-no-swipe]')) return;
 
       const currentSwipeIdx = SWIPEABLE_ROUTES.findIndex(r =>
         r === "/" ? location === "/" : location.startsWith(r),
@@ -204,10 +193,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       if (currentSwipeIdx === -1) return;
 
       if (deltaX < 0 && currentSwipeIdx < SWIPEABLE_ROUTES.length - 1) {
-        // Swipe left → next swipeable tab
         navigateTo(SWIPEABLE_ROUTES[currentSwipeIdx + 1]);
       } else if (deltaX > 0 && currentSwipeIdx > 0) {
-        // Swipe right → previous swipeable tab
         navigateTo(SWIPEABLE_ROUTES[currentSwipeIdx - 1]);
       }
     }
@@ -220,7 +207,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     };
   }, [location, navigateTo]);
 
-  // ── Full-screen pages (workout, sign-in, sign-up) ────────────────────────
+  // ── Full-screen pages ────────────────────────────────────────────────────
   const isFullscreen =
     location === "/workout" ||
     location.startsWith("/sign-in") ||
@@ -234,21 +221,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // ── Active item helper ───────────────────────────────────────────────────
   const isActive = (href: string) =>
     href === "/" ? location === "/" : location.startsWith(href);
 
-  // ── Sidebar-layout render ────────────────────────────────────────────────
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
 
-      {/* Desktop Sidebar */}
+      {/* ── Desktop Sidebar ─────────────────────────────────────────────── */}
       <aside className="hidden md:flex w-64 flex-col border-r border-white/[0.06] glass-nav shrink-0">
         <div className="p-6">
-          <button
-            onClick={() => navigateTo("/")}
-            className="flex items-center gap-2"
-          >
+          <button onClick={() => navigateTo("/")} className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center neon-glow">
               <Activity className="w-5 h-5 text-primary-foreground" />
             </div>
@@ -258,7 +241,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
+            const Icon   = item.icon;
             const active = isActive(item.href);
             return (
               <button
@@ -281,27 +264,46 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <UserSection />
       </aside>
 
-      {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-white/[0.06] glass-nav z-50 flex justify-around p-2">
-        {NAV_ITEMS.filter(item => !item.requireAuth).map(item => {
-          const Icon = item.icon;
+      {/* ── Mobile Bottom Nav ───────────────────────────────────────────── */}
+      {/*
+        overflow-x-auto + flex lets it scroll horizontally.
+        scrollbar-none hides the track on WebKit; scrollbar-width:none on Firefox.
+        Each button is flex-shrink-0 so it never collapses.
+      */}
+      <nav
+        ref={mobileNavRef}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06] glass-nav flex overflow-x-auto px-1 pb-safe"
+        style={{ scrollbarWidth: "none" } as React.CSSProperties}
+      >
+        <style>{`
+          nav::-webkit-scrollbar { display: none; }
+        `}</style>
+
+        {NAV_ITEMS.map((item) => {
+          const Icon   = item.icon;
           const active = isActive(item.href);
           return (
             <button
               key={item.href}
+              ref={(el) => {
+                if (el) navItemRefs.current.set(item.href, el);
+                else navItemRefs.current.delete(item.href);
+              }}
               onClick={() => navigateTo(item.href)}
               className={cn(
-                "flex flex-col items-center justify-center p-2 rounded-xl relative transition-all",
+                "flex-shrink-0 flex flex-col items-center justify-center px-3.5 py-2.5 rounded-xl relative transition-all",
                 active ? "text-primary" : "text-muted-foreground",
               )}
+              style={{ minWidth: 60 }}
             >
               <Icon className={cn("w-5 h-5", active && "nav-icon-active")} />
               <span className={cn(
-                "text-[9px] mt-0.5",
+                "text-[9px] mt-0.5 whitespace-nowrap",
                 active ? "font-bold" : "font-light opacity-80",
               )}>
                 {item.label}
               </span>
+
               {/* Active indicator dot */}
               {active && (
                 <motion.div
@@ -316,18 +318,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         })}
       </nav>
 
-      {/* Animated Main Content */}
-      {/*
-        overflow-hidden on <main> acts as the viewport mask — tabs sitting fully
-        off-screen at ±100% x are clipped and never visible to the user.
-      */}
-      <main className="flex-1 pb-20 md:pb-0 overflow-hidden relative">
-        {/*
-          mode="popLayout": the exiting tab is immediately popped out of layout
-          flow (position: absolute) so the entering tab can occupy the space
-          without waiting. Both animations run concurrently but are properly
-          z-ordered by the variants above (center zIndex:1 > enter/exit zIndex:0).
-        */}
+      {/* ── Animated Main Content ───────────────────────────────────────── */}
+      <main className="flex-1 pb-[72px] md:pb-0 overflow-hidden relative">
         <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
             key={location}
@@ -338,14 +330,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             exit="exit"
             transition={springTransition}
             className="absolute inset-0 overflow-y-auto"
-            style={{
-              // GPU-accelerate the slide: forces the browser to composite this
-              // layer on the GPU, eliminating the frame-jump at animation start.
-              willChange: "transform, opacity",
-              transform: "translateZ(0)",
-            }}
+            style={{ willChange: "transform, opacity", transform: "translateZ(0)" }}
           >
-            <div className="max-w-6xl mx-auto">
+            {/* Extra bottom padding so content clears the fixed nav bar on mobile */}
+            <div className="max-w-6xl mx-auto pb-[120px] md:pb-8">
               {children}
             </div>
           </motion.div>
