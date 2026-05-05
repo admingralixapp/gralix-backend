@@ -1,0 +1,56 @@
+I need to fix the questionnaire logic and expand the mobility database to make the Daily Tasks truly personalized.
+
+1. Fix the Questionnaire Flow:
+
+When 'Save My Preferences' is clicked, the modal must immediately save the data to localStorage.
+
+Crucial: Use onClose() to shut the modal automatically upon saving.
+
+Trigger an immediate UI refresh of the 'Daily Tasks' list so the user sees their new exercises without reloading.
+
+2. Expand the Mobility Database:
+Update mobilityService.js (or your mobility JSON file) with this targeted exercise library:
+
+GOAL: Handstand
+
+Wall Puppy Pose: Target: Thoracic spine/Shoulder flexion. Why: Unlocks the 'straight line' needed for handstands.
+
+First Knuckle Raises: Target: Wrist/Forearm strength. Why: Builds the finger-braking power to prevent overbalancing.
+
+Butcher’s Block Stretch: Target: Triceps/Lats. Why: Removes 'tightness' that pulls your arms forward.
+
+GOAL: Muscle-Up
+
+German Hang (Passive/Active): Target: Shoulder extension. Why: Essential for the deep transition phase of the muscle-up.
+
+Skin the Cat (Partial): Target: Scapular health. Why: Builds the 360-degree shoulder strength required for rings.
+
+Deep Lat Foam Roll/Stretch: Target: Lats. Why: Increases pulling range of motion.
+
+GOAL: Planche
+
+Planche Leans: Target: Wrist/Shoulder protraction. Why: The #1 drill for leaning further into the planche.
+
+Reverse Tabletop: Target: Anterior Deltoids. Why: Counter-stretches the extreme compression of planche work.
+
+Finger Pulses: Target: Wrist conditioning. Why: Prepares tendons for the high load of straight-arm work.
+
+GOAL: Pistol Squat
+
+Weighted Ankle Dorsiflexion: Target: Ankles. Why: Allows your knee to travel forward so you don't fall backward.
+
+Pigeon Pose: Target: Glutes/Hips. Why: Necessary for the leg-tracking and balance of a single-leg squat.
+
+Cossack Squats: Target: Adductors. Why: Improves lateral hip mobility.
+
+GOAL: Front Lever
+
+Active Scapular Hangs: Target: Scapular retractors. Why: Teaches you to keep your back 'flat' under tension.
+
+Prone Y-Raises: Target: Lower traps. Why: Strengthens the muscles that prevent shoulder rounding.
+
+Thoracic Bridge: Target: Mid-back. Why: Allows for better engagement of the posterior chain.
+
+3. UI Update:
+
+Ensure each task in the 'Daily Tasks' tab displays a short 'Why' caption based on the user's selected goal

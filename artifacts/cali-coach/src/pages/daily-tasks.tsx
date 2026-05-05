@@ -233,12 +233,14 @@ function TaskCard({
   muscles,
   durationSeconds,
   cue,
+  why,
 }: {
   index: number;
   name: string;
   muscles: string[];
   durationSeconds: number;
   cue: string;
+  why: string;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -276,7 +278,15 @@ function TaskCard({
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 pt-0 space-y-2 border-t border-border/50">
+        <div className="px-4 pb-4 pt-0 space-y-3 border-t border-border/50">
+          {/* Why this exercise for your goal */}
+          <div className="flex items-start gap-2 pt-3 rounded-lg bg-primary/5 px-3 py-2.5 -mx-0">
+            <span className="text-[10px] font-bold text-primary uppercase tracking-widest shrink-0 mt-px">
+              Why
+            </span>
+            <p className="text-xs text-primary/90 leading-relaxed">{why}</p>
+          </div>
+          {/* Coaching cue */}
           <p className="text-xs text-muted-foreground leading-relaxed">{cue}</p>
         </div>
       )}
@@ -556,6 +566,7 @@ export function DailyTasksPage() {
                 muscles={stretch.targetMuscles}
                 durationSeconds={stretch.durationSeconds}
                 cue={stretch.coachingCue}
+                why={stretch.why}
               />
             </motion.div>
           ))}
