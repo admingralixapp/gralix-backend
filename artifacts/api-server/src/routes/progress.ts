@@ -132,6 +132,7 @@ router.get("/progress/recent-sessions", async (req, res) => {
       startedAt: sessionsTable.startedAt,
       totalReps: sessionsTable.totalReps,
       avgFormScore: sessionsTable.avgFormScore,
+      logType: sessionsTable.logType,
       durationMinutes: sql<number | null>`
         case when ${sessionsTable.completedAt} is not null
         then (extract(epoch from (${sessionsTable.completedAt} - ${sessionsTable.startedAt})) / 60)::float

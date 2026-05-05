@@ -56,6 +56,8 @@ export const ListSessionsQueryParams = zod.object({
   offset: zod.coerce.number().default(listSessionsQueryOffsetDefault),
 });
 
+export const listSessionsResponseLogTypeDefault = `ai`;
+
 export const ListSessionsResponseItem = zod.object({
   id: zod.number(),
   exerciseId: zod.number(),
@@ -65,6 +67,16 @@ export const ListSessionsResponseItem = zod.object({
   totalReps: zod.number(),
   avgFormScore: zod.number().nullable(),
   notes: zod.string().nullable(),
+  logType: zod
+    .string()
+    .default(listSessionsResponseLogTypeDefault)
+    .describe(
+      "'ai' for camera-verified sessions, 'manual' for Quick Log entries",
+    ),
+  rpe: zod
+    .number()
+    .nullable()
+    .describe("Rate of Perceived Exertion (1–10), only set for manual logs"),
 });
 export const ListSessionsResponse = zod.array(ListSessionsResponseItem);
 
@@ -74,6 +86,7 @@ export const ListSessionsResponse = zod.array(ListSessionsResponseItem);
 export const CreateSessionBody = zod.object({
   exerciseId: zod.number(),
   notes: zod.string().nullish(),
+  logType: zod.string().optional().describe("'ai' or 'manual'"),
 });
 
 /**
@@ -82,6 +95,8 @@ export const CreateSessionBody = zod.object({
 export const GetSessionParams = zod.object({
   id: zod.coerce.number(),
 });
+
+export const getSessionResponseOneLogTypeDefault = `ai`;
 
 export const GetSessionResponse = zod
   .object({
@@ -93,6 +108,16 @@ export const GetSessionResponse = zod
     totalReps: zod.number(),
     avgFormScore: zod.number().nullable(),
     notes: zod.string().nullable(),
+    logType: zod
+      .string()
+      .default(getSessionResponseOneLogTypeDefault)
+      .describe(
+        "'ai' for camera-verified sessions, 'manual' for Quick Log entries",
+      ),
+    rpe: zod
+      .number()
+      .nullable()
+      .describe("Rate of Perceived Exertion (1–10), only set for manual logs"),
   })
   .and(
     zod.object({
@@ -122,7 +147,10 @@ export const UpdateSessionBody = zod.object({
   totalReps: zod.number().optional(),
   avgFormScore: zod.number().optional(),
   notes: zod.string().nullish(),
+  rpe: zod.number().nullish(),
 });
+
+export const updateSessionResponseLogTypeDefault = `ai`;
 
 export const UpdateSessionResponse = zod.object({
   id: zod.number(),
@@ -133,6 +161,16 @@ export const UpdateSessionResponse = zod.object({
   totalReps: zod.number(),
   avgFormScore: zod.number().nullable(),
   notes: zod.string().nullable(),
+  logType: zod
+    .string()
+    .default(updateSessionResponseLogTypeDefault)
+    .describe(
+      "'ai' for camera-verified sessions, 'manual' for Quick Log entries",
+    ),
+  rpe: zod
+    .number()
+    .nullable()
+    .describe("Rate of Perceived Exertion (1–10), only set for manual logs"),
 });
 
 /**
@@ -225,6 +263,8 @@ export const GetRecentSessionsQueryParams = zod.object({
   limit: zod.coerce.number().default(getRecentSessionsQueryLimitDefault),
 });
 
+export const getRecentSessionsResponseLogTypeDefault = `ai`;
+
 export const GetRecentSessionsResponseItem = zod.object({
   id: zod.number(),
   exerciseId: zod.number(),
@@ -233,7 +273,59 @@ export const GetRecentSessionsResponseItem = zod.object({
   totalReps: zod.number(),
   avgFormScore: zod.number().nullable(),
   durationMinutes: zod.number().nullable(),
+  logType: zod.string().default(getRecentSessionsResponseLogTypeDefault),
 });
 export const GetRecentSessionsResponse = zod.array(
   GetRecentSessionsResponseItem,
 );
+
+/**
+ * @summary Get today's mobility completion status and streak
+ */
+export const GetMobilityStatusResponse = zod.object({
+  completedToday: zod.boolean(),
+  currentStreak: zod.number(),
+  settings: zod.object({
+    enabled: zod.boolean(),
+    notificationTime: zod.string().describe("HH:MM format, e.g. '08:00'"),
+    mobilityGoal: zod
+      .string()
+      .describe("Goal key, e.g. 'pull', 'push', 'handstand'"),
+  }),
+});
+
+/**
+ * @summary Mark today's mobility session as complete
+ */
+export const CompleteMobilitySessionResponse = zod.object({
+  completedToday: zod.boolean(),
+  currentStreak: zod.number(),
+});
+
+/**
+ * @summary Get user notification and goal settings
+ */
+export const GetMobilitySettingsResponse = zod.object({
+  enabled: zod.boolean(),
+  notificationTime: zod.string().describe("HH:MM format, e.g. '08:00'"),
+  mobilityGoal: zod
+    .string()
+    .describe("Goal key, e.g. 'pull', 'push', 'handstand'"),
+});
+
+/**
+ * @summary Create or update notification and goal settings
+ */
+export const UpdateMobilitySettingsBody = zod.object({
+  enabled: zod.boolean().optional(),
+  notificationTime: zod.string().optional(),
+  mobilityGoal: zod.string().optional(),
+});
+
+export const UpdateMobilitySettingsResponse = zod.object({
+  enabled: zod.boolean(),
+  notificationTime: zod.string().describe("HH:MM format, e.g. '08:00'"),
+  mobilityGoal: zod
+    .string()
+    .describe("Goal key, e.g. 'pull', 'push', 'handstand'"),
+});

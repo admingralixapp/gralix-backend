@@ -108,21 +108,24 @@ function ConfettiCanvas() {
 
 // ─── Animated form ring ───────────────────────────────────────────────────────
 
-function FormRing({ score }: { score: number }) {
+function FormRing({ score }: { score: number | null }) {
   const [animPct, setAnimPct] = useState(0);
 
   const R    = 52;
   const SW   = 8;
   const circ = 2 * Math.PI * (R - SW / 2);
 
+  const effectiveScore = score ?? 0;
+
   const color =
-    score >= 95 ? "#eab308" :
-    score >= 80 ? "#10b981" :
-    score >= 65 ? "#3b82f6" :
-                  "#f97316";
+    score === null  ? "#64748b" :
+    score >= 95     ? "#eab308" :
+    score >= 80     ? "#10b981" :
+    score >= 65     ? "#3b82f6" :
+                      "#f97316";
 
   useEffect(() => {
-    const t = setTimeout(() => setAnimPct(score / 100), 250);
+    const t = setTimeout(() => setAnimPct(score !== null ? score / 100 : 0), 250);
     return () => clearTimeout(t);
   }, [score]);
 
@@ -151,10 +154,10 @@ function FormRing({ score }: { score: number }) {
       <text
         x={cx} y={cy - 7}
         textAnchor="middle" dominantBaseline="middle"
-        fontSize={22} fontWeight="700" fill={color}
+        fontSize={score === null ? 14 : 22} fontWeight="700" fill={color}
         fontFamily="ui-sans-serif, system-ui, sans-serif"
       >
-        {Math.round(score)}
+        {score === null ? "—" : Math.round(effectiveScore)}
       </text>
       <text
         x={cx} y={cy + 16}
@@ -162,7 +165,7 @@ function FormRing({ score }: { score: number }) {
         fontSize={9} fill="#64748b" letterSpacing="0.08em"
         fontFamily="ui-sans-serif, system-ui, sans-serif"
       >
-        FORM MASTERY
+        {score === null ? "MANUAL LOG" : "FORM MASTERY"}
       </text>
     </svg>
   );
@@ -236,7 +239,7 @@ function SkillProgressBar({
 export interface SessionResultsProps {
   exerciseName: string;
   totalReps: number;
-  avgFormScore: number;
+  avgFormScore: number | null;
   sessionId: number;
   /** Best ghost-sync percentage achieved during the session (0–100). Undefined when ghost mode was not active (e.g. test mode). */
   bestSyncPct?: number;
@@ -271,6 +274,7 @@ export function SessionResults({
 
   const isPerfectSet =
     !isStatic &&
+    avgFormScore !== null &&
     totalReps    >= PERFECT_SET_MIN_REPS &&
     avgFormScore >= PERFECT_SET_MIN_FORM;
 
@@ -394,7 +398,7 @@ export function SessionResults({
                 <div>
                   <p className="text-sm font-bold text-yellow-300">Perfect Set!</p>
                   <p className="text-xs text-yellow-400/70 mt-0.5">
-                    {totalReps} reps · {Math.round(avgFormScore)}% form — elite execution
+                    {totalReps} reps · {avgFormScore !== null ? Math.round(avgFormScore) : 0}% form — elite execution
                   </p>
                 </div>
               </div>

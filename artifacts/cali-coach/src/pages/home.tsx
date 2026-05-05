@@ -11,6 +11,7 @@ import {
   Sparkles,
   CheckCircle2,
   ChevronRight,
+  PenLine,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -239,12 +240,19 @@ export function Home() {
                         {session.totalReps}{" "}
                         <span className="text-sm text-muted-foreground">reps</span>
                       </div>
-                      <div className="text-sm text-primary font-medium">
-                        {session.avgFormScore != null
-                          ? Math.round(session.avgFormScore)
-                          : "--"}{" "}
-                        avg form
-                      </div>
+                      {session.logType === "manual" ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 border border-amber-500/30 text-amber-400 mt-1">
+                          <PenLine className="w-2.5 h-2.5" />
+                          Manual
+                        </span>
+                      ) : (
+                        <div className="text-sm text-primary font-medium">
+                          {session.avgFormScore != null
+                            ? Math.round(session.avgFormScore)
+                            : "--"}{" "}
+                          avg form
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

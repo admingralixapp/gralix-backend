@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap, Eye, EyeOff, Mic, MicOff } from "lucide-react";
+import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, cancelSpeech } from "@/lib/voice-service";
@@ -444,6 +444,10 @@ export function Workout() {
   const [syncPct, setSyncPct] = useState(100);
   const [isModelLoading, setIsModelLoading] = useState(false);
   const [isSavingTest, setIsSavingTest] = useState(false);
+  const [isManualLog, setIsManualLog] = useState(false);
+  const [manualReps, setManualReps] = useState(10);
+  const [manualRpe, setManualRpe] = useState<number | null>(null);
+  const [isSavingManual, setIsSavingManual] = useState(false);
 
   // ── Equipment selection ────────────────────────────────────────────────────
   const [equipment, setEquipment] = useState<EquipmentSelection>(DEFAULT_EQUIPMENT);
@@ -1297,6 +1301,64 @@ export function Workout() {
     }
   };
 
+  /** Manual Log: saves a user-entered rep count (no camera / AI form scoring). */
+  const handleManualLog = async () => {
+    if (!selectedExerciseId) {
+      toast({ title: "Select an exercise", description: "Pick an exercise first." });
+      return;
+    }
+    setIsSavingManual(true);
+    try {
+      const session = await createSession.mutateAsync({
+        data: { exerciseId: parseInt(selectedExerciseId), logType: "manual" },
+      });
+      const exercise = exercises?.find(e => e.id.toString() === selectedExerciseId);
+      const exerciseName = exercise?.name ?? "Exercise";
+
+      const history: SessionSummary[] = (sessionHistory ?? []).map(s => ({
+        exerciseName: s.exerciseName ?? "",
+        totalReps:    s.totalReps    ?? null,
+        avgFormScore: s.avgFormScore ?? null,
+        completedAt:  s.completedAt  ?? null,
+      }));
+      const prevEvaluated = evaluateSkillTree(history);
+
+      await updateSession.mutateAsync({
+        id:   session.id,
+        data: {
+          completedAt: new Date().toISOString(),
+          totalReps:   manualReps,
+          rpe:         manualRpe ?? undefined,
+        },
+      });
+
+      const newSession: SessionSummary = {
+        exerciseName,
+        totalReps:    manualReps,
+        avgFormScore: null,
+        completedAt:  new Date().toISOString(),
+      };
+      const nextEvaluated = evaluateSkillTree([...history, newSession]);
+
+      setIsManualLog(false);
+      setManualReps(10);
+      setManualRpe(null);
+      setSessionResults({
+        exerciseName,
+        totalReps:    manualReps,
+        avgFormScore: null,
+        sessionId:    session.id,
+        bestSyncPct:  undefined,
+        prevEvaluated,
+        nextEvaluated,
+      });
+    } catch {
+      toast({ title: "Error", description: "Could not save workout.", variant: "destructive" });
+    } finally {
+      setIsSavingManual(false);
+    }
+  };
+
   /** Test mode: saves a synthetic workout entry without camera. */
   const handleSaveTestWorkout = async () => {
     if (!selectedExerciseId) {
@@ -1772,6 +1834,89 @@ export function Workout() {
         {!isWorkoutActive && !isCalibrating && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
             <div className="text-center space-y-6 px-6 max-w-sm">
+
+              {/* ── Manual Log Screen ──────────────────────────────── */}
+              {isManualLog ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { setIsManualLog(false); setManualReps(10); setManualRpe(null); }}
+                      className="p-1.5 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <div className="text-left">
+                      <h2 className="text-xl font-bold leading-tight">Manual Log</h2>
+                      <p className="text-xs text-white/40">
+                        {exercises?.find(e => e.id.toString() === selectedExerciseId)?.name ?? "Select exercise"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Reps input */}
+                  <div className="w-full">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-3 text-left">
+                      Reps Completed
+                    </div>
+                    <div className="flex items-center justify-center gap-4">
+                      <button
+                        onClick={() => setManualReps(r => Math.max(0, r - 1))}
+                        className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center transition-all active:scale-95"
+                      >
+                        <Minus className="w-5 h-5" />
+                      </button>
+                      <div className="text-6xl font-black font-mono text-primary w-24 text-center tabular-nums">
+                        {manualReps}
+                      </div>
+                      <button
+                        onClick={() => setManualReps(r => r + 1)}
+                        className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center transition-all active:scale-95"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* RPE input */}
+                  <div className="w-full">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2 text-left flex justify-between">
+                      <span>RPE — How Hard Was It?</span>
+                      {manualRpe && (
+                        <span className="text-primary">{manualRpe}/10</span>
+                      )}
+                    </div>
+                    <div className="flex gap-1.5 justify-center flex-wrap">
+                      {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                        <button
+                          key={n}
+                          onClick={() => setManualRpe(prev => prev === n ? null : n)}
+                          className={`w-9 h-9 rounded-full text-sm font-bold transition-all active:scale-95 ${
+                            manualRpe === n
+                              ? "bg-primary text-black border-2 border-primary shadow-[0_0_12px_rgba(var(--primary)/0.6)]"
+                              : "bg-white/8 border border-white/15 text-white/60 hover:border-white/35"
+                          }`}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-white/25 mt-2 text-center">
+                      1 = very easy · 10 = all-out effort · optional
+                    </p>
+                  </div>
+
+                  <Button
+                    size="lg"
+                    className="w-48 h-12 text-base font-bold rounded-full"
+                    onClick={handleManualLog}
+                    disabled={!selectedExerciseId || isSavingManual}
+                  >
+                    <PenLine className="w-4 h-4 mr-2" />
+                    {isSavingManual ? "Saving…" : "Log It"}
+                  </Button>
+                </>
+              ) : (
+                <>
               <Activity className="w-16 h-16 text-primary mx-auto opacity-50" />
               <div>
                 <h2 className="text-2xl font-bold mb-2">Ready to train?</h2>
@@ -1857,6 +2002,18 @@ export function Workout() {
                 </div>
               </div>
 
+              {/* Manual Log — no camera */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-400/50 transition-all"
+                onClick={() => { setIsManualLog(true); setManualReps(10); setManualRpe(null); }}
+                disabled={!selectedExerciseId}
+              >
+                <PenLine className="w-4 h-4 mr-2" />
+                Manual Log (No AI)
+              </Button>
+
               <Card className="bg-white/5 border-white/10">
                 <CardContent className="p-4 space-y-3">
                   <div className="text-sm text-white/70 font-medium flex items-center gap-2">
@@ -1877,6 +2034,8 @@ export function Workout() {
                   </Button>
                 </CardContent>
               </Card>
+                </>
+              )}
             </div>
           </div>
         )}

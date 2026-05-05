@@ -37,6 +37,10 @@ export interface Session {
   totalReps: number;
   avgFormScore: number | null;
   notes: string | null;
+  /** 'ai' for camera-verified sessions, 'manual' for Quick Log entries */
+  logType: string;
+  /** Rate of Perceived Exertion (1–10), only set for manual logs */
+  rpe: number | null;
 }
 
 export interface Rep {
@@ -56,6 +60,8 @@ export type SessionWithReps = Session & {
 export interface CreateSessionBody {
   exerciseId: number;
   notes?: string | null;
+  /** 'ai' or 'manual' */
+  logType?: string;
 }
 
 export interface UpdateSessionBody {
@@ -63,6 +69,7 @@ export interface UpdateSessionBody {
   totalReps?: number;
   avgFormScore?: number;
   notes?: string | null;
+  rpe?: number | null;
 }
 
 export interface CreateRepBody {
@@ -107,6 +114,32 @@ export interface SessionSummary {
   totalReps: number;
   avgFormScore: number | null;
   durationMinutes: number | null;
+  logType: string;
+}
+
+export interface MobilitySettings {
+  enabled: boolean;
+  /** HH:MM format, e.g. '08:00' */
+  notificationTime: string;
+  /** Goal key, e.g. 'pull', 'push', 'handstand' */
+  mobilityGoal: string;
+}
+
+export interface MobilityStatus {
+  completedToday: boolean;
+  currentStreak: number;
+  settings: MobilitySettings;
+}
+
+export interface MobilityCompletionResult {
+  completedToday: boolean;
+  currentStreak: number;
+}
+
+export interface UpdateMobilitySettingsBody {
+  enabled?: boolean;
+  notificationTime?: string;
+  mobilityGoal?: string;
 }
 
 export type ListSessionsParams = {

@@ -27,6 +27,8 @@ router.get("/sessions", async (req, res) => {
       totalReps: sessionsTable.totalReps,
       avgFormScore: sessionsTable.avgFormScore,
       notes: sessionsTable.notes,
+      logType: sessionsTable.logType,
+      rpe: sessionsTable.rpe,
     })
     .from(sessionsTable)
     .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
@@ -56,7 +58,7 @@ router.post("/sessions", async (req, res) => {
 
   const [session] = await db
     .insert(sessionsTable)
-    .values({ exerciseId: body.exerciseId, notes: body.notes ?? null, userId })
+    .values({ exerciseId: body.exerciseId, notes: body.notes ?? null, logType: body.logType ?? "ai", userId })
     .returning();
   const [exercise] = await db
     .select({ name: exercisesTable.name })
@@ -80,6 +82,8 @@ router.get("/sessions/:id", async (req, res) => {
       totalReps: sessionsTable.totalReps,
       avgFormScore: sessionsTable.avgFormScore,
       notes: sessionsTable.notes,
+      logType: sessionsTable.logType,
+      rpe: sessionsTable.rpe,
     })
     .from(sessionsTable)
     .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
@@ -103,6 +107,7 @@ router.patch("/sessions/:id", async (req, res) => {
   if (body.totalReps !== undefined) updateData.totalReps = body.totalReps;
   if (body.avgFormScore !== undefined) updateData.avgFormScore = body.avgFormScore;
   if (body.notes !== undefined) updateData.notes = body.notes;
+  if (body.rpe !== undefined) updateData.rpe = body.rpe;
 
   const [updated] = await db
     .update(sessionsTable)

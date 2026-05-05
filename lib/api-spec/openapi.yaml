@@ -407,6 +407,14 @@ components:
         notes:
           type: string
           nullable: true
+        logType:
+          type: string
+          description: "'ai' for camera-verified sessions, 'manual' for Quick Log entries"
+          default: "ai"
+        rpe:
+          type: integer
+          nullable: true
+          description: "Rate of Perceived Exertion (1–10), only set for manual logs"
       required:
         - id
         - exerciseId
@@ -416,6 +424,8 @@ components:
         - totalReps
         - avgFormScore
         - notes
+        - logType
+        - rpe
 
     SessionWithReps:
       allOf:
@@ -437,6 +447,9 @@ components:
         notes:
           type: string
           nullable: true
+        logType:
+          type: string
+          description: "'ai' or 'manual'"
       required:
         - exerciseId
 
@@ -452,6 +465,9 @@ components:
           type: number
         notes:
           type: string
+          nullable: true
+        rpe:
+          type: integer
           nullable: true
 
     Rep:
@@ -599,6 +615,9 @@ components:
         durationMinutes:
           type: number
           nullable: true
+        logType:
+          type: string
+          default: "ai"
       required:
         - id
         - exerciseId
@@ -607,6 +626,7 @@ components:
         - totalReps
         - avgFormScore
         - durationMinutes
+        - logType
 
     MobilitySettings:
       type: object

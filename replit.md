@@ -35,6 +35,7 @@ A calisthenics motion capture coaching app. Uses the device camera with MediaPip
 - Audio coaching cues via Web Speech API, throttled to 4s intervals
 - Session tracking: create, log reps, complete sessions
 - Progress dashboard: form score timeline, per-exercise progress, streaks
+- **Manual Log (No AI)**: Pre-start overlay button opens a reps+RPE input screen (no camera required). Sessions saved with `logType: "manual"`. History and home recent sessions show an amber "Manual" badge instead of form score. RPE (1–10) is optional and stored on the session.
 - **Social layer**: friends (search by username, send/accept/reject requests), shared profiles (skill tree + form mastery), privacy controls (Public / Friends Only / Private)
 - **Daily Mobility System**: 5-stretch guided routine (60s holds) with Ghost Mode SVG overlay, goal-based routine selection from 8 skill-tree goals, Mobility Streak counter on dashboard, browser notification opt-in (user-specified time) in Settings
 - **Leaderboard**: Global top-100, National (country auto-detected via CF-IPCountry or Accept-Language), Friends-only — mastery points computed from skill tree (L1=100 pts … L5=500 pts, max 6,000). Sticky "Your Rank" bar always visible at bottom of the page.

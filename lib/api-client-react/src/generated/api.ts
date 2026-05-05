@@ -25,12 +25,16 @@ import type {
   GetRecentSessionsParams,
   HealthStatus,
   ListSessionsParams,
+  MobilityCompletionResult,
+  MobilitySettings,
+  MobilityStatus,
   ProgressSummary,
   Rep,
   Session,
   SessionSummary,
   SessionWithReps,
   TimelinePoint,
+  UpdateMobilitySettingsBody,
   UpdateSessionBody,
 } from "./api.schemas";
 
@@ -1155,3 +1159,324 @@ export function useGetRecentSessions<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get today's mobility completion status and streak
+ */
+export const getGetMobilityStatusUrl = () => {
+  return `/api/mobility/status`;
+};
+
+export const getMobilityStatus = async (
+  options?: RequestInit,
+): Promise<MobilityStatus> => {
+  return customFetch<MobilityStatus>(getGetMobilityStatusUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMobilityStatusQueryKey = () => {
+  return [`/api/mobility/status`] as const;
+};
+
+export const getGetMobilityStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMobilityStatus>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMobilityStatus>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMobilityStatusQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMobilityStatus>>
+  > = ({ signal }) => getMobilityStatus({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMobilityStatus>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMobilityStatusQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMobilityStatus>>
+>;
+export type GetMobilityStatusQueryError = ErrorType<void>;
+
+/**
+ * @summary Get today's mobility completion status and streak
+ */
+
+export function useGetMobilityStatus<
+  TData = Awaited<ReturnType<typeof getMobilityStatus>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMobilityStatus>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMobilityStatusQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Mark today's mobility session as complete
+ */
+export const getCompleteMobilitySessionUrl = () => {
+  return `/api/mobility/complete`;
+};
+
+export const completeMobilitySession = async (
+  options?: RequestInit,
+): Promise<MobilityCompletionResult> => {
+  return customFetch<MobilityCompletionResult>(
+    getCompleteMobilitySessionUrl(),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getCompleteMobilitySessionMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof completeMobilitySession>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof completeMobilitySession>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["completeMobilitySession"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof completeMobilitySession>>,
+    void
+  > = () => {
+    return completeMobilitySession(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CompleteMobilitySessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof completeMobilitySession>>
+>;
+
+export type CompleteMobilitySessionMutationError = ErrorType<void>;
+
+/**
+ * @summary Mark today's mobility session as complete
+ */
+export const useCompleteMobilitySession = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof completeMobilitySession>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof completeMobilitySession>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getCompleteMobilitySessionMutationOptions(options));
+};
+
+/**
+ * @summary Get user notification and goal settings
+ */
+export const getGetMobilitySettingsUrl = () => {
+  return `/api/mobility/settings`;
+};
+
+export const getMobilitySettings = async (
+  options?: RequestInit,
+): Promise<MobilitySettings> => {
+  return customFetch<MobilitySettings>(getGetMobilitySettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMobilitySettingsQueryKey = () => {
+  return [`/api/mobility/settings`] as const;
+};
+
+export const getGetMobilitySettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMobilitySettings>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMobilitySettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMobilitySettingsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMobilitySettings>>
+  > = ({ signal }) => getMobilitySettings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMobilitySettings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMobilitySettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMobilitySettings>>
+>;
+export type GetMobilitySettingsQueryError = ErrorType<void>;
+
+/**
+ * @summary Get user notification and goal settings
+ */
+
+export function useGetMobilitySettings<
+  TData = Awaited<ReturnType<typeof getMobilitySettings>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMobilitySettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMobilitySettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create or update notification and goal settings
+ */
+export const getUpdateMobilitySettingsUrl = () => {
+  return `/api/mobility/settings`;
+};
+
+export const updateMobilitySettings = async (
+  updateMobilitySettingsBody: UpdateMobilitySettingsBody,
+  options?: RequestInit,
+): Promise<MobilitySettings> => {
+  return customFetch<MobilitySettings>(getUpdateMobilitySettingsUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateMobilitySettingsBody),
+  });
+};
+
+export const getUpdateMobilitySettingsMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMobilitySettings>>,
+    TError,
+    { data: BodyType<UpdateMobilitySettingsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMobilitySettings>>,
+  TError,
+  { data: BodyType<UpdateMobilitySettingsBody> },
+  TContext
+> => {
+  const mutationKey = ["updateMobilitySettings"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMobilitySettings>>,
+    { data: BodyType<UpdateMobilitySettingsBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateMobilitySettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMobilitySettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMobilitySettings>>
+>;
+export type UpdateMobilitySettingsMutationBody =
+  BodyType<UpdateMobilitySettingsBody>;
+export type UpdateMobilitySettingsMutationError = ErrorType<void>;
+
+/**
+ * @summary Create or update notification and goal settings
+ */
+export const useUpdateMobilitySettings = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMobilitySettings>>,
+    TError,
+    { data: BodyType<UpdateMobilitySettingsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateMobilitySettings>>,
+  TError,
+  { data: BodyType<UpdateMobilitySettingsBody> },
+  TContext
+> => {
+  return useMutation(getUpdateMobilitySettingsMutationOptions(options));
+};
