@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap } from "lucide-react";
+import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, cancelSpeech } from "@/lib/voice-service";
+import { PoseSmoother } from "@/lib/pose-smoother";
 import {
   type EquipmentSelection,
   DEFAULT_EQUIPMENT,
@@ -104,6 +105,109 @@ const EXERCISE_CATEGORIES = [
 const SYNC_GATE = 85;
 const SYNC_VOICE_THRESHOLD = 80;
 const GHOST_CYCLE_MS = 4000;
+
+/** MediaPipe is queried at this rate; the canvas draws at full 60fps via interpolation. */
+const DETECT_INTERVAL_MS = 50; // 20 fps detection
+
+// ─── Focal joints per exercise (Minimalist Mode) ──────────────────────────────
+// Indices follow the MediaPipe 33-keypoint model (see exercise-registry LM map).
+const FOCAL_JOINTS: Record<string, number[]> = {
+  "Push-Up":              [11, 13, 15], // L shoulder, L elbow, L wrist
+  "Wall Push-Up":         [11, 13, 15],
+  "Incline Push-Up":      [11, 13, 15],
+  "Knee Push-Up":         [11, 13, 15],
+  "Diamond Push-Up":      [11, 13, 15],
+  "Pull-Up":              [11, 13, 15],
+  "Negative Pull-Ups":    [11, 13, 15],
+  "Australian Rows":      [11, 13, 15],
+  "Scapular Shrugs":      [11, 12, 23], // L shoulder, R shoulder, L hip
+  "Muscle-Up":            [11, 13, 15],
+  "Explosive Pull-Up":    [11, 13, 15],
+  "Tuck Front Lever":     [11, 13, 23], // shoulder, elbow, hip
+  "Straddle Front Lever": [11, 13, 23],
+  "Full Front Lever":     [11, 13, 23],
+  "Squat":                [23, 25, 27], // hip, knee, ankle
+  "Assisted Squat":       [23, 25, 27],
+  "Archer Squat":         [23, 25, 27],
+  "Pistol Squat":         [23, 25, 27],
+  "Nordic Curls":         [25, 26, 27], // L knee, R knee, L ankle
+  "Lunge":                [23, 25, 27],
+  "Plank":                [11, 23, 27], // shoulder, hip, ankle
+  "Dragon Flag":          [11, 23, 25],
+  "Human Flag":           [11, 12, 13],
+  "Burpee":               [11, 23, 27],
+  "Dip":                  [11, 13, 15],
+  "Handstand Push-Up":    [11, 13, 15],
+};
+
+// ─── Landmark interpolation helper ────────────────────────────────────────────
+
+/** Linear-interpolate between two landmark arrays (for 60fps smoothness). */
+function lerpLandmarks(prev: Landmark[], curr: Landmark[], t: number): Landmark[] {
+  if (prev.length !== curr.length) return curr;
+  return curr.map((c, i) => {
+    const p = prev[i];
+    return {
+      x:          p.x + (c.x - p.x) * t,
+      y:          p.y + (c.y - p.y) * t,
+      z:          p.z + (c.z - p.z) * t,
+      visibility: c.visibility,
+    };
+  });
+}
+
+// ─── Minimalist-mode canvas renderer ─────────────────────────────────────────
+
+/**
+ * Draws glowing circles on the 3 focal joints.
+ * Joints that are out of alignment with the ghost pulse red.
+ */
+function drawMinimalistJoints(
+  ctx:            CanvasRenderingContext2D,
+  userLms:        Landmark[],
+  ghostLms:       Landmark[],
+  focalIndices:   number[],
+  canvasW:        number,
+  canvasH:        number,
+  nowMs:          number,
+) {
+  const baseR = Math.min(canvasW, canvasH) * 0.02; // ~14 px on 720-high canvas
+
+  for (const idx of focalIndices) {
+    const lm    = userLms[idx];
+    const ghost = ghostLms[idx];
+    if (!lm) continue;
+
+    const cx   = lm.x * canvasW;
+    const cy   = lm.y * canvasH;
+    const dist = ghost ? Math.hypot(lm.x - ghost.x, lm.y - ghost.y) : 0;
+    const isOut = dist > 0.05;
+
+    const pulse  = isOut ? 0.7 + 0.3 * Math.abs(Math.sin(nowMs / 180)) : 1;
+    const radius = baseR * (isOut ? pulse * 1.15 : 1);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+
+    if (isOut) {
+      ctx.shadowColor = "#ef4444";
+      ctx.shadowBlur  = 28 * pulse;
+      ctx.fillStyle   = `rgba(239,68,68,${0.45 * pulse})`;
+      ctx.strokeStyle = `rgba(239,68,68,${0.9 * pulse})`;
+    } else {
+      ctx.shadowColor = "#22c55e";
+      ctx.shadowBlur  = 20;
+      ctx.fillStyle   = "rgba(34,197,94,0.30)";
+      ctx.strokeStyle = "#22c55e";
+    }
+
+    ctx.fill();
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.restore();
+  }
+}
 
 // ─── Calibration ─────────────────────────────────────────────────────────────
 
@@ -383,6 +487,31 @@ export function Workout() {
   /** Per-frame equipment modifier data shared between predictWebcam and processFrame. */
   const equipModRef = useRef({ wristJitter: 0, wristOverextended: false });
 
+  // ── Smoothing + detection-rate control ───────────────────────────────────
+  const smootherRef       = useRef(new PoseSmoother());
+  /** performance.now() when the last MediaPipe detection ran. */
+  const lastDetectMsRef   = useRef(0);
+  /** performance.now() of the detection before that (for interpolation). */
+  const prevDetectMsRef   = useRef(0);
+  /** EMA-smoothed landmarks from the most-recent detection. */
+  const currSmoothedRef   = useRef<Landmark[] | null>(null);
+  /** EMA-smoothed landmarks from the detection before that. */
+  const prevSmoothedRef   = useRef<Landmark[] | null>(null);
+  /** Ghost landmarks computed at the last detection. */
+  const currGhostRef      = useRef<Landmark[] | null>(null);
+  /** Ghost config at the last detection. */
+  const currGhostConfigRef = useRef<GhostExerciseConfig | null>(null);
+  /** Sync % at the last detection. */
+  const currSyncPctRef    = useRef(100);
+
+  // ── Minimalist Mode ──────────────────────────────────────────────────────
+  const [minimalistMode, setMinimalistModeState] = useState(false);
+  const minimalistModeRef = useRef(false);
+  const setMinimalistMode = (v: boolean) => {
+    minimalistModeRef.current = v;
+    setMinimalistModeState(v);
+  };
+
   const createSession = useCreateSession();
   const updateSession = useUpdateSession();
   const createRep     = useCreateRep();
@@ -611,46 +740,51 @@ export function Workout() {
   }, [exercises, selectedExerciseId, speak, speakSyncDrop, createRep, equipment]);
 
   // ── Main camera loop ───────────────────────────────────────────────────────
+  //
+  // Architecture:
+  //   • MediaPipe detection runs at max 20 fps (every DETECT_INTERVAL_MS).
+  //   • The canvas redraws at full 60 fps using linear interpolation between
+  //     the last two EMA-smoothed landmark snapshots.
+  //   • Minimalist Mode skips the full skeleton and renders glowing focal-joint
+  //     circles instead; misaligned joints pulse red.
+  //
   const predictWebcam = useCallback(() => {
     if (!videoRef.current || !canvasRef.current || !landmarkerRef.current) return;
     const video  = videoRef.current;
     const canvas = canvasRef.current;
     const ctx    = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) { requestRef.current = requestAnimationFrame(predictWebcam); return; }
 
-    if (video.currentTime !== lastVideoTimeRef.current) {
-      lastVideoTimeRef.current = video.currentTime;
+    const now = performance.now();
 
-      if (
-        video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA ||
-        video.videoWidth === 0 ||
-        video.videoHeight === 0
-      ) {
-        requestRef.current = requestAnimationFrame(predictWebcam);
-        return;
-      }
-
+    // Sync canvas size to video
+    if (video.videoWidth > 0) {
       if (canvas.width  !== video.videoWidth)  canvas.width  = video.videoWidth;
       if (canvas.height !== video.videoHeight) canvas.height = video.videoHeight;
+    }
 
+    // ── Detection phase (20 fps) ───────────────────────────────────────────
+    const sinceLastDetect = now - lastDetectMsRef.current;
+    if (
+      sinceLastDetect >= DETECT_INTERVAL_MS &&
+      video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA &&
+      video.videoWidth > 0
+    ) {
       let results;
       try {
-        results = landmarkerRef.current.detectForVideo(video, performance.now());
+        results = landmarkerRef.current.detectForVideo(video, now);
       } catch {
         requestRef.current = requestAnimationFrame(predictWebcam);
         return;
       }
 
-      ctx.save();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       if (results.landmarks?.length > 0) {
-        const userLandmarks = results.landmarks[0];
+        const raw    = results.landmarks[0];
 
-        // ── Track wrist history for rings jitter detection ─────────────────
-        const lWrist = userLandmarks[15];
-        const rWrist = userLandmarks[16];
-        const lElbow = userLandmarks[13];
+        // Wrist tracking for rings-jitter detection
+        const lWrist = raw[15];
+        const rWrist = raw[16];
+        const lElbow = raw[13];
         if (lWrist && rWrist) {
           wristHistoryRef.current.push({ lx: lWrist.x, ly: lWrist.y, rx: rWrist.x, ry: rWrist.y });
           if (wristHistoryRef.current.length > 12) wristHistoryRef.current.shift();
@@ -662,43 +796,87 @@ export function Workout() {
               hist.reduce((s, h) => s + Math.abs(h.lx - meanLx) + Math.abs(h.rx - meanRx), 0)
               / hist.length / 2;
           }
-          // Floor wrist extension: wrist z significantly > elbow z indicates hyperextension
           if (lElbow) {
             equipModRef.current.wristOverextended = (lWrist.z - lElbow.z) > 0.10;
           }
         }
 
-        const exerciseName  = exercises?.find(e => e.id.toString() === selectedExerciseId)?.name ?? "";
-        const ghostConfig   = exerciseName
+        // EMA smoothing (5-frame window)
+        const smoothed = smootherRef.current.smooth(raw);
+
+        // Ghost landmarks
+        const exerciseName = exercises?.find(e => e.id.toString() === selectedExerciseId)?.name ?? "";
+        const ghostConfig  = exerciseName
           ? getEquipmentGhostConfig(exerciseName, equipment.pushGear, equipment.pullGear)
           : null;
-        const currentPhase  = stateRef.current.phase;
+        const currentPhase = stateRef.current.phase;
 
-        let phasedGhostLandmarks: Landmark[] = userLandmarks;
+        let phasedGhost: Landmark[] = smoothed;
         if (ghostConfig) {
-          const phaseConfig      = getPhaseConfig(ghostConfig, currentPhase);
-          phasedGhostLandmarks   = computeGhostLandmarks(userLandmarks, phaseConfig.corrections);
+          const phaseConfig = getPhaseConfig(ghostConfig, currentPhase);
+          phasedGhost       = computeGhostLandmarks(smoothed, phaseConfig.corrections);
         }
 
         let currentSyncPct = 100;
         if (ghostConfig) {
-          const phaseConfig  = getPhaseConfig(ghostConfig, currentPhase);
-          currentSyncPct     = calcSyncPct(userLandmarks, phasedGhostLandmarks, phaseConfig.keyLandmarks);
+          const phaseConfig = getPhaseConfig(ghostConfig, currentPhase);
+          currentSyncPct    = calcSyncPct(smoothed, phasedGhost, phaseConfig.keyLandmarks);
         }
 
-        if (ghostConfig) {
-          const elapsed    = Date.now() - workoutStartMsRef.current;
-          const cyclePos   = (elapsed % GHOST_CYCLE_MS) / GHOST_CYCLE_MS;
-          const t          = Math.sin(cyclePos * Math.PI * 2) * 0.5 + 0.5;
-          const animGhost  = computeAnimatedGhostLandmarks(userLandmarks, ghostConfig, t);
-          drawGhostSkeleton(ctx, animGhost, canvas.width, canvas.height, currentSyncPct);
-        }
+        // Rotate buffers: prev ← curr ← new
+        prevSmoothedRef.current    = currSmoothedRef.current;
+        prevDetectMsRef.current    = lastDetectMsRef.current;
+        currSmoothedRef.current    = smoothed;
+        currGhostRef.current       = phasedGhost;
+        currGhostConfigRef.current = ghostConfig;
+        currSyncPctRef.current     = currentSyncPct;
+        lastDetectMsRef.current    = now;
 
+        // Game logic at detection rate (20 fps is sufficient for rep counting)
+        processFrame(smoothed, phasedGhost, ghostConfig, currentSyncPct);
+      }
+    }
+
+    // ── Drawing phase (60 fps) ─────────────────────────────────────────────
+    const curr = currSmoothedRef.current;
+    if (curr && canvas.width > 0) {
+      ctx.save();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Interpolation factor between the two most-recent detection snapshots
+      const prev     = prevSmoothedRef.current;
+      const interval = Math.max(1, lastDetectMsRef.current - prevDetectMsRef.current);
+      const tLerp    = Math.min(1, (now - lastDetectMsRef.current) / interval);
+      const display  = prev ? lerpLandmarks(prev, curr, tLerp) : curr;
+
+      const ghostLms    = currGhostRef.current;
+      const ghostConfig = currGhostConfigRef.current;
+      const syncPctNow  = currSyncPctRef.current;
+
+      // Ghost skeleton
+      if (ghostConfig && ghostLms) {
+        const elapsed   = Date.now() - workoutStartMsRef.current;
+        const cyclePos  = (elapsed % GHOST_CYCLE_MS) / GHOST_CYCLE_MS;
+        const tCycle    = Math.sin(cyclePos * Math.PI * 2) * 0.5 + 0.5;
+        const animGhost = computeAnimatedGhostLandmarks(display, ghostConfig, tCycle);
+        drawGhostSkeleton(ctx, animGhost, canvas.width, canvas.height, syncPctNow);
+      }
+
+      // User landmarks — Minimalist Mode or full skeleton
+      const exerciseName = exercises?.find(e => e.id.toString() === selectedExerciseId)?.name ?? "";
+      const focalIndices = minimalistModeRef.current ? (FOCAL_JOINTS[exerciseName] ?? null) : null;
+
+      if (focalIndices) {
+        drawMinimalistJoints(
+          ctx, display, ghostLms ?? display,
+          focalIndices, canvas.width, canvas.height, now,
+        );
+      } else {
         const drawingUtils = new DrawingUtils(ctx);
-        drawingUtils.drawLandmarks(userLandmarks, { radius: 3, color: "#00FF00", lineWidth: 2 });
-        drawingUtils.drawConnectors(userLandmarks, PoseLandmarker.POSE_CONNECTIONS, { color: "#00FF00", lineWidth: 2 });
-
-        processFrame(userLandmarks, phasedGhostLandmarks, ghostConfig, currentSyncPct);
+        // Cast to NormalizedLandmark[] — visibility is always present after detection
+        const displayNorm = display as Parameters<typeof drawingUtils.drawLandmarks>[0];
+        drawingUtils.drawLandmarks(displayNorm, { radius: 3, color: "#00FF00", lineWidth: 2 });
+        drawingUtils.drawConnectors(displayNorm, PoseLandmarker.POSE_CONNECTIONS, { color: "#00FF00", lineWidth: 2 });
       }
 
       ctx.restore();
@@ -907,6 +1085,16 @@ export function Workout() {
         bestSyncPct:      0,
         lastSyncDropMs:   0,
       };
+
+      // Reset smoothing + interpolation state for the new set
+      smootherRef.current.reset();
+      currSmoothedRef.current    = null;
+      prevSmoothedRef.current    = null;
+      currGhostRef.current       = null;
+      currGhostConfigRef.current = null;
+      lastDetectMsRef.current    = 0;
+      prevDetectMsRef.current    = 0;
+      currSyncPctRef.current     = 100;
 
       setReps(0);
       setHoldSeconds(0);
@@ -1341,6 +1529,23 @@ export function Workout() {
                     : "inset 0 0 0 4px rgba(255,160,0,0.4)"),
             }}
           />
+        )}
+
+        {/* Minimalist Mode toggle — visible during workout */}
+        {isWorkoutActive && (
+          <button
+            onClick={() => setMinimalistMode(!minimalistMode)}
+            title={minimalistMode ? "Show full skeleton" : "Minimalist Mode"}
+            className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-all select-none"
+            style={{
+              background: minimalistMode ? "rgba(34,197,94,0.18)" : "rgba(0,0,0,0.5)",
+              borderColor: minimalistMode ? "rgba(34,197,94,0.6)" : "rgba(255,255,255,0.15)",
+              color: minimalistMode ? "#86efac" : "rgba(255,255,255,0.5)",
+            }}
+          >
+            {minimalistMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            {minimalistMode ? "Minimalist" : "Full Skeleton"}
+          </button>
         )}
 
         {/* Ghost Mode badge + grip label */}
