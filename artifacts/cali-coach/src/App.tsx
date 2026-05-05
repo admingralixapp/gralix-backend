@@ -19,6 +19,7 @@ import { History } from "@/pages/history";
 import { SessionDetail } from "@/pages/session-detail";
 import { Progress } from "@/pages/progress";
 import { Exercises } from "@/pages/exercises";
+import { CommunityFeedPage } from "@/pages/community-feed";
 import { SkillTreePage } from "@/pages/skill-tree";
 import { Friends } from "@/pages/friends";
 import { ProfilePage } from "@/pages/profile";
@@ -225,6 +226,7 @@ function AppRouter() {
               <Route path="/session/:id" component={SessionDetail} />
               <Route path="/progress" component={Progress} />
               <Route path="/exercises" component={Exercises} />
+              <Route path="/community" component={CommunityFeedPage} />
               <Route path="/skill-tree" component={SkillTreePage} />
               <Route path="/leaderboard" component={Leaderboard} />
               <Route path="/friends" component={Friends} />

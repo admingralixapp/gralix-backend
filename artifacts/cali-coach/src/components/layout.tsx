@@ -14,6 +14,7 @@ import {
   LogOut,
   Trophy,
   ClipboardList,
+  Rss,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMyProfile, useFriendRequests } from "@/lib/social";
@@ -32,6 +33,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/",            label: "Dashboard",   icon: LayoutDashboard },
   { href: "/workout",     label: "Workout",      icon: Activity },
   { href: "/daily-tasks", label: "Daily Tasks",  icon: ClipboardList },
+  { href: "/community",   label: "Community",    icon: Rss },
   { href: "/history",     label: "History",      icon: History },
   { href: "/progress",    label: "Progress",     icon: TrendingUp },
   { href: "/skill-tree",  label: "Skill Tree",   icon: GitBranch },

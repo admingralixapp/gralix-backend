@@ -100,6 +100,9 @@ Static exercises (`isStatic: true` in `ExerciseConfig`) use a Hold Timer instead
 - `shoutouts` — elite skill mastery announcements (userId FK, skillId, skillTitle, branch, createdAt). Unique constraint on (userId, skillId) prevents duplicates.
 - `mobility_completions` — daily completion log (userId, completedDate DATE, routineGoal). Unique on (userId, completedDate).
 - `user_notification_settings` — per-user notification prefs (userId unique, enabled bool, notificationTime "HH:MM", mobilityGoal).
+- `feed_posts` — community video posts (userId, exerciseName, caption, videoObjectPath, isAiVerified, sessionId FK, likeCount, createdAt).
+- `feed_post_likes` — toggle likes on posts (postId, userId). Unique on (postId, userId).
+- `feed_post_comments` — comments on posts (postId, userId, content, createdAt).
 
 ## API Routes
 
@@ -134,6 +137,7 @@ Static exercises (`isStatic: true` in `ExerciseConfig`) use a Hold Timer instead
 
 - `/` — landing (signed-out) or dashboard (signed-in)
 - `/sign-in`, `/sign-up` — Clerk auth pages (no sidebar)
+- `/community` — Community Feed: scrollable video post feed with exercise filter chips, fire/comment interactions, glassmorphism cards. "Share to Feed" button in POV Review uploads clip to GCS + creates post.
 - `/friends` — search athletes, manage requests, friend list
 - `/profile/:username` — public profile with skill tree + form mastery ring
 - `/settings` — edit display name/username, privacy toggle, sign out
@@ -167,6 +171,17 @@ Static exercises (`isStatic: true` in `ExerciseConfig`) use a Hold Timer instead
 - `GET /api/skills/mastered` — auth required; returns mastered skills with full metadata (id, level, levelName, title, branch)
 - `POST /api/shoutouts` — auth required; idempotent (ON CONFLICT DO NOTHING)
 - `GET /api/feed` — returns shoutouts from self + friends; empty array for unauthenticated users
+
+### Community Feed API
+
+- `GET /api/community-feed` — paginated video post feed (optional `?exercise=` filter, `?limit=`, `?offset=`). Returns `likedByMe` boolean and `videoUrl` serving path.
+- `POST /api/community-feed` — create a post (auth required; body: exerciseName, caption, videoObjectPath, isAiVerified, sessionId)
+- `POST /api/community-feed/:id/like` — toggle like (auth required; returns `{ liked, likeCount }`)
+- `GET /api/community-feed/:id/comments` — get comments for a post
+- `POST /api/community-feed/:id/comments` — add comment (auth required; body: { content })
+- `POST /api/storage/uploads/request-url` — request presigned GCS upload URL (body: name, size, contentType → returns uploadURL + objectPath)
+- `GET /api/storage/objects/*` — serve uploaded video objects
+- `GET /api/storage/public-objects/*` — serve public assets
 
 ### Leaderboard API
 

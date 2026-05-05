@@ -22,10 +22,12 @@ import {
   Ghost,
   ChevronRight,
   Mic,
+  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { drawGhostSkeleton } from "@/lib/ghost-poses";
 import { speak as voiceSpeak } from "@/lib/voice-service";
+import { ShareToFeedSheet } from "./share-to-feed-sheet";
 import type { BestRepData, RepReviewPayload } from "@/lib/rep-recorder";
 import type { Landmark } from "@/lib/exercise-registry";
 
@@ -215,6 +217,7 @@ export function PovReview({
   const [isPlaying,      setIsPlaying]      = useState(false);
   const [narration,      setNarration]      = useState<NarrationState>("idle");
   const [videoError,     setVideoError]     = useState(false);
+  const [showShare,      setShowShare]      = useState(false);
 
   const deviations    = computeDeviations(bestRepData.userLandmarks, bestRepData.ghostLandmarks);
   const narrationText = buildNarration(exerciseName, bestRepData.repNumber, bestRepData.syncPct, deviations);
@@ -537,6 +540,16 @@ export function PovReview({
           </Button>
 
           <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowShare(true)}
+            className="border-primary/40 text-primary hover:bg-primary/10 gap-1.5"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            Share to Feed
+          </Button>
+
+          <Button
             size="sm"
             onClick={onComplete}
             className="font-bold gap-1"
@@ -546,6 +559,16 @@ export function PovReview({
           </Button>
         </div>
       </div>
+
+      {/* Share to feed sheet */}
+      {showShare && (
+        <ShareToFeedSheet
+          blob={blob}
+          exerciseName={exerciseName}
+          isAiVerified={true}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </div>
   );
 }

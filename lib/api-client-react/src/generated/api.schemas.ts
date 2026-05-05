@@ -146,6 +146,24 @@ export interface UpdateMobilitySettingsBody {
   mobilityGoal?: string;
 }
 
+export interface RequestUploadUrlBody {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export interface RequestUploadUrlResponseMetadata {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export interface RequestUploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+  metadata: RequestUploadUrlResponseMetadata;
+}
+
 export type ListSessionsParams = {
   limit?: number;
   offset?: number;
