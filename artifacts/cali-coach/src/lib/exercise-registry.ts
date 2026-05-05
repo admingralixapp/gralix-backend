@@ -240,16 +240,29 @@ const PUSH_UP: ExerciseConfig = {
     }
 
     const shoulderMid = midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]);
-    const hipMid = midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]);
-    const ankleMid = midpoint(lm[LM.LEFT_ANKLE], lm[LM.RIGHT_ANKLE]);
+    const hipMid      = midpoint(lm[LM.LEFT_HIP],      lm[LM.RIGHT_HIP]);
+    const ankleMid    = midpoint(lm[LM.LEFT_ANKLE],    lm[LM.RIGHT_ANKLE]);
+
+    // Body-line angle: deviation from 180° straight = sag or pike
     const bodyAngle = calcAngle(shoulderMid, hipMid, ankleMid);
-    const formScore = clamp(100 - Math.max(0, 180 - bodyAngle) * 2.5, 0, 100);
+    const bodyPenalty = clamp(Math.max(0, 180 - bodyAngle) * 2.5, 0, 60);
+
+    // Elbow flare: horizontal distance between elbow and shoulder (normalised)
+    const leftFlare  = Math.abs(lm[LM.LEFT_ELBOW].x  - lm[LM.LEFT_SHOULDER].x);
+    const rightFlare = Math.abs(lm[LM.RIGHT_ELBOW].x - lm[LM.RIGHT_SHOULDER].x);
+    const flarePenalty = clamp(((leftFlare + rightFlare) / 2) * 100, 0, 40);
+
+    const formScore = clamp(100 - bodyPenalty - flarePenalty * 0.5, 0, 100);
+
     let audioCue: string | null = null;
     if (formScore < 60) {
-      audioCue = hipMid.y < shoulderMid.y
-        ? "Keep your hips down — maintain a straight line"
-        : "Hips are dropping — tighten your core";
-      // (wrist extension monitoring injected by workout.tsx when pushGear=floor)
+      if (flarePenalty > bodyPenalty * 0.6) {
+        audioCue = "Elbows are flaring — tuck them in";
+      } else if (hipMid.y > ankleMid.y * 0.98) {
+        audioCue = "Hips are sagging — squeeze your core";
+      } else {
+        audioCue = "Straight line — head to heels";
+      }
     }
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
@@ -424,8 +437,9 @@ const PULL_UP: ExerciseConfig = {
   initialPhase: "bottom",
   processFrame(lm, phase) {
     const elbowAngle = calcAngle(lm[LM.LEFT_WRIST], lm[LM.LEFT_ELBOW], lm[LM.LEFT_SHOULDER]);
-    const wristY = lm[LM.LEFT_WRIST].y;
+    const wristY    = lm[LM.LEFT_WRIST].y;
     const shoulderY = lm[LM.LEFT_SHOULDER].y;
+    const noseY     = lm[LM.NOSE].y;
     let newPhase = phase;
     let repCounted = false;
     let repQuality: RepQuality | null = null;
@@ -435,19 +449,25 @@ const PULL_UP: ExerciseConfig = {
       newPhase = "bottom"; repCounted = true; repQuality = "complete";
     }
 
-    const rightElbow = calcAngle(lm[LM.RIGHT_WRIST], lm[LM.RIGHT_ELBOW], lm[LM.RIGHT_SHOULDER]);
+    const rightElbow    = calcAngle(lm[LM.RIGHT_WRIST], lm[LM.RIGHT_ELBOW], lm[LM.RIGHT_SHOULDER]);
     const symmetryPenalty = clamp(Math.abs(rightElbow - elbowAngle) * 0.5, 0, 20);
-    const hipMidX = midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]).x;
-    const shMidX = midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]).x;
-    const swingPenalty = clamp(Math.abs(hipMidX - shMidX) * 100, 0, 20);
+    const hipMidX       = midpoint(lm[LM.LEFT_HIP],      lm[LM.RIGHT_HIP]).x;
+    const shMidX        = midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]).x;
+    const swingPenalty  = clamp(Math.abs(hipMidX - shMidX) * 100, 0, 20);
     const extensionBonus = clamp((elbowAngle / 180) * 40, 0, 40);
     const formScore = clamp(60 + extensionBonus - symmetryPenalty - swingPenalty, 0, 100);
 
     let audioCue: string | null = null;
     if (formScore < 65) {
-      audioCue = swingPenalty > symmetryPenalty
-        ? "Engage your core — stop swinging"
-        : "Pull evenly on both sides";
+      // Chin-over-bar check: at "top" phase, nose should be clearly above wrist level
+      const chinOverBar = noseY < wristY - 0.04;
+      if (phase === "top" && !chinOverBar) {
+        audioCue = "Get your chin over the bar";
+      } else if (swingPenalty > symmetryPenalty) {
+        audioCue = "Stop the swinging — use your back";
+      } else {
+        audioCue = "Pull evenly — engage your lats";
+      }
     }
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
@@ -806,22 +826,37 @@ const SQUAT: ExerciseConfig = {
       repQuality = hipY < kneeY ? "incomplete" : "complete";
     }
 
-    const torsoAngle = calcAngle(
-      midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]),
-      midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]),
-      midpoint(lm[LM.LEFT_KNEE], lm[LM.RIGHT_KNEE]),
-    );
+    const shoulderMid = midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]);
+    const hipMid      = midpoint(lm[LM.LEFT_HIP],      lm[LM.RIGHT_HIP]);
+    const kneeMid     = midpoint(lm[LM.LEFT_KNEE],     lm[LM.RIGHT_KNEE]);
+    const ankleMid    = midpoint(lm[LM.LEFT_ANKLE],    lm[LM.RIGHT_ANKLE]);
+
+    const torsoAngle = calcAngle(shoulderMid, hipMid, kneeMid);
     const torsoPenalty = clamp((90 - torsoAngle) * 1.5, 0, 40);
-    const kneeDrift = Math.abs(lm[LM.LEFT_KNEE].x - lm[LM.LEFT_ANKLE].x) * 100;
+
+    // Forward lean: shoulders significantly ahead of hips (x-axis)
+    const forwardLean = Math.abs(shoulderMid.x - hipMid.x) > 0.09;
+
+    // Heel rise: ankle y drifts significantly relative to knee (heels lifting)
+    const heelRise = (ankleMid.y - kneeMid.y) > 0.38;
+
+    const kneeDrift   = Math.abs(lm[LM.LEFT_KNEE].x - lm[LM.LEFT_ANKLE].x) * 100;
     const kneePenalty = clamp(kneeDrift, 0, 30);
-    const formScore = clamp(100 - torsoPenalty - kneePenalty, 0, 100);
+    const formScore   = clamp(100 - torsoPenalty - kneePenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (repQuality === "incomplete") audioCue = "Go deeper — hips must reach knee level";
-    else if (formScore < 60) {
-      audioCue = kneePenalty > torsoPenalty
-        ? "Knees out — don't let them cave inward"
-        : "Keep your chest up and spine neutral";
+    if (repQuality === "incomplete") {
+      audioCue = "Go deeper — hips must reach knee level";
+    } else if (formScore < 60) {
+      if (heelRise) {
+        audioCue = "Weight on your heels — don't let them rise";
+      } else if (forwardLean) {
+        audioCue = "Chest up — don't lean forward";
+      } else if (kneePenalty > torsoPenalty) {
+        audioCue = "Knees out — don't let them cave inward";
+      } else {
+        audioCue = "Keep your chest up and spine neutral";
+      }
     }
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },

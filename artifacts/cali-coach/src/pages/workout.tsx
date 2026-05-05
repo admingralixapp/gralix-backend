@@ -6,10 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap, Eye, EyeOff } from "lucide-react";
+import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap, Eye, EyeOff, Mic, MicOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, cancelSpeech } from "@/lib/voice-service";
+import {
+  getPhaseTransitionCue,
+  getMilestoneCue,
+  toneFromScore,
+  DESCEND_PACER_CUES,
+  ASCEND_PACER_CUE,
+} from "@/lib/coaching-engine";
 import { PoseSmoother } from "@/lib/pose-smoother";
 import {
   type EquipmentSelection,
@@ -459,10 +466,12 @@ export function Workout() {
     phase:            "up" as Phase,
     repCount:         0,
     lastSpokenTime:   0,
+    lastPhaseCueMs:   0,   // separate cooldown for phase-transition cues (2 s)
     sessionStartTime: 0,
     sessionId:        0,
     repFormScores:    [] as number[],
     lastRepTime:      0,
+    avgRepDurationMs: 0,   // rolling average rep duration for milestone detection
     holdSeconds:      0,
     lastHoldTickMs:   0,
     holdActive:       false,
@@ -512,16 +521,48 @@ export function Workout() {
     setMinimalistModeState(v);
   };
 
+  // ── Voice Pacing ──────────────────────────────────────────────────────────
+  // When ON, the AI calls movement transitions in real-time:
+  // "Down... 2... 1... and Up!" queued via setTimeout on each phase change.
+  const [voicePacing, setVoicePacingState] = useState(false);
+  const voicePacingRef = useRef(false);
+  const setVoicePacing = (v: boolean) => {
+    voicePacingRef.current = v;
+    setVoicePacingState(v);
+  };
+  // Holds setTimeout IDs for pending pacer cues so they can be cancelled
+  // when the phase reverses before the sequence completes.
+  const pacerTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const clearPacerTimeouts = () => {
+    pacerTimeoutsRef.current.forEach(t => clearTimeout(t));
+    pacerTimeoutsRef.current = [];
+  };
+
   const createSession = useCreateSession();
   const updateSession = useUpdateSession();
   const createRep     = useCreateRep();
 
-  // ── Voice helper ───────────────────────────────────────────────────────────
-  const speak = useCallback((text: string) => {
+  // ── Voice helpers ──────────────────────────────────────────────────────────
+  /**
+   * General coaching cue — 4 s cooldown prevents rapid-fire speech.
+   * Accepts an optional tone that adjusts ElevenLabs expressiveness.
+   */
+  const speak = useCallback((text: string, tone: "encouraging" | "firm" | "neutral" = "neutral") => {
     const now = Date.now();
     if (now - stateRef.current.lastSpokenTime < 4000) return;
     stateRef.current.lastSpokenTime = now;
-    voiceSpeak(text);
+    voiceSpeak(text, tone);
+  }, []);
+
+  /**
+   * Phase-transition cue — independent 2 s cooldown so it doesn't block
+   * the general coaching cue queue. Pacer cues bypass this entirely.
+   */
+  const speakPhase = useCallback((text: string, tone: "encouraging" | "firm" | "neutral" = "neutral") => {
+    const now = Date.now();
+    if (now - stateRef.current.lastPhaseCueMs < 2000) return;
+    stateRef.current.lastPhaseCueMs = now;
+    voiceSpeak(text, tone);
   }, []);
 
   const lastSyncVoiceRef = useRef<number>(0);
@@ -529,7 +570,7 @@ export function Workout() {
     const now = Date.now();
     if (now - lastSyncVoiceRef.current < 5000) return;
     lastSyncVoiceRef.current = now;
-    voiceSpeak("Get back into position to continue.");
+    voiceSpeak("Get back into position to continue.", "neutral");
   }, []);
 
   // ── Load MediaPipe model ───────────────────────────────────────────────────
@@ -607,12 +648,15 @@ export function Workout() {
     const config = getExerciseConfig(exercise.name);
     if (!config) return;
 
-    const result = config.processFrame(landmarks, stateRef.current.phase as Phase, {
+    // ── Run exercise state machine ─────────────────────────────────────────
+    const prevPhase = stateRef.current.phase;
+    const result    = config.processFrame(landmarks, prevPhase as Phase, {
       pushDepthThreshold: isPushExercise(exercise.name)
         ? getPushDepthThreshold(equipment.pushGear)
         : undefined,
     });
     stateRef.current.phase = result.newPhase;
+    const phaseChanged = result.newPhase !== prevPhase;
 
     // ── Equipment modifier: rings stability bonus ──────────────────────────
     let equipBonus = 0;
@@ -633,6 +677,7 @@ export function Workout() {
     const blendedScore = ghostConfig
       ? Math.round((adjustedFormScore + currentSyncPct) / 2)
       : adjustedFormScore;
+    const tone = toneFromScore(blendedScore);
 
     const synced = currentSyncPct >= SYNC_GATE;
     const now    = Date.now();
@@ -650,6 +695,39 @@ export function Workout() {
     stateRef.current.bestSyncPct = Math.max(stateRef.current.bestSyncPct, currentSyncPct);
     setSyncPct(Math.round(currentSyncPct));
 
+    // ── Phase-transition coaching (fires once per phase change) ────────────
+    if (phaseChanged && !config.isStatic) {
+      clearPacerTimeouts();
+
+      if (voicePacingRef.current) {
+        // ── Active Pacer: "Down... 2... 1... and Up!" ─────────────────────
+        const isDescending =
+          (result.newPhase === "down") ||
+          (result.newPhase === "bottom" && (prevPhase === "up" || prevPhase === "top"));
+        const isAscending  =
+          (result.newPhase === "up") ||
+          (result.newPhase === "top" && (prevPhase === "down" || prevPhase === "bottom"));
+
+        if (isDescending) {
+          // Queue the countdown sequence
+          DESCEND_PACER_CUES.forEach(cue => {
+            const t = setTimeout(() => {
+              voiceSpeak(cue.text, cue.tone);
+            }, cue.delayMs);
+            pacerTimeoutsRef.current.push(t);
+          });
+        } else if (isAscending) {
+          voiceSpeak(ASCEND_PACER_CUE.text, ASCEND_PACER_CUE.tone);
+        }
+      } else {
+        // ── Standard phase-transition cue ─────────────────────────────────
+        const phaseCue = getPhaseTransitionCue(exercise.name, prevPhase as Phase, result.newPhase);
+        if (phaseCue) {
+          speakPhase(phaseCue.text, phaseCue.tone);
+        }
+      }
+    }
+
     if (config.isStatic) {
       const holdNow = result.isHoldActive === true && synced;
 
@@ -665,17 +743,17 @@ export function Workout() {
           totalSec !== stateRef.current.lastHoldSpeakSec
         ) {
           stateRef.current.lastHoldSpeakSec = totalSec;
-          speak(`${totalSec} seconds. Stay strong.`);
+          speak(`${totalSec} seconds. Stay strong.`, tone);
         }
       }
 
       if (holdNow && !stateRef.current.holdActive) {
-        speak("Perfect sync — hold it.");
+        speak("Perfect sync — hold it.", "encouraging");
       } else if (!holdNow && stateRef.current.holdActive) {
         if (!synced) {
           // sync drop handled above
         } else {
-          speak(result.audioCue ?? "Adjust your position.");
+          speak(result.audioCue ?? "Adjust your position.", tone);
         }
       }
 
@@ -694,6 +772,13 @@ export function Workout() {
         setReps(newRepCount);
 
         const duration = now - stateRef.current.lastRepTime;
+
+        // ── Update rolling average rep duration ────────────────────────────
+        if (stateRef.current.lastRepTime > 0 && duration > 0) {
+          stateRef.current.avgRepDurationMs = stateRef.current.avgRepDurationMs === 0
+            ? duration
+            : Math.round(stateRef.current.avgRepDurationMs * 0.7 + duration * 0.3);
+        }
         stateRef.current.lastRepTime = now;
         stateRef.current.repFormScores.push(blendedScore);
 
@@ -720,24 +805,35 @@ export function Workout() {
           },
         });
 
+        // ── Rep completion cue ─────────────────────────────────────────────
+        // Milestone: if this rep took >1.6× the average, the user is fatiguing
+        const isFatiguing =
+          stateRef.current.avgRepDurationMs > 0 &&
+          duration > stateRef.current.avgRepDurationMs * 1.6 &&
+          newRepCount >= 3;
+
         if (repQuality === "incomplete") {
-          speak("Incomplete rep — go deeper next time");
+          speak("Incomplete rep — go deeper next time", "firm");
+        } else if (isFatiguing) {
+          const milestone = getMilestoneCue();
+          speak(milestone.text, milestone.tone);
         } else if (newRepCount % 5 === 0) {
-          speak(`${newRepCount} reps. Keep it up!`);
+          speak(`${newRepCount} reps. Keep it up!`, "encouraging");
         } else {
-          speak("Good rep");
+          speak("Good rep", "neutral");
         }
       } else if (repCounted && !synced) {
-        speak("Match the ghost to earn that rep.");
+        speak("Match the ghost to earn that rep.", "neutral");
       } else if (equipCue) {
-        speak(equipCue);
+        speak(equipCue, tone);
       } else if (audioCue) {
-        speak(audioCue);
+        // Form correction — use blended score tone so voice matches severity
+        speak(audioCue, tone);
       }
 
       setFormScore(prev => prev * 0.9 + blendedScore * 0.1);
     }
-  }, [exercises, selectedExerciseId, speak, speakSyncDrop, createRep, equipment]);
+  }, [exercises, selectedExerciseId, speak, speakPhase, speakSyncDrop, createRep, equipment, clearPacerTimeouts]);
 
   // ── Main camera loop ───────────────────────────────────────────────────────
   //
@@ -1074,10 +1170,12 @@ export function Workout() {
         phase:            config?.initialPhase ?? "up",
         repCount:         0,
         lastSpokenTime:   Date.now(),
+        lastPhaseCueMs:   0,
         sessionStartTime: Date.now(),
         sessionId:        session.id,
         repFormScores:    [],
         lastRepTime:      Date.now(),
+        avgRepDurationMs: 0,
         holdSeconds:      0,
         lastHoldTickMs:   0,
         holdActive:       false,
@@ -1085,6 +1183,9 @@ export function Workout() {
         bestSyncPct:      0,
         lastSyncDropMs:   0,
       };
+
+      // Clear any pending pacer cues from the previous set
+      clearPacerTimeouts();
 
       // Reset smoothing + interpolation state for the new set
       smootherRef.current.reset();
@@ -1531,21 +1632,40 @@ export function Workout() {
           />
         )}
 
-        {/* Minimalist Mode toggle — visible during workout */}
+        {/* Top-left controls — visible during workout */}
         {isWorkoutActive && (
-          <button
-            onClick={() => setMinimalistMode(!minimalistMode)}
-            title={minimalistMode ? "Show full skeleton" : "Minimalist Mode"}
-            className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-all select-none"
-            style={{
-              background: minimalistMode ? "rgba(34,197,94,0.18)" : "rgba(0,0,0,0.5)",
-              borderColor: minimalistMode ? "rgba(34,197,94,0.6)" : "rgba(255,255,255,0.15)",
-              color: minimalistMode ? "#86efac" : "rgba(255,255,255,0.5)",
-            }}
-          >
-            {minimalistMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-            {minimalistMode ? "Minimalist" : "Full Skeleton"}
-          </button>
+          <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+
+            {/* Minimalist Mode toggle */}
+            <button
+              onClick={() => setMinimalistMode(!minimalistMode)}
+              title={minimalistMode ? "Show full skeleton" : "Minimalist Mode"}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-all select-none"
+              style={{
+                background:   minimalistMode ? "rgba(34,197,94,0.18)" : "rgba(0,0,0,0.50)",
+                borderColor:  minimalistMode ? "rgba(34,197,94,0.6)"  : "rgba(255,255,255,0.15)",
+                color:        minimalistMode ? "#86efac"               : "rgba(255,255,255,0.50)",
+              }}
+            >
+              {minimalistMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              {minimalistMode ? "Minimalist" : "Full Skeleton"}
+            </button>
+
+            {/* Voice Pacing toggle */}
+            <button
+              onClick={() => setVoicePacing(!voicePacing)}
+              title={voicePacing ? "Disable Voice Pacing" : "Enable Voice Pacing — AI counts your tempo"}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-all select-none"
+              style={{
+                background:  voicePacing ? "rgba(139,92,246,0.20)" : "rgba(0,0,0,0.50)",
+                borderColor: voicePacing ? "rgba(139,92,246,0.60)" : "rgba(255,255,255,0.15)",
+                color:       voicePacing ? "#c4b5fd"               : "rgba(255,255,255,0.50)",
+              }}
+            >
+              {voicePacing ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
+              {voicePacing ? "Voice Pacing" : "Voice Pacing"}
+            </button>
+          </div>
         )}
 
         {/* Ghost Mode badge + grip label */}

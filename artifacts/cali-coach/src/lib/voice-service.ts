@@ -195,24 +195,29 @@ function fallbackSpeak(text: string): void {
  * Automatically ducks all non-speech audio while the cue is playing and
  * smoothly restores it afterwards.
  * Falls back to Web Speech API if ElevenLabs is unavailable.
+ *
+ * @param tone  Optional coaching tone forwarded to /api/tts.
+ *              "encouraging" — warmer, more expressive (user is struggling)
+ *              "firm"        — authoritative (form is breaking down)
+ *              "neutral"     — default (good form, on track)
  */
-export function speak(text: string): void {
+export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral"): void {
   stopCurrentSource();
   window.speechSynthesis.cancel();
 
-  _speakAsync(text).catch(() => {
+  _speakAsync(text, tone).catch(() => {
     fallbackSpeak(text);
   });
 }
 
-async function _speakAsync(text: string): Promise<void> {
+async function _speakAsync(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral"): Promise<void> {
   let res: Response;
   try {
     res = await fetch("/api/tts", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, tone }),
     });
   } catch {
     fallbackSpeak(text);
