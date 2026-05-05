@@ -49,11 +49,16 @@ const springTransition = { type: "spring" as const, stiffness: 300, damping: 30 
  * Slide variants.
  *   dir ≥ 0  →  moving right in nav  →  enter from right, exit to left
  *   dir < 0  →  moving left  in nav  →  enter from left,  exit to right
+ *
+ * opacity: 0 on enter/exit ensures the tab is invisible while fully off-screen,
+ * preventing any "preview frame" flash before the spring starts.
+ * zIndex keeps the active (center) tab painted above the departing one so there
+ * are no layer-swap flickers mid-transition.
  */
 const pageVariants = {
-  enter: (dir: number) => ({ x: dir >= 0 ? "100%" : "-100%" }),
-  center: { x: 0 },
-  exit:   (dir: number) => ({ x: dir >= 0 ? "-100%" : "100%" }),
+  enter:  (dir: number) => ({ x: dir >= 0 ? "100%" : "-100%", opacity: 0, zIndex: 0 }),
+  center:                   { x: 0,                             opacity: 1, zIndex: 1 },
+  exit:   (dir: number) => ({ x: dir >= 0 ? "-100%" : "100%", opacity: 0, zIndex: 0 }),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -301,8 +306,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </nav>
 
       {/* Animated Main Content */}
+      {/*
+        overflow-hidden on <main> acts as the viewport mask — tabs sitting fully
+        off-screen at ±100% x are clipped and never visible to the user.
+      */}
       <main className="flex-1 pb-20 md:pb-0 overflow-hidden relative">
-        <AnimatePresence initial={false} custom={direction} mode="sync">
+        {/*
+          mode="popLayout": the exiting tab is immediately popped out of layout
+          flow (position: absolute) so the entering tab can occupy the space
+          without waiting. Both animations run concurrently but are properly
+          z-ordered by the variants above (center zIndex:1 > enter/exit zIndex:0).
+        */}
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
             key={location}
             custom={direction}
@@ -312,6 +327,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             exit="exit"
             transition={springTransition}
             className="absolute inset-0 overflow-y-auto"
+            style={{
+              // GPU-accelerate the slide: forces the browser to composite this
+              // layer on the GPU, eliminating the frame-jump at animation start.
+              willChange: "transform, opacity",
+              transform: "translateZ(0)",
+            }}
           >
             <div className="max-w-6xl mx-auto">
               {children}
