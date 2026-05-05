@@ -22,6 +22,10 @@ export interface MobilitySettings {
   /** "HH:MM" */
   notificationTime: string;
   mobilityGoal: string;
+  /** Comma-separated stiffness areas e.g. "Wrists,Hips" */
+  stiffnessAreas: string;
+  /** 5 | 10 | 15 */
+  dailyTimeMinutes: number;
 }
 
 export interface MobilityStatus {
@@ -87,7 +91,12 @@ export async function requestNotificationPermission(): Promise<boolean> {
   return result === "granted";
 }
 
-function scheduleNextNotification(timeHHMM: string, goalLabel: string): void {
+function scheduleNextNotification(
+  timeHHMM: string,
+  goalLabel: string,
+  stiffnessAreas: string,
+  dailyTimeMinutes: number,
+): void {
   const win = window as WinWithTimer;
   if (typeof win.__mobilityNotifTimeout === "number") {
     clearTimeout(win.__mobilityNotifTimeout);
@@ -100,15 +109,22 @@ function scheduleNextNotification(timeHHMM: string, goalLabel: string): void {
   if (next <= now) next.setDate(next.getDate() + 1);
   const msUntil = next.getTime() - now.getTime();
 
+  // Build a goal-specific, personalised notification body
+  const areas = stiffnessAreas
+    ? stiffnessAreas.split(",").filter(Boolean).slice(0, 2).join(" & ")
+    : "";
+  const focusLine = areas ? ` Focus: ${areas}.` : "";
+  const body = `Ready to work toward your ${goalLabel}? Your ${dailyTimeMinutes}-min mobility prep is waiting.${focusLine}`;
+
   win.__mobilityNotifTimeout = window.setTimeout(() => {
     if (Notification.permission === "granted") {
-      new Notification("CaliCoach Mobility", {
-        body: `Time for your daily flexibility routine! Working toward: ${goalLabel}`,
+      new Notification("CaliCoach — Daily Tasks", {
+        body,
         icon: "/logo.svg",
         tag: "calicoach-mobility",
       });
     }
-    scheduleNextNotification(timeHHMM, goalLabel);
+    scheduleNextNotification(timeHHMM, goalLabel, stiffnessAreas, dailyTimeMinutes);
   }, msUntil);
 }
 
@@ -124,7 +140,12 @@ export function useNotificationScheduler(
 
     const goal = status.settings.mobilityGoal as MobilityGoal;
     const goalLabel = GOAL_LABELS[goal] ?? goal;
-    scheduleNextNotification(status.settings.notificationTime, goalLabel);
+    scheduleNextNotification(
+      status.settings.notificationTime,
+      goalLabel,
+      status.settings.stiffnessAreas ?? "",
+      status.settings.dailyTimeMinutes ?? 10,
+    );
 
     return () => {
       const win = window as WinWithTimer;
@@ -136,5 +157,7 @@ export function useNotificationScheduler(
     status?.settings.enabled,
     status?.settings.notificationTime,
     status?.settings.mobilityGoal,
+    status?.settings.stiffnessAreas,
+    status?.settings.dailyTimeMinutes,
   ]);
 }

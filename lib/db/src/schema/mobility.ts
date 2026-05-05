@@ -32,6 +32,10 @@ export const userNotificationSettingsTable = pgTable("user_notification_settings
   enabled:          boolean("enabled").notNull().default(false),
   notificationTime: varchar("notification_time", { length: 5 }).notNull().default("08:00"),
   mobilityGoal:     varchar("mobility_goal", { length: 64 }).notNull().default("general"),
+  /** Comma-separated stiffness areas e.g. "Wrists,Hips,Lower Back" */
+  stiffnessAreas:   varchar("stiffness_areas", { length: 256 }).notNull().default(""),
+  /** Minutes the user wants to spend daily: 5 | 10 | 15 */
+  dailyTimeMinutes: integer("daily_time_minutes").notNull().default(10),
   createdAt:        timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt:        timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

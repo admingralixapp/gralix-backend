@@ -13,6 +13,7 @@ import {
   LogIn,
   LogOut,
   Trophy,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMyProfile, useFriendRequests } from "@/lib/social";
@@ -28,14 +29,15 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/",           label: "Dashboard",  icon: LayoutDashboard },
-  { href: "/workout",    label: "Workout",     icon: Activity },
-  { href: "/history",    label: "History",     icon: History },
-  { href: "/progress",   label: "Progress",    icon: TrendingUp },
-  { href: "/skill-tree", label: "Skill Tree",  icon: GitBranch },
-  { href: "/leaderboard",label: "Leaderboard", icon: Trophy },
-  { href: "/friends",    label: "Friends",     icon: Users,     requireAuth: true },
-  { href: "/settings",   label: "Settings",    icon: Settings,  requireAuth: true },
+  { href: "/",            label: "Dashboard",   icon: LayoutDashboard },
+  { href: "/workout",     label: "Workout",      icon: Activity },
+  { href: "/daily-tasks", label: "Daily Tasks",  icon: ClipboardList },
+  { href: "/history",     label: "History",      icon: History },
+  { href: "/progress",    label: "Progress",     icon: TrendingUp },
+  { href: "/skill-tree",  label: "Skill Tree",   icon: GitBranch },
+  { href: "/leaderboard", label: "Leaderboard",  icon: Trophy },
+  { href: "/friends",     label: "Friends",      icon: Users,    requireAuth: true },
+  { href: "/settings",    label: "Settings",     icon: Settings, requireAuth: true },
 ];
 
 /** The three tabs reachable by swiping left / right. */

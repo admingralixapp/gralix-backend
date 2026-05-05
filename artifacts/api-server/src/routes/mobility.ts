@@ -28,6 +28,16 @@ function calcStreak(dates: string[]): number {
   return streak;
 }
 
+function settingsResponse(s: typeof userNotificationSettingsTable.$inferSelect | undefined) {
+  return {
+    enabled:          s?.enabled          ?? false,
+    notificationTime: s?.notificationTime ?? "08:00",
+    mobilityGoal:     s?.mobilityGoal     ?? "general",
+    stiffnessAreas:   s?.stiffnessAreas   ?? "",
+    dailyTimeMinutes: s?.dailyTimeMinutes  ?? 10,
+  };
+}
+
 // ─── GET /mobility/status ────────────────────────────────────────────────────
 
 router.get("/mobility/status", requireAuth, async (req, res) => {
@@ -57,11 +67,7 @@ router.get("/mobility/status", requireAuth, async (req, res) => {
   res.json({
     completedToday,
     currentStreak,
-    settings: {
-      enabled: settings?.enabled ?? false,
-      notificationTime: settings?.notificationTime ?? "08:00",
-      mobilityGoal: settings?.mobilityGoal ?? "general",
-    },
+    settings: settingsResponse(settings),
   });
 });
 
@@ -118,19 +124,17 @@ router.get("/mobility/settings", requireAuth, async (req, res) => {
     .from(userNotificationSettingsTable)
     .where(eq(userNotificationSettingsTable.userId, userId));
 
-  res.json({
-    enabled: settings?.enabled ?? false,
-    notificationTime: settings?.notificationTime ?? "08:00",
-    mobilityGoal: settings?.mobilityGoal ?? "general",
-  });
+  res.json(settingsResponse(settings));
 });
 
 // ─── POST /mobility/settings ─────────────────────────────────────────────────
 
 const SettingsBody = z.object({
-  enabled: z.boolean().optional(),
+  enabled:          z.boolean().optional(),
   notificationTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
-  mobilityGoal: z.string().optional(),
+  mobilityGoal:     z.string().optional(),
+  stiffnessAreas:   z.string().optional(),
+  dailyTimeMinutes: z.number().int().optional(),
 });
 
 router.post("/mobility/settings", requireAuth, async (req, res) => {
@@ -144,9 +148,11 @@ router.post("/mobility/settings", requireAuth, async (req, res) => {
   const body = SettingsBody.parse(req.body);
 
   const updateValues: Record<string, unknown> = {};
-  if (body.enabled !== undefined) updateValues.enabled = body.enabled;
+  if (body.enabled          !== undefined) updateValues.enabled          = body.enabled;
   if (body.notificationTime !== undefined) updateValues.notificationTime = body.notificationTime;
-  if (body.mobilityGoal !== undefined) updateValues.mobilityGoal = body.mobilityGoal;
+  if (body.mobilityGoal     !== undefined) updateValues.mobilityGoal     = body.mobilityGoal;
+  if (body.stiffnessAreas   !== undefined) updateValues.stiffnessAreas   = body.stiffnessAreas;
+  if (body.dailyTimeMinutes !== undefined) updateValues.dailyTimeMinutes  = body.dailyTimeMinutes;
 
   const [existing] = await db
     .select({ id: userNotificationSettingsTable.id })
@@ -165,18 +171,16 @@ router.post("/mobility/settings", requireAuth, async (req, res) => {
       .insert(userNotificationSettingsTable)
       .values({
         userId,
-        enabled: body.enabled ?? false,
+        enabled:          body.enabled          ?? false,
         notificationTime: body.notificationTime ?? "08:00",
-        mobilityGoal: body.mobilityGoal ?? "general",
+        mobilityGoal:     body.mobilityGoal     ?? "general",
+        stiffnessAreas:   body.stiffnessAreas   ?? "",
+        dailyTimeMinutes:  body.dailyTimeMinutes  ?? 10,
       })
       .returning();
   }
 
-  res.json({
-    enabled: result?.enabled ?? false,
-    notificationTime: result?.notificationTime ?? "08:00",
-    mobilityGoal: result?.mobilityGoal ?? "general",
-  });
+  res.json(settingsResponse(result));
 });
 
 export default router;

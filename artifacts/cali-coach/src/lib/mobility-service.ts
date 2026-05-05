@@ -39,19 +39,44 @@ export type MobilityGoal =
   | "general";
 
 export const GOAL_LABELS: Record<MobilityGoal, string> = {
-  pull: "Pull-Up Mastery",
+  pull:          "Pull-Up Mastery",
   "front-lever": "Front Lever",
-  "muscle-up": "Muscle-Up",
-  push: "Push-Up Mastery",
-  handstand: "Handstand Push-Up",
-  core: "Dragon / Human Flag",
-  legs: "Pistol Squat",
-  general: "All-Round Mobility",
+  "muscle-up":   "Muscle-Up",
+  push:          "Planche / Push",
+  handstand:     "Handstand",
+  core:          "Dragon / Human Flag",
+  legs:          "Pistol Squat",
+  general:       "All-Round Mobility",
 };
 
 export const GOAL_OPTIONS: { value: MobilityGoal; label: string }[] = (
   Object.entries(GOAL_LABELS) as [MobilityGoal, string][]
 ).map(([value, label]) => ({ value, label }));
+
+/** Human-readable questionnaire options for the primary goal picker */
+export const QUESTIONNAIRE_GOAL_OPTIONS: { value: MobilityGoal; label: string }[] = [
+  { value: "handstand",     label: "Handstand" },
+  { value: "muscle-up",     label: "Muscle-Up" },
+  { value: "push",          label: "Planche" },
+  { value: "legs",          label: "Pistol Squat" },
+  { value: "front-lever",   label: "Front Lever" },
+  { value: "pull",          label: "Pull-Up Mastery" },
+  { value: "core",          label: "Dragon / Human Flag" },
+  { value: "general",       label: "General Mobility" },
+];
+
+export const STIFFNESS_OPTIONS = [
+  "Wrists",
+  "Shoulders",
+  "Lower Back",
+  "Ankles",
+  "Hips",
+] as const;
+
+export type StiffnessArea = (typeof STIFFNESS_OPTIONS)[number];
+
+export const TIME_OPTIONS = [5, 10, 15] as const;
+export type DailyTimeMinutes = (typeof TIME_OPTIONS)[number];
 
 // ─── Stretch Library ─────────────────────────────────────────────────────────
 
@@ -188,6 +213,38 @@ const STRETCHES: Record<string, Stretch> = {
       "Keep elbows straight and lower slowly. You should feel a deep stretch across the front of both shoulders.",
     pose: "kneeling-backward",
   },
+  ankleCircles: {
+    id: "ankleCircles",
+    name: "Ankle Mobility Circles",
+    durationSeconds: 60,
+    targetMuscles: ["Ankles", "Calves", "Achilles"],
+    description:
+      "Sit or stand on one foot. Lift the other foot and draw large slow circles with your toes — 10 clockwise, 10 counter-clockwise. Switch at 30 s.",
+    coachingCue:
+      "Make the circles as large as comfortable. Move from the ankle, not the whole leg.",
+    pose: "standing-arm-up",
+  },
+  calfStretch: {
+    id: "calfStretch",
+    name: "Wall Calf Stretch",
+    durationSeconds: 60,
+    targetMuscles: ["Calves", "Achilles", "Ankles"],
+    description:
+      "Stand facing a wall with hands on it for support. Step one foot back and press the heel into the floor with a straight knee. Switch at 30 s.",
+    coachingCue:
+      "Keep heel flat on the floor. Lean your body slightly forward to increase the stretch.",
+    pose: "lunge",
+  },
+};
+
+// ─── Stiffness area → prioritized stretch IDs ────────────────────────────────
+
+const STIFFNESS_STRETCH_IDS: Record<string, string[]> = {
+  "Wrists":      ["wristExtension", "wristFlexion"],
+  "Shoulders":   ["shoulderDislocates", "chestOpener", "tricepsStretch", "shoulderFlexion"],
+  "Lower Back":  ["thoracicRotation", "hamstring", "hipFlexorLunge"],
+  "Ankles":      ["ankleCircles", "calfStretch", "hipFlexorLunge"],
+  "Hips":        ["hipFlexorLunge", "pigeonPose", "pancake"],
 };
 
 // ─── Goal → Routine Mapping ──────────────────────────────────────────────────
@@ -203,9 +260,65 @@ const GOAL_ROUTINES: Record<MobilityGoal, string[]> = {
   general:        ["wristExtension", "shoulderDislocates", "hipFlexorLunge", "thoracicRotation", "chestOpener"],
 };
 
+// Full extended library for bonus stretches when time allows
+const ALL_STRETCH_IDS = Object.keys(STRETCHES);
+
 export function getRoutineForGoal(goal: MobilityGoal | string): Stretch[] {
   const safeGoal = (GOAL_ROUTINES[goal as MobilityGoal] ? goal : "general") as MobilityGoal;
   return GOAL_ROUTINES[safeGoal].map((id) => STRETCHES[id]).filter(Boolean);
+}
+
+/**
+ * Generate a personalized task list based on questionnaire preferences.
+ * - Prioritises stretches that target the user's stiffness areas
+ * - Trims to match the daily time commitment
+ *   5 min → 3 stretches, 10 min → 5 stretches, 15 min → up to 8 stretches
+ */
+export function getTasksForPreferences(
+  goal: MobilityGoal | string,
+  stiffnessAreas: string[],
+  dailyTimeMinutes: number,
+): Stretch[] {
+  const safeGoal = (GOAL_ROUTINES[goal as MobilityGoal] ? goal : "general") as MobilityGoal;
+  const baseIds = GOAL_ROUTINES[safeGoal];
+
+  // Build priority set from stiffness areas
+  const priorityIds = new Set<string>();
+  for (const area of stiffnessAreas) {
+    for (const id of (STIFFNESS_STRETCH_IDS[area] ?? [])) {
+      priorityIds.add(id);
+    }
+  }
+
+  // Sort base routine: stiffness-relevant first, then remaining in order
+  const sorted = [
+    ...baseIds.filter(id => priorityIds.has(id)),
+    ...baseIds.filter(id => !priorityIds.has(id)),
+  ];
+
+  // Determine target count from time budget
+  let targetCount = 5;
+  if (dailyTimeMinutes <= 5)  targetCount = 3;
+  else if (dailyTimeMinutes <= 10) targetCount = 5;
+  else targetCount = 8;
+
+  // If we need more than the base routine (15 min), pull from stiffness stretches
+  // not already in the base routine
+  if (targetCount > sorted.length) {
+    const bonusIds = [];
+    for (const area of stiffnessAreas) {
+      for (const id of (STIFFNESS_STRETCH_IDS[area] ?? [])) {
+        if (!sorted.includes(id) && STRETCHES[id]) bonusIds.push(id);
+      }
+    }
+    // Add any remaining stretches from the full library
+    for (const id of ALL_STRETCH_IDS) {
+      if (!sorted.includes(id) && !bonusIds.includes(id)) bonusIds.push(id);
+    }
+    sorted.push(...bonusIds.slice(0, targetCount - sorted.length));
+  }
+
+  return sorted.slice(0, targetCount).map(id => STRETCHES[id]).filter(Boolean);
 }
 
 /**
