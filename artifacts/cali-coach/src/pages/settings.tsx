@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/react";
-import { Bell, Shield, LogOut, User, CheckCircle2, BellOff } from "lucide-react";
+import { Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video, AlertTriangle } from "lucide-react";
 import { useMyProfile, useUpdatePrivacy, useUpsertProfile } from "@/lib/social";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -9,6 +9,14 @@ import {
   requestNotificationPermission,
 } from "@/lib/use-mobility";
 import { GOAL_OPTIONS, type MobilityGoal } from "@/lib/mobility-service";
+import {
+  getRetentionDays,
+  setRetentionDays,
+  purgeExpiredClips,
+  clearAllClips,
+  getClipCount,
+  type RetentionDays,
+} from "@/lib/clip-store";
 
 type PrivacyLevel = "public" | "friends" | "private";
 
@@ -30,6 +38,12 @@ const PRIVACY_OPTIONS: { value: PrivacyLevel; label: string; desc: string }[] = 
   },
 ];
 
+const RETENTION_LABELS: Record<RetentionDays, string> = {
+  3:  "3 Days",
+  7:  "7 Days",
+  14: "14 Days",
+};
+
 export function Settings() {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
@@ -42,17 +56,21 @@ export function Settings() {
   const updateMobilitySettings = useUpdateMobilitySettings();
 
   const [displayName, setDisplayName] = useState("");
-  const [username, setUsername] = useState("");
-  const [editing, setEditing] = useState(false);
+  const [username,    setUsername]    = useState("");
+  const [editing,     setEditing]     = useState(false);
 
-  // Notification settings local state
-  const [notifEnabled, setNotifEnabled] = useState(false);
-  const [notifTime, setNotifTime] = useState("08:00");
-  const [notifGoal, setNotifGoal] = useState<MobilityGoal>("general");
+  // Notification settings
+  const [notifEnabled,    setNotifEnabled]    = useState(false);
+  const [notifTime,       setNotifTime]       = useState("08:00");
+  const [notifGoal,       setNotifGoal]       = useState<MobilityGoal>("general");
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
-  const [savingNotif, setSavingNotif] = useState(false);
+  const [savingNotif,     setSavingNotif]     = useState(false);
 
-  // Sync local state from server data
+  // Video storage settings
+  const [retention,   setRetention]   = useState<RetentionDays>(() => getRetentionDays());
+  const [clipCount,   setClipCount]   = useState<number>(() => getClipCount());
+  const [confirmClear, setConfirmClear] = useState(false);
+
   useEffect(() => {
     if (!mobilityStatus?.settings) return;
     setNotifEnabled(mobilityStatus.settings.enabled);
@@ -60,7 +78,6 @@ export function Settings() {
     setNotifGoal((mobilityStatus.settings.mobilityGoal as MobilityGoal) ?? "general");
   }, [mobilityStatus?.settings]);
 
-  // Check notification permission on mount
   useEffect(() => {
     if ("Notification" in window) {
       setNotifPermission(Notification.permission);
@@ -125,21 +142,18 @@ export function Settings() {
 
   async function handleNotifToggle() {
     const next = !notifEnabled;
-
     if (next && notifPermission !== "granted") {
       const granted = await requestNotificationPermission();
       if (!granted) {
         toast({
           title: "Notifications blocked",
-          description:
-            "Please allow notifications in your browser settings, then try again.",
+          description: "Please allow notifications in your browser settings, then try again.",
           variant: "destructive",
         });
         return;
       }
       setNotifPermission("granted");
     }
-
     setNotifEnabled(next);
   }
 
@@ -165,25 +179,42 @@ export function Settings() {
     );
   }
 
-  return (
-    <div className="p-6 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">Settings</h1>
+  function handleRetentionChange(days: RetentionDays) {
+    setRetention(days);
+    setRetentionDays(days);
+    purgeExpiredClips();
+    setClipCount(getClipCount());
+    toast({
+      title: "Auto-delete updated",
+      description: `Clips will now be kept for ${RETENTION_LABELS[days]}.`,
+    });
+  }
 
-      {/* Account */}
-      <section className="mb-6">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-          <User className="w-4 h-4" />
-          Account
-        </h2>
+  function handleClearAll() {
+    if (!confirmClear) {
+      setConfirmClear(true);
+      return;
+    }
+    const removed = clearAllClips();
+    setClipCount(0);
+    setConfirmClear(false);
+    toast({
+      title: `${removed} clip${removed !== 1 ? "s" : ""} cleared`,
+      description: "Video files removed. Your workout stats are safe.",
+    });
+  }
+
+  return (
+    <div className="p-6 max-w-2xl space-y-6">
+      <h1 className="text-2xl font-bold">Settings</h1>
+
+      {/* ── Account ──────────────────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader icon={<User className="w-4 h-4" />} label="Account" />
         <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-          {/* Avatar + email */}
           <div className="flex items-center gap-4">
             {user.imageUrl ? (
-              <img
-                src={user.imageUrl}
-                alt="avatar"
-                className="w-14 h-14 rounded-full object-cover"
-              />
+              <img src={user.imageUrl} alt="avatar" className="w-14 h-14 rounded-full object-cover" />
             ) : (
               <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-xl font-bold text-primary">
                 {(profile?.displayName ?? user.firstName ?? "U")[0].toUpperCase()}
@@ -202,13 +233,10 @@ export function Settings() {
             </div>
           </div>
 
-          {/* Edit form */}
           {editing ? (
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1">
-                  Display Name
-                </label>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">Display Name</label>
                 <input
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
@@ -216,9 +244,7 @@ export function Settings() {
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1">
-                  Username
-                </label>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">Username</label>
                 <input
                   value={username}
                   onChange={(e) =>
@@ -227,9 +253,7 @@ export function Settings() {
                   className="w-full px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="e.g. john_doe"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Letters, numbers and underscores only.
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Letters, numbers and underscores only.</p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -248,24 +272,144 @@ export function Settings() {
               </div>
             </div>
           ) : (
-            <button
-              onClick={startEditing}
-              className="text-sm text-primary hover:underline"
-            >
+            <button onClick={startEditing} className="text-sm text-primary hover:underline">
               Edit profile
             </button>
           )}
         </div>
       </section>
 
-      {/* Daily Mobility Notifications */}
-      <section className="mb-6">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-          <Bell className="w-4 h-4" />
-          Daily Mobility Reminders
-        </h2>
+      {/* ── Video Storage ─────────────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader icon={<HardDrive className="w-4 h-4" />} label="Video Storage" />
+
+        {/* Glassmorphism card */}
+        <div
+          className="rounded-2xl border border-white/10 p-5 space-y-5"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)",
+          }}
+        >
+          {/* Storage pill */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/25 flex items-center justify-center shrink-0">
+              <Video className="w-4 h-4 text-blue-400" />
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-foreground">
+                {clipCount === 0
+                  ? "No clips stored"
+                  : `${clipCount} clip${clipCount !== 1 ? "s" : ""} on this device`}
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                Video files only — workout stats are always kept
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-white/[0.07]" />
+
+          {/* Auto-delete control */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="text-sm font-semibold text-foreground">Auto-Delete Clips After</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">
+                  Clips older than this are removed on app launch
+                </div>
+              </div>
+            </div>
+
+            {/* Segmented control */}
+            <div
+              className="flex rounded-xl overflow-hidden border border-white/10 p-0.5 gap-0.5"
+              style={{ background: "rgba(255,255,255,0.04)" }}
+            >
+              {([3, 7, 14] as RetentionDays[]).map((days) => {
+                const active = retention === days;
+                return (
+                  <button
+                    key={days}
+                    onClick={() => handleRetentionChange(days)}
+                    className={[
+                      "flex-1 text-sm font-semibold py-2 rounded-[9px] transition-all duration-200",
+                      active
+                        ? "bg-primary text-black shadow-md"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06]",
+                    ].join(" ")}
+                  >
+                    {RETENTION_LABELS[days]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-white/[0.07]" />
+
+          {/* Clear All Clips */}
+          <div>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-sm font-semibold text-foreground">Clear All Clips</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">
+                  Free up space immediately. Reps, sets, and form scores are unaffected.
+                </div>
+              </div>
+            </div>
+
+            {confirmClear ? (
+              <div className="mt-3 flex items-start gap-3 p-3.5 rounded-xl border border-red-500/30 bg-red-500/8">
+                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs text-red-300 font-medium mb-2">
+                    This will delete {clipCount} clip{clipCount !== 1 ? "s" : ""} from this device. Are you sure?
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleClearAll}
+                      className="px-3.5 py-1.5 rounded-lg bg-red-500 hover:bg-red-400 text-white text-xs font-bold transition-colors"
+                    >
+                      Yes, Clear All
+                    </button>
+                    <button
+                      onClick={() => setConfirmClear(false)}
+                      className="px-3.5 py-1.5 rounded-lg border border-white/15 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={handleClearAll}
+                disabled={clipCount === 0}
+                className={[
+                  "mt-3 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all",
+                  clipCount === 0
+                    ? "border-white/8 text-white/20 cursor-not-allowed"
+                    : "border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50",
+                ].join(" ")}
+              >
+                <Trash2 className="w-4 h-4" />
+                Clear All Clips
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Daily Mobility Reminders ──────────────────────────────────────────── */}
+      <section>
+        <SectionHeader icon={<Bell className="w-4 h-4" />} label="Daily Mobility Reminders" />
         <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-          {/* Toggle */}
           <div className="flex items-center justify-between">
             <div>
               <div className="font-medium text-sm">Enable daily reminders</div>
@@ -291,16 +435,13 @@ export function Settings() {
             </button>
           </div>
 
-          {/* Permission warning */}
           {notifEnabled && notifPermission === "denied" && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
               <BellOff className="w-4 h-4 shrink-0" />
-              Notifications are blocked in your browser. Please allow them in your
-              browser/OS settings and reload the page.
+              Notifications are blocked in your browser. Please allow them in your browser/OS settings and reload the page.
             </div>
           )}
 
-          {/* Reminder time */}
           {notifEnabled && (
             <div className="space-y-3 pt-1">
               <div>
@@ -314,7 +455,6 @@ export function Settings() {
                   className="px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary w-full sm:w-auto"
                 />
               </div>
-
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">
                   Mobility goal
@@ -325,9 +465,7 @@ export function Settings() {
                   className="w-full px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   {GOAL_OPTIONS.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
+                    <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -347,15 +485,12 @@ export function Settings() {
         </div>
       </section>
 
-      {/* Privacy */}
-      <section className="mb-6">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-          <Shield className="w-4 h-4" />
-          Profile Privacy
-        </h2>
+      {/* ── Profile Privacy ───────────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader icon={<Shield className="w-4 h-4" />} label="Profile Privacy" />
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           {PRIVACY_OPTIONS.map(({ value, label, desc }, i) => {
-            const active = currentPrivacy === value;
+            const active   = currentPrivacy === value;
             const updating = updatePrivacy.isPending;
             return (
               <button
@@ -392,12 +527,9 @@ export function Settings() {
         )}
       </section>
 
-      {/* Sign out */}
+      {/* ── Sign out ──────────────────────────────────────────────────────────── */}
       <section>
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-          <LogOut className="w-4 h-4" />
-          Session
-        </h2>
+        <SectionHeader icon={<LogOut className="w-4 h-4" />} label="Session" />
         <div className="rounded-xl border border-border bg-card p-5">
           <p className="text-sm text-muted-foreground mb-4">
             Signed in as{" "}
@@ -415,5 +547,16 @@ export function Settings() {
         </div>
       </section>
     </div>
+  );
+}
+
+// ─── Helper ───────────────────────────────────────────────────────────────────
+
+function SectionHeader({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+      {icon}
+      {label}
+    </h2>
   );
 }
