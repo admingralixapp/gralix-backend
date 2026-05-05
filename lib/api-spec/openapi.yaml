@@ -415,6 +415,10 @@ components:
           type: integer
           nullable: true
           description: "Rate of Perceived Exertion (1–10), only set for manual logs"
+        isVerified:
+          type: boolean
+          description: "true = AI-coached and not flagged as static image; false = manual or frozen-frame detected"
+          default: true
       required:
         - id
         - exerciseId
@@ -426,6 +430,7 @@ components:
         - notes
         - logType
         - rpe
+        - isVerified
 
     SessionWithReps:
       allOf:
@@ -469,6 +474,8 @@ components:
         rpe:
           type: integer
           nullable: true
+        isVerified:
+          type: boolean
 
     Rep:
       type: object
@@ -618,6 +625,9 @@ components:
         logType:
           type: string
           default: "ai"
+        isVerified:
+          type: boolean
+          default: true
       required:
         - id
         - exerciseId
@@ -627,6 +637,7 @@ components:
         - avgFormScore
         - durationMinutes
         - logType
+        - isVerified
 
     MobilitySettings:
       type: object

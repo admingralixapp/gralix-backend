@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, timestamp, real, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, timestamp, real, text, varchar, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { exercisesTable } from "./exercises";
@@ -18,6 +18,8 @@ export const sessionsTable = pgTable("sessions", {
   logType:      varchar("log_type", { length: 16 }).notNull().default("ai"),
   /** Rate of Perceived Exertion (1–10), only set for manual logs */
   rpe:          integer("rpe"),
+  /** true = AI-coached and not flagged for frozen frame; false = manual or detected static image */
+  isVerified:   boolean("is_verified").notNull().default(true),
 });
 
 export const insertSessionSchema = createInsertSchema(sessionsTable).omit({

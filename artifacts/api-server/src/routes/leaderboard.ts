@@ -136,6 +136,7 @@ router.get(
       totalReps: sessionsTable.totalReps,
       avgFormScore: sessionsTable.avgFormScore,
       completedAt: sessionsTable.completedAt,
+      isVerified: sessionsTable.isVerified,
     } as const;
 
     if (relevantUserIds !== null) {

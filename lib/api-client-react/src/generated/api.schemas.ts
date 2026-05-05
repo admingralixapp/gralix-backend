@@ -41,6 +41,8 @@ export interface Session {
   logType: string;
   /** Rate of Perceived Exertion (1–10), only set for manual logs */
   rpe: number | null;
+  /** true = AI-coached and not flagged as static image; false = manual or frozen-frame detected */
+  isVerified: boolean;
 }
 
 export interface Rep {
@@ -70,6 +72,7 @@ export interface UpdateSessionBody {
   avgFormScore?: number;
   notes?: string | null;
   rpe?: number | null;
+  isVerified?: boolean;
 }
 
 export interface CreateRepBody {
@@ -115,6 +118,7 @@ export interface SessionSummary {
   avgFormScore: number | null;
   durationMinutes: number | null;
   logType: string;
+  isVerified: boolean;
 }
 
 export interface MobilitySettings {

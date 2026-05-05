@@ -500,6 +500,11 @@ export function Workout() {
   /** Per-frame equipment modifier data shared between predictWebcam and processFrame. */
   const equipModRef = useRef({ wristJitter: 0, wristOverextended: false });
 
+  /** Anti-cheat: true if a frozen/static video frame was detected this session. */
+  const frozenDetectedRef = useRef(false);
+  /** Anti-cheat: tracks last seen video.currentTime and when it first went static. */
+  const frozenCheckRef = useRef({ lastTime: -1, sinceMs: 0 });
+
   // ── Smoothing + detection-rate control ───────────────────────────────────
   const smootherRef       = useRef(new PoseSmoother());
   /** performance.now() when the last MediaPipe detection ran. */
@@ -863,6 +868,29 @@ export function Workout() {
       if (canvas.height !== video.videoHeight) canvas.height = video.videoHeight;
     }
 
+    // ── Anti-cheat: frozen/static-image detection ─────────────────────────
+    // During an active AI session, if video.currentTime stops advancing for
+    // more than 3 seconds (e.g. the user is filming a static image / screen),
+    // flag the session as unverified and notify the user once.
+    if (stateRef.current.sessionId !== 0 && video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) {
+      const vt = video.currentTime;
+      if (vt > 0 && vt === frozenCheckRef.current.lastTime) {
+        if (frozenCheckRef.current.sinceMs === 0) {
+          frozenCheckRef.current.sinceMs = now;
+        } else if (!frozenDetectedRef.current && now - frozenCheckRef.current.sinceMs > 3000) {
+          frozenDetectedRef.current = true;
+          toast({
+            title: "⚠️ Static Image Detected",
+            description: "Your video appears frozen. This set will be marked as Unverified.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        frozenCheckRef.current.sinceMs = 0;
+        frozenCheckRef.current.lastTime = vt;
+      }
+    }
+
     // ── Detection phase (20 fps) ───────────────────────────────────────────
     const sinceLastDetect = now - lastDetectMsRef.current;
     if (
@@ -1188,6 +1216,10 @@ export function Workout() {
         lastSyncDropMs:   0,
       };
 
+      // Reset frozen-frame detection for new session
+      frozenDetectedRef.current = false;
+      frozenCheckRef.current = { lastTime: -1, sinceMs: 0 };
+
       // Clear any pending pacer cues from the previous set
       clearPacerTimeouts();
 
@@ -1261,6 +1293,7 @@ export function Workout() {
           completedAt:  new Date().toISOString(),
           totalReps:    finalReps,
           avgFormScore: finalFormScore,
+          ...(frozenDetectedRef.current ? { isVerified: false } : {}),
         },
       });
 
@@ -1329,6 +1362,7 @@ export function Workout() {
           completedAt: new Date().toISOString(),
           totalReps:   manualReps,
           rpe:         manualRpe ?? undefined,
+          isVerified:  false,
         },
       });
 

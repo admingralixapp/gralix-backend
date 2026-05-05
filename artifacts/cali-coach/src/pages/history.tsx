@@ -2,7 +2,7 @@ import { useListSessions } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Link } from "wouter";
-import { Calendar, ChevronRight, PenLine } from "lucide-react";
+import { Calendar, ChevronRight, PenLine, ShieldCheck } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function History() {
@@ -35,10 +35,16 @@ export function History() {
                   <div className="space-y-1">
                     <h3 className="font-bold text-lg group-hover:text-primary transition-colors flex items-center gap-2">
                       {session.exerciseName}
-                      {session.logType === "manual" && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 border border-amber-500/30 text-amber-400">
+                      {session.isVerified ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
+                          style={{ boxShadow: "0 0 6px 0 rgba(16,185,129,0.25)" }}>
+                          <ShieldCheck className="w-2.5 h-2.5" />
+                          AI Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-muted/60 border border-border text-muted-foreground">
                           <PenLine className="w-2.5 h-2.5" />
-                          Manual
+                          Self-Reported
                         </span>
                       )}
                     </h3>
@@ -59,16 +65,25 @@ export function History() {
                     </div>
                     <div className="text-right hidden sm:block">
                       {session.logType === "manual" ? (
-                        <div className="flex flex-col items-end">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/15 border border-amber-500/30 text-amber-400">
-                            <PenLine className="w-3 h-3" />
-                            Manual
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-muted/60 border border-border text-muted-foreground">
+                            <PenLine className="w-2.5 h-2.5" />
+                            Self-Reported
                           </span>
                           {session.rpe != null && (
-                            <span className="text-xs text-muted-foreground mt-1">
+                            <span className="text-xs text-muted-foreground">
                               RPE {session.rpe}/10
                             </span>
                           )}
+                        </div>
+                      ) : !session.isVerified ? (
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="font-mono text-2xl font-bold text-muted-foreground">
+                            {session.avgFormScore ? Math.round(session.avgFormScore) : '--'}
+                          </div>
+                          <span className="text-[10px] font-medium text-amber-400 uppercase tracking-wider">
+                            Unverified
+                          </span>
                         </div>
                       ) : (
                         <>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Show } from "@clerk/react";
-import { Trophy, Globe, Users, Flag, Star, Dumbbell, LogIn } from "lucide-react";
+import { Trophy, Globe, Users, Flag, Star, Dumbbell, LogIn, ShieldCheck } from "lucide-react";
 import { useLeaderboard, useMyProfile } from "@/lib/social";
 import type { LeaderboardEntry } from "@/lib/social";
 import { cn } from "@/lib/utils";
@@ -267,10 +267,16 @@ export function Leaderboard() {
           </div>
         )}
 
-        {/* Max points legend */}
-        <p className="text-xs text-muted-foreground text-center mt-4 px-6">
-          Max 6,000 pts · L1=100 · L2=200 · L3=300 · L4=400 · L5=500 per skill
-        </p>
+        {/* Disclaimer + Max points legend */}
+        <div className="text-center mt-4 px-6 space-y-1">
+          <p className="text-xs text-amber-400/80 flex items-center justify-center gap-1.5">
+            <ShieldCheck className="w-3 h-3 shrink-0" />
+            Only AI-Verified reps count toward global rankings.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Max 6,000 pts · L1=100 · L2=200 · L3=300 · L4=400 · L5=500 per skill
+          </p>
+        </div>
       </div>
 
       {/* ── Sticky rank bar (fixed, always visible) ── */}

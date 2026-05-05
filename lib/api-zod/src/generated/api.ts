@@ -57,6 +57,7 @@ export const ListSessionsQueryParams = zod.object({
 });
 
 export const listSessionsResponseLogTypeDefault = `ai`;
+export const listSessionsResponseIsVerifiedDefault = true;
 
 export const ListSessionsResponseItem = zod.object({
   id: zod.number(),
@@ -77,6 +78,12 @@ export const ListSessionsResponseItem = zod.object({
     .number()
     .nullable()
     .describe("Rate of Perceived Exertion (1–10), only set for manual logs"),
+  isVerified: zod
+    .boolean()
+    .default(listSessionsResponseIsVerifiedDefault)
+    .describe(
+      "true = AI-coached and not flagged as static image; false = manual or frozen-frame detected",
+    ),
 });
 export const ListSessionsResponse = zod.array(ListSessionsResponseItem);
 
@@ -97,6 +104,7 @@ export const GetSessionParams = zod.object({
 });
 
 export const getSessionResponseOneLogTypeDefault = `ai`;
+export const getSessionResponseOneIsVerifiedDefault = true;
 
 export const GetSessionResponse = zod
   .object({
@@ -118,6 +126,12 @@ export const GetSessionResponse = zod
       .number()
       .nullable()
       .describe("Rate of Perceived Exertion (1–10), only set for manual logs"),
+    isVerified: zod
+      .boolean()
+      .default(getSessionResponseOneIsVerifiedDefault)
+      .describe(
+        "true = AI-coached and not flagged as static image; false = manual or frozen-frame detected",
+      ),
   })
   .and(
     zod.object({
@@ -148,9 +162,11 @@ export const UpdateSessionBody = zod.object({
   avgFormScore: zod.number().optional(),
   notes: zod.string().nullish(),
   rpe: zod.number().nullish(),
+  isVerified: zod.boolean().optional(),
 });
 
 export const updateSessionResponseLogTypeDefault = `ai`;
+export const updateSessionResponseIsVerifiedDefault = true;
 
 export const UpdateSessionResponse = zod.object({
   id: zod.number(),
@@ -171,6 +187,12 @@ export const UpdateSessionResponse = zod.object({
     .number()
     .nullable()
     .describe("Rate of Perceived Exertion (1–10), only set for manual logs"),
+  isVerified: zod
+    .boolean()
+    .default(updateSessionResponseIsVerifiedDefault)
+    .describe(
+      "true = AI-coached and not flagged as static image; false = manual or frozen-frame detected",
+    ),
 });
 
 /**
@@ -264,6 +286,7 @@ export const GetRecentSessionsQueryParams = zod.object({
 });
 
 export const getRecentSessionsResponseLogTypeDefault = `ai`;
+export const getRecentSessionsResponseIsVerifiedDefault = true;
 
 export const GetRecentSessionsResponseItem = zod.object({
   id: zod.number(),
@@ -274,6 +297,7 @@ export const GetRecentSessionsResponseItem = zod.object({
   avgFormScore: zod.number().nullable(),
   durationMinutes: zod.number().nullable(),
   logType: zod.string().default(getRecentSessionsResponseLogTypeDefault),
+  isVerified: zod.boolean().default(getRecentSessionsResponseIsVerifiedDefault),
 });
 export const GetRecentSessionsResponse = zod.array(
   GetRecentSessionsResponseItem,

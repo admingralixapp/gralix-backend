@@ -29,6 +29,7 @@ router.get("/sessions", async (req, res) => {
       notes: sessionsTable.notes,
       logType: sessionsTable.logType,
       rpe: sessionsTable.rpe,
+      isVerified: sessionsTable.isVerified,
     })
     .from(sessionsTable)
     .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
@@ -84,6 +85,7 @@ router.get("/sessions/:id", async (req, res) => {
       notes: sessionsTable.notes,
       logType: sessionsTable.logType,
       rpe: sessionsTable.rpe,
+      isVerified: sessionsTable.isVerified,
     })
     .from(sessionsTable)
     .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
@@ -108,6 +110,7 @@ router.patch("/sessions/:id", async (req, res) => {
   if (body.avgFormScore !== undefined) updateData.avgFormScore = body.avgFormScore;
   if (body.notes !== undefined) updateData.notes = body.notes;
   if (body.rpe !== undefined) updateData.rpe = body.rpe;
+  if (body.isVerified !== undefined) updateData.isVerified = body.isVerified;
 
   const [updated] = await db
     .update(sessionsTable)

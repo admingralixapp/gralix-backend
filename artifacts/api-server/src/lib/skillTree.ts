@@ -136,6 +136,8 @@ export interface SessionRow {
   totalReps: number | null;
   avgFormScore: number | null;
   completedAt: Date | string | null;
+  /** false = manual or frozen-frame flagged; absent = treat as true (legacy rows) */
+  isVerified?: boolean;
 }
 
 export interface MasteredSkillInfo {
@@ -150,11 +152,17 @@ export interface MasteredSkillInfo {
  * Compute mastery points for a single user given their session history.
  * Mirrors the frontend `evaluateSkillTree` logic exactly.
  */
-export function computeMasteryPoints(sessions: SessionRow[]): {
+export function computeMasteryPoints(
+  sessions: SessionRow[],
+  /** When true (default), only count AI-verified sessions toward leaderboard points */
+  verifiedOnly = true,
+): {
   points: number;
   masteredCount: number;
 } {
-  const completed = sessions.filter((s) => s.completedAt != null);
+  const completed = sessions.filter(
+    (s) => s.completedAt != null && (!verifiedOnly || s.isVerified !== false),
+  );
   const masteredIds = new Set<string>();
 
   for (const node of SKILL_NODES) {
