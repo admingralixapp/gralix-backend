@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Bell,
   BellOff,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import {
   getTasksForPreferences,
   GOAL_LABELS,
@@ -30,6 +32,33 @@ import {
   requestNotificationPermission,
 } from "@/lib/use-mobility";
 
+// ─── Local-storage helpers ────────────────────────────────────────────────────
+// Used as an optimistic cache so the task list updates the instant the user
+// taps Save — no API round-trip needed for the re-render.
+
+const LS_KEY = "calicoach:dailyPrefs";
+
+interface LocalPrefs {
+  mobilityGoal: string;
+  stiffnessAreas: string;
+  dailyTimeMinutes: number;
+}
+
+function readLocalPrefs(): LocalPrefs | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? (JSON.parse(raw) as LocalPrefs) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalPrefs(p: LocalPrefs) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(p));
+  } catch { /* storage full — ignore */ }
+}
+
 // ─── Questionnaire Modal ──────────────────────────────────────────────────────
 
 interface QuestionnaireProps {
@@ -38,7 +67,6 @@ interface QuestionnaireProps {
   initialTime: number;
   onSave: (goal: string, areas: StiffnessArea[], time: number) => void;
   onClose: () => void;
-  saving: boolean;
 }
 
 function Questionnaire({
@@ -47,7 +75,6 @@ function Questionnaire({
   initialTime,
   onSave,
   onClose,
-  saving,
 }: QuestionnaireProps) {
   const [goal, setGoal]   = useState(initialGoal || "general");
   const [areas, setAreas] = useState<StiffnessArea[]>(initialAreas);
@@ -60,13 +87,22 @@ function Questionnaire({
   }
 
   return (
-    <div
+    <motion.div
+      key="questionnaire-backdrop"
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       style={{ background: "rgba(0,0,0,0.7)" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
       onClick={onClose}
     >
-      <div
+      <motion.div
         className="w-full sm:max-w-lg bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-y-auto max-h-[92vh]"
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0,  opacity: 1 }}
+        exit={{ y: 40,  opacity: 0 }}
+        transition={{ type: "spring", stiffness: 340, damping: 30 }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -162,14 +198,30 @@ function Questionnaire({
           <Button
             className="w-full font-bold"
             size="lg"
-            disabled={saving}
             onClick={() => onSave(goal, areas, time)}
           >
-            {saving ? "Saving…" : "Save My Preferences"}
+            Save My Preferences
           </Button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── Saved checkmark flash ────────────────────────────────────────────────────
+
+function SavedBadge() {
+  return (
+    <motion.div
+      className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold shadow-lg pointer-events-none"
+      initial={{ opacity: 0, y: 16, scale: 0.92 }}
+      animate={{ opacity: 1, y: 0,  scale: 1    }}
+      exit={{    opacity: 0, y: -8, scale: 0.92 }}
+      transition={{ type: "spring", stiffness: 360, damping: 28 }}
+    >
+      <CheckCircle2 className="w-4 h-4" />
+      Goals Updated! Your routine has been personalized.
+    </motion.div>
   );
 }
 
@@ -272,18 +324,17 @@ function NotificationCard({
         </div>
         <button
           onClick={onToggle}
-          className={cn(
-            "relative w-10 h-5.5 rounded-full transition-colors",
-            enabled ? "bg-primary" : "bg-muted",
-          )}
-          style={{ width: 40, height: 22 }}
+          className="relative rounded-full transition-colors"
+          style={{ width: 40, height: 22, background: enabled ? "var(--primary)" : "hsl(var(--muted))" }}
         >
           <span
-            className={cn(
-              "absolute top-0.5 left-0.5 w-4.5 h-4.5 rounded-full bg-white shadow transition-transform",
-              enabled ? "translate-x-[18px]" : "translate-x-0",
-            )}
-            style={{ width: 18, height: 18 }}
+            className="absolute top-0.5 rounded-full bg-white shadow transition-transform"
+            style={{
+              left: 2,
+              width: 18,
+              height: 18,
+              transform: enabled ? "translateX(18px)" : "translateX(0)",
+            }}
           />
         </button>
       </div>
@@ -312,28 +363,59 @@ function NotificationCard({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function DailyTasksPage() {
-  const [, setLocation]        = useLocation();
-  const { data: status }       = useMobilityStatus();
-  const updateSettings         = useUpdateMobilitySettings();
+  const [, setLocation]    = useLocation();
+  const { data: status }   = useMobilityStatus();
+  const updateSettings     = useUpdateMobilitySettings();
+  const { toast }          = useToast();
+
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
+  const [showSavedBadge,    setShowSavedBadge]    = useState(false);
+
+  // ── Optimistic local preferences ──────────────────────────────────────────
+  // Initialised from localStorage (instant) then overwritten by server data.
+  // Drives the task list so the re-render is immediate on Save.
+  const serverSettings = status?.settings;
+
+  const [localPrefs, setLocalPrefs] = useState<LocalPrefs>(() => {
+    const cached = readLocalPrefs();
+    return cached ?? {
+      mobilityGoal:     "general",
+      stiffnessAreas:   "",
+      dailyTimeMinutes: 10,
+    };
+  });
+
+  // Sync server data into local prefs once loaded (server is source of truth)
+  useEffect(() => {
+    if (!serverSettings) return;
+    const synced: LocalPrefs = {
+      mobilityGoal:     serverSettings.mobilityGoal     ?? "general",
+      stiffnessAreas:   serverSettings.stiffnessAreas   ?? "",
+      dailyTimeMinutes: serverSettings.dailyTimeMinutes  ?? 10,
+    };
+    setLocalPrefs(synced);
+    writeLocalPrefs(synced);
+  }, [
+    serverSettings?.mobilityGoal,
+    serverSettings?.stiffnessAreas,
+    serverSettings?.dailyTimeMinutes,
+  ]);
 
   useNotificationScheduler(status);
 
-  const settings = status?.settings;
-  const goal     = (settings?.mobilityGoal ?? "general") as MobilityGoal;
+  const goal     = localPrefs.mobilityGoal as MobilityGoal;
   const goalLabel = GOAL_LABELS[goal] ?? goal;
-  const stiffnessAreas   = settings?.stiffnessAreas   ?? "";
-  const dailyTimeMinutes = settings?.dailyTimeMinutes  ?? 10;
-  const enabled          = settings?.enabled           ?? false;
-  const notificationTime = settings?.notificationTime  ?? "08:00";
+  const stiffnessAreas   = localPrefs.stiffnessAreas;
+  const dailyTimeMinutes = localPrefs.dailyTimeMinutes;
+  const enabled          = serverSettings?.enabled          ?? false;
+  const notificationTime = serverSettings?.notificationTime ?? "08:00";
 
-  // Parse stiffness areas back to array
   const areasArray = stiffnessAreas
     ? (stiffnessAreas.split(",").filter(Boolean) as StiffnessArea[])
     : [];
 
-  // Generate personalised task list
-  const tasks = getTasksForPreferences(goal, areasArray, dailyTimeMinutes);
+  // Task list derived from local (optimistic) prefs — updates instantly
+  const tasks    = getTasksForPreferences(goal, areasArray, dailyTimeMinutes);
   const totalMin = routineDurationMinutes(tasks);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
@@ -343,22 +425,34 @@ export function DailyTasksPage() {
     newAreas: StiffnessArea[],
     newTime: number,
   ) {
-    updateSettings.mutate(
-      {
-        mobilityGoal:     newGoal,
-        stiffnessAreas:   newAreas.join(","),
-        dailyTimeMinutes: newTime,
-      },
-      { onSuccess: () => setShowQuestionnaire(false) },
-    );
+    const newPrefs: LocalPrefs = {
+      mobilityGoal:     newGoal,
+      stiffnessAreas:   newAreas.join(","),
+      dailyTimeMinutes: newTime,
+    };
+
+    // 1. Update local state immediately — task list re-renders right now
+    setLocalPrefs(newPrefs);
+    // 2. Persist to localStorage so the next mount also picks it up instantly
+    writeLocalPrefs(newPrefs);
+    // 3. Close the modal without waiting for the network
+    setShowQuestionnaire(false);
+    // 4. Show the in-page animated badge
+    setShowSavedBadge(true);
+    setTimeout(() => setShowSavedBadge(false), 2800);
+    // 5. Toast for accessibility / desktop users
+    toast({
+      title: "Goals Updated!",
+      description: "Your routine has been personalized.",
+    });
+    // 6. Sync to the server in the background
+    updateSettings.mutate(newPrefs);
   }
 
   function handleToggleNotification() {
     if (!enabled) {
       requestNotificationPermission().then(granted => {
-        if (granted) {
-          updateSettings.mutate({ enabled: true });
-        }
+        if (granted) updateSettings.mutate({ enabled: true });
       });
     } else {
       updateSettings.mutate({ enabled: false });
@@ -442,22 +536,30 @@ export function DailyTasksPage() {
 
       {/* Task list */}
       <div className="space-y-2.5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
-            Today's Tasks
-          </h2>
-        </div>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
+          Today's Tasks
+        </h2>
 
-        {tasks.map((stretch, i) => (
-          <TaskCard
-            key={stretch.id}
-            index={i}
-            name={stretch.name}
-            muscles={stretch.targetMuscles}
-            durationSeconds={stretch.durationSeconds}
-            cue={stretch.coachingCue}
-          />
-        ))}
+        <AnimatePresence mode="popLayout">
+          {tasks.map((stretch, i) => (
+            <motion.div
+              key={stretch.id}
+              layout
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18, delay: i * 0.04 }}
+            >
+              <TaskCard
+                index={i}
+                name={stretch.name}
+                muscles={stretch.targetMuscles}
+                durationSeconds={stretch.durationSeconds}
+                cue={stretch.coachingCue}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
       {/* Start Session CTA */}
@@ -481,17 +583,23 @@ export function DailyTasksPage() {
         onTimeChange={handleTimeChange}
       />
 
-      {/* Questionnaire modal */}
-      {showQuestionnaire && (
-        <Questionnaire
-          initialGoal={goal}
-          initialAreas={areasArray}
-          initialTime={dailyTimeMinutes}
-          saving={updateSettings.isPending}
-          onSave={handleSavePreferences}
-          onClose={() => setShowQuestionnaire(false)}
-        />
-      )}
+      {/* Questionnaire modal — rendered with AnimatePresence for slide-up enter/exit */}
+      <AnimatePresence>
+        {showQuestionnaire && (
+          <Questionnaire
+            initialGoal={goal}
+            initialAreas={areasArray}
+            initialTime={dailyTimeMinutes}
+            onSave={handleSavePreferences}
+            onClose={() => setShowQuestionnaire(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Saved badge */}
+      <AnimatePresence>
+        {showSavedBadge && <SavedBadge />}
+      </AnimatePresence>
     </div>
   );
 }
