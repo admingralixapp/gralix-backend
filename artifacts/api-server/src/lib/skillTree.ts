@@ -1,10 +1,14 @@
 /**
  * Backend mirror of the frontend skill tree data.
- * Used to compute per-user Mastery Points for leaderboards and feed features.
+ * Used to compute per-user Performance Points for leaderboards.
  *
- * Points per mastered skill: level × 100
- *   L1 = 100 pts, L2 = 200 pts, L3 = 300 pts, L4 = 400 pts, L5 = 500 pts
- * Max possible: 20 skills × avg 300 = 6 000 pts
+ * Scoring (AI-Verified sessions only):
+ *   Points per set = difficultyWeight × reps × (formScore / 100)
+ *   For static holds: reps = seconds held
+ *
+ * Skill Tree XP (masteredCount):
+ *   Uses ALL sessions (verified + manual) — unchanged from before.
+ *   Not capped; contributes only to secondary sort on leaderboard.
  */
 
 interface SkillNodeDef {
@@ -12,7 +16,7 @@ interface SkillNodeDef {
   level: number;
   levelName: string;
   title: string;
-  branch: string; // "PUSH" | "PULL" | "CORE" | "LEGS"
+  branch: string;
   exercises: string[];
   masteryRequirement: {
     minReps: number;
@@ -130,7 +134,7 @@ export const SKILL_NODES: SkillNodeDef[] = [
     masteryRequirement: { minReps: 20, minFormScore: 90, minQualifyingSessions: 7 },
   },
 
-  // ── Overhead Pressing Path (branches from push-1) ─────────────────────────
+  // ── Overhead Pressing Path ─────────────────────────────────────────────────
   {
     id: "push-oh-1", level: 2, levelName: "Novice", title: "Pike Push-Up", branch: "PUSH",
     exercises: ["Pike Push-Up"],
@@ -142,7 +146,7 @@ export const SKILL_NODES: SkillNodeDef[] = [
     masteryRequirement: { minReps: 8, minFormScore: 78, minQualifyingSessions: 4 },
   },
 
-  // ── Explosive Pull Path (branches from pull-2) ────────────────────────────
+  // ── Explosive Pull Path ────────────────────────────────────────────────────
   {
     id: "pull-exp-1", level: 3, levelName: "Intermediate", title: "Chest-to-Bar Pull-Up", branch: "PULL",
     exercises: ["Chest-to-Bar Pull-Up"],
@@ -154,7 +158,7 @@ export const SKILL_NODES: SkillNodeDef[] = [
     masteryRequirement: { minReps: 4, minFormScore: 80, minQualifyingSessions: 4 },
   },
 
-  // ── Static Holds Path (branches from core-1) ──────────────────────────────
+  // ── Static Holds Path ─────────────────────────────────────────────────────
   {
     id: "core-sh-1", level: 2, levelName: "Novice", title: "Hollow Body Hold", branch: "CORE",
     exercises: ["Hollow Body Hold"],
@@ -166,7 +170,7 @@ export const SKILL_NODES: SkillNodeDef[] = [
     masteryRequirement: { minReps: 10, minFormScore: 72, minQualifyingSessions: 4 },
   },
 
-  // ── Unilateral Legs Path (branches from legs-2) ───────────────────────────
+  // ── Unilateral Legs Path ───────────────────────────────────────────────────
   {
     id: "legs-uni-1", level: 3, levelName: "Intermediate", title: "Bulgarian Split Squat", branch: "LEGS",
     exercises: ["Bulgarian Split Squat"],
@@ -179,13 +183,68 @@ export const SKILL_NODES: SkillNodeDef[] = [
   },
 ];
 
+// ─── Difficulty Weights ───────────────────────────────────────────────────────
+// Points per rep (or per second for holds) = weight × (formScore / 100)
+// Tiers: Beginner=1.0, Intermediate=3.0, Advanced=5.0, Elite=10.0
+
+export const DIFFICULTY_WEIGHTS: Record<string, number> = {
+  // ── Beginner (1.0) ──
+  "Wall Push-Up":       1.0,
+  "Incline Push-Up":    1.0,
+  "Knee Push-Up":       1.0,
+  "Assisted Squat":     1.0,
+  "Scapular Shrugs":    1.0,
+  "Negative Pull-Ups":  1.0,
+  "Plank":              1.0,
+  // ── Intermediate (3.0) ──
+  "Push-Up":            3.0,
+  "Diamond Push-Up":    3.0,
+  "Pike Push-Up":       3.0,
+  "Australian Rows":    3.0,
+  "Pull-Up":            3.0,
+  "Dip":                3.0,
+  "Squat":              3.0,
+  "Lunge":              3.0,
+  "Burpee":             3.0,
+  "Hollow Body Hold":   3.0,
+  "Tuck Front Lever":   3.0,
+  "Bulgarian Split Squat": 3.0,
+  "Chest-to-Bar Pull-Up":  3.0,
+  // ── Advanced (5.0) ──
+  "Elevated Pike Push-Up": 5.0,
+  "Explosive Pull-Up":  5.0,
+  "Archer Pull-Up":     5.0,
+  "Tuck L-Sit":         5.0,
+  "Straddle Front Lever": 5.0,
+  "Dragon Flag":        5.0,
+  "Archer Squat":       5.0,
+  "Nordic Curls":       5.0,
+  "Shrimp Squat":       5.0,
+  "Pistol Squat":       5.0,
+  // ── Elite (10.0) ──
+  "Handstand Push-Up":  10.0,
+  "Muscle-Up":          10.0,
+  "Full Front Lever":   10.0,
+  "Human Flag":         10.0,
+};
+
+/** Case-insensitive difficulty weight lookup. Returns 1.0 for unknown exercises. */
+function getDifficultyWeight(exerciseName: string): number {
+  const key = Object.keys(DIFFICULTY_WEIGHTS).find(
+    (k) => k.toLowerCase() === exerciseName.toLowerCase(),
+  );
+  return key ? DIFFICULTY_WEIGHTS[key] : 1.0;
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 export interface SessionRow {
   exerciseName: string;
   totalReps: number | null;
   avgFormScore: number | null;
   completedAt: Date | string | null;
-  /** false = manual or frozen-frame flagged; absent = treat as true (legacy rows) */
-  isVerified?: boolean;
+  /** false = manual log or frozen-frame flagged; absent/null = treat as true (legacy). */
+  isVerified?: boolean | null;
 }
 
 export interface MasteredSkillInfo {
@@ -196,26 +255,43 @@ export interface MasteredSkillInfo {
   branch: string;
 }
 
+// ─── computeMasteryPoints ─────────────────────────────────────────────────────
+
 /**
- * Compute mastery points for a single user given their session history.
- * Mirrors the frontend `evaluateSkillTree` logic exactly.
+ * Compute a user's leaderboard score from their session history.
+ *
+ * points (leaderboard):
+ *   Sum of (difficultyWeight × reps × formScore/100) for every AI-Verified set.
+ *   Manual logs contribute 0 leaderboard points.
+ *
+ * masteredCount (secondary sort, Skill Tree XP):
+ *   Counted from ALL sessions (verified + manual) — manual logs still count
+ *   toward skill mastery as before.
  */
-export function computeMasteryPoints(
-  sessions: SessionRow[],
-  /** When true (default), only count AI-verified sessions toward leaderboard points */
-  verifiedOnly = true,
-): {
+export function computeMasteryPoints(sessions: SessionRow[]): {
   points: number;
   masteredCount: number;
 } {
-  const completed = sessions.filter(
-    (s) => s.completedAt != null && (!verifiedOnly || s.isVerified !== false),
-  );
-  const masteredIds = new Set<string>();
+  // ── Performance Points (verified only) ──
+  let points = 0;
+  for (const s of sessions) {
+    // Skip unverified / manual logs
+    if (s.isVerified === false) continue;
+    if (s.completedAt == null) continue;
+    const reps      = s.totalReps ?? 0;
+    const form      = s.avgFormScore ?? 0;
+    const weight    = getDifficultyWeight(s.exerciseName);
+    points += weight * reps * (form / 100);
+  }
+  points = Math.round(points);
+
+  // ── Skill Tree Mastery Count (all sessions) ──
+  const allCompleted = sessions.filter((s) => s.completedAt != null);
+  const masteredIds  = new Set<string>();
 
   for (const node of SKILL_NODES) {
     const req = node.masteryRequirement;
-    const qualifying = completed.filter(
+    const qualifying = allCompleted.filter(
       (s) =>
         node.exercises.some(
           (ex) => ex.toLowerCase() === (s.exerciseName ?? "").toLowerCase(),
@@ -228,16 +304,11 @@ export function computeMasteryPoints(
     }
   }
 
-  const points = SKILL_NODES.filter((n) => masteredIds.has(n.id)).reduce(
-    (sum, n) => sum + n.level * 100,
-    0,
-  );
-
   return { points, masteredCount: masteredIds.size };
 }
 
 /**
- * Return the full node info for every mastered skill.
+ * Return the full node info for every mastered skill (uses all sessions).
  */
 export function getMasteredSkills(sessions: SessionRow[]): MasteredSkillInfo[] {
   const completed = sessions.filter((s) => s.completedAt != null);

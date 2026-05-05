@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Show } from "@clerk/react";
-import { Trophy, Globe, Users, Flag, Star, Dumbbell, LogIn, ShieldCheck } from "lucide-react";
+import {
+  Trophy, Globe, Users, Flag, Star, Dumbbell, LogIn, ShieldCheck, ChevronDown, ChevronUp, Zap,
+} from "lucide-react";
 import { useLeaderboard, useMyProfile } from "@/lib/social";
 import type { LeaderboardEntry } from "@/lib/social";
+import {
+  DIFFICULTY_WEIGHTS, getDifficultyTier, TIER_COLOR, type DifficultyTier,
+} from "@/lib/exercise-registry";
 import { cn } from "@/lib/utils";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function flagEmoji(code: string | null | undefined): string {
   if (!code || code.length !== 2) return "";
@@ -25,9 +28,11 @@ const MEDAL: Record<number, { icon: string; color: string }> = {
   3: { icon: "🥉", color: "text-amber-600" },
 };
 
-function MasteryBar({ points }: { points: number }) {
-  const MAX = 6000;
-  const pct = Math.min(100, (points / MAX) * 100);
+/** Soft reference for bar width at 10 000 pts — purely cosmetic, no cap. */
+const BAR_REF = 10_000;
+
+function PointsBar({ points }: { points: number }) {
+  const pct = Math.min(100, (points / BAR_REF) * 100);
   return (
     <div className="flex items-center gap-2 min-w-0">
       <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden min-w-[40px]">
@@ -43,13 +48,9 @@ function MasteryBar({ points }: { points: number }) {
   );
 }
 
-function LeaderboardRow({
-  entry,
-  isMe,
-}: {
-  entry: LeaderboardEntry;
-  isMe: boolean;
-}) {
+// ─── LeaderboardRow ───────────────────────────────────────────────────────────
+
+function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolean }) {
   const medal = MEDAL[entry.rank];
   return (
     <Link
@@ -64,19 +65,14 @@ function LeaderboardRow({
         {medal ? (
           <span className="text-lg leading-none">{medal.icon}</span>
         ) : (
-          <span className="text-sm font-bold text-muted-foreground tabular-nums">
-            {entry.rank}
-          </span>
+          <span className="text-sm font-bold text-muted-foreground tabular-nums">{entry.rank}</span>
         )}
       </div>
 
       {/* Avatar */}
       {entry.avatarUrl ? (
-        <img
-          src={entry.avatarUrl}
-          alt={entry.displayName}
-          className="w-8 h-8 rounded-full object-cover shrink-0"
-        />
+        <img src={entry.avatarUrl} alt={entry.displayName}
+          className="w-8 h-8 rounded-full object-cover shrink-0" />
       ) : (
         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0">
           {entry.displayName[0]?.toUpperCase() ?? "?"}
@@ -86,12 +82,7 @@ function LeaderboardRow({
       {/* Name + country */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span
-            className={cn(
-              "text-sm font-medium truncate",
-              isMe && "text-primary",
-            )}
-          >
+          <span className={cn("text-sm font-medium truncate", isMe && "text-primary")}>
             {entry.displayName}
           </span>
           {isMe && (
@@ -103,10 +94,7 @@ function LeaderboardRow({
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <span>@{entry.username}</span>
           {entry.country && (
-            <>
-              <span>·</span>
-              <span title={entry.country}>{flagEmoji(entry.country)}</span>
-            </>
+            <><span>·</span><span title={entry.country}>{flagEmoji(entry.country)}</span></>
           )}
           <span>·</span>
           <Dumbbell className="w-3 h-3" />
@@ -114,11 +102,11 @@ function LeaderboardRow({
         </div>
       </div>
 
-      {/* Points bar */}
+      {/* Points bar (desktop) */}
       <div className="w-36 shrink-0 hidden sm:block">
-        <MasteryBar points={entry.masteryPoints} />
+        <PointsBar points={entry.masteryPoints} />
       </div>
-      {/* Mobile: just points */}
+      {/* Points (mobile) */}
       <span className="text-sm font-bold text-primary tabular-nums sm:hidden shrink-0">
         {entry.masteryPoints.toLocaleString()}
       </span>
@@ -126,9 +114,103 @@ function LeaderboardRow({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
+// ─── Move Value Guide ─────────────────────────────────────────────────────────
+
+const TIER_ORDER: DifficultyTier[] = ["Elite", "Advanced", "Intermediate", "Beginner"];
+
+const EXERCISES_BY_TIER = TIER_ORDER.map((tier) => ({
+  tier,
+  color: TIER_COLOR[tier],
+  exercises: Object.entries(DIFFICULTY_WEIGHTS)
+    .filter(([, w]) => getDifficultyTier(w) === tier)
+    .sort(([, a], [, b]) => b - a),
+}));
+
+function MoveValueGuide() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="mx-6 mt-4 rounded-xl border border-border bg-card overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-secondary/30 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Zap className="w-4 h-4 text-amber-400" />
+          <span className="text-sm font-semibold">Move Value Guide</span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">
+            · Points per rep at 100% form
+          </span>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+      </button>
+
+      {open && (
+        <div className="px-4 pb-4 border-t border-border">
+          <p className="text-[11px] text-muted-foreground mt-3 mb-4 leading-relaxed">
+            Each AI-verified rep (or second held) earns{" "}
+            <span className="text-foreground font-medium">weight × reps × (form% / 100)</span> points.
+            Manual logs count toward Skill Tree XP only — no leaderboard points.
+          </p>
+
+          <div className="space-y-4">
+            {EXERCISES_BY_TIER.map(({ tier, color, exercises }) => (
+              <div key={tier}>
+                {/* Tier header */}
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest"
+                    style={{ color }}>
+                    {tier}
+                  </span>
+                  <div className="flex-1 h-px" style={{ backgroundColor: color, opacity: 0.25 }} />
+                  <span className="text-[10px] font-bold tabular-nums" style={{ color }}>
+                    {exercises[0]?.[1].toFixed(1)}×
+                  </span>
+                </div>
+
+                {/* Exercise rows */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                  {exercises.map(([name, weight]) => {
+                    const isStatic = ["Plank", "Tuck Front Lever", "Straddle Front Lever",
+                      "Full Front Lever", "Dragon Flag", "Human Flag",
+                      "Hollow Body Hold", "Tuck L-Sit"].includes(name);
+                    return (
+                      <div key={name}
+                        className="flex items-center justify-between rounded-lg px-2.5 py-1.5 gap-2"
+                        style={{ backgroundColor: `${color}0d`, border: `1px solid ${color}20` }}>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="text-[10px] shrink-0" title={isStatic ? "Hold (pts/sec)" : "Rep-based"}>
+                            {isStatic ? "⏱" : "💪"}
+                          </span>
+                          <span className="text-[11px] font-medium truncate">{name}</span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="text-[11px] font-bold tabular-nums" style={{ color }}>
+                            {weight.toFixed(1)}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground">
+                            {isStatic ? "pts/s" : "pts/rep"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-[10px] text-muted-foreground mt-3 pt-3 border-t border-border/50">
+            Example: 10 Muscle-Up reps at 90% form = 10 × 10.0 × 0.9 ={" "}
+            <span className="text-foreground font-medium">90 pts</span>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 type Tab = "global" | "national" | "friends";
 
@@ -141,7 +223,6 @@ const TABS: { id: Tab; label: string; icon: typeof Globe }[] = [
 export function Leaderboard() {
   const [tab, setTab] = useState<Tab>("global");
   const { data: myProfile } = useMyProfile();
-
   const { data, isLoading, error } = useLeaderboard(tab);
 
   const myUserId = myProfile?.id;
@@ -149,14 +230,16 @@ export function Leaderboard() {
 
   return (
     <>
-      {/* ── Page (leaves room for sticky rank bar) ── */}
       <div className="pb-28 md:pb-24">
         {/* Header */}
         <div className="p-6 pb-4">
-          <h1 className="text-2xl font-bold flex items-center gap-2 mb-5">
+          <h1 className="text-2xl font-bold flex items-center gap-2 mb-1">
             <Trophy className="w-6 h-6 text-yellow-400" />
             Leaderboard
           </h1>
+          <p className="text-xs text-muted-foreground mb-5">
+            Total Points Earned · AI-verified reps only
+          </p>
 
           {/* Tabs */}
           <div className="flex gap-1 p-1 rounded-xl bg-secondary w-fit">
@@ -208,9 +291,7 @@ export function Leaderboard() {
             <h3 className="font-semibold mb-2">Country not detected</h3>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
               We couldn't detect your country. Set it in{" "}
-              <Link href="/settings" className="text-primary hover:underline">
-                Settings
-              </Link>{" "}
+              <Link href="/settings" className="text-primary hover:underline">Settings</Link>{" "}
               to unlock the national leaderboard.
             </p>
           </div>
@@ -253,7 +334,7 @@ export function Leaderboard() {
                 Athlete
               </div>
               <div className="w-36 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">
-                Mastery Points
+                Total Points
               </div>
             </div>
 
@@ -267,19 +348,22 @@ export function Leaderboard() {
           </div>
         )}
 
-        {/* Disclaimer + Max points legend */}
+        {/* Move Value Guide */}
+        <MoveValueGuide />
+
+        {/* Disclaimer */}
         <div className="text-center mt-4 px-6 space-y-1">
           <p className="text-xs text-amber-400/80 flex items-center justify-center gap-1.5">
             <ShieldCheck className="w-3 h-3 shrink-0" />
-            Only AI-Verified reps count toward global rankings.
+            Only AI-verified reps earn leaderboard points. Manual logs = Skill Tree XP only.
           </p>
           <p className="text-xs text-muted-foreground">
-            Max 6,000 pts · L1=100 · L2=200 · L3=300 · L4=400 · L5=500 per skill
+            Formula: difficulty × reps × (form% / 100) · Unlimited ceiling
           </p>
         </div>
       </div>
 
-      {/* ── Sticky rank bar (fixed, always visible) ── */}
+      {/* ── Sticky rank bar ── */}
       <div className="fixed bottom-[80px] md:bottom-0 left-0 md:left-64 right-0 z-30">
         <div className="bg-card/95 backdrop-blur-sm border-t border-border px-5 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -300,30 +384,27 @@ export function Leaderboard() {
           <div className="flex items-center gap-6 text-sm">
             <div className="text-center">
               <div className="text-xs text-muted-foreground">Points</div>
-              <div className="font-bold text-primary">
+              <div className="font-bold text-primary tabular-nums">
                 {(data?.myPoints ?? 0).toLocaleString()}
               </div>
             </div>
             <div className="text-center">
               <div className="text-xs text-muted-foreground">Skills</div>
-              <div className="font-bold">{data?.myMasteredSkills ?? 0}</div>
-            </div>
-            <div className="text-center hidden sm:block">
-              <div className="text-xs text-muted-foreground">Max</div>
-              <div className="font-bold text-muted-foreground">6,000</div>
+              <div className="font-bold tabular-nums">{data?.myMasteredSkills ?? 0}</div>
             </div>
           </div>
 
-          {/* Mini progress bar */}
+          {/* Mini progress bar — soft 10k reference */}
           <div className="flex-1 max-w-[120px] hidden md:block">
             <div className="h-2 bg-secondary rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full transition-all"
-                style={{
-                  width: `${Math.min(100, ((data?.myPoints ?? 0) / 6000) * 100)}%`,
-                }}
+                style={{ width: `${Math.min(100, ((data?.myPoints ?? 0) / BAR_REF) * 100)}%` }}
               />
             </div>
+            <p className="text-[9px] text-muted-foreground text-right mt-0.5 tabular-nums">
+              {Math.round(Math.min(100, ((data?.myPoints ?? 0) / BAR_REF) * 100))}%
+            </p>
           </div>
         </div>
       </div>

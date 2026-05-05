@@ -91,6 +91,13 @@ export interface ExerciseConfig {
    * processFrame will return isHoldActive to drive the timer.
    */
   isStatic: boolean;
+  /**
+   * Performance scoring weight for leaderboard points.
+   * Points per rep (or per second for static holds) = difficultyWeight × (formScore / 100).
+   * Tiers: Beginner=1.0, Intermediate=3.0, Advanced=5.0, Elite=10.0
+   * Only AI-verified sessions contribute leaderboard points.
+   */
+  difficultyWeight: number;
   processFrame(landmarks: Landmark[], currentPhase: Phase, equipment?: EquipmentContext): FrameResult;
 }
 
@@ -126,6 +133,7 @@ function inZone(angle: number, target: number, tolerance = 10): boolean {
 const WALL_PUSH_UP: ExerciseConfig = {
   displayName: "Wall Push-Up",
   isStatic: false,
+  difficultyWeight: 1.0,
   criticalJoints: [
     { label: "Shoulder–Elbow–Wrist", description: "Elbow angle drives rep counting. Lock out fully at the top." },
     { label: "Elbow alignment", description: "Keep elbows pointed downward, not flaring wide." },
@@ -153,6 +161,7 @@ const WALL_PUSH_UP: ExerciseConfig = {
 const INCLINE_PUSH_UP: ExerciseConfig = {
   displayName: "Incline Push-Up",
   isStatic: false,
+  difficultyWeight: 1.0,
   criticalJoints: [
     { label: "Shoulder–Elbow–Wrist", description: "Elbow angle drives rep counting. Lock out fully at the top." },
     { label: "Shoulder–Hip–Ankle line", description: "Body must stay in a straight plank line throughout." },
@@ -187,6 +196,7 @@ const INCLINE_PUSH_UP: ExerciseConfig = {
 const KNEE_PUSH_UP: ExerciseConfig = {
   displayName: "Knee Push-Up",
   isStatic: false,
+  difficultyWeight: 1.0,
   criticalJoints: [
     { label: "Shoulder–Elbow–Wrist", description: "Elbow angle drives rep counting. Lock out fully at the top." },
     { label: "Shoulder–Hip–Knee line", description: "Body must stay straight from shoulder to knee — ankles are ignored." },
@@ -223,6 +233,7 @@ const KNEE_PUSH_UP: ExerciseConfig = {
 const PUSH_UP: ExerciseConfig = {
   displayName: "Push-Up",
   isStatic: false,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Shoulder–Elbow–Wrist", description: "Elbow angle drives rep counting. Lock out fully at the top." },
     { label: "Shoulder–Hip–Ankle line", description: "Body must stay in a straight plank line throughout." },
@@ -271,6 +282,7 @@ const PUSH_UP: ExerciseConfig = {
 const DIAMOND_PUSH_UP: ExerciseConfig = {
   displayName: "Diamond Push-Up",
   isStatic: false,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Shoulder–Elbow–Wrist", description: "Elbow angle drives rep counting. Elbows must track close to the torso." },
     { label: "Shoulder–Hip–Ankle line", description: "Maintain a rigid plank throughout — no hip sagging." },
@@ -309,6 +321,7 @@ const DIAMOND_PUSH_UP: ExerciseConfig = {
 const HANDSTAND_PUSH_UP: ExerciseConfig = {
   displayName: "Handstand Push-Up",
   isStatic: false,
+  difficultyWeight: 10.0,
   criticalJoints: [
     { label: "Wrist–Elbow–Shoulder", description: "Elbow angle drives rep counting (inverted). Full lock-out at the top." },
     { label: "Wrist–Hip vertical", description: "Hips should stay stacked above wrists — no banana arch." },
@@ -342,6 +355,7 @@ const HANDSTAND_PUSH_UP: ExerciseConfig = {
 const SCAPULAR_SHRUGS: ExerciseConfig = {
   displayName: "Scapular Shrugs",
   isStatic: false,
+  difficultyWeight: 1.0,
   criticalJoints: [
     { label: "Wrist–Shoulder distance", description: "Shoulder elevation relative to the bar. Shrugging up decreases the gap." },
     { label: "Arm straightness", description: "Keep elbows locked straight throughout." },
@@ -371,6 +385,7 @@ const SCAPULAR_SHRUGS: ExerciseConfig = {
 const AUSTRALIAN_ROWS: ExerciseConfig = {
   displayName: "Australian Rows",
   isStatic: false,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Wrist–Elbow–Shoulder", description: "Elbow angle drives rep counting — pull until chest reaches bar level." },
     { label: "Body plank alignment", description: "Keep hips up and body rigid." },
@@ -400,6 +415,7 @@ const AUSTRALIAN_ROWS: ExerciseConfig = {
 const NEGATIVE_PULL_UPS: ExerciseConfig = {
   displayName: "Negative Pull-Ups",
   isStatic: false,
+  difficultyWeight: 1.0,
   criticalJoints: [
     { label: "Wrist y vs Shoulder y", description: "Rep starts when chin is over bar. Lower slowly." },
     { label: "Wrist–Elbow–Shoulder", description: "Rep completes at full arm extension (elbow > 160°)." },
@@ -430,6 +446,7 @@ const NEGATIVE_PULL_UPS: ExerciseConfig = {
 const PULL_UP: ExerciseConfig = {
   displayName: "Pull-Up",
   isStatic: false,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Wrist–Elbow–Shoulder (primary)", description: "Elbow angle must exceed 160° at the bottom for a dead-hang." },
     { label: "Wrist y vs Shoulder y", description: "Rep top recorded only when the body rises enough for chin-over-bar." },
@@ -478,6 +495,7 @@ const PULL_UP: ExerciseConfig = {
 const EXPLOSIVE_PULL_UP: ExerciseConfig = {
   displayName: "Explosive Pull-Up",
   isStatic: false,
+  difficultyWeight: 5.0,
   criticalJoints: [
     { label: "Wrist–Elbow–Shoulder", description: "Pull explosively until chest clears bar level. Full extension at bottom." },
     { label: "Hip swing control", description: "Minimal kip — explosive pull should do the work, not body swing." },
@@ -515,6 +533,7 @@ const EXPLOSIVE_PULL_UP: ExerciseConfig = {
 const MUSCLE_UP: ExerciseConfig = {
   displayName: "Muscle-Up",
   isStatic: false,
+  difficultyWeight: 10.0,
   criticalJoints: [
     { label: "Wrist y vs Hip y", description: "Full muscle-up: wrists must clear shoulder level on the pull, then press above." },
     { label: "Shoulder–Elbow–Wrist", description: "Elbow extension at the top of the press-out confirms a complete rep." },
@@ -566,6 +585,7 @@ const MUSCLE_UP: ExerciseConfig = {
 const TUCK_FRONT_LEVER: ExerciseConfig = {
   displayName: "Tuck Front Lever",
   isStatic: true,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Body horizontality", description: "Shoulder and hip should be at the same height — body perfectly horizontal." },
     { label: "Elbow lock-out", description: "Arms stay fully extended throughout the hold." },
@@ -607,6 +627,7 @@ const TUCK_FRONT_LEVER: ExerciseConfig = {
 const STRADDLE_FRONT_LEVER: ExerciseConfig = {
   displayName: "Straddle Front Lever",
   isStatic: true,
+  difficultyWeight: 5.0,
   criticalJoints: [
     { label: "Body horizontality", description: "Hips must be level with shoulders — body horizontal." },
     { label: "Elbow lock-out", description: "Arms stay fully extended throughout." },
@@ -646,6 +667,7 @@ const STRADDLE_FRONT_LEVER: ExerciseConfig = {
 const FULL_FRONT_LEVER: ExerciseConfig = {
   displayName: "Full Front Lever",
   isStatic: true,
+  difficultyWeight: 10.0,
   criticalJoints: [
     { label: "Shoulder–Ankle horizontality", description: "Entire body must be horizontal from shoulder to ankle." },
     { label: "Elbow lock-out", description: "Arms fully extended, zero bend allowed." },
@@ -688,6 +710,7 @@ const FULL_FRONT_LEVER: ExerciseConfig = {
 const DRAGON_FLAG: ExerciseConfig = {
   displayName: "Dragon Flag",
   isStatic: true,
+  difficultyWeight: 5.0,
   criticalJoints: [
     { label: "Shoulder–Hip–Ankle line", description: "Body must stay perfectly straight — no pike or sag." },
     { label: "Hip elevation", description: "Only your upper back touches the bench — hold the body horizontal above it." },
@@ -734,6 +757,7 @@ const DRAGON_FLAG: ExerciseConfig = {
 const HUMAN_FLAG: ExerciseConfig = {
   displayName: "Human Flag",
   isStatic: true,
+  difficultyWeight: 10.0,
   criticalJoints: [
     { label: "Shoulder–Hip–Ankle horizontality", description: "Body must be perfectly horizontal from top arm to feet." },
     { label: "Arm structure", description: "Top arm pushes; bottom arm pulls. Both arms straight." },
@@ -776,6 +800,7 @@ const HUMAN_FLAG: ExerciseConfig = {
 const ASSISTED_SQUAT: ExerciseConfig = {
   displayName: "Assisted Squat",
   isStatic: false,
+  difficultyWeight: 1.0,
   criticalJoints: [
     { label: "Hip–Knee–Ankle (primary)", description: "Knee angle drives rep counting. A shallower depth (120°) is acceptable." },
     { label: "Torso position", description: "Keep your chest tall." },
@@ -807,6 +832,7 @@ const ASSISTED_SQUAT: ExerciseConfig = {
 const SQUAT: ExerciseConfig = {
   displayName: "Squat",
   isStatic: false,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Hip–Knee–Ankle (primary)", description: "Knee angle drives rep counting. Must break 100° at the bottom." },
     { label: "Hip depth vs Knee height", description: "Rep is incomplete if hip doesn't reach knee depth." },
@@ -865,6 +891,7 @@ const SQUAT: ExerciseConfig = {
 const ARCHER_SQUAT: ExerciseConfig = {
   displayName: "Archer Squat",
   isStatic: false,
+  difficultyWeight: 5.0,
   criticalJoints: [
     { label: "Hip–Knee–Ankle (working leg)", description: "Track the bending leg — deep knee flexion required." },
     { label: "Extended leg straightness", description: "Keep the extended leg locked out to the side throughout." },
@@ -904,6 +931,7 @@ const ARCHER_SQUAT: ExerciseConfig = {
 const PISTOL_SQUAT: ExerciseConfig = {
   displayName: "Pistol Squat",
   isStatic: false,
+  difficultyWeight: 5.0,
   criticalJoints: [
     { label: "Hip–Knee–Ankle (single leg)", description: "Track the working leg. Deep flexion required — break 85° at the bottom." },
     { label: "Free leg extension", description: "Keep the non-working leg extended forward, parallel to ground." },
@@ -949,6 +977,7 @@ const PISTOL_SQUAT: ExerciseConfig = {
 const NORDIC_CURLS: ExerciseConfig = {
   displayName: "Nordic Curls",
   isStatic: false,
+  difficultyWeight: 5.0,
   criticalJoints: [
     { label: "Shoulder relative to Knee", description: "Controls the lowering arc. Lower slowly until you can no longer resist." },
     { label: "Hip–Knee–Ankle line", description: "Keep hips neutral — don't break at the hips. Lower as a rigid unit." },
@@ -992,6 +1021,7 @@ const NORDIC_CURLS: ExerciseConfig = {
 const PLANK: ExerciseConfig = {
   displayName: "Plank",
   isStatic: true,
+  difficultyWeight: 1.0,
   criticalJoints: [
     { label: "Shoulder–Hip–Ankle line (primary)", description: "Body must form a straight line from shoulder to ankle." },
     { label: "Hip y vs Shoulder–Ankle midpoint", description: "Triggers cue when hips pike up or sag down." },
@@ -1024,6 +1054,7 @@ const PLANK: ExerciseConfig = {
 const DIP: ExerciseConfig = {
   displayName: "Dip",
   isStatic: false,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Shoulder–Elbow–Wrist", description: "Elbow angle drives rep counting. Elbows stay tucked, not flared." },
     { label: "Torso lean", description: "Slight forward lean shifts emphasis to the chest." },
@@ -1052,6 +1083,7 @@ const DIP: ExerciseConfig = {
 const LUNGE: ExerciseConfig = {
   displayName: "Lunge",
   isStatic: false,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Hip–Knee–Ankle (front leg)", description: "Front-leg knee angle drives rep counting." },
     { label: "Knee alignment", description: "Front knee must track directly over the foot." },
@@ -1082,6 +1114,7 @@ const LUNGE: ExerciseConfig = {
 const BURPEE: ExerciseConfig = {
   displayName: "Burpee",
   isStatic: false,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Shoulder–Hip–Knee", description: "Hip angle cycles from deep crouch to full overhead extension." },
     { label: "Body alignment (plank phase)", description: "Full plank position must be achieved mid-rep." },
@@ -1110,6 +1143,7 @@ const BURPEE: ExerciseConfig = {
 const CHEST_TO_BAR_PULL_UP: ExerciseConfig = {
   displayName: "Chest-to-Bar Pull-Up",
   isStatic: false,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Wrist–Elbow–Shoulder", description: "Full dead-hang extension at the bottom — elbows locked out." },
     { label: "Wrist Y vs Chest level", description: "Rep only counts when wrists clear well above shoulder height — chest must touch bar." },
@@ -1151,6 +1185,7 @@ const CHEST_TO_BAR_PULL_UP: ExerciseConfig = {
 const ARCHER_PULL_UP: ExerciseConfig = {
   displayName: "Archer Pull-Up",
   isStatic: false,
+  difficultyWeight: 5.0,
   criticalJoints: [
     { label: "Working arm Elbow (Wrist–Elbow–Shoulder)", description: "Track the bending arm — drives the rep count." },
     { label: "Extended arm straightness", description: "The straight arm must stay locked out throughout the movement." },
@@ -1192,6 +1227,7 @@ const ARCHER_PULL_UP: ExerciseConfig = {
 const PIKE_PUSH_UP: ExerciseConfig = {
   displayName: "Pike Push-Up",
   isStatic: false,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Shoulder–Elbow–Wrist", description: "Elbow angle drives rep counting. Lower your head between your hands to full depth." },
     { label: "Hip elevation", description: "Hips must stay high throughout — maintain the inverted V throughout the set." },
@@ -1230,6 +1266,7 @@ const PIKE_PUSH_UP: ExerciseConfig = {
 const ELEVATED_PIKE_PUSH_UP: ExerciseConfig = {
   displayName: "Elevated Pike Push-Up",
   isStatic: false,
+  difficultyWeight: 5.0,
   criticalJoints: [
     { label: "Shoulder–Elbow–Wrist", description: "Elbow angle drives rep counting. Full lock-out at the top." },
     { label: "Hip elevation (elevated feet)", description: "With feet elevated the hips must be even higher than a standard pike — don't let them drop." },
@@ -1267,6 +1304,7 @@ const ELEVATED_PIKE_PUSH_UP: ExerciseConfig = {
 const HOLLOW_BODY_HOLD: ExerciseConfig = {
   displayName: "Hollow Body Hold",
   isStatic: true,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Ankle elevation (above hips)", description: "Legs must be raised and held straight — the lower the legs, the harder the hold." },
     { label: "Shoulder elevation", description: "Shoulders must curl off the floor — arms reach forward alongside the ears." },
@@ -1311,6 +1349,7 @@ const HOLLOW_BODY_HOLD: ExerciseConfig = {
 const TUCK_L_SIT: ExerciseConfig = {
   displayName: "Tuck L-Sit",
   isStatic: true,
+  difficultyWeight: 5.0,
   criticalJoints: [
     { label: "Hip elevation (above Wrists)", description: "Hips must be raised above wrist level — press the floor/bars away." },
     { label: "Elbow lock-out", description: "Arms stay fully extended — bent elbows break the position." },
@@ -1350,6 +1389,7 @@ const TUCK_L_SIT: ExerciseConfig = {
 const BULGARIAN_SPLIT_SQUAT: ExerciseConfig = {
   displayName: "Bulgarian Split Squat",
   isStatic: false,
+  difficultyWeight: 3.0,
   criticalJoints: [
     { label: "Hip–Knee–Ankle (front leg)", description: "Front-leg knee angle drives rep counting. Sink until thigh is parallel to floor." },
     { label: "Torso alignment", description: "Keep your torso upright — don't lean excessively forward." },
@@ -1389,6 +1429,7 @@ const BULGARIAN_SPLIT_SQUAT: ExerciseConfig = {
 const SHRIMP_SQUAT: ExerciseConfig = {
   displayName: "Shrimp Squat",
   isStatic: false,
+  difficultyWeight: 5.0,
   criticalJoints: [
     { label: "Hip–Knee–Ankle (working leg)", description: "Drive the working knee deep — aim to touch the floor with the rear knee." },
     { label: "Hip balance", description: "Hip must stay aligned over the working ankle — don't let it drift sideways." },
@@ -1426,6 +1467,78 @@ const SHRIMP_SQUAT: ExerciseConfig = {
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
+
+// ─── Difficulty Weight Registry ───────────────────────────────────────────────
+// Canonical map of exercise name → leaderboard difficulty weight.
+// Points per rep (or per second for static holds) = weight × (formScore / 100).
+// Only AI-verified sessions earn leaderboard points.
+// Tiers: Beginner=1.0 · Intermediate=3.0 · Advanced=5.0 · Elite=10.0
+
+export const DIFFICULTY_WEIGHTS: Record<string, number> = {
+  // ── Beginner (1.0) ──────────────────────────────────────────────────────────
+  "Wall Push-Up":       1.0,
+  "Incline Push-Up":    1.0,
+  "Knee Push-Up":       1.0,
+  "Assisted Squat":     1.0,
+  "Scapular Shrugs":    1.0,
+  "Negative Pull-Ups":  1.0,
+  "Plank":              1.0,
+  // ── Intermediate (3.0) ──────────────────────────────────────────────────────
+  "Push-Up":            3.0,
+  "Diamond Push-Up":    3.0,
+  "Pike Push-Up":       3.0,
+  "Australian Rows":    3.0,
+  "Pull-Up":            3.0,
+  "Dip":                3.0,
+  "Squat":              3.0,
+  "Lunge":              3.0,
+  "Burpee":             3.0,
+  "Hollow Body Hold":   3.0,
+  "Tuck Front Lever":   3.0,
+  "Bulgarian Split Squat": 3.0,
+  "Chest-to-Bar Pull-Up":  3.0,
+  // ── Advanced (5.0) ──────────────────────────────────────────────────────────
+  "Elevated Pike Push-Up": 5.0,
+  "Explosive Pull-Up":  5.0,
+  "Archer Pull-Up":     5.0,
+  "Tuck L-Sit":         5.0,
+  "Straddle Front Lever": 5.0,
+  "Dragon Flag":        5.0,
+  "Archer Squat":       5.0,
+  "Nordic Curls":       5.0,
+  "Shrimp Squat":       5.0,
+  "Pistol Squat":       5.0,
+  // ── Elite (10.0) ────────────────────────────────────────────────────────────
+  "Handstand Push-Up":  10.0,
+  "Muscle-Up":          10.0,
+  "Full Front Lever":   10.0,
+  "Human Flag":         10.0,
+};
+
+export type DifficultyTier = "Beginner" | "Intermediate" | "Advanced" | "Elite";
+
+export const TIER_COLOR: Record<DifficultyTier, string> = {
+  Beginner:     "#6b7280",
+  Intermediate: "#3b82f6",
+  Advanced:     "#f97316",
+  Elite:        "#eab308",
+};
+
+/** Returns the difficulty tier label for a given weight. */
+export function getDifficultyTier(weight: number): DifficultyTier {
+  if (weight >= 10) return "Elite";
+  if (weight >= 5)  return "Advanced";
+  if (weight >= 3)  return "Intermediate";
+  return "Beginner";
+}
+
+/** Case-insensitive difficulty weight lookup. Returns 1.0 for unknown exercises. */
+export function getDifficultyWeight(exerciseName: string): number {
+  const key = Object.keys(DIFFICULTY_WEIGHTS).find(
+    (k) => k.toLowerCase() === exerciseName.toLowerCase(),
+  );
+  return key ? DIFFICULTY_WEIGHTS[key] : 1.0;
+}
 
 // ─── Registry & lookup ────────────────────────────────────────────────────────
 
