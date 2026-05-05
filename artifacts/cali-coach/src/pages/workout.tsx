@@ -4,8 +4,9 @@ import { useListExercises, useListSessions, useCreateSession, useUpdateSession, 
 import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-vision";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Activity, Play, Square, FlaskConical, Ghost, Settings2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, cancelSpeech } from "@/lib/voice-service";
@@ -306,6 +307,8 @@ export function Workout() {
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>("");
   const [sessionResults, setSessionResults] = useState<Omit<SessionResultsProps, "onClose"> | null>(null);
   const [povReview,      setPovReview]      = useState<{ payload: RepReviewPayload; results: Omit<SessionResultsProps, "onClose"> } | null>(null);
+  const [pickerOpen,     setPickerOpen]     = useState(false);
+  const [infoExercise,   setInfoExercise]   = useState<{ name: string; id: number } | null>(null);
 
   const { data: sessionHistory } = useListSessions(
     { limit: 500, offset: 0 },
@@ -1107,6 +1110,96 @@ export function Workout() {
   return (
     <div className="flex flex-col h-screen bg-black text-white relative">
 
+      {/* ── Exercise Info Modal ─────────────────────────────────────────────── */}
+      <Dialog open={!!infoExercise} onOpenChange={(open) => { if (!open) setInfoExercise(null); }}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          {infoExercise && (() => {
+            const infoEx     = exercises?.find(e => e.name === infoExercise.name);
+            const infoConfig = getExerciseConfig(infoExercise.name);
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-base">
+                    <Activity className="w-4 h-4 text-primary shrink-0" />
+                    {infoExercise.name}
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-5 mt-1">
+                  {/* Target Muscles */}
+                  {infoEx && infoEx.muscleGroups.length > 0 && (
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
+                        <Info className="w-3 h-3" /> Target Muscles
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {infoEx.muscleGroups.map(m => (
+                          <span
+                            key={m}
+                            className="text-xs px-2.5 py-1 bg-primary/10 text-primary rounded-full font-medium border border-primary/20"
+                          >
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Critical Joints */}
+                  {infoConfig && infoConfig.criticalJoints.length > 0 && (
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
+                        <Crosshair className="w-3 h-3 text-primary" /> Critical Joints
+                      </div>
+                      <ul className="space-y-2.5">
+                        {infoConfig.criticalJoints.map((joint, i) => (
+                          <li key={i}>
+                            <span className="inline-block text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded font-mono">
+                              {joint.label}
+                            </span>
+                            <p className="text-xs text-muted-foreground mt-1 pl-0.5 leading-relaxed">
+                              {joint.description}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Audio Cues */}
+                  {infoEx && infoEx.coachingCues.length > 0 && (
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
+                        <Volume2 className="w-3 h-3" /> Audio Cues
+                      </div>
+                      <ul className="space-y-2">
+                        {infoEx.coachingCues.slice(0, 4).map((cue, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                            <span className="text-primary mt-0.5 shrink-0">▸</span>
+                            <span className="italic">"{cue}"</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Train button */}
+                  <Button
+                    className="w-full font-bold mt-2"
+                    onClick={() => {
+                      if (infoExercise) setSelectedExerciseId(infoExercise.id.toString());
+                      setInfoExercise(null);
+                    }}
+                  >
+                    Train {infoExercise.name}
+                  </Button>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
       {/* POV Performance Review — shown before SessionResults when recording available */}
       {povReview && (
         <PovReview
@@ -1137,36 +1230,80 @@ export function Workout() {
           Cancel
         </Button>
         {!isWorkoutActive && !isCalibrating && (
-          <div className="w-64">
-            <Select value={selectedExerciseId} onValueChange={setSelectedExerciseId} disabled={isModelLoading}>
-              <SelectTrigger className="bg-black/50 border-white/20 text-white">
-                <SelectValue placeholder={isModelLoading ? "Loading model..." : "Select Exercise"} />
-              </SelectTrigger>
-              <SelectContent className="max-h-96">
-                {EXERCISE_CATEGORIES.map(cat => {
-                  const items = cat.exercises
-                    .map(entry => {
-                      const dbEx = exercises?.find(e => e.name === entry.dbName);
-                      return dbEx ? { ...entry, id: dbEx.id } : null;
-                    })
-                    .filter(Boolean) as Array<{ dbName: string; label: string; id: number }>;
-                  if (items.length === 0) return null;
-                  return (
-                    <SelectGroup key={cat.label}>
-                      <SelectLabel className="text-xs font-bold uppercase tracking-widest text-primary/80 px-2 py-1.5">
-                        {cat.label}
-                      </SelectLabel>
-                      {items.map(item => (
-                        <SelectItem key={item.id} value={item.id.toString()} className="pl-4">
+          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <PopoverTrigger asChild>
+              <button
+                disabled={isModelLoading}
+                className="flex items-center gap-2 bg-black/50 border border-white/20 text-white rounded-md px-3 py-2 text-sm min-w-[220px] max-w-[280px] disabled:opacity-40 hover:bg-black/70 transition-colors"
+              >
+                <span className="flex-1 text-left truncate text-white/80">
+                  {isModelLoading
+                    ? "Loading model…"
+                    : (() => {
+                        for (const cat of EXERCISE_CATEGORIES) {
+                          const entry = cat.exercises.find(e => {
+                            const dbEx = exercises?.find(ex => ex.name === e.dbName);
+                            return dbEx?.id.toString() === selectedExerciseId;
+                          });
+                          if (entry) return entry.label;
+                        }
+                        return "Select Exercise";
+                      })()}
+                </span>
+                <ChevronDown className="w-4 h-4 shrink-0 text-white/40" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0 max-h-[440px] overflow-y-auto" align="end">
+              {EXERCISE_CATEGORIES.map(cat => {
+                const items = cat.exercises
+                  .map(entry => {
+                    const dbEx = exercises?.find(e => e.name === entry.dbName);
+                    return dbEx ? { ...entry, id: dbEx.id } : null;
+                  })
+                  .filter(Boolean) as Array<{ dbName: string; label: string; id: number }>;
+                if (items.length === 0) return null;
+                return (
+                  <div key={cat.label}>
+                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/70 bg-secondary/30 border-b border-border sticky top-0">
+                      {cat.label}
+                    </div>
+                    {items.map(item => (
+                      <div
+                        key={item.id}
+                        className={`flex items-center gap-1 border-b border-border/40 group hover:bg-secondary/40 transition-colors ${
+                          item.id.toString() === selectedExerciseId ? "bg-primary/10" : ""
+                        }`}
+                      >
+                        <button
+                          className={`flex-1 text-left text-sm px-3 py-2.5 truncate ${
+                            item.id.toString() === selectedExerciseId
+                              ? "text-primary font-medium"
+                              : "text-foreground"
+                          }`}
+                          onClick={() => {
+                            setSelectedExerciseId(item.id.toString());
+                            setPickerOpen(false);
+                          }}
+                        >
                           {item.label}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
+                        </button>
+                        <button
+                          className="p-2 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setInfoExercise({ name: item.dbName, id: item.id });
+                          }}
+                          title="View coaching info"
+                        >
+                          <Info className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </PopoverContent>
+          </Popover>
         )}
       </div>
 
@@ -1353,6 +1490,28 @@ export function Workout() {
                   ))}
                 </div>
               </div>
+
+              {/* ── Pro-Tip ────────────────────────────────────────────── */}
+              {(() => {
+                const ex = exercises?.find(e => e.id.toString() === selectedExerciseId);
+                if (!ex) return null;
+                const config = getExerciseConfig(ex.name);
+                const tip = ex.coachingCues?.[0] ?? config?.criticalJoints?.[0]?.description;
+                if (!tip) return null;
+                return (
+                  <div className="w-full text-left">
+                    <div className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg bg-primary/10 border border-primary/25">
+                      <Zap className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                      <div>
+                        <div className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-0.5">
+                          Pro Tip
+                        </div>
+                        <p className="text-xs text-white/70 leading-snug">{tip}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <Button
                 size="lg"
