@@ -129,6 +129,54 @@ export const SKILL_NODES: SkillNodeDef[] = [
     exercises: ["Squat", "Lunge"],
     masteryRequirement: { minReps: 20, minFormScore: 90, minQualifyingSessions: 7 },
   },
+
+  // ── Overhead Pressing Path (branches from push-1) ─────────────────────────
+  {
+    id: "push-oh-1", level: 2, levelName: "Novice", title: "Pike Push-Up", branch: "PUSH",
+    exercises: ["Pike Push-Up"],
+    masteryRequirement: { minReps: 8, minFormScore: 72, minQualifyingSessions: 3 },
+  },
+  {
+    id: "push-oh-2", level: 3, levelName: "Intermediate", title: "Elevated Pike Push-Up", branch: "PUSH",
+    exercises: ["Elevated Pike Push-Up"],
+    masteryRequirement: { minReps: 8, minFormScore: 78, minQualifyingSessions: 4 },
+  },
+
+  // ── Explosive Pull Path (branches from pull-2) ────────────────────────────
+  {
+    id: "pull-exp-1", level: 3, levelName: "Intermediate", title: "Chest-to-Bar Pull-Up", branch: "PULL",
+    exercises: ["Chest-to-Bar Pull-Up"],
+    masteryRequirement: { minReps: 5, minFormScore: 78, minQualifyingSessions: 4 },
+  },
+  {
+    id: "pull-exp-2", level: 4, levelName: "Advanced", title: "Archer Pull-Up", branch: "PULL",
+    exercises: ["Archer Pull-Up"],
+    masteryRequirement: { minReps: 4, minFormScore: 80, minQualifyingSessions: 4 },
+  },
+
+  // ── Static Holds Path (branches from core-1) ──────────────────────────────
+  {
+    id: "core-sh-1", level: 2, levelName: "Novice", title: "Hollow Body Hold", branch: "CORE",
+    exercises: ["Hollow Body Hold"],
+    masteryRequirement: { minReps: 20, minFormScore: 70, minQualifyingSessions: 3 },
+  },
+  {
+    id: "core-sh-2", level: 3, levelName: "Intermediate", title: "Tuck L-Sit", branch: "CORE",
+    exercises: ["Tuck L-Sit"],
+    masteryRequirement: { minReps: 10, minFormScore: 72, minQualifyingSessions: 4 },
+  },
+
+  // ── Unilateral Legs Path (branches from legs-2) ───────────────────────────
+  {
+    id: "legs-uni-1", level: 3, levelName: "Intermediate", title: "Bulgarian Split Squat", branch: "LEGS",
+    exercises: ["Bulgarian Split Squat"],
+    masteryRequirement: { minReps: 8, minFormScore: 78, minQualifyingSessions: 4 },
+  },
+  {
+    id: "legs-uni-2", level: 4, levelName: "Advanced", title: "Shrimp Squat", branch: "LEGS",
+    exercises: ["Shrimp Squat"],
+    masteryRequirement: { minReps: 5, minFormScore: 80, minQualifyingSessions: 4 },
+  },
 ];
 
 export interface SessionRow {

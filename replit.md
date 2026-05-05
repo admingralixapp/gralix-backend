@@ -44,21 +44,33 @@ A calisthenics motion capture coaching app. Uses the device camera with MediaPip
 
 ## Exercises & Skill Tree
 
-**24 skills across 4 branches** (previously 20). Each skill has a `type`: `standard | static | explosive`.
+**32 skills across 4 branches** (expanded from 24). Each skill has a `type`: `standard | static | explosive`.
+New category paths added: Overhead Pressing (PUSH), Explosive Pull (PULL), Static Holds (CORE), Unilateral Legs (LEGS).
 
-### PUSH (6 skills)
-Wall Push-Up → Incline → Knee → Push-Up → Diamond Push-Up → **Handstand Push-Up** (satellite, parallel L5)
+### PUSH (8 skills)
+- **Main path**: Push-Up Foundation → Push-Up Strength → Dip Introduction → Dip Mastery → Push Elite (L5)
+- **Overhead Path** (branches from L1): Pike Push-Up → Elevated Pike Push-Up
+- **Handstand Path** (parallel L5): Handstand Push-Up
 
-### PULL (8 skills — forked after L2)
+### PULL (10 skills — forked after L2)
 Scapular Shrugs → Australian Rows → Negative Pull-Ups → Pull-Up, then forks into:
 - **Front Lever Path** (static): Tuck Front Lever → Straddle Front Lever → Full Front Lever
 - **Muscle-Up Path** (explosive): Explosive Pull-Up → Muscle-Up (x2 nodes)
+- **Explosive Pull Path** (branches from L2): Chest-to-Bar Pull-Up → Archer Pull-Up
 
-### CORE (5 skills)
-Plank (static) → Burpee Basics → Burpee Conditioning → **Dragon Flag** (static) → **Human Flag** (static)
+### CORE (7 skills)
+- **Main path**: Plank → Burpee Basics → Burpee Conditioning → Dragon Flag (static) → Human Flag (static)
+- **Static Holds Path** (branches from Plank): Hollow Body Hold → Tuck L-Sit
 
-### LEGS (5 skills)
-Assisted Squat → Squat → Archer Squat → **Nordic Curls** → Pistol Squat
+### LEGS (7 skills)
+- **Main path**: Squat Foundation → Squat Strength → Lunge Balance → Nordic Curls → Pistol Squat
+- **Unilateral Path** (branches from L2): Bulgarian Split Squat → Shrimp Squat
+
+### Exercise Registry (34 exercises in DB)
+All 34 exercises have AI coaching configs in `exercise-registry.ts` with:
+- Target joints / critical joint pairs for the AI coach
+- State-machine processFrame (standard/explosive: rep counting; static: hold timer)
+- 3 specific audio coaching cues per exercise
 
 ### Ghost Mode AR Overlay
 Active during every live camera workout. Defined in `artifacts/cali-coach/src/lib/ghost-poses.ts`.

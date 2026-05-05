@@ -525,6 +525,182 @@ const LEGS_NODES: SkillNode[] = [
   },
 ];
 
+// ─── Overhead Pressing Path (branches from push-1) ────────────────────────────
+const PUSH_OVERHEAD_NODES: SkillNode[] = [
+  {
+    id: "push-oh-1",
+    branch: "PUSH",
+    level: 2,
+    levelName: "Novice",
+    type: "standard",
+    title: "Pike Push-Up",
+    description:
+      "Hips high, hands shoulder-width — lower your head between your hands and press back up. Shifts load onto the shoulders and upper chest, bridging the gap toward overhead pressing.",
+    exercises: ["Pike Push-Up"],
+    masteryRequirement: {
+      description: "Complete 8 reps with ≥72% form score in 3 sessions",
+      minReps: 8,
+      minFormScore: 72,
+      minQualifyingSessions: 3,
+    },
+    prerequisiteId: "push-1",
+    path: "overhead",
+    pathLabel: "Overhead Path",
+  },
+  {
+    id: "push-oh-2",
+    branch: "PUSH",
+    level: 3,
+    levelName: "Intermediate",
+    type: "standard",
+    title: "Elevated Pike Push-Up",
+    description:
+      "Feet on a box or bench — the elevated angle increases the shoulder range of motion and load, making this a direct stepping-stone to the handstand push-up.",
+    exercises: ["Elevated Pike Push-Up"],
+    masteryRequirement: {
+      description: "Complete 8 reps with ≥78% form score in 4 sessions",
+      minReps: 8,
+      minFormScore: 78,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "push-oh-1",
+    path: "overhead",
+    pathLabel: "Overhead Path",
+  },
+];
+
+// ─── Explosive Pull Path (branches from pull-2) ────────────────────────────────
+const PULL_EXPLOSIVE_NODES: SkillNode[] = [
+  {
+    id: "pull-exp-1",
+    branch: "PULL",
+    level: 3,
+    levelName: "Intermediate",
+    type: "explosive",
+    title: "Chest-to-Bar Pull-Up",
+    description:
+      "Explode past chin-over-bar — drive until your chest touches the bar. Demands far more pulling strength than a standard pull-up and directly builds the power needed for advanced bar work.",
+    exercises: ["Chest-to-Bar Pull-Up"],
+    masteryRequirement: {
+      description: "Complete 5 reps with ≥78% form score in 4 sessions",
+      minReps: 5,
+      minFormScore: 78,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "pull-2",
+    path: "explosive-pull",
+    pathLabel: "Explosive Pull Path",
+  },
+  {
+    id: "pull-exp-2",
+    branch: "PULL",
+    level: 4,
+    levelName: "Advanced",
+    type: "explosive",
+    title: "Archer Pull-Up",
+    description:
+      "One arm pulls while the other extends straight — a brutally asymmetric drill that develops unilateral lat strength and sets the stage for the one-arm pull-up.",
+    exercises: ["Archer Pull-Up"],
+    masteryRequirement: {
+      description: "Complete 4 reps per side with ≥80% form score in 4 sessions",
+      minReps: 4,
+      minFormScore: 80,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "pull-exp-1",
+    path: "explosive-pull",
+    pathLabel: "Explosive Pull Path",
+  },
+];
+
+// ─── Static Holds Path (branches from core-1) ─────────────────────────────────
+const CORE_STATIC_HOLDS_NODES: SkillNode[] = [
+  {
+    id: "core-sh-1",
+    branch: "CORE",
+    level: 2,
+    levelName: "Novice",
+    type: "static",
+    title: "Hollow Body Hold",
+    description:
+      "Lie on your back and brace into a hollow curve — shoulders off the floor, straight legs raised low. The fundamental full-body tension skill that underpins every calisthenics movement.",
+    exercises: ["Hollow Body Hold"],
+    masteryRequirement: {
+      description: "Hold 20 s with ≥70% form score in 3 sessions",
+      minReps: 20,
+      minFormScore: 70,
+      minQualifyingSessions: 3,
+    },
+    prerequisiteId: "core-1",
+    path: "static-holds",
+    pathLabel: "Static Holds Path",
+  },
+  {
+    id: "core-sh-2",
+    branch: "CORE",
+    level: 3,
+    levelName: "Intermediate",
+    type: "static",
+    title: "Tuck L-Sit",
+    description:
+      "Press on parallel bars or the floor and lift your hips clear — knees tucked to chest, arms locked out. Builds the hip-flexor and tricep strength needed for a full L-sit and beyond.",
+    exercises: ["Tuck L-Sit"],
+    masteryRequirement: {
+      description: "Hold 10 s with ≥72% form score in 4 sessions",
+      minReps: 10,
+      minFormScore: 72,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "core-sh-1",
+    path: "static-holds",
+    pathLabel: "Static Holds Path",
+  },
+];
+
+// ─── Unilateral Legs Path (branches from legs-2) ──────────────────────────────
+const LEGS_UNILATERAL_NODES: SkillNode[] = [
+  {
+    id: "legs-uni-1",
+    branch: "LEGS",
+    level: 3,
+    levelName: "Intermediate",
+    type: "standard",
+    title: "Bulgarian Split Squat",
+    description:
+      "Rear foot elevated, front foot forward — sink until the rear knee grazes the floor. One of the most effective unilateral strength builders in bodyweight training.",
+    exercises: ["Bulgarian Split Squat"],
+    masteryRequirement: {
+      description: "Complete 8 reps per side with ≥78% form score in 4 sessions",
+      minReps: 8,
+      minFormScore: 78,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "legs-2",
+    path: "unilateral",
+    pathLabel: "Unilateral Path",
+  },
+  {
+    id: "legs-uni-2",
+    branch: "LEGS",
+    level: 4,
+    levelName: "Advanced",
+    type: "standard",
+    title: "Shrimp Squat",
+    description:
+      "Single-leg squat with the rear foot held behind — touch the back knee to the floor and stand back up. Exceptional ankle mobility, quad strength and balance are all demanded simultaneously.",
+    exercises: ["Shrimp Squat"],
+    masteryRequirement: {
+      description: "Complete 5 reps per side with ≥80% form score in 4 sessions",
+      minReps: 5,
+      minFormScore: 80,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "legs-uni-1",
+    path: "unilateral",
+    pathLabel: "Unilateral Path",
+  },
+];
+
 // ─── Equipment Specialty Nodes ────────────────────────────────────────────────
 
 // ── PULL — Bar Specialist (branches from pull-2) ──────────────────────────────
@@ -783,6 +959,14 @@ export const EQUIPMENT_SPECIALTY_NODES: SkillNode[] = [
   ...PUSH_WEIGHTED_NODES,
 ];
 
+// ─── New Category Path Nodes ───────────────────────────────────────────────────
+export const NEW_CATEGORY_NODES: SkillNode[] = [
+  ...PUSH_OVERHEAD_NODES,
+  ...PULL_EXPLOSIVE_NODES,
+  ...CORE_STATIC_HOLDS_NODES,
+  ...LEGS_UNILATERAL_NODES,
+];
+
 // ─── Full registry ─────────────────────────────────────────────────────────────
 
 /**
@@ -803,6 +987,7 @@ export const ALL_SKILL_NODES: SkillNode[] = [
   ...CORE_NODES,
   ...LEGS_NODES,
   ...EQUIPMENT_SPECIALTY_NODES,
+  ...NEW_CATEGORY_NODES,
 ];
 
 /** Core skill count (excludes equipment specialty paths) */

@@ -1104,6 +1104,329 @@ const BURPEE: ExerciseConfig = {
   },
 };
 
+// ─── Explosive Pull: Chest-to-Bar Pull-Up ─────────────────────────────────────
+// Like a pull-up but the chest must clear bar level — wrists rise well above shoulders.
+
+const CHEST_TO_BAR_PULL_UP: ExerciseConfig = {
+  displayName: "Chest-to-Bar Pull-Up",
+  isStatic: false,
+  criticalJoints: [
+    { label: "Wrist–Elbow–Shoulder", description: "Full dead-hang extension at the bottom — elbows locked out." },
+    { label: "Wrist Y vs Chest level", description: "Rep only counts when wrists clear well above shoulder height — chest must touch bar." },
+  ],
+  initialPhase: "bottom",
+  processFrame(lm, phase) {
+    const elbowAngle = calcAngle(lm[LM.LEFT_WRIST], lm[LM.LEFT_ELBOW], lm[LM.LEFT_SHOULDER]);
+    const wristY    = (lm[LM.LEFT_WRIST].y  + lm[LM.RIGHT_WRIST].y)  / 2;
+    const shoulderY = (lm[LM.LEFT_SHOULDER].y + lm[LM.RIGHT_SHOULDER].y) / 2;
+    let newPhase = phase;
+    let repCounted = false;
+    let repQuality: RepQuality | null = null;
+
+    // Chest-to-bar: wrists must be significantly above shoulder level
+    const chestClear = wristY > shoulderY + 0.10;
+    if (phase === "bottom" && chestClear) newPhase = "top";
+    else if (phase === "top" && elbowAngle > 160) {
+      newPhase = "bottom"; repCounted = true; repQuality = "complete";
+    }
+
+    const hipMidX = midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]).x;
+    const shMidX  = midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]).x;
+    const swingPenalty = clamp(Math.abs(hipMidX - shMidX) * 80, 0, 25);
+    const depthBonus   = chestClear ? 20 : 0;
+    const formScore    = clamp(80 + depthBonus - swingPenalty, 0, 100);
+
+    let audioCue: string | null = null;
+    if (phase === "top" && !chestClear) audioCue = "Drive your chest to the bar — pull higher";
+    else if (swingPenalty > 15) audioCue = "Control the swing — pull straight up";
+    else if (phase === "bottom" && elbowAngle < 150) audioCue = "Full dead hang — lock out your elbows";
+    return { newPhase, repCounted, repQuality, formScore, audioCue };
+  },
+};
+
+// ─── Explosive Pull: Archer Pull-Up ───────────────────────────────────────────
+// One arm performs the pull while the other extends straight to the side — tracking
+// the working (left) arm elbow and ensuring the extended (right) arm stays locked.
+
+const ARCHER_PULL_UP: ExerciseConfig = {
+  displayName: "Archer Pull-Up",
+  isStatic: false,
+  criticalJoints: [
+    { label: "Working arm Elbow (Wrist–Elbow–Shoulder)", description: "Track the bending arm — drives the rep count." },
+    { label: "Extended arm straightness", description: "The straight arm must stay locked out throughout the movement." },
+  ],
+  initialPhase: "bottom",
+  processFrame(lm, phase) {
+    const workElbow = calcAngle(lm[LM.LEFT_WRIST], lm[LM.LEFT_ELBOW], lm[LM.LEFT_SHOULDER]);
+    const extElbow  = calcAngle(lm[LM.RIGHT_WRIST], lm[LM.RIGHT_ELBOW], lm[LM.RIGHT_SHOULDER]);
+    const wristY    = lm[LM.LEFT_WRIST].y;
+    const shoulderY = lm[LM.LEFT_SHOULDER].y;
+    let newPhase = phase;
+    let repCounted = false;
+    let repQuality: RepQuality | null = null;
+
+    if (phase === "bottom" && wristY > shoulderY) newPhase = "top";
+    else if (phase === "top" && workElbow > 155) {
+      newPhase = "bottom"; repCounted = true; repQuality = "complete";
+    }
+
+    // Penalise extended arm bending
+    const extPenalty = clamp((145 - extElbow) * 1.2, 0, 40);
+    const swingPenalty = clamp(
+      Math.abs(midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]).x - midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]).x) * 80,
+      0, 25,
+    );
+    const formScore = clamp(100 - extPenalty - swingPenalty, 0, 100);
+
+    let audioCue: string | null = null;
+    if (extPenalty > 20) audioCue = "Keep the extended arm locked out — straight as a rod";
+    else if (swingPenalty > 15) audioCue = "Shift your weight fully onto the working arm";
+    else if (formScore < 65) audioCue = "Pull your elbow to your hip on the working side";
+    return { newPhase, repCounted, repQuality, formScore, audioCue };
+  },
+};
+
+// ─── Overhead Pressing: Pike Push-Up ──────────────────────────────────────────
+// Inverted-V / downward-dog position. Elbows bend to lower head toward floor.
+
+const PIKE_PUSH_UP: ExerciseConfig = {
+  displayName: "Pike Push-Up",
+  isStatic: false,
+  criticalJoints: [
+    { label: "Shoulder–Elbow–Wrist", description: "Elbow angle drives rep counting. Lower your head between your hands to full depth." },
+    { label: "Hip elevation", description: "Hips must stay high throughout — maintain the inverted V throughout the set." },
+  ],
+  initialPhase: "up",
+  processFrame(lm, phase) {
+    const elbowAngle = calcAngle(lm[LM.LEFT_SHOULDER], lm[LM.LEFT_ELBOW], lm[LM.LEFT_WRIST]);
+    let newPhase = phase;
+    let repCounted = false;
+    let repQuality: RepQuality | null = null;
+
+    if (phase === "up" && elbowAngle < 90) newPhase = "down";
+    else if (phase === "down" && elbowAngle > 150) {
+      newPhase = "up"; repCounted = true; repQuality = "complete";
+    }
+
+    // Hip elevation: in normalised coords, lower y = higher in space.
+    // Hips above shoulders → hipMid.y < shoulderMid.y
+    const shoulderMid = midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]);
+    const hipMid      = midpoint(lm[LM.LEFT_HIP],      lm[LM.RIGHT_HIP]);
+    const hipElevation = shoulderMid.y - hipMid.y; // positive = hips higher
+    const hipPenalty   = clamp((0.10 - hipElevation) * 200, 0, 40);
+    const formScore    = clamp(100 - hipPenalty, 0, 100);
+
+    let audioCue: string | null = null;
+    if (hipPenalty > 20) audioCue = "Pike your hips higher — form that inverted V shape";
+    else if (formScore < 65) audioCue = "Lower your head between your hands";
+    return { newPhase, repCounted, repQuality, formScore, audioCue };
+  },
+};
+
+// ─── Overhead Pressing: Elevated Pike Push-Up ─────────────────────────────────
+// Feet on an elevated surface — same mechanics as pike push-up but greater shoulder
+// range of motion and load. Stricter hip elevation required.
+
+const ELEVATED_PIKE_PUSH_UP: ExerciseConfig = {
+  displayName: "Elevated Pike Push-Up",
+  isStatic: false,
+  criticalJoints: [
+    { label: "Shoulder–Elbow–Wrist", description: "Elbow angle drives rep counting. Full lock-out at the top." },
+    { label: "Hip elevation (elevated feet)", description: "With feet elevated the hips must be even higher than a standard pike — don't let them drop." },
+  ],
+  initialPhase: "up",
+  processFrame(lm, phase) {
+    const elbowAngle = calcAngle(lm[LM.LEFT_SHOULDER], lm[LM.LEFT_ELBOW], lm[LM.LEFT_WRIST]);
+    let newPhase = phase;
+    let repCounted = false;
+    let repQuality: RepQuality | null = null;
+
+    if (phase === "up" && elbowAngle < 85) newPhase = "down";
+    else if (phase === "down" && elbowAngle > 150) {
+      newPhase = "up"; repCounted = true; repQuality = "complete";
+    }
+
+    const shoulderMid = midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]);
+    const hipMid      = midpoint(lm[LM.LEFT_HIP],      lm[LM.RIGHT_HIP]);
+    // Elevated pike requires a steeper angle — hips must be noticeably higher
+    const hipElevation = shoulderMid.y - hipMid.y;
+    const hipPenalty   = clamp((0.15 - hipElevation) * 200, 0, 45);
+    const formScore    = clamp(100 - hipPenalty, 0, 100);
+
+    let audioCue: string | null = null;
+    if (hipPenalty > 25) audioCue = "Keep hips elevated — this loads your shoulders";
+    else if (formScore < 65) audioCue = "Lower until your head nearly touches the floor";
+    return { newPhase, repCounted, repQuality, formScore, audioCue };
+  },
+};
+
+// ─── Static Holds: Hollow Body Hold ───────────────────────────────────────────
+// Lying supine: shoulders and straight legs raised, lower back pressed to floor.
+// Tracked from a side-camera view: both shoulders and ankles elevated above hip level.
+
+const HOLLOW_BODY_HOLD: ExerciseConfig = {
+  displayName: "Hollow Body Hold",
+  isStatic: true,
+  criticalJoints: [
+    { label: "Ankle elevation (above hips)", description: "Legs must be raised and held straight — the lower the legs, the harder the hold." },
+    { label: "Shoulder elevation", description: "Shoulders must curl off the floor — arms reach forward alongside the ears." },
+  ],
+  initialPhase: "hold",
+  processFrame(lm, _phase) {
+    const shoulderMid = midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]);
+    const hipMid      = midpoint(lm[LM.LEFT_HIP],      lm[LM.RIGHT_HIP]);
+    const ankleMid    = midpoint(lm[LM.LEFT_ANKLE],    lm[LM.RIGHT_ANKLE]);
+
+    // In normalised coords (y = 0 at top): lower y = higher in frame.
+    // When lying on back (camera from side): hips on floor (highest y),
+    // both shoulders and ankles elevated above hips (lower y than hips).
+    const anklesElevated   = ankleMid.y   < hipMid.y - 0.05;
+    const shouldersElevated = shoulderMid.y < hipMid.y - 0.02;
+
+    // Body should be roughly horizontal — shoulder-to-ankle tilt
+    const bodyTiltDiff  = Math.abs(shoulderMid.y - ankleMid.y);
+    const bodyTiltAngle = Math.atan(bodyTiltDiff) * (180 / Math.PI);
+    const isHorizontal  = bodyTiltAngle < 20;
+
+    const isHoldActive = anklesElevated && shouldersElevated && isHorizontal;
+
+    const elevationScore = Math.min(
+      clamp((hipMid.y - ankleMid.y) * 200, 0, 50),
+      clamp((hipMid.y - shoulderMid.y) * 200, 0, 50),
+    );
+    const tiltPenalty = clamp(bodyTiltAngle * 2, 0, 40);
+    const formScore   = clamp(50 + elevationScore - tiltPenalty, 0, 100);
+
+    let audioCue: string | null = null;
+    if (!anklesElevated)    audioCue = "Raise your legs — keep them straight and together";
+    else if (!shouldersElevated) audioCue = "Curl your shoulders off the floor — reach arms forward";
+    else if (!isHorizontal) audioCue = "Keep your body long and horizontal — squeeze your core";
+    return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
+  },
+};
+
+// ─── Static Holds: Tuck L-Sit ─────────────────────────────────────────────────
+// On parallel bars or floor: arms locked out, hips raised above wrists, knees tucked.
+
+const TUCK_L_SIT: ExerciseConfig = {
+  displayName: "Tuck L-Sit",
+  isStatic: true,
+  criticalJoints: [
+    { label: "Hip elevation (above Wrists)", description: "Hips must be raised above wrist level — press the floor/bars away." },
+    { label: "Elbow lock-out", description: "Arms stay fully extended — bent elbows break the position." },
+  ],
+  initialPhase: "hold",
+  processFrame(lm, _phase) {
+    const wristMid = midpoint(lm[LM.LEFT_WRIST],    lm[LM.RIGHT_WRIST]);
+    const hipMid   = midpoint(lm[LM.LEFT_HIP],      lm[LM.RIGHT_HIP]);
+    const kneeMid  = midpoint(lm[LM.LEFT_KNEE],     lm[LM.RIGHT_KNEE]);
+    const leftElbow  = calcAngle(lm[LM.LEFT_SHOULDER],  lm[LM.LEFT_ELBOW],  lm[LM.LEFT_WRIST]);
+    const rightElbow = calcAngle(lm[LM.RIGHT_SHOULDER], lm[LM.RIGHT_ELBOW], lm[LM.RIGHT_WRIST]);
+    const avgElbow   = (leftElbow + rightElbow) / 2;
+
+    // Hips above wrists: hipMid.y < wristMid.y (lower y = higher in frame)
+    const hipsElevated = hipMid.y < wristMid.y;
+    // Knees tucked: knees near or above hip height
+    const kneesTucked  = kneeMid.y <= hipMid.y + 0.05;
+    const elbowsExtended = avgElbow > 140;
+
+    const isHoldActive = hipsElevated && elbowsExtended;
+
+    const hipLiftPenalty = hipsElevated ? 0 : clamp((wristMid.y - hipMid.y) * 200, 0, 40);
+    const elbowPenalty   = clamp((150 - avgElbow) * 1.2, 0, 40);
+    const formScore      = clamp(100 - hipLiftPenalty - elbowPenalty, 0, 100);
+
+    let audioCue: string | null = null;
+    if (!elbowsExtended)  audioCue = "Lock out your arms — press down through your palms";
+    else if (!hipsElevated) audioCue = "Push the floor away — lift your hips off the surface";
+    else if (!kneesTucked)  audioCue = "Tuck your knees tight to your chest";
+    return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
+  },
+};
+
+// ─── Unilateral Legs: Bulgarian Split Squat ───────────────────────────────────
+// Rear foot elevated, front foot forward. Deep knee flexion on the front (working) leg.
+
+const BULGARIAN_SPLIT_SQUAT: ExerciseConfig = {
+  displayName: "Bulgarian Split Squat",
+  isStatic: false,
+  criticalJoints: [
+    { label: "Hip–Knee–Ankle (front leg)", description: "Front-leg knee angle drives rep counting. Sink until thigh is parallel to floor." },
+    { label: "Torso alignment", description: "Keep your torso upright — don't lean excessively forward." },
+  ],
+  initialPhase: "up",
+  processFrame(lm, phase) {
+    const kneeAngle = calcAngle(lm[LM.LEFT_HIP], lm[LM.LEFT_KNEE], lm[LM.LEFT_ANKLE]);
+    let newPhase = phase;
+    let repCounted = false;
+    let repQuality: RepQuality | null = null;
+
+    if (phase === "up" && kneeAngle < 100) newPhase = "down";
+    else if (phase === "down" && kneeAngle > 155) {
+      newPhase = "up"; repCounted = true; repQuality = "complete";
+    }
+
+    const torsoAngle = calcAngle(
+      midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]),
+      midpoint(lm[LM.LEFT_HIP],      lm[LM.RIGHT_HIP]),
+      midpoint(lm[LM.LEFT_KNEE],     lm[LM.RIGHT_KNEE]),
+    );
+    const torsoPenalty = clamp((90 - torsoAngle) * 1.2, 0, 40);
+    const kneeDrift    = Math.abs(lm[LM.LEFT_KNEE].x - lm[LM.LEFT_ANKLE].x) * 100;
+    const kneePenalty  = clamp(kneeDrift * 0.8, 0, 30);
+    const formScore    = clamp(100 - torsoPenalty - kneePenalty, 0, 100);
+
+    let audioCue: string | null = null;
+    if (kneePenalty > torsoPenalty && formScore < 65) audioCue = "Keep your front knee tracking over your toes";
+    else if (formScore < 60) audioCue = "Torso upright — sink straight down into the squat";
+    return { newPhase, repCounted, repQuality, formScore, audioCue };
+  },
+};
+
+// ─── Unilateral Legs: Shrimp Squat ────────────────────────────────────────────
+// Single-leg squat with the rear foot held behind. Very deep working-leg knee flexion.
+
+const SHRIMP_SQUAT: ExerciseConfig = {
+  displayName: "Shrimp Squat",
+  isStatic: false,
+  criticalJoints: [
+    { label: "Hip–Knee–Ankle (working leg)", description: "Drive the working knee deep — aim to touch the floor with the rear knee." },
+    { label: "Hip balance", description: "Hip must stay aligned over the working ankle — don't let it drift sideways." },
+  ],
+  initialPhase: "up",
+  processFrame(lm, phase) {
+    const kneeAngle = calcAngle(lm[LM.LEFT_HIP], lm[LM.LEFT_KNEE], lm[LM.LEFT_ANKLE]);
+    let newPhase = phase;
+    let repCounted = false;
+    let repQuality: RepQuality | null = null;
+
+    if (phase === "up" && kneeAngle < 85) newPhase = "down";
+    else if (phase === "down" && kneeAngle > 155) {
+      newPhase = "up"; repCounted = true;
+      const hipY  = lm[LM.LEFT_HIP].y;
+      const kneeY = lm[LM.LEFT_KNEE].y;
+      repQuality = hipY < kneeY ? "incomplete" : "complete";
+    }
+
+    // Balance: hip should stay over working ankle
+    const balancePenalty = clamp(Math.abs(lm[LM.LEFT_HIP].x - lm[LM.LEFT_ANKLE].x) * 100 * 0.6, 0, 35);
+    const torsoPenalty   = clamp(
+      (90 - calcAngle(
+        midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]),
+        midpoint(lm[LM.LEFT_HIP],      lm[LM.RIGHT_HIP]),
+        midpoint(lm[LM.LEFT_KNEE],     lm[LM.RIGHT_KNEE]),
+      )) * 1.0, 0, 35,
+    );
+    const formScore = clamp(100 - balancePenalty - torsoPenalty, 0, 100);
+
+    let audioCue: string | null = null;
+    if (repQuality === "incomplete")         audioCue = "Go deeper — full depth shrimp squat";
+    else if (balancePenalty > 20 && formScore < 65) audioCue = "Stay balanced — keep your hip over your ankle";
+    else if (formScore < 60)                 audioCue = "Control the descent — slow and steady";
+    return { newPhase, repCounted, repQuality, formScore, audioCue };
+  },
+};
+
 // ─── Registry & lookup ────────────────────────────────────────────────────────
 
 export const EXERCISE_REGISTRY: Record<string, ExerciseConfig> = {
@@ -1126,6 +1449,18 @@ export const EXERCISE_REGISTRY: Record<string, ExerciseConfig> = {
   // Pull: Muscle-Up path (explosive)
   "Explosive Pull-Up": EXPLOSIVE_PULL_UP,
   "Muscle-Up":         MUSCLE_UP,
+  // Pull: Explosive Pull path
+  "Chest-to-Bar Pull-Up": CHEST_TO_BAR_PULL_UP,
+  "Archer Pull-Up":       ARCHER_PULL_UP,
+  // Push: Overhead Pressing path
+  "Pike Push-Up":          PIKE_PUSH_UP,
+  "Elevated Pike Push-Up": ELEVATED_PIKE_PUSH_UP,
+  // Core: Static Holds path
+  "Hollow Body Hold": HOLLOW_BODY_HOLD,
+  "Tuck L-Sit":       TUCK_L_SIT,
+  // Legs: Unilateral path
+  "Bulgarian Split Squat": BULGARIAN_SPLIT_SQUAT,
+  "Shrimp Squat":          SHRIMP_SQUAT,
   // Legs progression
   "Assisted Squat": ASSISTED_SQUAT,
   "Squat":          SQUAT,
