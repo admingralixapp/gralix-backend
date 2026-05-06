@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useUser, useClerk } from "@clerk/react";
-import { Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video, AlertTriangle, Timer } from "lucide-react";
+import { Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video, AlertTriangle, Timer, Camera } from "lucide-react";
 import { useMyProfile, useUpdatePrivacy, useUpsertProfile } from "@/lib/social";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -61,9 +61,12 @@ export function Settings() {
   const { data: mobilityStatus } = useMobilityStatus();
   const updateMobilitySettings = useUpdateMobilitySettings();
 
-  const [displayName, setDisplayName] = useState("");
-  const [username,    setUsername]    = useState("");
-  const [editing,     setEditing]     = useState(false);
+  const [displayName,    setDisplayName]    = useState("");
+  const [username,       setUsername]       = useState("");
+  const [editing,        setEditing]        = useState(false);
+  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Notification settings
   const [notifEnabled,    setNotifEnabled]    = useState(false);
@@ -130,10 +133,71 @@ export function Settings() {
     });
   }
 
+  // Resolved avatar URL: local upload preview → saved DB value → Clerk OAuth photo
+  const displayAvatarUrl = localAvatarUrl ?? profile?.avatarUrl ?? user?.imageUrl ?? null;
+
   function startEditing() {
     setDisplayName(profile?.displayName ?? user?.fullName ?? "");
     setUsername(profile?.username ?? user?.username ?? "");
     setEditing(true);
+  }
+
+  async function handleAvatarSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      toast({ title: "Only JPG and PNG are supported", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Image must be under 5 MB", variant: "destructive" });
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      // Step 1 — request presigned upload URL
+      const { uploadURL, objectPath } = await fetch("/api/storage/uploads/request-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+      }).then(async (r) => {
+        if (!r.ok) throw new Error("Could not get upload URL");
+        return r.json() as Promise<{ uploadURL: string; objectPath: string }>;
+      });
+
+      // Step 2 — upload directly to GCS
+      const put = await fetch(uploadURL, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!put.ok) throw new Error("Upload to storage failed");
+
+      const servingUrl = `/api/storage${objectPath}`;
+      setLocalAvatarUrl(servingUrl);
+
+      // Step 3 — auto-save avatar immediately
+      upsertProfile.mutate(
+        {
+          username: profile?.username ?? "",
+          displayName: profile?.displayName ?? user?.fullName ?? "",
+          avatarUrl: servingUrl,
+        },
+        {
+          onSuccess: () =>
+            toast({ title: "Profile photo updated", description: "Your new photo has been saved." }),
+          onError: () =>
+            toast({ title: "Failed to save photo", variant: "destructive" }),
+        },
+      );
+    } catch (err) {
+      toast({ title: (err as Error).message || "Upload failed", variant: "destructive" });
+    } finally {
+      setAvatarUploading(false);
+    }
   }
 
   function saveProfile() {
@@ -141,7 +205,7 @@ export function Settings() {
       {
         username,
         displayName,
-        avatarUrl: user?.imageUrl ?? undefined,
+        avatarUrl: localAvatarUrl ?? profile?.avatarUrl ?? user?.imageUrl ?? undefined,
       },
       {
         onSuccess: () => {
@@ -226,14 +290,52 @@ export function Settings() {
       <section>
         <SectionHeader icon={<User className="w-4 h-4" />} label="Account" />
         <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png"
+            className="hidden"
+            onChange={handleAvatarSelect}
+          />
+
           <div className="flex items-center gap-4">
-            {user.imageUrl ? (
-              <img src={user.imageUrl} alt="avatar" className="w-14 h-14 rounded-full object-cover" />
-            ) : (
-              <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-xl font-bold text-primary">
-                {(profile?.displayName ?? user.firstName ?? "U")[0].toUpperCase()}
+            {/* Clickable avatar with glassmorphism camera overlay */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={avatarUploading || upsertProfile.isPending}
+              title="Change profile photo"
+              className="relative w-14 h-14 rounded-full group shrink-0 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background disabled:cursor-wait"
+            >
+              {displayAvatarUrl ? (
+                <img
+                  src={displayAvatarUrl}
+                  alt="avatar"
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full bg-primary/20 flex items-center justify-center text-xl font-bold text-primary">
+                  {(profile?.displayName ?? user.firstName ?? "U")[0].toUpperCase()}
+                </div>
+              )}
+              {/* Glassmorphism hover overlay */}
+              <div
+                className="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-disabled:opacity-100 transition-opacity"
+                style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}
+              >
+                {avatarUploading ? (
+                  <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                ) : (
+                  <Camera className="w-5 h-5 text-white" />
+                )}
               </div>
-            )}
+              {/* Camera badge */}
+              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary border-2 border-background flex items-center justify-center">
+                <Camera className="w-2.5 h-2.5 text-black" />
+              </div>
+            </button>
+
             <div>
               <div className="font-semibold">
                 {profile?.displayName ?? user.fullName ?? user.firstName}
@@ -244,6 +346,14 @@ export function Settings() {
               {profile?.username && (
                 <div className="text-xs text-primary mt-0.5">@{profile.username}</div>
               )}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={avatarUploading || upsertProfile.isPending}
+                className="text-xs text-muted-foreground hover:text-primary mt-1 transition-colors disabled:opacity-50"
+              >
+                {avatarUploading ? "Uploading…" : "Edit photo"}
+              </button>
             </div>
           </div>
 

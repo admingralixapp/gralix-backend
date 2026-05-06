@@ -7,7 +7,7 @@ import {
   sessionsTable,
   exercisesTable,
 } from "@workspace/db";
-import { eq, ne, ilike, or, and, desc, inArray } from "drizzle-orm";
+import { eq, ilike, or, and, desc, inArray } from "drizzle-orm";
 
 const router = Router();
 
@@ -229,20 +229,15 @@ router.get(
       })
       .from(usersTable)
       .where(
-        and(
-          or(
-            ilike(usersTable.username, `%${q}%`),
-            ilike(usersTable.displayName, `%${q}%`),
-          ),
-          // Exclude self directly in SQL
-          me ? ne(usersTable.id, me.id) : undefined,
+        or(
+          ilike(usersTable.username, `%${q}%`),
+          ilike(usersTable.displayName, `%${q}%`),
         ),
       )
       .limit(20);
 
-    // Safety filter: also remove self in JS
-    const filtered = me ? results.filter((u) => u.id !== me.id) : results;
-    res.json(filtered);
+    // Return all matches including self so users can find their own profile
+    res.json(results);
   },
 );
 
