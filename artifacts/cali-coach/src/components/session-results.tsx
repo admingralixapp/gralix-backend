@@ -202,7 +202,7 @@ function SkillProgressBar({
       <div className="flex items-center justify-between text-sm">
         <span className="font-semibold">{node.title}</span>
         <span className="text-muted-foreground text-xs tabular-nums">
-          {nextQualifying} / {total} sessions
+          {Math.min(nextQualifying, total)} / {total} sessions
         </span>
       </div>
 

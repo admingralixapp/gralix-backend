@@ -141,7 +141,7 @@ function WindowNode({
           </div>
           <div className="flex items-center justify-between mt-1">
             <span className="text-[9px] text-muted-foreground tabular-nums">
-              {pct}% · {skill.progress.qualifyingSessions}/{skill.masteryRequirement.minQualifyingSessions}
+              {pct}% · {Math.min(skill.progress.qualifyingSessions, skill.masteryRequirement.minQualifyingSessions)}/{skill.masteryRequirement.minQualifyingSessions}
             </span>
             <Link href={workoutUrl}>
               <button

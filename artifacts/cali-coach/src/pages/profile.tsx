@@ -356,10 +356,9 @@ export function ProfilePage() {
               </h2>
               <div className="rounded-xl border border-border bg-card overflow-hidden">
                 {inProgressSkills.map((skill, i) => {
-                  const pct =
-                    (skill.progress.qualifyingSessions /
-                      skill.masteryRequirement.minQualifyingSessions) *
-                    100;
+                  const req = skill.masteryRequirement.minQualifyingSessions;
+                  const capped = Math.min(skill.progress.qualifyingSessions, req);
+                  const pct = Math.min(100, (capped / req) * 100);
                   return (
                     <div
                       key={skill.id}
@@ -371,14 +370,13 @@ export function ProfilePage() {
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-sm font-medium">{skill.title}</span>
                         <span className="text-xs text-muted-foreground">
-                          {skill.progress.qualifyingSessions}/
-                          {skill.masteryRequirement.minQualifyingSessions}
+                          {capped}/{req}
                         </span>
                       </div>
                       <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
                         <div
                           className="h-full bg-primary rounded-full transition-all"
-                          style={{ width: `${Math.min(100, pct)}%` }}
+                          style={{ width: `${pct}%` }}
                         />
                       </div>
                     </div>

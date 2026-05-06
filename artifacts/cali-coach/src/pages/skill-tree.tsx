@@ -598,7 +598,7 @@ function SkillOverlay({
           </div>
           <p className="text-[9px] text-zinc-600 mt-1">{req.description}</p>
           <p className="text-[9px] text-zinc-600 mt-0.5">
-            {prog.qualifyingSessions}/{req.minQualifyingSessions} qualifying sessions
+            {Math.min(prog.qualifyingSessions, req.minQualifyingSessions)}/{req.minQualifyingSessions} qualifying sessions
           </p>
         </div>
       )}
@@ -1081,7 +1081,7 @@ function SpecialtyNodeCard({ skill, isLast }: { skill: EvaluatedSkill; isLast: b
             <div className="flex justify-between items-center mb-1">
               <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Sessions</span>
               <span className="text-[11px] font-bold tabular-nums" style={{ color: isMastered ? spec.color : undefined }}>
-                {qualifyingSessions}/{req.minQualifyingSessions}
+                {Math.min(qualifyingSessions, req.minQualifyingSessions)}/{req.minQualifyingSessions}
               </span>
             </div>
             <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
