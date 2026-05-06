@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
+import { getExerciseConfig, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, cancelSpeech, setVoiceMuted } from "@/lib/voice-service";
 import { getRestDuration, type RestDuration, REST_DURATION_OPTIONS } from "@/lib/workout-settings";
 import { getVoiceCues, getCameraFacing, getMirrorVideo } from "@/lib/workout-preferences";
@@ -228,7 +228,7 @@ const SYNC_VOICE_THRESHOLD = 80;
 const GHOST_CYCLE_MS = 4000;
 
 /** MediaPipe is queried at this rate; the canvas draws at full 60fps via interpolation. */
-const DETECT_INTERVAL_MS = 50; // 20 fps detection
+const DETECT_INTERVAL_MS = 33; // ~30 fps detection
 
 // ─── Focal joints per exercise (Minimalist Mode) ──────────────────────────────
 // Indices follow the MediaPipe 33-keypoint model (see exercise-registry LM map).
@@ -375,6 +375,31 @@ function drawMinimalistJoints(
   }
 }
 
+
+// ─── Worker types (mirror pose-processor.worker.ts) ──────────────────────────
+
+interface WorkerOutputLocal {
+  repCounted:       boolean;
+  repQuality:       "complete" | "incomplete" | null;
+  newPhase:         Phase;
+  formScore:        number;
+  audioCue:         string | null;
+  isHoldActive?:    boolean;
+  isStatic:         boolean;
+  /** Primary joint angle this frame — passed back next call as prevKeyAngle. */
+  keyAngle:         number | null;
+  velocityAssisted: boolean;
+}
+
+interface PendingFrameData {
+  landmarks:      Landmark[];
+  ghostLandmarks: Landmark[];
+  ghostConfig:    import("@/lib/ghost-poses").GhostExerciseConfig | null;
+  syncPct:        number;
+  exerciseId:     string;
+  exerciseName:   string;
+  prevPhase:      Phase;
+}
 
 // ─── Workout component ────────────────────────────────────────────────────────
 
@@ -535,6 +560,31 @@ export function Workout() {
   /** Anti-cheat: tracks last seen video.currentTime and when it first went static. */
   const frozenCheckRef = useRef({ lastTime: -1, sinceMs: 0 });
 
+  // ── Velocity-based rep detection ─────────────────────────────────────────
+  /** Previous frame's primary joint angle (°) — sent to the Worker each frame
+   *  so it can detect velocity reversals for fast-movement rep counting. */
+  const prevKeyAngleRef = useRef<number | null>(null);
+
+  // ── Pose-processing Web Worker ────────────────────────────────────────────
+  const workerRef            = useRef<Worker | null>(null);
+  /** True while the Worker is processing a frame; prevents queue build-up. */
+  const workerBusyRef        = useRef(false);
+  /** Frame context stored while awaiting the Worker's async response. */
+  const pendingFrameDataRef  = useRef<PendingFrameData | null>(null);
+  /** Ref that always points to the latest handleFrameResult (avoids stale closure
+   *  in the Worker's onmessage handler which is set up only once on mount). */
+  const handleFrameResultRef = useRef<((out: WorkerOutputLocal, ctx: PendingFrameData) => void) | null>(null);
+
+  // ── Audio-cue priority buffer (150 ms debounce window) ───────────────────
+  /** Highest-priority cue collected in the current 150 ms window. */
+  const pendingFormCueRef = useRef<{ text: string; tone: "encouraging" | "firm" | "neutral"; priority: number } | null>(null);
+  /** setTimeout ID for flushing the pending form cue. */
+  const cueFlushTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── "Stay in frame" cue cooldown ─────────────────────────────────────────
+  /** Date.now() of the last "stay in frame" voice cue — 8 s cooldown. */
+  const lastInFrameCueMsRef = useRef(0);
+
   // ── Smoothing + detection-rate control ───────────────────────────────────
   const smootherRef       = useRef(new PoseSmoother());
   /** performance.now() when the last MediaPipe detection ran. */
@@ -621,6 +671,40 @@ export function Workout() {
     voiceSpeak("Get back into position to continue.", "neutral");
   }, []);
 
+  /**
+   * Priority-buffered form-correction cue.
+   *
+   * During fast reps the exercise state machine can fire multiple audioCues
+   * within a single rep cycle.  This function collects cues for a 150 ms
+   * window and speaks only the highest-priority one — preventing the coach
+   * from shouting three corrections at once.
+   *
+   * Priority levels:
+   *   3 = critical   (blendedScore < 60)
+   *   2 = moderate   (blendedScore < 80)
+   *   1 = general
+   */
+  const speakFormCue = useCallback((
+    text:     string,
+    tone:     "encouraging" | "firm" | "neutral",
+    priority: number,
+  ) => {
+    const cur = pendingFormCueRef.current;
+    // Replace with the incoming cue only if it is at least as important
+    if (!cur || priority >= cur.priority) {
+      pendingFormCueRef.current = { text, tone, priority };
+    }
+    // Schedule the flush if not already pending
+    if (!cueFlushTimerRef.current) {
+      cueFlushTimerRef.current = setTimeout(() => {
+        cueFlushTimerRef.current = null;
+        const cue = pendingFormCueRef.current;
+        pendingFormCueRef.current = null;
+        if (cue) speak(cue.text, cue.tone);
+      }, 150);
+    }
+  }, [speak]);
+
   // ── Load MediaPipe model ───────────────────────────────────────────────────
   useEffect(() => {
     async function loadModel() {
@@ -644,6 +728,9 @@ export function Workout() {
             baseOptions: { modelAssetPath, delegate },
             runningMode: "VIDEO",
             numPoses: 1,
+            // Higher tracking confidence reduces jitter between frames
+            // (equivalent to smoothLandmarks in the legacy MediaPipe API).
+            minTrackingConfidence: 0.6,
           });
           landmarkerRef.current = landmarker;
           setIsModelLoading(false);
@@ -659,6 +746,45 @@ export function Workout() {
     loadModel();
     return () => { landmarkerRef.current?.close(); };
   }, [toast]);
+
+  // ── Pose-processing Web Worker ─────────────────────────────────────────────
+  //
+  // The Worker runs the exercise state machine (config.processFrame + velocity
+  // assist) off the main thread, freeing it for MediaPipe detection and UI
+  // rendering.  MediaPipe itself must stay on the main thread because the GPU
+  // delegate requires the WebGL context, but all the angle maths and rep logic
+  // can run in a Worker without any browser-API access.
+  //
+  // Protocol:
+  //   predictWebcam → Worker : WorkerInput  (landmarks, phase, exercise, …)
+  //   Worker → onmessage     : WorkerOutput (phase result, rep flag, cues, …)
+  //
+  // If the Worker is busy when a new frame arrives, we fall back to synchronous
+  // processing so no rep is ever missed.
+  useEffect(() => {
+    const worker = new Worker(
+      new URL("../workers/pose-processor.worker.ts", import.meta.url),
+      { type: "module" },
+    );
+
+    worker.onmessage = (e: MessageEvent<WorkerOutputLocal | null>) => {
+      workerBusyRef.current = false;
+      if (!e.data || !pendingFrameDataRef.current) return;
+      const ctx = pendingFrameDataRef.current;
+      pendingFrameDataRef.current = null;
+      // Store keyAngle for next frame's velocity calculation
+      prevKeyAngleRef.current = e.data.keyAngle;
+      handleFrameResultRef.current?.(e.data, ctx);
+    };
+
+    worker.onerror = () => { workerBusyRef.current = false; };
+
+    workerRef.current = worker;
+    return () => {
+      worker.terminate();
+      workerRef.current = null;
+    };
+  }, []);
 
   // ── Mounted guard — prevents async continuations from touching state/DOM
   //    after the component has already unmounted.
@@ -696,28 +822,25 @@ export function Workout() {
     }
   };
 
-  // ── processFrame ───────────────────────────────────────────────────────────
-  const processFrame = useCallback((
-    landmarks: Landmark[],
-    ghostLandmarks: Landmark[],
-    ghostConfig: GhostExerciseConfig | null,
-    currentSyncPct: number,
+  // ── handleFrameResult ──────────────────────────────────────────────────────
+  //
+  // Processes a result from the pose-processing Worker (or the sync fallback).
+  // Receives the computed FrameResult alongside the frame context (landmarks,
+  // ghost data, syncPct, exercise identity, previous phase) that was snapshotted
+  // at the time of dispatch so that state reads are consistent.
+  //
+  const handleFrameResult = useCallback((
+    output: WorkerOutputLocal,
+    ctx:    PendingFrameData,
   ) => {
-    const exercise = exercises?.find(e => e.id.toString() === selectedExerciseId);
+    const { landmarks, ghostLandmarks, ghostConfig, syncPct: currentSyncPct, exerciseId, prevPhase } = ctx;
+
+    const exercise = exercises?.find(e => e.id.toString() === exerciseId);
     if (!exercise) return;
 
-    const config = getExerciseConfig(exercise.name);
-    if (!config) return;
-
-    // ── Run exercise state machine ─────────────────────────────────────────
-    const prevPhase = stateRef.current.phase;
-    const result    = config.processFrame(landmarks, prevPhase as Phase, {
-      pushDepthThreshold: isPushExercise(exercise.name)
-        ? getPushDepthThreshold(equipment.pushGear)
-        : undefined,
-    });
-    stateRef.current.phase = result.newPhase;
-    const phaseChanged = result.newPhase !== prevPhase;
+    // ── Update phase in shared state ──────────────────────────────────────
+    stateRef.current.phase = output.newPhase;
+    const phaseChanged = output.newPhase !== prevPhase;
 
     // ── Equipment modifier: rings stability bonus ──────────────────────────
     let equipBonus = 0;
@@ -734,7 +857,7 @@ export function Workout() {
       equipCue = "Neutral wrists — don't let them bend back.";
     }
 
-    const adjustedFormScore = Math.min(100, result.formScore + equipBonus);
+    const adjustedFormScore = Math.min(100, output.formScore + equipBonus);
     const blendedScore = ghostConfig
       ? Math.round((adjustedFormScore + currentSyncPct) / 2)
       : adjustedFormScore;
@@ -757,24 +880,21 @@ export function Workout() {
     setSyncPct(Math.round(currentSyncPct));
 
     // ── Phase-transition coaching (fires once per phase change) ────────────
-    if (phaseChanged && !config.isStatic) {
+    if (phaseChanged && !output.isStatic) {
       clearPacerTimeouts();
 
       if (voicePacingRef.current) {
         // ── Active Pacer: "Down... 2... 1... and Up!" ─────────────────────
         const isDescending =
-          (result.newPhase === "down") ||
-          (result.newPhase === "bottom" && (prevPhase === "up" || prevPhase === "top"));
+          (output.newPhase === "down") ||
+          (output.newPhase === "bottom" && (prevPhase === "up" || prevPhase === "top"));
         const isAscending  =
-          (result.newPhase === "up") ||
-          (result.newPhase === "top" && (prevPhase === "down" || prevPhase === "bottom"));
+          (output.newPhase === "up") ||
+          (output.newPhase === "top" && (prevPhase === "down" || prevPhase === "bottom"));
 
         if (isDescending) {
-          // Queue the countdown sequence
           DESCEND_PACER_CUES.forEach(cue => {
-            const t = setTimeout(() => {
-              voiceSpeak(cue.text, cue.tone);
-            }, cue.delayMs);
+            const t = setTimeout(() => { voiceSpeak(cue.text, cue.tone); }, cue.delayMs);
             pacerTimeoutsRef.current.push(t);
           });
         } else if (isAscending) {
@@ -782,15 +902,15 @@ export function Workout() {
         }
       } else {
         // ── Standard phase-transition cue ─────────────────────────────────
-        const phaseCue = getPhaseTransitionCue(exercise.name, prevPhase as Phase, result.newPhase);
+        const phaseCue = getPhaseTransitionCue(exercise.name, prevPhase, output.newPhase);
         if (phaseCue) {
           speakPhase(phaseCue.text, phaseCue.tone);
         }
       }
     }
 
-    if (config.isStatic) {
-      const holdNow = result.isHoldActive === true && synced;
+    if (output.isStatic) {
+      const holdNow = output.isHoldActive === true && synced;
 
       if (holdNow && stateRef.current.lastHoldTickMs > 0) {
         const delta   = (now - stateRef.current.lastHoldTickMs) / 1000;
@@ -811,10 +931,8 @@ export function Workout() {
       if (holdNow && !stateRef.current.holdActive) {
         speak("Perfect sync — hold it.", "encouraging");
       } else if (!holdNow && stateRef.current.holdActive) {
-        if (!synced) {
-          // sync drop handled above
-        } else {
-          speak(result.audioCue ?? "Adjust your position.", tone);
+        if (synced) {
+          speak(output.audioCue ?? "Adjust your position.", tone);
         }
       }
 
@@ -825,7 +943,7 @@ export function Workout() {
       stateRef.current.repFormScores.push(blendedScore);
       setFormScore(prev => prev * 0.9 + blendedScore * 0.1);
     } else {
-      const { repCounted, repQuality, audioCue } = result;
+      const { repCounted, repQuality, audioCue } = output;
 
       if (repCounted && synced) {
         const newRepCount = stateRef.current.repCount + 1;
@@ -847,10 +965,10 @@ export function Workout() {
         if (currentSyncPct > bestRepSyncRef.current) {
           bestRepSyncRef.current = currentSyncPct;
           const repData: BestRepData = {
-            repNumber:     newRepCount,
-            syncPct:       Math.round(currentSyncPct),
-            formScore:     blendedScore,
-            userLandmarks: landmarks.map(l => ({ ...l })),
+            repNumber:      newRepCount,
+            syncPct:        Math.round(currentSyncPct),
+            formScore:      blendedScore,
+            userLandmarks:  landmarks.map(l => ({ ...l })),
             ghostLandmarks: ghostLandmarks.map(l => ({ ...l })),
           };
           recorderRef.current?.logBestRep(repData);
@@ -859,9 +977,9 @@ export function Workout() {
         createRep.mutate({
           sessionId: stateRef.current.sessionId,
           data: {
-            repNumber:    newRepCount,
-            formScore:    blendedScore,
-            durationMs:   duration > 0 ? duration : null,
+            repNumber:     newRepCount,
+            formScore:     blendedScore,
+            durationMs:    duration > 0 ? duration : null,
             feedbackGiven: audioCue ?? equipCue ?? null,
           },
         });
@@ -888,18 +1006,97 @@ export function Workout() {
       } else if (equipCue) {
         speak(equipCue, tone);
       } else if (audioCue) {
-        // Form correction — use blended score tone so voice matches severity
-        speak(audioCue, tone);
+        // Form correction — priority-buffer (150 ms window) speaks only the
+        // most critical cue per burst, preventing rapid-fire corrections.
+        const priority = blendedScore < 60 ? 3 : blendedScore < 80 ? 2 : 1;
+        speakFormCue(audioCue, tone, priority);
       }
 
       setFormScore(prev => prev * 0.9 + blendedScore * 0.1);
     }
-  }, [exercises, selectedExerciseId, speak, speakPhase, speakSyncDrop, createRep, equipment, clearPacerTimeouts]);
+  }, [exercises, speak, speakPhase, speakSyncDrop, speakFormCue, createRep, equipment, clearPacerTimeouts]);
+
+  // Keep the ref current so the Worker's onmessage closure always calls the
+  // latest version without re-binding the handler.
+  useEffect(() => { handleFrameResultRef.current = handleFrameResult; });
+
+  // ── processFrame ───────────────────────────────────────────────────────────
+  //
+  // Dispatches the current frame to the pose-processing Worker.  All the heavy
+  // angle computation and state-machine logic runs off the main thread.
+  //
+  // If the Worker is still processing the previous frame (rare at 30 fps), we
+  // fall back to synchronous processing so no rep is ever silently dropped.
+  //
+  const processFrame = useCallback((
+    landmarks:      Landmark[],
+    ghostLandmarks: Landmark[],
+    ghostConfig:    GhostExerciseConfig | null,
+    currentSyncPct: number,
+  ) => {
+    const exercise = exercises?.find(e => e.id.toString() === selectedExerciseId);
+    if (!exercise) return;
+    const config = getExerciseConfig(exercise.name);
+    if (!config) return;
+
+    const prevPhase = stateRef.current.phase as Phase;
+    const equipCtx: EquipmentContext = {
+      pushDepthThreshold: isPushExercise(exercise.name)
+        ? getPushDepthThreshold(equipment.pushGear)
+        : undefined,
+    };
+
+    const ctx: PendingFrameData = {
+      landmarks, ghostLandmarks, ghostConfig,
+      syncPct:      currentSyncPct,
+      exerciseId:   exercise.id.toString(),
+      exerciseName: exercise.name,
+      prevPhase,
+    };
+
+    const worker = workerRef.current;
+    if (worker && !workerBusyRef.current) {
+      // Off-thread path: dispatch to Worker; result arrives in onmessage
+      workerBusyRef.current      = true;
+      pendingFrameDataRef.current = ctx;
+      worker.postMessage({
+        landmarks,
+        prevPhase,
+        exerciseName: exercise.name,
+        equipment:    equipCtx,
+        prevKeyAngle: prevKeyAngleRef.current,
+        frameDeltaMs: lastDetectMsRef.current > 0
+          ? performance.now() - lastDetectMsRef.current
+          : 0,
+      });
+    } else {
+      // Sync fallback: Worker unavailable or still busy with previous frame
+      const result = config.processFrame(landmarks, prevPhase, equipCtx);
+      const syncOutput: WorkerOutputLocal = {
+        repCounted:      result.repCounted,
+        repQuality:      result.repQuality,
+        newPhase:        result.newPhase,
+        formScore:       result.formScore,
+        audioCue:        result.audioCue,
+        isHoldActive:    result.isHoldActive,
+        isStatic:        config.isStatic,
+        keyAngle:        null,
+        velocityAssisted: false,
+      };
+      prevKeyAngleRef.current = null;
+      handleFrameResultRef.current?.(syncOutput, ctx);
+    }
+  }, [exercises, selectedExerciseId, equipment]);
 
   // ── Main camera loop ───────────────────────────────────────────────────────
   //
   // Architecture:
-  //   • MediaPipe detection runs at max 20 fps (every DETECT_INTERVAL_MS).
+  //   • MediaPipe detection runs at ~30 fps (every DETECT_INTERVAL_MS = 33 ms).
+  //   • Exercise state-machine logic is dispatched to a Web Worker; the result
+  //     arrives asynchronously via onmessage so the main thread is never blocked
+  //     by angle computations during the render phase.
+  //   • Velocity-based rep detection is applied in the Worker to catch fast
+  //     movements that only appear in a single detection frame at the bottom.
   //   • The canvas redraws at full 60 fps using linear interpolation between
   //     the last two EMA-smoothed landmark snapshots.
   //   • Minimalist Mode skips the full skeleton and renders glowing focal-joint
@@ -943,7 +1140,7 @@ export function Workout() {
       }
     }
 
-    // ── Detection phase (20 fps) ───────────────────────────────────────────
+    // ── Detection phase (~30 fps) ──────────────────────────────────────────
     const sinceLastDetect = now - lastDetectMsRef.current;
     if (
       sinceLastDetect >= DETECT_INTERVAL_MS &&
@@ -960,6 +1157,31 @@ export function Workout() {
 
       if (results.landmarks?.length > 0) {
         const raw    = results.landmarks[0];
+
+        // ── Visibility / "stay in frame" coaching ────────────────────────
+        // Key landmarks: shoulders (11,12), elbows (13,14), wrists (15,16),
+        // hips (23,24).  If ≥4 of these drop below 0.5 visibility the user
+        // is likely out of frame or in poor lighting.  One gentle cue fires
+        // at most every 8 seconds so it never drowns out form coaching.
+        if (stateRef.current.sessionId !== 0) {
+          const KEY_LM_INDICES = [11, 12, 13, 14, 15, 16, 23, 24];
+          const lowVisCount = KEY_LM_INDICES.filter(
+            idx => (raw[idx]?.visibility ?? 1) < 0.5,
+          ).length;
+          const nowMs = Date.now();
+          if (lowVisCount >= 4 && nowMs - lastInFrameCueMsRef.current > 8000) {
+            lastInFrameCueMsRef.current = nowMs;
+            const inFrameCues = [
+              "Try to stay in frame.",
+              "Step back so your full body is visible.",
+              "Check your lighting — I'm losing track.",
+            ];
+            voiceSpeak(
+              inFrameCues[Math.floor(Math.random() * inFrameCues.length)],
+              "neutral",
+            );
+          }
+        }
 
         // Wrist tracking for rings-jitter detection
         const lWrist = raw[15];
@@ -1012,7 +1234,7 @@ export function Workout() {
         currSyncPctRef.current     = currentSyncPct;
         lastDetectMsRef.current    = now;
 
-        // Game logic at detection rate (20 fps is sufficient for rep counting)
+        // Dispatch to Worker (or sync fallback) for exercise state machine
         processFrame(smoothed, phasedGhost, ghostConfig, currentSyncPct);
       }
     }

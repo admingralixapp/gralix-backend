@@ -104,7 +104,7 @@ export interface ExerciseConfig {
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
 /** 2-D angle (degrees) at vertex b, formed by rays b→a and b→c. */
-function calcAngle(a: Landmark, b: Landmark, c: Landmark): number {
+export function calcAngle(a: Landmark, b: Landmark, c: Landmark): number {
   const rad =
     Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
   let deg = Math.abs(rad * (180 / Math.PI));
