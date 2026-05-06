@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler } from "lucide-react";
+import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, cancelSpeech, setVoiceMuted } from "@/lib/voice-service";
@@ -221,6 +221,70 @@ const EXERCISE_CATEGORIES: ExerciseCategory[] = [
   },
 ];
 
+// ─── Equipment Specialty categories (Bar / Rings / Weighted) ─────────────────
+
+type EquipmentBranchKey = "BAR" | "RINGS" | "WEIGHTED";
+
+interface EquipmentExerciseCategory {
+  label:    string;
+  branch:   EquipmentBranchKey;
+  color:    string;
+  exercises: Array<{ dbName: string; label: string; nodeId: string | null }>;
+}
+
+const EQUIPMENT_SPECIALTY_CATEGORIES: EquipmentExerciseCategory[] = [
+  // ── Bar Specialist ──────────────────────────────────────────────────────────
+  {
+    label:  "Bar Specialist",
+    branch: "BAR",
+    color:  "#f59e0b",
+    exercises: [
+      { dbName: "Pull-Up",           label: "Bar Volume Pull-Up",    nodeId: "pull-bar-1" },
+      { dbName: "Explosive Pull-Up", label: "Explosive Bar Pull-Up", nodeId: "pull-bar-2" },
+      { dbName: "Muscle-Up",         label: "Strict Bar Muscle-Up",  nodeId: "pull-bar-3" },
+    ],
+  },
+  // ── Rings ────────────────────────────────────────────────────────────────
+  {
+    label:  "Rings — Pull",
+    branch: "RINGS",
+    color:  "#06b6d4",
+    exercises: [
+      { dbName: "Ring Support Hold", label: "Ring Support Hold", nodeId: "pull-rings-1" },
+      { dbName: "Ring Pull-Up",      label: "Ring Pull-Up",      nodeId: "pull-rings-2" },
+      { dbName: "Ring Muscle-Up",    label: "Ring Muscle-Up",    nodeId: "pull-rings-3" },
+    ],
+  },
+  {
+    label:  "Rings — Push",
+    branch: "RINGS",
+    color:  "#06b6d4",
+    exercises: [
+      { dbName: "Ring Dip",       label: "Ring Dip",        nodeId: "push-rings-1" },
+      { dbName: "Ring Muscle-Up", label: "Ring Muscle-Up",  nodeId: "push-rings-2" },
+    ],
+  },
+  // ── Weighted ─────────────────────────────────────────────────────────────
+  {
+    label:  "Weighted — Pull",
+    branch: "WEIGHTED",
+    color:  "#a855f7",
+    exercises: [
+      { dbName: "Weighted Pull-Up",   label: "Weighted Pull-Up",   nodeId: "pull-weighted-1" },
+      { dbName: "Weighted Pull-Up",   label: "Weighted Volume",    nodeId: "pull-weighted-2" },
+      { dbName: "Weighted Muscle-Up", label: "Weighted Muscle-Up", nodeId: "pull-weighted-3" },
+    ],
+  },
+  {
+    label:  "Weighted — Push",
+    branch: "WEIGHTED",
+    color:  "#a855f7",
+    exercises: [
+      { dbName: "Weighted Dip", label: "Weighted Dip", nodeId: "push-weighted-1" },
+    ],
+  },
+];
+
 // ─── Sync thresholds ──────────────────────────────────────────────────────────
 
 const SYNC_GATE = 85;
@@ -414,6 +478,10 @@ export function Workout() {
   const [povReview,      setPovReview]      = useState<{ payload: RepReviewPayload; results: Omit<SessionResultsProps, "onClose"> } | null>(null);
   const [pickerOpen,     setPickerOpen]     = useState(false);
   const [infoExercise,   setInfoExercise]   = useState<{ name: string; id: number; nodeId: string | null } | null>(null);
+  // Exercise picker search query — resets on picker close
+  const [exerciseSearch, setExerciseSearch] = useState("");
+  // Collapsed state for each specialty sub-category header in the picker
+  const [collapsedSpecialtyCats, setCollapsedSpecialtyCats] = useState<Record<string, boolean>>({});
 
   const { data: sessionHistory } = useListSessions(
     { limit: 500, offset: 0 },
@@ -2418,7 +2486,7 @@ export function Workout() {
             }}
           >
             <div className="text-[10px] font-bold uppercase tracking-widest text-white/35 mb-2">Exercise</div>
-            <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <Popover open={pickerOpen} onOpenChange={open => { setPickerOpen(open); if (!open) setExerciseSearch(""); }}>
               <PopoverTrigger asChild>
                 <button
                   disabled={isModelLoading}
@@ -2428,7 +2496,16 @@ export function Workout() {
                     {isModelLoading
                       ? "Loading model…"
                       : (() => {
+                          // Check bodyweight first
                           for (const cat of EXERCISE_CATEGORIES) {
+                            const entry = cat.exercises.find(e => {
+                              const dbEx = exercises?.find(ex => ex.name === e.dbName);
+                              return dbEx?.id.toString() === selectedExerciseId;
+                            });
+                            if (entry) return entry.label;
+                          }
+                          // Then specialty
+                          for (const cat of EQUIPMENT_SPECIALTY_CATEGORIES) {
                             const entry = cat.exercises.find(e => {
                               const dbEx = exercises?.find(ex => ex.name === e.dbName);
                               return dbEx?.id.toString() === selectedExerciseId;
@@ -2441,96 +2518,315 @@ export function Workout() {
                   <ChevronDown className="w-4 h-4 shrink-0 text-white/35" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-0 max-h-[440px] overflow-y-auto" align="start">
-                {(() => {
-                  const grouped = new Map<BranchKey, typeof EXERCISE_CATEGORIES>();
-                  for (const cat of EXERCISE_CATEGORIES) {
-                    if (!grouped.has(cat.branch)) grouped.set(cat.branch, []);
-                    grouped.get(cat.branch)!.push(cat);
-                  }
-                  const branchOrder: BranchKey[] = ["PUSH", "PULL", "CORE", "LEGS"];
-                  return branchOrder.map(branch => {
-                    const cats = grouped.get(branch);
-                    if (!cats) return null;
-                    const branchColor = cats[0].color;
+
+              {/* ── Exercise Selection Hub ─────────────────────────────────── */}
+              <PopoverContent
+                className="p-0 overflow-hidden"
+                style={{ width: "min(620px, calc(100vw - 1.5rem))" }}
+                align="start"
+                sideOffset={4}
+              >
+                {/* Search bar */}
+                <div className="p-2 border-b border-border/40">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30 pointer-events-none" />
+                    <input
+                      value={exerciseSearch}
+                      onChange={e => setExerciseSearch(e.target.value)}
+                      placeholder="Search all exercises…"
+                      className="w-full pl-8 pr-3 py-2 text-sm bg-white/[0.05] border border-white/10 rounded-lg outline-none focus:border-primary/40 placeholder:text-white/25 transition-colors"
+                      autoComplete="off"
+                    />
+                  </div>
+                </div>
+
+                {exerciseSearch.trim() ? (
+                  /* ── Search results ────────────────────────────────────── */
+                  (() => {
+                    const q = exerciseSearch.toLowerCase();
+                    type HitRow = { label: string; dbName: string; nodeId: string | null; color: string; columnLabel: string };
+                    const hits: HitRow[] = [];
+                    for (const cat of EXERCISE_CATEGORIES) {
+                      for (const ex of cat.exercises) {
+                        if (ex.label.toLowerCase().includes(q) || ex.dbName.toLowerCase().includes(q)) {
+                          hits.push({ ...ex, color: cat.color, columnLabel: "Bodyweight" });
+                        }
+                      }
+                    }
+                    for (const cat of EQUIPMENT_SPECIALTY_CATEGORIES) {
+                      for (const ex of cat.exercises) {
+                        if (ex.label.toLowerCase().includes(q) || ex.dbName.toLowerCase().includes(q)) {
+                          hits.push({ ...ex, color: cat.color, columnLabel: "Equipment" });
+                        }
+                      }
+                    }
+                    if (hits.length === 0) {
+                      return (
+                        <div className="py-8 text-center text-sm text-white/35">No exercises match "{exerciseSearch}"</div>
+                      );
+                    }
                     return (
-                      <div key={branch}>
-                        {/* Branch header */}
-                        <div
-                          className="px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] sticky top-0 z-10 border-b"
-                          style={{
-                            background: `${branchColor}22`,
-                            borderColor: `${branchColor}44`,
-                            color: branchColor,
-                          }}
-                        >
-                          {branch}
-                        </div>
-                        {cats.map(cat => {
-                          const items = cat.exercises
-                            .map(entry => {
-                              const dbEx = exercises?.find(e => e.name === entry.dbName);
-                              return dbEx ? { ...entry, id: dbEx.id } : null;
-                            })
-                            .filter(Boolean) as Array<ExerciseEntry & { id: number }>;
-                          if (items.length === 0) return null;
+                      <div className="max-h-[420px] overflow-y-auto">
+                        {hits.map((item, idx) => {
+                          const dbEx = exercises?.find(e => e.name === item.dbName);
+                          if (!dbEx) return null;
+                          const locked = isExerciseLocked(item.nodeId);
+                          const isSelected = dbEx.id.toString() === selectedExerciseId;
                           return (
-                            <div key={cat.label}>
-                              {/* Sub-category header */}
-                              <div
-                                className="px-3 py-1 text-[9px] font-bold uppercase tracking-widest border-b"
-                                style={{
-                                  color: `${branchColor}99`,
-                                  borderColor: "rgba(255,255,255,0.06)",
-                                  background: "rgba(255,255,255,0.025)",
+                            <div
+                              key={`${item.dbName}-${item.nodeId}-${idx}`}
+                              className={`flex items-center gap-1 border-b border-border/30 group transition-colors ${
+                                isSelected ? "" : locked ? "opacity-50 hover:opacity-70" : "hover:bg-white/[0.04]"
+                              }`}
+                              style={isSelected ? { background: `${item.color}18` } : undefined}
+                            >
+                              <button
+                                className="flex-1 text-left text-sm px-3 py-2.5 flex items-center gap-2 cursor-pointer"
+                                style={isSelected ? { color: item.color, fontWeight: 600 } : undefined}
+                                onClick={() => {
+                                  if (locked) {
+                                    setPickerOpen(false);
+                                    setInfoExercise({ name: item.dbName, id: dbEx.id, nodeId: item.nodeId });
+                                  } else {
+                                    setSelectedExerciseId(dbEx.id.toString());
+                                    setPickerOpen(false);
+                                    setExerciseSearch("");
+                                  }
                                 }}
                               >
-                                {cat.label.replace(`${branch.charAt(0)}${branch.slice(1).toLowerCase()} — `, "").replace(/^Push — |^Pull — |^Core — |^Legs — /i, "")}
-                              </div>
-                              {items.map(item => {
-                                const locked = isExerciseLocked(item.nodeId);
-                                const isSelected = item.id.toString() === selectedExerciseId;
-                                return (
-                                  <div
-                                    key={item.id}
-                                    className={`flex items-center gap-1 border-b border-border/30 group transition-colors ${
-                                      isSelected ? "" : locked ? "opacity-50 hover:opacity-70" : "hover:bg-white/[0.04]"
-                                    }`}
-                                    style={isSelected ? { background: `${branchColor}20` } : undefined}
-                                  >
-                                    <button
-                                      className="flex-1 text-left text-sm px-3 py-2.5 truncate flex items-center gap-2 cursor-pointer"
-                                      style={isSelected ? { color: branchColor, fontWeight: 600 } : undefined}
-                                      onClick={() => {
-                                        if (locked) {
-                                          setPickerOpen(false);
-                                          setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId });
-                                        } else {
-                                          setSelectedExerciseId(item.id.toString());
-                                          setPickerOpen(false);
-                                        }
-                                      }}
-                                    >
-                                      {locked && <Lock className="w-3 h-3 shrink-0 text-white/30" />}
-                                      <span className="truncate">{item.label}</span>
-                                    </button>
-                                    <button
-                                      className="p-2 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
-                                      onClick={(e) => { e.stopPropagation(); setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId }); }}
-                                      title={locked ? "View requirements" : "View coaching info"}
-                                    >
-                                      {locked ? <Lock className="w-3.5 h-3.5" /> : <Info className="w-3.5 h-3.5" />}
-                                    </button>
-                                  </div>
-                                );
-                              })}
+                                {locked && <Lock className="w-3 h-3 shrink-0 text-white/30" />}
+                                <span className="flex-1 truncate">{item.label}</span>
+                                <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium shrink-0"
+                                  style={{ color: item.color, background: `${item.color}20` }}>
+                                  {item.columnLabel}
+                                </span>
+                              </button>
+                              <button
+                                className="p-2 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
+                                onClick={e => { e.stopPropagation(); setInfoExercise({ name: item.dbName, id: dbEx.id, nodeId: item.nodeId }); }}
+                              >
+                                {locked ? <Lock className="w-3.5 h-3.5" /> : <Info className="w-3.5 h-3.5" />}
+                              </button>
                             </div>
                           );
                         })}
                       </div>
                     );
-                  });
-                })()}
+                  })()
+                ) : (
+                  /* ── Dual-column Selection Hub ───────────────────────── */
+                  <div className="flex divide-x divide-border/40" style={{ maxHeight: 440 }}>
+
+                    {/* Left: Bodyweight Fundamentals */}
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                      <div className="px-3 py-2 border-b border-border/30 shrink-0 flex items-center gap-1.5">
+                        <Activity className="w-3 h-3 text-primary/70" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.12em] text-primary/80">
+                          Bodyweight Fundamentals
+                        </span>
+                      </div>
+                      <div className="overflow-y-auto flex-1">
+                        {(() => {
+                          const grouped = new Map<BranchKey, typeof EXERCISE_CATEGORIES>();
+                          for (const cat of EXERCISE_CATEGORIES) {
+                            if (!grouped.has(cat.branch)) grouped.set(cat.branch, []);
+                            grouped.get(cat.branch)!.push(cat);
+                          }
+                          const branchOrder: BranchKey[] = ["PUSH", "PULL", "CORE", "LEGS"];
+                          return branchOrder.map(branch => {
+                            const cats = grouped.get(branch);
+                            if (!cats) return null;
+                            const branchColor = cats[0].color;
+                            return (
+                              <div key={branch}>
+                                <div
+                                  className="px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] sticky top-0 z-10 border-b"
+                                  style={{ background: `${branchColor}22`, borderColor: `${branchColor}44`, color: branchColor }}
+                                >
+                                  {branch}
+                                </div>
+                                {cats.map(cat => {
+                                  const items = cat.exercises
+                                    .map(entry => {
+                                      const dbEx = exercises?.find(e => e.name === entry.dbName);
+                                      return dbEx ? { ...entry, id: dbEx.id } : null;
+                                    })
+                                    .filter(Boolean) as Array<ExerciseEntry & { id: number }>;
+                                  if (items.length === 0) return null;
+                                  const subLabel = cat.label.replace(/^(Push|Pull|Core|Legs)\s*[—-]\s*/i, "");
+                                  return (
+                                    <div key={cat.label}>
+                                      <div
+                                        className="px-3 py-1 text-[8.5px] font-bold uppercase tracking-widest border-b"
+                                        style={{ color: `${branchColor}80`, borderColor: "rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}
+                                      >
+                                        {subLabel}
+                                      </div>
+                                      {items.map(item => {
+                                        const locked = isExerciseLocked(item.nodeId);
+                                        const isSelected = item.id.toString() === selectedExerciseId;
+                                        return (
+                                          <div
+                                            key={item.id}
+                                            className={`flex items-center gap-1 border-b border-border/20 group transition-colors ${
+                                              isSelected ? "" : locked ? "opacity-50 hover:opacity-70" : "hover:bg-white/[0.04]"
+                                            }`}
+                                            style={isSelected ? { background: `${branchColor}20` } : undefined}
+                                          >
+                                            <button
+                                              className="flex-1 text-left text-xs px-3 py-2 truncate flex items-center gap-1.5 cursor-pointer"
+                                              style={isSelected ? { color: branchColor, fontWeight: 600 } : undefined}
+                                              onClick={() => {
+                                                if (locked) {
+                                                  setPickerOpen(false);
+                                                  setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId });
+                                                } else {
+                                                  setSelectedExerciseId(item.id.toString());
+                                                  setPickerOpen(false);
+                                                }
+                                              }}
+                                            >
+                                              {locked && <Lock className="w-2.5 h-2.5 shrink-0 text-white/30" />}
+                                              <span className="truncate">{item.label}</span>
+                                            </button>
+                                            <button
+                                              className="p-1.5 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
+                                              onClick={e => { e.stopPropagation(); setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId }); }}
+                                            >
+                                              {locked ? <Lock className="w-3 h-3" /> : <Info className="w-3 h-3" />}
+                                            </button>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* Right: Equipment Specialty */}
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                      <div className="px-3 py-2 border-b border-border/30 shrink-0 flex items-center gap-1.5">
+                        <Dumbbell className="w-3 h-3 text-amber-400/70" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.12em] text-amber-400/80">
+                          Equipment Specialty
+                        </span>
+                      </div>
+                      <div className="overflow-y-auto flex-1">
+                        {(() => {
+                          const grouped = new Map<EquipmentBranchKey, typeof EQUIPMENT_SPECIALTY_CATEGORIES>();
+                          for (const cat of EQUIPMENT_SPECIALTY_CATEGORIES) {
+                            if (!grouped.has(cat.branch)) grouped.set(cat.branch, []);
+                            grouped.get(cat.branch)!.push(cat);
+                          }
+                          const branchMeta: Record<EquipmentBranchKey, { label: string; color: string }> = {
+                            BAR:      { label: "Bar Specialist", color: "#f59e0b" },
+                            RINGS:    { label: "Rings",          color: "#06b6d4" },
+                            WEIGHTED: { label: "Weighted",       color: "#a855f7" },
+                          };
+                          return (["BAR", "RINGS", "WEIGHTED"] as EquipmentBranchKey[]).map(branch => {
+                            const cats = grouped.get(branch);
+                            if (!cats) return null;
+                            const { label: branchLabel, color: branchColor } = branchMeta[branch];
+                            const isCollapsed = collapsedSpecialtyCats[branch] ?? false;
+                            return (
+                              <div key={branch}>
+                                <button
+                                  className="w-full flex items-center px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] sticky top-0 z-10 border-b transition-colors hover:opacity-80"
+                                  style={{ background: `${branchColor}22`, borderColor: `${branchColor}44`, color: branchColor }}
+                                  onClick={() => setCollapsedSpecialtyCats(prev => ({ ...prev, [branch]: !prev[branch] }))}
+                                >
+                                  <span className="flex-1 text-left">{branchLabel}</span>
+                                  {isCollapsed
+                                    ? <ChevronRight className="w-3 h-3 opacity-60" />
+                                    : <ChevronDown className="w-3 h-3 opacity-60" />
+                                  }
+                                </button>
+                                {!isCollapsed && cats.map(cat => {
+                                  const items = cat.exercises
+                                    .map(entry => {
+                                      const dbEx = exercises?.find(e => e.name === entry.dbName);
+                                      return dbEx ? { ...entry, id: dbEx.id } : null;
+                                    })
+                                    .filter(Boolean) as Array<{ dbName: string; label: string; nodeId: string | null; id: number }>;
+                                  if (items.length === 0) return null;
+                                  const subLabel = cat.label.replace(/^(Bar Specialist|Rings|Weighted)\s*[—-]\s*/i, "");
+                                  const hasSubLabel = subLabel !== cat.label && subLabel.length > 0;
+                                  return (
+                                    <div key={cat.label}>
+                                      {hasSubLabel && (
+                                        <div
+                                          className="px-3 py-1 text-[8.5px] font-bold uppercase tracking-widest border-b"
+                                          style={{ color: `${branchColor}80`, borderColor: "rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}
+                                        >
+                                          {subLabel}
+                                        </div>
+                                      )}
+                                      {items.map((item, idx) => {
+                                        const locked = isExerciseLocked(item.nodeId);
+                                        const isSelected = item.id.toString() === selectedExerciseId;
+                                        const isChainStep = idx > 0;
+                                        return (
+                                          <div key={`${item.id}-${item.nodeId}`}>
+                                            {isChainStep && (
+                                              <div className="flex justify-center py-0.5">
+                                                <div className="w-px h-3"
+                                                  style={{
+                                                    background: `repeating-linear-gradient(to bottom,${branchColor}80 0,${branchColor}80 3px,transparent 3px,transparent 6px)`,
+                                                  }}
+                                                />
+                                              </div>
+                                            )}
+                                            <div
+                                              className={`flex items-center gap-1 border-b border-border/20 group transition-colors ${
+                                                isSelected ? "" : locked ? "opacity-50 hover:opacity-70" : "hover:bg-white/[0.04]"
+                                              }`}
+                                              style={isSelected ? { background: `${branchColor}20` } : undefined}
+                                            >
+                                              <button
+                                                className="flex-1 text-left text-xs px-3 py-2 flex items-center gap-1.5 cursor-pointer"
+                                                style={isSelected ? { color: branchColor, fontWeight: 600 } : undefined}
+                                                onClick={() => {
+                                                  if (locked) {
+                                                    setPickerOpen(false);
+                                                    setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId });
+                                                  } else {
+                                                    setSelectedExerciseId(item.id.toString());
+                                                    setPickerOpen(false);
+                                                  }
+                                                }}
+                                              >
+                                                {locked && <Lock className="w-2.5 h-2.5 shrink-0 text-white/30" />}
+                                                <span className="flex-1 truncate">{item.label}</span>
+                                                {isChainStep && (
+                                                  <ChevronRight className="w-2.5 h-2.5 shrink-0 opacity-30" />
+                                                )}
+                                              </button>
+                                              <button
+                                                className="p-1.5 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
+                                                onClick={e => { e.stopPropagation(); setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId }); }}
+                                              >
+                                                {locked ? <Lock className="w-3 h-3" /> : <Info className="w-3 h-3" />}
+                                              </button>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </PopoverContent>
             </Popover>
           </div>

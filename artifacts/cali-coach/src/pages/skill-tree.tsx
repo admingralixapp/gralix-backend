@@ -1174,8 +1174,19 @@ function SpecialtyNodeCard({ skill, isLast }: { skill: EvaluatedSkill; isLast: b
   return (
     <div className="relative flex flex-col items-center">
       {!isLast && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-5 z-0"
-          style={{ backgroundColor: isMastered ? spec.color : "hsl(var(--border))" }} />
+        // Dashed glowing connector — visually distinct from the solid bodyweight tree lines
+        <div className="absolute z-0" style={{ top: "100%", left: "50%", transform: "translateX(-50%)", width: 2, height: 28 }}>
+          <svg width="2" height="28" viewBox="0 0 2 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line
+              x1="1" y1="0" x2="1" y2="28"
+              stroke={isMastered ? spec.color : "hsl(var(--border))"}
+              strokeWidth="2"
+              strokeDasharray="5 4"
+              strokeLinecap="round"
+              style={isMastered ? { filter: `drop-shadow(0 0 3px ${spec.color}90)` } : undefined}
+            />
+          </svg>
+        </div>
       )}
       <div
         className={cn(
@@ -1291,13 +1302,22 @@ function DoubleMasteryBanner({ evaluated }: { evaluated: EvaluatedSkill[] }) {
   );
 }
 
+// Map each equipment tag to which main-tree node it branches from and a human label
+const SPECIALTY_BRANCH_ORIGIN: Record<EquipmentTag, { fromLabel: string; fromNodeId: string }[]> = {
+  bar:      [{ fromLabel: "Pull-Up",     fromNodeId: "pull-2" }],
+  rings:    [{ fromLabel: "Pull-Up",     fromNodeId: "pull-2" }, { fromLabel: "Dip Intro", fromNodeId: "push-3" }],
+  weighted: [{ fromLabel: "Pull-Up",     fromNodeId: "pull-2" }, { fromLabel: "Dip Intro", fromNodeId: "push-3" }],
+};
+
 function EquipmentSpecialtyColumn({ tag, skills }: { tag: EquipmentTag; skills: EvaluatedSkill[] }) {
   const spec          = EQUIPMENT_SPECIALTIES[tag];
   const masteredCount = skills.filter((s) => s.status === "mastered").length;
+  const origins       = SPECIALTY_BRANCH_ORIGIN[tag] ?? [];
 
   return (
     <div className="flex flex-col gap-0">
-      <div className="rounded-xl border-2 p-3 mb-5 flex items-center justify-between"
+      {/* Column header */}
+      <div className="rounded-xl border-2 p-3 mb-2 flex items-center justify-between"
         style={{ borderColor: spec.color, backgroundColor: spec.bgColor }}>
         <div className="flex items-center gap-2">
           <EquipmentTagIcon tag={tag} color={spec.color} />
@@ -1307,6 +1327,24 @@ function EquipmentSpecialtyColumn({ tag, skills }: { tag: EquipmentTag; skills: 
           {masteredCount}/{skills.length}
         </span>
       </div>
+
+      {/* Branch-origin badge — shows which main tree node unlocks this path */}
+      {origins.length > 0 && (
+        <div className="flex items-center gap-1.5 mb-4 px-1">
+          <div className="flex-1 h-px" style={{
+            background: `repeating-linear-gradient(to right,${spec.color}60 0,${spec.color}60 4px,transparent 4px,transparent 8px)`,
+          }} />
+          <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border shrink-0"
+            style={{ color: spec.color, borderColor: `${spec.color}50`, background: `${spec.color}12` }}>
+            unlocks after{" "}
+            {origins.map(o => o.fromLabel).join(" / ")}
+          </span>
+          <div className="flex-1 h-px" style={{
+            background: `repeating-linear-gradient(to right,${spec.color}60 0,${spec.color}60 4px,transparent 4px,transparent 8px)`,
+          }} />
+        </div>
+      )}
+
       <div className="flex flex-col gap-5">
         {skills.map((skill, i) => (
           <SpecialtyNodeCard key={skill.id} skill={skill} isLast={i === skills.length - 1} />
@@ -1332,11 +1370,21 @@ function EquipmentSpecialtySection({ evaluated }: { evaluated: EvaluatedSkill[] 
 
   return (
     <div className="space-y-6">
+      {/* Section header */}
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Equipment Specialty Paths</h2>
-          <p className="text-muted-foreground text-sm mt-1">
-            Parallel paths that unlock after mastering foundational movements.
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-2xl font-bold tracking-tight">Equipment Specialty Paths</h2>
+            {/* Visual cue: dashed separator distinguishes specialty from main tree */}
+            <span className="hidden sm:flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full border border-dashed border-amber-500/40 text-amber-400/70 bg-amber-950/20">
+              <svg width="16" height="8" viewBox="0 0 16 8" fill="none" className="shrink-0">
+                <line x1="0" y1="4" x2="16" y2="4" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 3" strokeLinecap="round" />
+              </svg>
+              Branching Paths
+            </span>
+          </div>
+          <p className="text-muted-foreground text-sm">
+            Parallel specialty paths — dashed connectors indicate equipment-specific progressions.
           </p>
         </div>
         <div className="text-right shrink-0">
