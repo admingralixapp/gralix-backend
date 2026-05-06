@@ -209,9 +209,9 @@ const PULL_NODES: SkillNode[] = [
     level: 3,
     levelName: "Intermediate",
     type: "standard",
-    title: "Negative Pull-Up",
+    title: "Negative Pull-Ups",
     description: "Start from chin-over-bar and lower yourself as slowly as possible. This eccentric-focused variation builds the explosive pulling power needed for the Muscle-Up path.",
-    exercises: ["Negative Pull-Up"],
+    exercises: ["Negative Pull-Ups"],
     masteryRequirement: {
       description: "Complete 5 reps with ≥78% form score in 4 sessions",
       minReps: 5,

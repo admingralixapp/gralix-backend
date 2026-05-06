@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useListExercises, useListSessions, useCreateSession, useUpdateSession, useCreateRep } from "@workspace/api-client-react";
 import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-vision";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers } from "lucide-react";
+import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, cancelSpeech, setVoiceMuted } from "@/lib/voice-service";
@@ -33,7 +33,7 @@ import {
   RINGS_STABILITY_BONUS,
   RINGS_JITTER_THRESHOLD,
 } from "@/lib/equipment";
-import { evaluateSkillTree, type EvaluatedSkill, type SessionSummary } from "@/lib/skill-tree";
+import { evaluateSkillTree, ALL_SKILL_NODES, type EvaluatedSkill, type SessionSummary } from "@/lib/skill-tree";
 import { SessionResults, type SessionResultsProps } from "@/components/session-results";
 import { PovReview }                                from "@/components/pov-review";
 import { RepRecorder, type BestRepData, type RepReviewPayload } from "@/lib/rep-recorder";
@@ -50,64 +50,176 @@ import {
 
 // ─── Exercise menu ────────────────────────────────────────────────────────────
 
-const EXERCISE_CATEGORIES = [
+type BranchKey = "PUSH" | "PULL" | "CORE" | "LEGS";
+
+interface ExerciseEntry {
+  dbName: string;
+  label: string;
+  /** Skill-tree node ID that first introduces this exercise — used for locking. */
+  nodeId: string | null;
+}
+
+interface ExerciseCategory {
+  label: string;
+  branch: BranchKey;
+  color: string;
+  exercises: ExerciseEntry[];
+}
+
+const EXERCISE_CATEGORIES: ExerciseCategory[] = [
+  // ── PUSH (orange) ─────────────────────────────────────────────────────────
   {
-    label: "Push",
+    label: "Push — Main",
+    branch: "PUSH",
+    color: "#f97316",
     exercises: [
-      { dbName: "Wall Push-Up",    label: "Wall Push-Up (Lv.1)" },
-      { dbName: "Incline Push-Up", label: "Incline Push-Up (Lv.2)" },
-      { dbName: "Knee Push-Up",    label: "Knee Push-Up (Lv.3)" },
-      { dbName: "Push-Up",         label: "Full Push-Up (Lv.4)" },
-      { dbName: "Diamond Push-Up", label: "Diamond Push-Up (Lv.5)" },
+      { dbName: "Push-Up",                label: "Push-Up",                nodeId: "push-1" },
+      { dbName: "Diamond Push-Up",        label: "Diamond Push-Up",        nodeId: "push-3" },
+      { dbName: "Archer Push-Up",         label: "Archer Push-Up",         nodeId: "push-4" },
+      { dbName: "Pseudo Planche Push-Up", label: "Pseudo Planche Push-Up", nodeId: "push-5" },
     ],
   },
+  {
+    label: "Push — Overhead Path",
+    branch: "PUSH",
+    color: "#f97316",
+    exercises: [
+      { dbName: "Pike Push-Up",          label: "Pike Push-Up",           nodeId: "push-oh-1" },
+      { dbName: "Elevated Pike Push-Up", label: "Elevated Pike Push-Up",  nodeId: "push-oh-2" },
+      { dbName: "Handstand Push-Up",     label: "Handstand Push-Up",      nodeId: "push-oh-3" },
+      { dbName: "Handstand",             label: "Handstand",              nodeId: "push-oh-4" },
+    ],
+  },
+  {
+    label: "Push — Planche Path",
+    branch: "PUSH",
+    color: "#f97316",
+    exercises: [
+      { dbName: "Planche Lean",     label: "Planche Lean",     nodeId: "push-pp-1" },
+      { dbName: "Tuck Planche",     label: "Tuck Planche",     nodeId: "push-pp-2" },
+      { dbName: "Straddle Planche", label: "Straddle Planche", nodeId: "push-pp-3" },
+      { dbName: "Planche",          label: "Full Planche",     nodeId: "push-pp-4" },
+    ],
+  },
+  // ── PULL (blue) ───────────────────────────────────────────────────────────
   {
     label: "Pull — Foundation",
+    branch: "PULL",
+    color: "#3b82f6",
     exercises: [
-      { dbName: "Scapular Shrugs",   label: "Scapular Shrugs (Lv.1)" },
-      { dbName: "Australian Rows",   label: "Australian Rows (Lv.2)" },
-      { dbName: "Negative Pull-Ups", label: "Negative Pull-Ups (Lv.3)" },
-      { dbName: "Pull-Up",           label: "Full Pull-Ups (Lv.4)" },
+      { dbName: "Scapular Shrugs",   label: "Scapular Shrugs",   nodeId: "pull-1" },
+      { dbName: "Australian Rows",   label: "Australian Rows",   nodeId: null },
+      { dbName: "Negative Pull-Ups", label: "Negative Pull-Ups", nodeId: "pull-3" },
+      { dbName: "Pull-Up",           label: "Pull-Up",           nodeId: "pull-1" },
     ],
   },
   {
-    label: "Pull — Static Path 🧲",
+    label: "Pull — Front Lever Path",
+    branch: "PULL",
+    color: "#3b82f6",
     exercises: [
-      { dbName: "Tuck Front Lever",     label: "Tuck Front Lever (Lv.3)" },
-      { dbName: "Straddle Front Lever", label: "Straddle Front Lever (Lv.4)" },
-      { dbName: "Full Front Lever",     label: "Full Front Lever (Lv.5)" },
+      { dbName: "Tuck Front Lever",     label: "Tuck Front Lever",     nodeId: "pull-fl-1" },
+      { dbName: "Straddle Front Lever", label: "Straddle Front Lever", nodeId: "pull-fl-2" },
+      { dbName: "Full Front Lever",     label: "Full Front Lever",     nodeId: "pull-fl-3" },
     ],
   },
   {
-    label: "Pull — Explosive Path ⚡",
+    label: "Pull — Muscle-Up Path",
+    branch: "PULL",
+    color: "#3b82f6",
     exercises: [
-      { dbName: "Explosive Pull-Up", label: "Explosive Pull-Ups (Lv.3)" },
-      { dbName: "Muscle-Up",         label: "Muscle-Up (Lv.4–5)" },
+      { dbName: "Chest-to-Bar Pull-Up", label: "Chest-to-Bar Pull-Up", nodeId: "pull-mu-1" },
+      { dbName: "Muscle-Up",            label: "Muscle-Up",            nodeId: "pull-mu-2" },
     ],
   },
   {
-    label: "Legs",
+    label: "Pull — Advanced Moves",
+    branch: "PULL",
+    color: "#3b82f6",
     exercises: [
-      { dbName: "Assisted Squat", label: "Assisted Squat (Lv.1)" },
-      { dbName: "Squat",          label: "Air Squat (Lv.2)" },
-      { dbName: "Archer Squat",   label: "Archer Squat (Lv.3)" },
-      { dbName: "Nordic Curls",   label: "Nordic Curls (Lv.4)" },
-      { dbName: "Pistol Squat",   label: "Pistol Squat (Lv.5)" },
+      { dbName: "Archer Pull-Up",     label: "Archer Pull-Up",     nodeId: "pull-am-1" },
+      { dbName: "Typewriter Pull-Up", label: "Typewriter Pull-Up", nodeId: "pull-am-2" },
+    ],
+  },
+  // ── CORE (purple) ─────────────────────────────────────────────────────────
+  {
+    label: "Core — Main",
+    branch: "CORE",
+    color: "#8b5cf6",
+    exercises: [
+      { dbName: "Plank",     label: "Plank",      nodeId: "core-1" },
+      { dbName: "Side Plank", label: "Side Plank", nodeId: "core-2" },
     ],
   },
   {
-    label: "Core",
+    label: "Core — Hollow Holds Path",
+    branch: "CORE",
+    color: "#8b5cf6",
     exercises: [
-      { dbName: "Plank",             label: "Plank (Static)" },
-      { dbName: "Dragon Flag",       label: "Dragon Flag (Static, Lv.4)" },
-      { dbName: "Human Flag",        label: "Human Flag (Static, Lv.5)" },
-      { dbName: "Lunge",             label: "Lunge" },
-      { dbName: "Burpee",            label: "Burpee" },
-      { dbName: "Dip",               label: "Dip" },
-      { dbName: "Handstand Push-Up", label: "Handstand Push-Up (Lv.5)" },
+      { dbName: "Dead Bug",           label: "Dead Bug",            nodeId: "core-hh-1" },
+      { dbName: "Superman",           label: "Superman",            nodeId: "core-hh-2" },
+      { dbName: "Hollow Body Hold",   label: "Hollow Body Hold",    nodeId: "core-hh-3" },
+      { dbName: "Dragon Flag Negative", label: "Dragon Flag Negative", nodeId: "core-hh-4" },
+      { dbName: "Dragon Flag",        label: "Dragon Flag",         nodeId: "core-hh-5" },
     ],
   },
-] as const;
+  {
+    label: "Core — Bar Based Path",
+    branch: "CORE",
+    color: "#8b5cf6",
+    exercises: [
+      { dbName: "Active Hang",      label: "Active Hang",       nodeId: "core-bb-1" },
+      { dbName: "Hanging Knee Tuck", label: "Hanging Knee Tuck", nodeId: "core-bb-2" },
+      { dbName: "Hanging Leg Raise", label: "Hanging Leg Raise", nodeId: "core-bb-3" },
+      { dbName: "Toes to Bar",      label: "Toes to Bar",       nodeId: "core-bb-4" },
+    ],
+  },
+  {
+    label: "Core — Human Flag Path",
+    branch: "CORE",
+    color: "#8b5cf6",
+    exercises: [
+      { dbName: "Windshield Wiper",   label: "Windshield Wipers",  nodeId: "core-hf-1" },
+      { dbName: "Tucked Human Flag",  label: "Tucked Human Flag",  nodeId: "core-hf-2" },
+      { dbName: "One-Leg Human Flag", label: "One-Leg Human Flag", nodeId: "core-hf-3" },
+      { dbName: "Human Flag",         label: "Human Flag",         nodeId: "core-hf-4" },
+    ],
+  },
+  // ── LEGS (green) ──────────────────────────────────────────────────────────
+  {
+    label: "Legs — Main",
+    branch: "LEGS",
+    color: "#22c55e",
+    exercises: [
+      { dbName: "Squat",                label: "Squat",                nodeId: "legs-1" },
+      { dbName: "Shrimp Squat",         label: "Shrimp Squat",         nodeId: "legs-3" },
+      { dbName: "Bulgarian Split Squat", label: "Bulgarian Split Squat", nodeId: "legs-4" },
+      { dbName: "Nordic Curls",         label: "Nordic Curls",         nodeId: null },
+    ],
+  },
+  {
+    label: "Legs — L-Sit Path",
+    branch: "LEGS",
+    color: "#22c55e",
+    exercises: [
+      { dbName: "Pike Stretch",      label: "Pike Stretch",       nodeId: "legs-ls-1" },
+      { dbName: "L-Sit Compression", label: "L-Sit Compression",  nodeId: "legs-ls-2" },
+      { dbName: "Tuck L-Sit",        label: "Tuck L-Sit",         nodeId: "legs-ls-3" },
+      { dbName: "L-Sit",             label: "L-Sit",              nodeId: "legs-ls-4" },
+    ],
+  },
+  {
+    label: "Legs — Pistol Squat Path",
+    branch: "LEGS",
+    color: "#22c55e",
+    exercises: [
+      { dbName: "Step-Up",             label: "Step-Up",             nodeId: "legs-ps-1" },
+      { dbName: "Assisted Pistol Squat", label: "Assisted Pistol Squat", nodeId: "legs-ps-2" },
+      { dbName: "Close-Stance Squat",  label: "Close-Stance Squat",  nodeId: "legs-ps-3" },
+      { dbName: "Pistol Squat",        label: "Pistol Squat",        nodeId: "legs-ps-4" },
+    ],
+  },
+];
 
 // ─── Sync thresholds ──────────────────────────────────────────────────────────
 
@@ -121,32 +233,77 @@ const DETECT_INTERVAL_MS = 50; // 20 fps detection
 // ─── Focal joints per exercise (Minimalist Mode) ──────────────────────────────
 // Indices follow the MediaPipe 33-keypoint model (see exercise-registry LM map).
 const FOCAL_JOINTS: Record<string, number[]> = {
-  "Push-Up":              [11, 13, 15], // L shoulder, L elbow, L wrist
-  "Wall Push-Up":         [11, 13, 15],
-  "Incline Push-Up":      [11, 13, 15],
-  "Knee Push-Up":         [11, 13, 15],
-  "Diamond Push-Up":      [11, 13, 15],
-  "Pull-Up":              [11, 13, 15],
-  "Negative Pull-Ups":    [11, 13, 15],
-  "Australian Rows":      [11, 13, 15],
-  "Scapular Shrugs":      [11, 12, 23], // L shoulder, R shoulder, L hip
-  "Muscle-Up":            [11, 13, 15],
-  "Explosive Pull-Up":    [11, 13, 15],
-  "Tuck Front Lever":     [11, 13, 23], // shoulder, elbow, hip
-  "Straddle Front Lever": [11, 13, 23],
-  "Full Front Lever":     [11, 13, 23],
-  "Squat":                [23, 25, 27], // hip, knee, ankle
-  "Assisted Squat":       [23, 25, 27],
-  "Archer Squat":         [23, 25, 27],
-  "Pistol Squat":         [23, 25, 27],
-  "Nordic Curls":         [25, 26, 27], // L knee, R knee, L ankle
-  "Lunge":                [23, 25, 27],
-  "Plank":                [11, 23, 27], // shoulder, hip, ankle
-  "Dragon Flag":          [11, 23, 25],
-  "Human Flag":           [11, 12, 13],
-  "Burpee":               [11, 23, 27],
-  "Dip":                  [11, 13, 15],
-  "Handstand Push-Up":    [11, 13, 15],
+  // ── Push ────────────────────────────────────────────────────────────────────
+  "Push-Up":                 [11, 13, 15], // L shoulder, L elbow, L wrist
+  "Wall Push-Up":            [11, 13, 15],
+  "Incline Push-Up":         [11, 13, 15],
+  "Knee Push-Up":            [11, 13, 15],
+  "Diamond Push-Up":         [11, 13, 15],
+  "Archer Push-Up":          [11, 13, 15],
+  "Pseudo Planche Push-Up":  [11, 13, 15],
+  "Pike Push-Up":            [11, 13, 15],
+  "Elevated Pike Push-Up":   [11, 13, 15],
+  "Handstand Push-Up":       [11, 13, 15],
+  "Handstand":               [11, 13, 15],
+  "Planche Lean":            [11, 15, 23], // shoulder, wrist, hip
+  "Tuck Planche":            [11, 15, 23],
+  "Straddle Planche":        [11, 15, 23],
+  "Planche":                 [11, 15, 23],
+  "Dip":                     [11, 13, 15],
+  // ── Pull ────────────────────────────────────────────────────────────────────
+  "Pull-Up":                 [11, 13, 15],
+  "Negative Pull-Ups":       [11, 13, 15],
+  "Australian Rows":         [11, 13, 15],
+  "Scapular Shrugs":         [11, 12, 23], // L shoulder, R shoulder, L hip
+  "Muscle-Up":               [11, 13, 15],
+  "Explosive Pull-Up":       [11, 13, 15],
+  "Chest-to-Bar Pull-Up":    [11, 13, 15],
+  "Archer Pull-Up":          [11, 13, 15],
+  "Typewriter Pull-Up":      [11, 13, 15],
+  "Tuck Front Lever":        [11, 13, 23], // shoulder, elbow, hip
+  "Straddle Front Lever":    [11, 13, 23],
+  "Full Front Lever":        [11, 13, 23],
+  "Ring Support Hold":       [11, 13, 15],
+  "Ring Pull-Up":            [11, 13, 15],
+  "Ring Muscle-Up":          [11, 13, 15],
+  "Ring Dip":                [11, 13, 15],
+  "Weighted Pull-Up":        [11, 13, 15],
+  "Weighted Muscle-Up":      [11, 13, 15],
+  "Weighted Dip":            [11, 13, 15],
+  // ── Core ────────────────────────────────────────────────────────────────────
+  "Plank":                   [11, 23, 27], // shoulder, hip, ankle
+  "Side Plank":              [11, 23, 27],
+  "Dead Bug":                [23, 25, 27], // hip, knee, ankle
+  "Superman":                [11, 23, 27],
+  "Hollow Body Hold":        [11, 23, 27],
+  "Dragon Flag Negative":    [11, 23, 27],
+  "Dragon Flag":             [11, 23, 25],
+  "Active Hang":             [15, 11, 23], // wrist, shoulder, hip
+  "Hanging Knee Tuck":       [23, 25, 27],
+  "Hanging Leg Raise":       [23, 25, 27],
+  "Toes to Bar":             [15, 23, 27],
+  "Windshield Wiper":        [23, 27, 28], // hip, L ankle, R ankle
+  "Tucked Human Flag":       [11, 23, 25],
+  "One-Leg Human Flag":      [11, 23, 27],
+  "Human Flag":              [11, 12, 13],
+  // ── Legs ────────────────────────────────────────────────────────────────────
+  "Squat":                   [23, 25, 27], // hip, knee, ankle
+  "Assisted Squat":          [23, 25, 27],
+  "Archer Squat":            [23, 25, 27],
+  "Pistol Squat":            [23, 25, 27],
+  "Shrimp Squat":            [23, 25, 27],
+  "Bulgarian Split Squat":   [23, 25, 27],
+  "Nordic Curls":            [25, 26, 27], // L knee, R knee, L ankle
+  "Pike Stretch":            [23, 25, 27],
+  "L-Sit Compression":       [23, 25, 27],
+  "Tuck L-Sit":              [15, 23, 27],
+  "L-Sit":                   [15, 23, 27],
+  "Step-Up":                 [23, 25, 27],
+  "Assisted Pistol Squat":   [23, 25, 27],
+  "Close-Stance Squat":      [23, 25, 27],
+  // ── Other ───────────────────────────────────────────────────────────────────
+  "Lunge":                   [23, 25, 27],
+  "Burpee":                  [11, 23, 27],
 };
 
 // ─── Landmark interpolation helper ────────────────────────────────────────────
@@ -427,6 +584,30 @@ export function Workout() {
     { limit: 500, offset: 0 },
     { query: { queryKey: ["/api/sessions", { limit: 500 }] } },
   );
+
+  const evaluatedSkills = useMemo(() => {
+    if (!sessionHistory) return {} as Record<string, EvaluatedSkill>;
+    const history: SessionSummary[] = sessionHistory.map(s => ({
+      exerciseName: s.exerciseName,
+      totalReps: s.totalReps ?? null,
+      avgFormScore: s.avgFormScore != null ? Number(s.avgFormScore) : null,
+      completedAt: s.completedAt ?? null,
+    }));
+    const result = evaluateSkillTree(history);
+    const map: Record<string, EvaluatedSkill> = {};
+    for (const ev of result) map[ev.id] = ev;
+    return map;
+  }, [sessionHistory]);
+
+  function isExerciseLocked(nodeId: string | null): boolean {
+    if (!nodeId) return false;
+    const node = ALL_SKILL_NODES.find(n => n.id === nodeId);
+    if (!node) return false;
+    const prereqId = node.prerequisiteId;
+    if (!prereqId) return false;
+    const prereqStatus = evaluatedSkills[prereqId]?.status;
+    return prereqStatus !== "mastered";
+  }
 
   useEffect(() => {
     if (!exercises || selectedExerciseId) return;
@@ -2265,46 +2446,92 @@ export function Workout() {
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-0 max-h-[440px] overflow-y-auto" align="start">
-                {EXERCISE_CATEGORIES.map(cat => {
-                  const items = cat.exercises
-                    .map(entry => {
-                      const dbEx = exercises?.find(e => e.name === entry.dbName);
-                      return dbEx ? { ...entry, id: dbEx.id } : null;
-                    })
-                    .filter(Boolean) as Array<{ dbName: string; label: string; id: number }>;
-                  if (items.length === 0) return null;
-                  return (
-                    <div key={cat.label}>
-                      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/70 bg-secondary/30 border-b border-border sticky top-0">
-                        {cat.label}
-                      </div>
-                      {items.map(item => (
+                {(() => {
+                  const grouped = new Map<BranchKey, typeof EXERCISE_CATEGORIES>();
+                  for (const cat of EXERCISE_CATEGORIES) {
+                    if (!grouped.has(cat.branch)) grouped.set(cat.branch, []);
+                    grouped.get(cat.branch)!.push(cat);
+                  }
+                  const branchOrder: BranchKey[] = ["PUSH", "PULL", "CORE", "LEGS"];
+                  return branchOrder.map(branch => {
+                    const cats = grouped.get(branch);
+                    if (!cats) return null;
+                    const branchColor = cats[0].color;
+                    return (
+                      <div key={branch}>
+                        {/* Branch header */}
                         <div
-                          key={item.id}
-                          className={`flex items-center gap-1 border-b border-border/40 group hover:bg-secondary/40 transition-colors ${
-                            item.id.toString() === selectedExerciseId ? "bg-primary/10" : ""
-                          }`}
+                          className="px-3 py-2 text-[11px] font-black uppercase tracking-[0.12em] sticky top-0 z-10 border-b"
+                          style={{
+                            background: `${branchColor}22`,
+                            borderColor: `${branchColor}44`,
+                            color: branchColor,
+                          }}
                         >
-                          <button
-                            className={`flex-1 text-left text-sm px-3 py-2.5 truncate ${
-                              item.id.toString() === selectedExerciseId ? "text-primary font-medium" : "text-foreground"
-                            }`}
-                            onClick={() => { setSelectedExerciseId(item.id.toString()); setPickerOpen(false); }}
-                          >
-                            {item.label}
-                          </button>
-                          <button
-                            className="p-2 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
-                            onClick={(e) => { e.stopPropagation(); setInfoExercise({ name: item.dbName, id: item.id }); }}
-                            title="View coaching info"
-                          >
-                            <Info className="w-3.5 h-3.5" />
-                          </button>
+                          {branch}
                         </div>
-                      ))}
-                    </div>
-                  );
-                })}
+                        {cats.map(cat => {
+                          const items = cat.exercises
+                            .map(entry => {
+                              const dbEx = exercises?.find(e => e.name === entry.dbName);
+                              return dbEx ? { ...entry, id: dbEx.id } : null;
+                            })
+                            .filter(Boolean) as Array<ExerciseEntry & { id: number }>;
+                          if (items.length === 0) return null;
+                          return (
+                            <div key={cat.label}>
+                              {/* Sub-category header */}
+                              <div
+                                className="px-3 py-1 text-[9px] font-bold uppercase tracking-widest border-b"
+                                style={{
+                                  color: `${branchColor}99`,
+                                  borderColor: "rgba(255,255,255,0.06)",
+                                  background: "rgba(255,255,255,0.025)",
+                                }}
+                              >
+                                {cat.label.replace(`${branch.charAt(0)}${branch.slice(1).toLowerCase()} — `, "").replace(/^Push — |^Pull — |^Core — |^Legs — /i, "")}
+                              </div>
+                              {items.map(item => {
+                                const locked = isExerciseLocked(item.nodeId);
+                                const isSelected = item.id.toString() === selectedExerciseId;
+                                return (
+                                  <div
+                                    key={item.id}
+                                    className={`flex items-center gap-1 border-b border-border/30 group transition-colors ${
+                                      isSelected ? "" : locked ? "opacity-50" : "hover:bg-white/[0.04]"
+                                    }`}
+                                    style={isSelected ? { background: `${branchColor}20` } : undefined}
+                                  >
+                                    <button
+                                      className={`flex-1 text-left text-sm px-3 py-2.5 truncate flex items-center gap-2 ${
+                                        locked ? "cursor-not-allowed" : "cursor-pointer"
+                                      }`}
+                                      style={isSelected ? { color: branchColor, fontWeight: 600 } : undefined}
+                                      disabled={locked}
+                                      onClick={() => { if (!locked) { setSelectedExerciseId(item.id.toString()); setPickerOpen(false); } }}
+                                    >
+                                      {locked && <Lock className="w-3 h-3 shrink-0 text-white/30" />}
+                                      <span className="truncate">{item.label}</span>
+                                    </button>
+                                    {!locked && (
+                                      <button
+                                        className="p-2 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
+                                        onClick={(e) => { e.stopPropagation(); setInfoExercise({ name: item.dbName, id: item.id }); }}
+                                        title="View coaching info"
+                                      >
+                                        <Info className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  });
+                })()}
               </PopoverContent>
             </Popover>
           </div>
