@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@clerk/react";
 import { useEffect } from "react";
 import { GOAL_LABELS, type MobilityGoal } from "./mobility-service";
 
 // ---------------------------------------------------------------------------
-// Shared fetch helper
+// Shared fetch helpers
 // ---------------------------------------------------------------------------
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, { credentials: "include", ...options });
@@ -12,6 +13,23 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
     throw new Error(body.error ?? "Request failed");
   }
   return res.json() as Promise<T>;
+}
+
+async function apiFetchAuth<T>(
+  url: string,
+  token: string | null,
+  options?: RequestInit,
+): Promise<T> {
+  const extraHeaders: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+  return apiFetch<T>(url, {
+    ...options,
+    headers: {
+      ...(options?.headers as Record<string, string> | undefined),
+      ...extraHeaders,
+    },
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -38,10 +56,13 @@ export interface MobilityStatus {
 // Hooks
 // ---------------------------------------------------------------------------
 export function useMobilityStatus() {
+  const { getToken } = useAuth();
   return useQuery<MobilityStatus | null>({
     queryKey: ["/api/mobility/status"],
-    queryFn: () =>
-      apiFetch<MobilityStatus>("/api/mobility/status").catch(() => null),
+    queryFn: async () => {
+      const token = await getToken();
+      return apiFetchAuth<MobilityStatus>("/api/mobility/status", token).catch(() => null);
+    },
     staleTime: 60_000,
     retry: false,
   });
@@ -49,16 +70,20 @@ export function useMobilityStatus() {
 
 export function useCompleteMobility() {
   const qc = useQueryClient();
+  const { getToken } = useAuth();
   return useMutation({
-    mutationFn: ({ goal }: { goal?: string }) =>
-      apiFetch<{ completedToday: boolean; currentStreak: number }>(
+    mutationFn: async ({ goal }: { goal?: string }) => {
+      const token = await getToken();
+      return apiFetchAuth<{ completedToday: boolean; currentStreak: number }>(
         "/api/mobility/complete",
+        token,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ goal }),
         },
-      ),
+      );
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/mobility/status"] });
     },
@@ -67,13 +92,16 @@ export function useCompleteMobility() {
 
 export function useUpdateMobilitySettings() {
   const qc = useQueryClient();
+  const { getToken } = useAuth();
   return useMutation({
-    mutationFn: (settings: Partial<MobilitySettings>) =>
-      apiFetch<MobilitySettings>("/api/mobility/settings", {
+    mutationFn: async (settings: Partial<MobilitySettings>) => {
+      const token = await getToken();
+      return apiFetchAuth<MobilitySettings>("/api/mobility/settings", token, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
-      }),
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["/api/mobility/status"] });
     },

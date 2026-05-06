@@ -18,6 +18,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, AlertCircle, Upload, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@clerk/react";
 import { uploadVideoBlob } from "./community-feed";
 import { storeClip } from "./clip-store";
 
@@ -144,6 +145,7 @@ function FloatingUploadBar({ jobs }: { jobs: UploadJob[] }) {
 export function UploadManagerProvider({ children }: { children: ReactNode }) {
   const [jobs, setJobs] = useState<UploadJob[]>([]);
   const qc = useQueryClient();
+  const { getToken } = useAuth();
   const jobsRef = useRef(jobs);
   jobsRef.current = jobs;
 
@@ -198,10 +200,14 @@ export function UploadManagerProvider({ children }: { children: ReactNode }) {
           } else {
             // mode === "feed" — create community post
             updateJob(id, { status: "posting" });
+            const token = await getToken();
             await fetch("/api/community-feed", {
               method:      "POST",
               credentials: "include",
-              headers:     { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
               body: JSON.stringify({
                 exerciseName: opts.exerciseName,
                 caption:      opts.caption ?? "",
@@ -224,7 +230,7 @@ export function UploadManagerProvider({ children }: { children: ReactNode }) {
         }
       })();
     },
-    [qc, updateJob, removeJob],
+    [qc, updateJob, removeJob, getToken],
   );
 
   const isActive = jobs.some(

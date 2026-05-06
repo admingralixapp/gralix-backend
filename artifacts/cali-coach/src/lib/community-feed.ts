@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@clerk/react";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -42,6 +43,23 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
     throw new Error((body as { error?: string }).error ?? "Request failed");
   }
   return res.json() as Promise<T>;
+}
+
+async function apiFetchAuth<T>(
+  url: string,
+  token: string | null,
+  options?: RequestInit,
+): Promise<T> {
+  const extraHeaders: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+  return apiFetch<T>(url, {
+    ...options,
+    headers: {
+      ...(options?.headers as Record<string, string> | undefined),
+      ...extraHeaders,
+    },
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -89,19 +107,22 @@ export function useCommunityFeed(exerciseFilter?: string) {
 
 export function useCreatePost() {
   const qc = useQueryClient();
+  const { getToken } = useAuth();
   return useMutation({
-    mutationFn: (body: {
+    mutationFn: async (body: {
       exerciseName: string;
       caption?: string;
       videoObjectPath?: string;
       isAiVerified?: boolean;
       sessionId?: number;
-    }) =>
-      apiFetch<FeedPost>("/api/community-feed", {
+    }) => {
+      const token = await getToken();
+      return apiFetchAuth<FeedPost>("/api/community-feed", token, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-      }),
+      });
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["community-feed"] });
     },
@@ -110,11 +131,14 @@ export function useCreatePost() {
 
 export function useToggleLike(postId: number) {
   const qc = useQueryClient();
+  const { getToken } = useAuth();
   return useMutation({
-    mutationFn: () =>
-      apiFetch<{ liked: boolean; likeCount: number }>(`/api/community-feed/${postId}/like`, {
+    mutationFn: async () => {
+      const token = await getToken();
+      return apiFetchAuth<{ liked: boolean; likeCount: number }>(`/api/community-feed/${postId}/like`, token, {
         method: "POST",
-      }),
+      });
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["community-feed"] });
     },
@@ -135,13 +159,16 @@ export function usePostComments(postId: number, enabled = true) {
 
 export function useAddComment(postId: number) {
   const qc = useQueryClient();
+  const { getToken } = useAuth();
   return useMutation({
-    mutationFn: (content: string) =>
-      apiFetch<FeedComment>(`/api/community-feed/${postId}/comments`, {
+    mutationFn: async (content: string) => {
+      const token = await getToken();
+      return apiFetchAuth<FeedComment>(`/api/community-feed/${postId}/comments`, token, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
-      }),
+      });
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["feed-comments", postId] });
       void qc.invalidateQueries({ queryKey: ["community-feed"] });

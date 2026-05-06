@@ -145,7 +145,7 @@ export function Settings() {
       },
       {
         onSuccess: () => {
-          toast({ title: "Profile saved" });
+          toast({ title: "Profile Updated", description: "Your profile changes have been saved." });
           setEditing(false);
         },
         onError: (err: Error) =>

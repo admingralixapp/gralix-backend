@@ -108,6 +108,7 @@ router.post("/users/me", requireAuthMiddleware, async (req: Request, res: Respon
       .onConflictDoUpdate({
         target: usersTable.clerkId,
         set: {
+          username: safeUsername,
           displayName: displayName.slice(0, 128),
           avatarUrl: avatarUrl ?? null,
           country,
