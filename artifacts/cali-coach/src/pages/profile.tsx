@@ -11,9 +11,12 @@ import {
   Trophy,
   Dumbbell,
   Medal,
+  Pencil,
 } from "lucide-react";
+import { useLocation } from "wouter";
 import {
   useFriendProfile,
+  useMyProfile,
   useSendFriendRequest,
   useRespondToRequest,
 } from "@/lib/social";
@@ -116,7 +119,9 @@ function ProfileContent() {
   const params = useParams<{ username: string }>();
   const username = params.username ?? "";
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
+  const { data: myProfile } = useMyProfile();
   const { data: profile, isLoading, error } = useFriendProfile(username);
   const sendRequest = useSendFriendRequest();
   const respondRequest = useRespondToRequest();
@@ -191,6 +196,7 @@ function ProfileContent() {
 
   const { friendRequestStatus, friendRequestId, friendRequestFromMe } = profile as any;
 
+  const isOwnProfile = !!myProfile && myProfile.id === user.id;
   const displayName = user.displayName || user.username || "Athlete";
 
   return (
@@ -239,38 +245,50 @@ function ProfileContent() {
           </div>
         </div>
 
-        {/* Friend request button */}
+        {/* Own profile → Edit button; other user → friend request controls */}
         <Show when="signed-in">
-          {!friendRequestStatus && (
+          {isOwnProfile ? (
             <button
-              onClick={handleSendRequest}
-              disabled={sendRequest.isPending}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              onClick={() => setLocation("/settings")}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-sm font-medium hover:bg-secondary/50 transition-colors"
             >
-              <UserPlus className="w-4 h-4" />
-              Add Friend
+              <Pencil className="w-4 h-4" />
+              Edit Profile
             </button>
-          )}
-          {friendRequestStatus === "pending" && friendRequestFromMe && (
-            <span className="text-xs text-muted-foreground px-3 py-2 rounded-lg border border-border">
-              Request Sent
-            </span>
-          )}
-          {friendRequestStatus === "pending" && !friendRequestFromMe && (
-            <button
-              onClick={() => handleAccept(friendRequestId)}
-              disabled={respondRequest.isPending}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              <UserCheck className="w-4 h-4" />
-              Accept Request
-            </button>
-          )}
-          {friendRequestStatus === "accepted" && (
-            <span className="text-xs text-primary font-medium flex items-center gap-1">
-              <UserCheck className="w-3.5 h-3.5" />
-              Friends
-            </span>
+          ) : (
+            <>
+              {!friendRequestStatus && (
+                <button
+                  onClick={handleSendRequest}
+                  disabled={sendRequest.isPending}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Add Friend
+                </button>
+              )}
+              {friendRequestStatus === "pending" && friendRequestFromMe && (
+                <span className="text-xs text-muted-foreground px-3 py-2 rounded-lg border border-border">
+                  Request Sent
+                </span>
+              )}
+              {friendRequestStatus === "pending" && !friendRequestFromMe && (
+                <button
+                  onClick={() => handleAccept(friendRequestId)}
+                  disabled={respondRequest.isPending}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  Accept Request
+                </button>
+              )}
+              {friendRequestStatus === "accepted" && (
+                <span className="text-xs text-primary font-medium flex items-center gap-1">
+                  <UserCheck className="w-3.5 h-3.5" />
+                  Friends
+                </span>
+              )}
+            </>
           )}
         </Show>
       </div>
