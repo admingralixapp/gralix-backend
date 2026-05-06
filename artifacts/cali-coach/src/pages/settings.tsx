@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useUser, useClerk } from "@clerk/react";
-import { Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video, AlertTriangle, Timer, Camera } from "lucide-react";
+import { Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video, AlertTriangle, Timer, Camera, Volume2, FlipHorizontal2 } from "lucide-react";
+import {
+  getVoiceCues, setVoiceCues,
+  getCameraFacing, setCameraFacing, type CameraFacing,
+  getMirrorVideo, setMirrorVideo,
+} from "@/lib/workout-preferences";
 import { useMyProfile, useUpdatePrivacy, useUpsertProfile } from "@/lib/social";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -86,6 +91,28 @@ export function Settings() {
   function handleRestDurationChange(d: RestDuration) {
     setRestDuration(d);
     setRestDurationState(d);
+  }
+
+  // Workout camera & audio preferences
+  const [voiceCuesEnabled, setVoiceCuesState]   = useState<boolean>(() => getVoiceCues());
+  const [cameraFacing,     setCameraFacingState] = useState<CameraFacing>(() => getCameraFacing());
+  const [mirrorVideoOn,    setMirrorVideoState]  = useState<boolean>(() => getMirrorVideo());
+
+  function handleVoiceCuesToggle() {
+    const next = !voiceCuesEnabled;
+    setVoiceCues(next);
+    setVoiceCuesState(next);
+  }
+
+  function handleCameraFacingChange(facing: CameraFacing) {
+    setCameraFacing(facing);
+    setCameraFacingState(facing);
+  }
+
+  function handleMirrorVideoToggle() {
+    const next = !mirrorVideoOn;
+    setMirrorVideo(next);
+    setMirrorVideoState(next);
   }
 
   useEffect(() => {
@@ -559,6 +586,124 @@ export function Settings() {
                 </button>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Workout Camera & Audio ────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader icon={<Camera className="w-4 h-4" />} label="Workout Camera & Audio" />
+        <div
+          className="rounded-2xl border border-white/10 p-5 space-y-5"
+          style={{
+            background: "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)",
+          }}
+        >
+          {/* AI Voice Coaching */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                <Volume2 className="w-4 h-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-foreground">AI Voice Coaching</div>
+                <div className="text-[11px] text-muted-foreground">
+                  Spoken coaching cues during workouts
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleVoiceCuesToggle}
+              className={[
+                "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
+                voiceCuesEnabled ? "bg-primary" : "bg-muted",
+              ].join(" ")}
+              role="switch"
+              aria-checked={voiceCuesEnabled}
+            >
+              <span
+                className={[
+                  "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg transform transition duration-200",
+                  voiceCuesEnabled ? "translate-x-5" : "translate-x-0",
+                ].join(" ")}
+              />
+            </button>
+          </div>
+
+          <div className="h-px bg-white/[0.07]" />
+
+          {/* Default Camera */}
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/25 flex items-center justify-center shrink-0">
+                <Camera className="w-4 h-4 text-blue-400" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-foreground">Default Camera</div>
+                <div className="text-[11px] text-muted-foreground">
+                  Which camera opens when you start a workout
+                </div>
+              </div>
+            </div>
+            <div
+              className="flex rounded-xl overflow-hidden border border-white/10 p-0.5 gap-0.5"
+              style={{ background: "rgba(255,255,255,0.04)" }}
+            >
+              {(["user", "environment"] as const).map((facing) => {
+                const active = cameraFacing === facing;
+                const label  = facing === "user" ? "Front" : "Back";
+                return (
+                  <button
+                    key={facing}
+                    onClick={() => handleCameraFacingChange(facing)}
+                    className={[
+                      "flex-1 text-sm font-semibold py-2 rounded-[9px] transition-all duration-200",
+                      active
+                        ? "bg-primary text-black shadow-md"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06]",
+                    ].join(" ")}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="h-px bg-white/[0.07]" />
+
+          {/* Mirror Video */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center shrink-0">
+                <FlipHorizontal2 className="w-4 h-4 text-violet-400" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-foreground">Mirror Camera Preview</div>
+                <div className="text-[11px] text-muted-foreground">
+                  Flip the front-facing camera like a mirror
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleMirrorVideoToggle}
+              className={[
+                "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
+                mirrorVideoOn ? "bg-primary" : "bg-muted",
+              ].join(" ")}
+              role="switch"
+              aria-checked={mirrorVideoOn}
+            >
+              <span
+                className={[
+                  "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg transform transition duration-200",
+                  mirrorVideoOn ? "translate-x-5" : "translate-x-0",
+                ].join(" ")}
+              />
+            </button>
           </div>
         </div>
       </section>

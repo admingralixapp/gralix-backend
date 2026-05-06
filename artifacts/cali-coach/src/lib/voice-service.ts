@@ -28,6 +28,18 @@
  *   src.start();
  */
 
+// ─── Mute flag (controlled by Settings › Voice Cues toggle) ──────────────────
+
+let _muted = false;
+
+/**
+ * Silence all coaching cues for the duration of the current workout.
+ * Called by the Workout page on mount based on the user's Voice Cues preference.
+ */
+export function setVoiceMuted(muted: boolean): void {
+  _muted = muted;
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const DUCK_TARGET    = 0.3;   // 30 % during coaching cue
@@ -202,6 +214,7 @@ function fallbackSpeak(text: string): void {
  *              "neutral"     — default (good form, on track)
  */
 export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral"): void {
+  if (_muted) return;
   stopCurrentSource();
   window.speechSynthesis.cancel();
 

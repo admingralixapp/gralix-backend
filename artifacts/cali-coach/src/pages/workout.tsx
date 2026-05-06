@@ -9,8 +9,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
-import { speak as voiceSpeak, cancelSpeech } from "@/lib/voice-service";
+import { speak as voiceSpeak, cancelSpeech, setVoiceMuted } from "@/lib/voice-service";
 import { getRestDuration, type RestDuration, REST_DURATION_OPTIONS } from "@/lib/workout-settings";
+import { getVoiceCues, getCameraFacing, getMirrorVideo } from "@/lib/workout-preferences";
 import {
   getPhaseTransitionCue,
   getMilestoneCue,
@@ -551,6 +552,15 @@ export function Workout() {
   /** Sync % at the last detection. */
   const currSyncPctRef    = useRef(100);
 
+  // ── Workout Preferences (from localStorage, read once on mount) ───────────
+  const [mirrorVideo] = useState(() => getMirrorVideo());
+
+  // Apply / remove the voice-muted flag whenever the component mounts/unmounts
+  useEffect(() => {
+    setVoiceMuted(!getVoiceCues());
+    return () => { setVoiceMuted(false); };
+  }, []);
+
   // ── Minimalist Mode ──────────────────────────────────────────────────────
   const [minimalistMode, setMinimalistModeState] = useState(false);
   const minimalistModeRef = useRef(false);
@@ -657,7 +667,7 @@ export function Workout() {
     if (videoRef.current.srcObject) return; // already running
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1280, height: 720, facingMode: "user" },
+        video: { width: 1280, height: 720, facingMode: getCameraFacing() },
       });
       videoRef.current.srcObject = stream;
       videoRef.current.play();
@@ -1905,7 +1915,7 @@ export function Workout() {
         <div className="absolute inset-0 bg-zinc-900 overflow-hidden">
           <video
             ref={videoRef}
-            className="absolute inset-0 w-full h-full object-cover -scale-x-100"
+            className={`absolute inset-0 w-full h-full object-cover${mirrorVideo ? " -scale-x-100" : ""}`}
             playsInline
             muted
           />
@@ -1913,7 +1923,7 @@ export function Workout() {
             ref={canvasRef}
             width={1280}
             height={720}
-            className="absolute inset-0 w-full h-full object-cover -scale-x-100 pointer-events-none"
+            className={`absolute inset-0 w-full h-full object-cover pointer-events-none${mirrorVideo ? " -scale-x-100" : ""}`}
           />
 
           {/* Calibration overlay */}
