@@ -215,6 +215,275 @@ const PATH_LABELS = [
   { x: HUB_X - GAP * 2,       y: HUB_Y + SIDE + 22,   text: "Pistol Squat", color: BRANCH_COLOR.LEGS },
 ];
 
+// ─── Equipment Specialty Node Positions ──────────────────────────────────────
+// Equipment nodes branch off their bodyweight prerequisites:
+//   PULL branch (→ east): equipment paths fan SOUTH from pull-2
+//   PUSH branch (↑ north): equipment paths fan WEST from push-3
+
+const EQUIPMENT_NODE_POS: Record<string, { x: number; y: number }> = {
+  // ── PULL — Bar Specialist (south of pull-branch, y + SIDE*2) ──
+  "pull-bar-1":      { x: HUB_X + GAP * 2, y: HUB_Y + SIDE * 2 },  // (1800, 1830)
+  "pull-bar-2":      { x: HUB_X + GAP * 3, y: HUB_Y + SIDE * 2 },  // (1950, 1830)
+  "pull-bar-3":      { x: HUB_X + GAP * 4, y: HUB_Y + SIDE * 2 },  // (2100, 1830)
+  // ── PULL — Rings Specialist (south of bar lane, y + SIDE*3) ──
+  "pull-rings-1":    { x: HUB_X + GAP * 2, y: HUB_Y + SIDE * 3 },  // (1800, 1995)
+  "pull-rings-2":    { x: HUB_X + GAP * 3, y: HUB_Y + SIDE * 3 },  // (1950, 1995)
+  "pull-rings-3":    { x: HUB_X + GAP * 4, y: HUB_Y + SIDE * 3 },  // (2100, 1995)
+  // ── PULL — Weighted Specialist (south of rings lane, y + SIDE*4) ──
+  "pull-weighted-1": { x: HUB_X + GAP * 2, y: HUB_Y + SIDE * 4 },  // (1800, 2160)
+  "pull-weighted-2": { x: HUB_X + GAP * 3, y: HUB_Y + SIDE * 4 },  // (1950, 2160)
+  "pull-weighted-3": { x: HUB_X + GAP * 4, y: HUB_Y + SIDE * 4 },  // (2100, 2160)
+  // ── PUSH — Rings Specialist (west of push-branch, x - SIDE) ──
+  "push-rings-1":    { x: HUB_X - SIDE,     y: HUB_Y - GAP * 3 },  // (1335, 1050)
+  "push-rings-2":    { x: HUB_X - SIDE,     y: HUB_Y - GAP * 4 },  // (1335,  900)
+  // ── PUSH — Weighted Specialist (further west, x - SIDE*2) ──
+  "push-weighted-1": { x: HUB_X - SIDE * 2, y: HUB_Y - GAP * 3 },  // (1170, 1050)
+};
+
+// Equipment edges follow the prerequisite chain defined in skill-tree.ts
+const EQUIPMENT_EDGES: Array<[string, string]> = [
+  // PULL bar (from pull-2)
+  ["pull-2", "pull-bar-1"], ["pull-bar-1", "pull-bar-2"], ["pull-bar-2", "pull-bar-3"],
+  // PULL rings (from pull-2)
+  ["pull-2", "pull-rings-1"], ["pull-rings-1", "pull-rings-2"], ["pull-rings-2", "pull-rings-3"],
+  // PULL weighted (from pull-2)
+  ["pull-2", "pull-weighted-1"], ["pull-weighted-1", "pull-weighted-2"], ["pull-weighted-2", "pull-weighted-3"],
+  // PUSH rings (from push-3)
+  ["push-3", "push-rings-1"], ["push-rings-1", "push-rings-2"],
+  // PUSH weighted (from push-3)
+  ["push-3", "push-weighted-1"],
+];
+
+// Equipment tag → color (matches EQUIPMENT_SPECIALTIES exported from skill-tree.ts)
+const EQUIPMENT_COLORS: Record<string, string> = {
+  bar:      "#f59e0b",
+  rings:    "#06b6d4",
+  weighted: "#a855f7",
+};
+
+// Path labels that appear when lens is on
+const EQUIPMENT_PATH_LABELS = [
+  { x: HUB_X + GAP * 3,    y: HUB_Y + SIDE * 2 - 38, text: "Bar Specialist",  color: EQUIPMENT_COLORS.bar },
+  { x: HUB_X + GAP * 3,    y: HUB_Y + SIDE * 3 - 38, text: "Rings",           color: EQUIPMENT_COLORS.rings },
+  { x: HUB_X + GAP * 3,    y: HUB_Y + SIDE * 4 - 38, text: "Weighted",        color: EQUIPMENT_COLORS.weighted },
+  { x: HUB_X - SIDE - 40,  y: HUB_Y - GAP * 3.4,     text: "Rings",           color: EQUIPMENT_COLORS.rings },
+  { x: HUB_X - SIDE * 2 - 48, y: HUB_Y - GAP * 3.4,  text: "Weighted",        color: EQUIPMENT_COLORS.weighted },
+];
+
+function equipmentNodeColor(id: string): string {
+  if (id.includes("-bar-"))      return EQUIPMENT_COLORS.bar;
+  if (id.includes("-rings-"))    return EQUIPMENT_COLORS.rings;
+  if (id.includes("-weighted-")) return EQUIPMENT_COLORS.weighted;
+  return MUTED;
+}
+
+// ─── EquipmentConnectorPath ───────────────────────────────────────────────────
+// Neon dashed line used for equipment-specific branches (distinct from bodyweight)
+
+function EquipmentConnectorPath({
+  fromPos, toPos, color, mastered, lit, fromR = NODE_R, toR = NODE_R,
+}: {
+  fromPos: { x: number; y: number };
+  toPos:   { x: number; y: number };
+  color:   string;
+  mastered: boolean;
+  lit:      boolean;
+  fromR?: number;
+  toR?: number;
+}) {
+  const { x1, y1, x2, y2 } = edgePoints(fromPos, toPos, fromR, toR);
+  const d = makeBezier(x1, y1, x2, y2);
+  if (mastered) {
+    return (
+      <g>
+        {/* Wide outer neon bloom */}
+        <path d={d} fill="none" stroke={color}
+          strokeWidth={lit ? 18 : 10} opacity={lit ? 0.28 : 0.10}
+          strokeLinecap="round" />
+        {/* Core glow line (solid, no dash) */}
+        <path d={d} fill="none" stroke={color}
+          strokeWidth={lit ? 3.5 : 2.5} opacity={lit ? 1 : 0.85}
+          strokeLinecap="round" />
+        {/* Neon dash overlay */}
+        <path d={d} fill="none" stroke="white"
+          strokeWidth={1} opacity={lit ? 0.45 : 0.20}
+          strokeDasharray="6 8" strokeLinecap="round" />
+      </g>
+    );
+  }
+  // Unlocked / locked: visible dashed neon (shows the gear path)
+  return (
+    <g>
+      <path d={d} fill="none" stroke={color}
+        strokeWidth={lit ? 8 : 5} opacity={lit ? 0.18 : 0.06}
+        strokeLinecap="round" />
+      <path d={d} fill="none" stroke={color}
+        strokeWidth={lit ? 2 : 1.5}
+        strokeDasharray="7 6"
+        opacity={lit ? 0.7 : 0.35}
+        strokeLinecap="round"
+        style={{ transition: "opacity 0.15s" }}
+      />
+    </g>
+  );
+}
+
+// ─── DiamondNode ──────────────────────────────────────────────────────────────
+// Diamond-shaped SVG node for equipment specialty skills.
+// Uses the same overall structure as GlassNode but with a rotated polygon.
+
+function DiamondNode({
+  nodeId, skill, isHovered, showLabel, onClick, onHover,
+}: {
+  nodeId:    string;
+  skill:     EvaluatedSkill;
+  isHovered: boolean;
+  showLabel: boolean;
+  onClick:   (skill: EvaluatedSkill, e: React.MouseEvent) => void;
+  onHover:   (id: string | null) => void;
+}) {
+  const pos = EQUIPMENT_NODE_POS[nodeId];
+  if (!pos) return null;
+  const { x, y } = pos;
+  const color = equipmentNodeColor(nodeId);
+
+  const isMastered = skill.status === "mastered";
+  const isLocked   = skill.status === "locked";
+  const isUnlocked = skill.status === "unlocked";
+
+  const pct = skill.masteryRequirement.minQualifyingSessions > 0
+    ? Math.min(1, skill.progress.qualifyingSessions / skill.masteryRequirement.minQualifyingSessions)
+    : 0;
+
+  const R  = NODE_R;
+  const RR = NODE_R + 8; // outer ring radius
+
+  // Diamond polygon points: top, right, bottom, left
+  const pts        = `${x},${y - R}  ${x + R},${y}  ${x},${y + R}  ${x - R},${y}`;
+  const outerPts   = `${x},${y - RR} ${x + RR},${y} ${x},${y + RR} ${x - RR},${y}`;
+  const glowPts14  = `${x},${y - (R+14)} ${x+(R+14)},${y} ${x},${y+(R+14)} ${x-(R+14)},${y}`;
+  const glowPts7   = `${x},${y - (R+7)}  ${x+(R+7)},${y}  ${x},${y+(R+7)}  ${x-(R+7)},${y}`;
+  const hitPts     = `${x},${y - (R+20)} ${x+(R+20)},${y} ${x},${y+(R+20)} ${x-(R+20)},${y}`;
+
+  const shortTitle = skill.title.length > 13 ? skill.title.slice(0, 12) + "…" : skill.title;
+
+  return (
+    <g
+      onClick={(e) => { e.stopPropagation(); onClick(skill, e); }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onPointerEnter={() => onHover(nodeId)}
+      onPointerLeave={() => onHover(null)}
+      style={{
+        cursor: "pointer",
+        pointerEvents: "auto",
+        transformOrigin: `${x}px ${y}px`,
+        transform: isHovered ? "scale(1.12)" : "scale(1)",
+        transition: "transform 0.14s cubic-bezier(0.34,1.56,0.64,1)",
+      }}
+      role="button"
+      aria-label={skill.title}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onClick(skill, e as unknown as React.MouseEvent);
+      }}
+    >
+      {/* Hit area */}
+      <polygon points={hitPts} fill="transparent" style={{ cursor: "pointer", pointerEvents: "all" }} />
+
+      {/* Hover pulse ring */}
+      {isHovered && (
+        <polygon points={`${x},${y-(R+20)} ${x+(R+20)},${y} ${x},${y+(R+20)} ${x-(R+20)},${y}`}
+          fill="none" stroke={isMastered ? GOLD : color} strokeWidth={1.5} opacity={0.25} />
+      )}
+
+      {/* Mastered glow rings */}
+      {isMastered && (
+        <>
+          <polygon points={glowPts14} fill="none" stroke={GOLD}
+            strokeWidth={isHovered ? 2 : 1} opacity={isHovered ? 0.3 : 0.12} />
+          <polygon points={glowPts7}  fill="none" stroke={GOLD}
+            strokeWidth={isHovered ? 2.5 : 1.5} opacity={isHovered ? 0.65 : 0.35} />
+        </>
+      )}
+
+      {/* Progress ring (unlocked) — circle ring around diamond */}
+      {isUnlocked && (() => {
+        const CIRC = 2 * Math.PI * RR;
+        return (
+          <>
+            <circle cx={x} cy={y} r={RR}
+              fill="none" stroke={color} strokeWidth={3} opacity={isHovered ? 0.3 : 0.15} />
+            {pct > 0 && (
+              <circle cx={x} cy={y} r={RR}
+                fill="none" stroke={color} strokeWidth={3}
+                strokeDasharray={`${pct * CIRC} ${CIRC}`}
+                strokeLinecap="round"
+                transform={`rotate(-90 ${x} ${y})`}
+                opacity={isHovered ? 1 : 0.9}
+              />
+            )}
+          </>
+        );
+      })()}
+
+      {/* Neon outer glow for mastered */}
+      {isMastered && (
+        <polygon points={outerPts} fill="none" stroke={color}
+          strokeWidth={isHovered ? 10 : 6} opacity={isHovered ? 0.22 : 0.08} />
+      )}
+
+      {/* Main diamond */}
+      <polygon points={pts}
+        fill={isMastered ? GOLD : isLocked ? "#080f1a" : "rgba(15,23,42,0.92)"}
+        stroke={isMastered ? "#f59e0b" : isLocked ? "#1e293b" : color}
+        strokeWidth={
+          isMastered ? (isHovered ? 3 : 2)
+          : isLocked  ? 1.5
+          : (isHovered ? 3.5 : 2.5)
+        }
+        opacity={isLocked ? 0.5 : 1}
+      />
+
+      {/* Shimmer on top facet */}
+      {!isLocked && (
+        <ellipse cx={x} cy={y - R * 0.35}
+          rx={R * 0.35} ry={R * 0.16}
+          fill="white" opacity={isHovered ? 0.14 : 0.07} />
+      )}
+
+      {/* Status icon */}
+      {isMastered && <StarShape cx={x} cy={y} />}
+      {isLocked    && <LockShape cx={x} cy={y} />}
+      {isUnlocked  && (
+        <text x={x} y={y} textAnchor="middle" dominantBaseline="central"
+          fontSize={10} fontWeight="800" fill={color}
+          fontFamily="ui-monospace, monospace">
+          ◆
+        </text>
+      )}
+
+      {/* Progress badge */}
+      {isUnlocked && pct > 0 && !showLabel && (
+        <text x={x} y={y + R + 12} textAnchor="middle"
+          fontSize={7} fill={color} opacity={0.75} fontFamily="ui-monospace, monospace">
+          {Math.round(pct * 100)}%
+        </text>
+      )}
+
+      {/* Label */}
+      {showLabel && (
+        <text x={x} y={y + R + 13} textAnchor="middle"
+          fontSize={8}
+          fill={isLocked ? "#374151" : isHovered ? (isMastered ? GOLD : color) : "#9ca3af"}
+          fontWeight={isUnlocked || isHovered ? "600" : "400"}
+          fontFamily="ui-sans-serif, system-ui, sans-serif">
+          {shortTitle}
+        </text>
+      )}
+    </g>
+  );
+}
+
 // ─── Bezier path builder (direction-aware) ───────────────────────────────────
 
 function makeBezier(
@@ -777,7 +1046,7 @@ interface OverlayState {
   screenY: number;
 }
 
-function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
+function TreeCanvas({ evaluated, lensOn }: { evaluated: EvaluatedSkill[]; lensOn: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [pan,  setPan]         = useState({ x: 0, y: 0 });
   const [zoom, setZoom]        = useState(0.52);
@@ -795,18 +1064,27 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
   const panRef        = useRef(pan);
   panRef.current      = pan;
 
+  // Unified position map — includes equipment nodes when lens is on
+  const allNodePos = useMemo<Record<string, { x: number; y: number }>>(() => {
+    return lensOn ? { ...NODE_POS, ...EQUIPMENT_NODE_POS } : NODE_POS;
+  }, [lensOn]);
+
   const skillMap = useMemo(() => {
     const m = new Map<string, EvaluatedSkill>();
     for (const s of evaluated) m.set(s.id, s);
     return m;
   }, [evaluated]);
 
-  // First in-progress skill (for auto-center)
+  // First in-progress skill (for auto-center) — includes equipment nodes when lens on
   const inProgressId = useMemo(() => {
-    const order = [...EDGES.map(([a]) => a), ...EDGES.map(([, b]) => b)];
+    const allEdges = lensOn ? [...EDGES, ...EQUIPMENT_EDGES] : EDGES;
+    const order = [...allEdges.map(([a]) => a), ...allEdges.map(([, b]) => b)];
     const unique = [...new Set(order)];
-    return unique.find((id) => skillMap.get(id)?.status === "unlocked") ?? null;
-  }, [skillMap]);
+    return unique.find((id) => {
+      const s = skillMap.get(id);
+      return s?.status === "unlocked" && (lensOn || !s.equipmentSpecialty);
+    }) ?? null;
+  }, [skillMap, lensOn]);
 
   // Center view on a given SVG point
   const centerOn = useCallback((svgX: number, svgY: number, targetZoom?: number) => {
@@ -840,10 +1118,10 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
   // Auto-center on first in-progress skill
   const autoCenter = useCallback(() => {
     if (!inProgressId) { resetView(); return; }
-    const pos = NODE_POS[inProgressId];
+    const pos = allNodePos[inProgressId];
     if (!pos) { resetView(); return; }
     centerOn(pos.x, pos.y, Math.max(zoomRef.current, 0.7));
-  }, [inProgressId, centerOn, resetView]);
+  }, [inProgressId, centerOn, resetView, allNodePos]);
 
   // Non-passive wheel zoom
   useEffect(() => {
@@ -925,12 +1203,12 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
     if (containerRef.current) containerRef.current.style.cursor = "grab";
   }
 
-  // Node click → open overlay
+  // Node click → open overlay (works for both bodyweight and equipment nodes)
   function handleNodeClick(skill: EvaluatedSkill, _e: React.MouseEvent) {
     if (didDrag.current) return;
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const pos = NODE_POS[skill.id];
+    const pos = allNodePos[skill.id];
     if (!pos) return;
     setContainerSize({ w: rect.width, h: rect.height });
     setOverlay({
@@ -941,7 +1219,11 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
   }
 
   const showLabel = zoom >= 0.48;
-  const overlayColor = overlay ? nodeColor(overlay.skill.id) : "#6b7280";
+  const overlayColor = overlay
+    ? overlay.skill.equipmentSpecialty
+      ? equipmentNodeColor(overlay.skill.id)
+      : nodeColor(overlay.skill.id)
+    : "#6b7280";
 
   return (
     <div className="relative" style={{ height: "calc(100vh - 210px)", minHeight: 430 }}>
@@ -1017,7 +1299,7 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
               );
             })}
 
-            {/* ── Skill edges ── */}
+            {/* ── Bodyweight skill edges ── */}
             {EDGES.map(([fromId, toId]) => {
               const fromPos = NODE_POS[fromId];
               const toPos   = NODE_POS[toId];
@@ -1037,10 +1319,31 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
               );
             })}
 
+            {/* ── Equipment Lens: neon dashed edges (fade in when lensOn) ── */}
+            {lensOn && EQUIPMENT_EDGES.map(([fromId, toId]) => {
+              const fromPos = allNodePos[fromId];
+              const toPos   = EQUIPMENT_NODE_POS[toId] ?? allNodePos[toId];
+              if (!fromPos || !toPos) return null;
+              const fromSkill = skillMap.get(fromId);
+              const mastered  = fromSkill?.status === "mastered";
+              const lit = hoveredId === fromId || hoveredId === toId;
+              const color = equipmentNodeColor(toId) || equipmentNodeColor(fromId);
+              return (
+                <EquipmentConnectorPath
+                  key={`eq-${fromId}-${toId}`}
+                  fromPos={fromPos}
+                  toPos={toPos}
+                  color={color}
+                  mastered={mastered}
+                  lit={lit}
+                />
+              );
+            })}
+
             {/* ── Cross-branch dependency lines (shown when a node is selected) ── */}
             {overlay?.skill.secondaryPrerequisiteIds?.map((reqId) => {
-              const fromPos = NODE_POS[overlay.skill.id];
-              const toPos   = NODE_POS[reqId];
+              const fromPos = allNodePos[overlay.skill.id];
+              const toPos   = allNodePos[reqId];
               if (!fromPos || !toPos) return null;
               const prereqMastered = skillMap.get(reqId)?.status === "mastered";
               return (
@@ -1078,12 +1381,39 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
               </text>
             ))}
 
-            {/* ── Skill nodes ── */}
+            {/* ── Equipment path labels (only when lens is on and zoomed in) ── */}
+            {lensOn && showLabel && EQUIPMENT_PATH_LABELS.map(({ x, y, text, color }) => (
+              <text key={`eq-lbl-${text}-${x}`} x={x} y={y} textAnchor="middle"
+                fontSize={8} fill={color} opacity={0.70}
+                fontFamily="ui-sans-serif, system-ui, sans-serif"
+                fontStyle="italic" fontWeight="600">
+                {text} ◆
+              </text>
+            ))}
+
+            {/* ── Bodyweight skill nodes (circles) ── */}
             {Object.keys(NODE_POS).map((nodeId) => {
               const skill = skillMap.get(nodeId);
               if (!skill) return null;
               return (
                 <GlassNode
+                  key={nodeId}
+                  nodeId={nodeId}
+                  skill={skill}
+                  isHovered={hoveredId === nodeId}
+                  showLabel={showLabel}
+                  onClick={handleNodeClick}
+                  onHover={setHoveredId}
+                />
+              );
+            })}
+
+            {/* ── Equipment Lens: diamond nodes (animate in when lensOn) ── */}
+            {lensOn && Object.keys(EQUIPMENT_NODE_POS).map((nodeId) => {
+              const skill = skillMap.get(nodeId);
+              if (!skill) return null;
+              return (
+                <DiamondNode
                   key={nodeId}
                   nodeId={nodeId}
                   skill={skill}
@@ -1407,11 +1737,26 @@ function EquipmentSpecialtySection({ evaluated }: { evaluated: EvaluatedSkill[] 
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+const LENS_STORAGE_KEY = "calicoach_equipment_lens";
+
 export function SkillTreePage() {
   const { data: sessions, isLoading } = useListSessions(
     { limit: 500, offset: 0 },
     { query: { queryKey: ["/api/sessions", { limit: 500 }] } },
   );
+
+  // Equipment Lens state — persisted to localStorage so workout picker stays in sync
+  const [lensOn, setLensOn] = useState<boolean>(() => {
+    try { return localStorage.getItem(LENS_STORAGE_KEY) === "true"; } catch { return false; }
+  });
+
+  const toggleLens = () => {
+    const next = !lensOn;
+    setLensOn(next);
+    try { localStorage.setItem(LENS_STORAGE_KEY, String(next)); } catch {}
+    // Dispatch a storage event so other tabs / the workout page can react
+    window.dispatchEvent(new StorageEvent("storage", { key: LENS_STORAGE_KEY, newValue: String(next) }));
+  };
 
   const evaluated = useMemo(() => {
     if (!sessions) return null;
@@ -1433,6 +1778,47 @@ export function SkillTreePage() {
           </p>
         </div>
         <div className="flex items-center gap-4 shrink-0">
+          {/* ── Equipment Lens Toggle ── */}
+          <button
+            onClick={toggleLens}
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl border transition-all select-none"
+            style={lensOn ? {
+              borderColor: "#f59e0b60",
+              background: "rgba(245,158,11,0.08)",
+              boxShadow: "0 0 12px rgba(245,158,11,0.18)",
+            } : {
+              borderColor: "rgba(255,255,255,0.08)",
+              background: "rgba(255,255,255,0.03)",
+            }}
+            title={lensOn ? "Hide equipment specialty paths" : "Show equipment specialty paths in the tree"}
+          >
+            {/* Diamond icon representing equipment specialty nodes */}
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <polygon
+                points="7,0 14,7 7,14 0,7"
+                fill={lensOn ? "#f59e0b" : "transparent"}
+                stroke={lensOn ? "#f59e0b" : "#6b7280"}
+                strokeWidth="1.5"
+              />
+            </svg>
+            <span className="text-xs font-bold tracking-wide"
+              style={{ color: lensOn ? "#f59e0b" : "#6b7280" }}>
+              Equipment Overlay
+            </span>
+            {/* Toggle pill */}
+            <span className="relative inline-flex w-9 h-5 rounded-full border transition-colors shrink-0"
+              style={{
+                backgroundColor: lensOn ? "rgba(245,158,11,0.3)" : "rgba(255,255,255,0.05)",
+                borderColor: lensOn ? "#f59e0b60" : "rgba(255,255,255,0.10)",
+              }}>
+              <span className="absolute top-0.5 transition-all duration-200 w-4 h-4 rounded-full shadow"
+                style={{
+                  left: lensOn ? "calc(100% - 18px)" : "2px",
+                  backgroundColor: lensOn ? "#f59e0b" : "#374151",
+                }} />
+            </span>
+          </button>
+
           <div className="text-right">
             <p className="text-2xl font-bold tabular-nums">
               {totalMastered}
@@ -1473,6 +1859,24 @@ export function SkillTreePage() {
           <Lock className="w-3 h-3 text-zinc-600" />
           Locked
         </span>
+        {/* Equipment legend items — shown only when lens is on */}
+        {lensOn && (
+          <>
+            <span className="h-4 w-px bg-white/10" />
+            {[
+              { color: EQUIPMENT_COLORS.bar,      label: "Bar ◆" },
+              { color: EQUIPMENT_COLORS.rings,    label: "Rings ◆" },
+              { color: EQUIPMENT_COLORS.weighted, label: "Weighted ◆" },
+            ].map(({ color, label }) => (
+              <span key={label} className="flex items-center gap-1.5">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                  <polygon points="6,0 12,6 6,12 0,6" fill={color} opacity={0.85} />
+                </svg>
+                <span style={{ color }}>{label}</span>
+              </span>
+            ))}
+          </>
+        )}
       </div>
 
       {/* Tree */}
@@ -1480,7 +1884,7 @@ export function SkillTreePage() {
         <Skeleton className="w-full rounded-2xl" style={{ height: "calc(100vh - 210px)", minHeight: 430 }} />
       ) : (
         <>
-          <TreeCanvas evaluated={evaluated} />
+          <TreeCanvas evaluated={evaluated} lensOn={lensOn} />
           <div className="border-t border-border/40 pt-8">
             <EquipmentSpecialtySection evaluated={evaluated} />
           </div>

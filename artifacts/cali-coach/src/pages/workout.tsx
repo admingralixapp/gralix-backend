@@ -482,6 +482,19 @@ export function Workout() {
   const [exerciseSearch, setExerciseSearch] = useState("");
   // Collapsed state for each specialty sub-category header in the picker
   const [collapsedSpecialtyCats, setCollapsedSpecialtyCats] = useState<Record<string, boolean>>({});
+  // Equipment Lens — synced with Skill Tree page via localStorage
+  const [equipmentLensOn, setEquipmentLensOn] = useState<boolean>(() => {
+    try { return localStorage.getItem("calicoach_equipment_lens") === "true"; } catch { return false; }
+  });
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === "calicoach_equipment_lens") {
+        setEquipmentLensOn(e.newValue === "true");
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
 
   const { data: sessionHistory } = useListSessions(
     { limit: 500, offset: 0 },
@@ -2708,8 +2721,8 @@ export function Workout() {
                       </div>
                     </div>
 
-                    {/* Right: Equipment Specialty */}
-                    <div className="flex-1 flex flex-col overflow-hidden">
+                    {/* Right: Equipment Specialty — only shown when Equipment Lens is enabled */}
+                    {equipmentLensOn && <div className="flex-1 flex flex-col overflow-hidden">
                       <div className="px-3 py-2 border-b border-border/30 shrink-0 flex items-center gap-1.5">
                         <Dumbbell className="w-3 h-3 text-amber-400/70" />
                         <span className="text-[10px] font-black uppercase tracking-[0.12em] text-amber-400/80">
@@ -2824,7 +2837,7 @@ export function Workout() {
                           });
                         })()}
                       </div>
-                    </div>
+                    </div>}
                   </div>
                 )}
               </PopoverContent>
