@@ -369,7 +369,7 @@ components:
             type: string
         difficulty:
           type: string
-          enum: [beginner, intermediate, advanced]
+          enum: [beginner, intermediate, advanced, elite]
         coachingCues:
           type: array
           items:

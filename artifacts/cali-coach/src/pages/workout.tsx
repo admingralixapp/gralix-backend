@@ -603,9 +603,11 @@ export function Workout() {
     if (!nodeId) return false;
     const node = ALL_SKILL_NODES.find(n => n.id === nodeId);
     if (!node) return false;
-    const prereqId = node.prerequisiteId;
-    if (!prereqId) return false;
-    const prereqStatus = evaluatedSkills[prereqId]?.status;
+    // Level 1 nodes and nodes with no prerequisite are always unlocked
+    if (!node.prerequisiteId || node.level <= 1) return false;
+    // Only lock if we actually have session data loaded AND the prereq isn't mastered
+    if (!sessionHistory) return false;
+    const prereqStatus = evaluatedSkills[node.prerequisiteId]?.status;
     return prereqStatus !== "mastered";
   }
 

@@ -16,6 +16,7 @@ export const ExerciseDifficulty = {
   beginner: "beginner",
   intermediate: "intermediate",
   advanced: "advanced",
+  elite: "elite",
 } as const;
 
 export interface Exercise {
