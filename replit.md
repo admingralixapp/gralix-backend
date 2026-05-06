@@ -38,6 +38,7 @@ Required Environment Variables:
 - `artifacts/api-spec`: OpenAPI specification for API codegen.
 - `artifacts/cali-coach/src/lib/ghost-poses.ts`: Ghost Mode AR Overlay configurations.
 - `artifacts/cali-coach/src/lib/workout-settings.ts`: Rest duration localStorage helpers (`getRestDuration`, `setRestDuration`).
+- `artifacts/cali-coach/src/lib/badge-status.ts`: 7-tier status badge utility — `getBadge(masteredCount)` → `{ label, icon, bgColor, textColor, borderColor }`.
 - `artifacts/api-server/src/lib/skillTree.ts`: Logic for skill tree evaluation and mastery points.
 - `artifacts/cali-coach/src/lib/skill-tree.ts`: All 52 skill node definitions (4 branches × multiple sub-paths), `evaluateSkillTree()`, `ALL_SKILL_NODES`.
 - `artifacts/cali-coach/src/components/skill-map.tsx`: Dashboard Dynamic Window (3 nodes/branch).
@@ -62,7 +63,7 @@ Required Environment Variables:
 - Workout history and progress tracking with a dashboard.
 - Manual logging option for sessions without camera use.
 - Anti-cheat/verification system for AI-coached sessions.
-- Social features: friend management, shared profiles with skill trees and mastery.
+- Social features: friend management, shared profiles with skill trees and mastery. 7-tier status badges (Bronze→Master) shown on leaderboard rows, friend list, and profile pages based on mastered skill count.
 - Daily Mobility System with guided routines and streak tracking.
 - Global, national, and friends leaderboards based on mastery points.
 - Level-up celebration with confetti and social shoutouts for elite skill mastery.

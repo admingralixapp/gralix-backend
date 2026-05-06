@@ -7,7 +7,8 @@ import {
   sessionsTable,
   exercisesTable,
 } from "@workspace/db";
-import { eq, ilike, or, and, desc, inArray } from "drizzle-orm";
+import { eq, ilike, or, and, desc, inArray, isNotNull } from "drizzle-orm";
+import { computeMasteryPoints, type SessionRow } from "../lib/skillTree";
 
 const router = Router();
 
@@ -128,16 +129,19 @@ router.post("/users/me", requireAuthMiddleware, async (req: Request, res: Respon
 });
 
 // ---------------------------------------------------------------------------
-// PUT /api/users/me/privacy — update privacy level
+// PUT /api/users/me/privacy — update privacy level and/or community posts visibility
 // ---------------------------------------------------------------------------
 router.put(
   "/users/me/privacy",
   requireAuthMiddleware,
   async (req: Request, res: Response) => {
     const clerkId = (req as any).clerkId as string;
-    const { privacyLevel } = req.body as { privacyLevel: string };
+    const { privacyLevel, communityPostsPublic } = req.body as {
+      privacyLevel?: string;
+      communityPostsPublic?: boolean;
+    };
 
-    if (!["public", "friends", "private"].includes(privacyLevel)) {
+    if (privacyLevel !== undefined && !["public", "friends", "private"].includes(privacyLevel)) {
       res.status(400).json({ error: "Invalid privacyLevel" });
       return;
     }
@@ -148,9 +152,18 @@ router.put(
       return;
     }
 
+    const updateSet: Record<string, unknown> = {};
+    if (privacyLevel !== undefined) updateSet.privacyLevel = privacyLevel;
+    if (communityPostsPublic !== undefined) updateSet.communityPostsPublic = communityPostsPublic;
+
+    if (Object.keys(updateSet).length === 0) {
+      res.status(400).json({ error: "Nothing to update" });
+      return;
+    }
+
     const [updated] = await db
       .update(usersTable)
-      .set({ privacyLevel: privacyLevel as "public" | "friends" | "private" })
+      .set(updateSet as any)
       .where(eq(usersTable.id, me.id))
       .returning();
 
@@ -373,7 +386,7 @@ router.get(
 );
 
 // ---------------------------------------------------------------------------
-// GET /api/friends — list accepted friends
+// GET /api/friends — list accepted friends with masteredSkillsCount for badges
 // ---------------------------------------------------------------------------
 router.get("/friends", requireAuthMiddleware, async (req: Request, res: Response) => {
   const clerkId = (req as any).clerkId as string;
@@ -418,7 +431,35 @@ router.get("/friends", requireAuthMiddleware, async (req: Request, res: Response
     .from(usersTable)
     .where(inArray(usersTable.id, friendIds));
 
-  res.json(friends);
+  // Compute mastered skill count per friend for badge display
+  const friendSessions = await db
+    .select({
+      userId: sessionsTable.userId,
+      exerciseName: exercisesTable.name,
+      totalReps: sessionsTable.totalReps,
+      avgFormScore: sessionsTable.avgFormScore,
+      completedAt: sessionsTable.completedAt,
+      isVerified: sessionsTable.isVerified,
+    })
+    .from(sessionsTable)
+    .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
+    .where(and(isNotNull(sessionsTable.userId), inArray(sessionsTable.userId, friendIds)));
+
+  const sessionsByFriend = new Map<number, SessionRow[]>();
+  for (const s of friendSessions) {
+    if (s.userId == null) continue;
+    const bucket = sessionsByFriend.get(s.userId) ?? [];
+    bucket.push(s);
+    sessionsByFriend.set(s.userId, bucket);
+  }
+
+  const result = friends.map((f) => {
+    const sessions = sessionsByFriend.get(f.id) ?? [];
+    const { masteredCount } = computeMasteryPoints(sessions);
+    return { ...f, masteredSkillsCount: masteredCount };
+  });
+
+  res.json(result);
 });
 
 // ---------------------------------------------------------------------------

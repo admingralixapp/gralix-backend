@@ -16,6 +16,7 @@ import {
   useRespondToRequest,
 } from "@/lib/social";
 import { evaluateSkillTree, type SessionSummary } from "@/lib/skill-tree";
+import { getBadge } from "@/lib/badge-status";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -183,7 +184,21 @@ export function ProfilePage() {
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold">{user.displayName}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl font-bold">{user.displayName}</h1>
+            {(() => {
+              const badge = getBadge(masteredSkills.length);
+              return badge ? (
+                <span className={cn(
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border",
+                  badge.bgColor, badge.textColor, badge.borderColor,
+                )}>
+                  <span>{badge.icon}</span>
+                  {badge.label}
+                </span>
+              ) : null;
+            })()}
+          </div>
           <div className="text-sm text-muted-foreground">@{user.username}</div>
           <div className="mt-1">
             <PrivacyBadge level={user.privacyLevel} />

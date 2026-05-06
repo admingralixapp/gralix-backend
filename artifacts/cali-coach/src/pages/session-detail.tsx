@@ -20,9 +20,8 @@ function ClipPlayer({ objectPath }: { objectPath: string }) {
   const [playing, setPlaying] = useState(false);
   const videoRef = useState<HTMLVideoElement | null>(null);
 
-  // Build a served URL from the objectPath
-  // objectPath is like "/objects/uploads/xxx.webm" or similar
-  const src = objectPath.startsWith("http") ? objectPath : objectPath;
+  // objectPath is like "/objects/uploads/xxx.webm" — prefix with /api/storage to serve it
+  const src = objectPath.startsWith("http") ? objectPath : `/api/storage${objectPath}`;
 
   return (
     <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
@@ -30,6 +29,7 @@ function ClipPlayer({ objectPath }: { objectPath: string }) {
         ref={(el) => { (videoRef as unknown as { current: HTMLVideoElement | null }).current = el; }}
         src={src}
         loop
+        muted
         playsInline
         className="w-full h-full object-contain"
         onPlay={() => setPlaying(true)}

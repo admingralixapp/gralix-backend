@@ -7,7 +7,7 @@ import {
   getCameraFacing, setCameraFacing, type CameraFacing,
   getMirrorVideo, setMirrorVideo,
 } from "@/lib/workout-preferences";
-import { useMyProfile, useUpdatePrivacy, useUpsertProfile } from "@/lib/social";
+import { useMyProfile, useUpdatePrivacy, useUpdateCommunityPostsPublic, useUpsertProfile } from "@/lib/social";
 import { useToast } from "@/hooks/use-toast";
 import {
   useMobilityStatus,
@@ -36,17 +36,17 @@ const PRIVACY_OPTIONS: { value: PrivacyLevel; label: string; desc: string }[] = 
   {
     value: "public",
     label: "Public",
-    desc: "Anyone can view your skill tree and form mastery score.",
+    desc: "Anyone can view your profile, skill tree, and mastery badges.",
   },
   {
     value: "friends",
     label: "Friends Only",
-    desc: "Only people you've accepted as friends can see your profile.",
+    desc: "Only accepted friends can view your profile. Your badge is always visible to friends.",
   },
   {
     value: "private",
     label: "Private",
-    desc: "Your profile is hidden from everyone.",
+    desc: "Your profile is hidden — even from friends. Badges still appear on the leaderboard.",
   },
 ];
 
@@ -62,6 +62,7 @@ export function Settings() {
   const { signOut } = useClerk();
   const { data: profile, isLoading: profileLoading } = useMyProfile();
   const updatePrivacy = useUpdatePrivacy();
+  const updateCommunityPostsPublic = useUpdateCommunityPostsPublic();
   const upsertProfile = useUpsertProfile();
   const { toast } = useToast();
 
@@ -852,6 +853,44 @@ export function Settings() {
             Set up your profile to enable privacy controls.
           </p>
         )}
+
+        {/* Community Posts visibility toggle */}
+        <div className="mt-3 rounded-xl border border-border bg-card p-4 flex items-start justify-between gap-4">
+          <div>
+            <div className="font-medium text-sm">Show Community Posts to Everyone</div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              When off, only your friends can see your posts in the Community tab.
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              if (!profile) return;
+              const next = !(profile.communityPostsPublic ?? true);
+              updateCommunityPostsPublic.mutate(next, {
+                onSuccess: () =>
+                  toast({
+                    title: next ? "Community posts are now public" : "Community posts hidden from non-friends",
+                  }),
+                onError: () =>
+                  toast({ title: "Failed to update setting", variant: "destructive" }),
+              });
+            }}
+            disabled={updateCommunityPostsPublic.isPending || !profile}
+            className={[
+              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 disabled:opacity-50",
+              (profile?.communityPostsPublic ?? true) ? "bg-primary" : "bg-muted",
+            ].join(" ")}
+            role="switch"
+            aria-checked={profile?.communityPostsPublic ?? true}
+          >
+            <span
+              className={[
+                "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg transform transition duration-200",
+                (profile?.communityPostsPublic ?? true) ? "translate-x-5" : "translate-x-0",
+              ].join(" ")}
+            />
+          </button>
+        </div>
       </section>
 
       {/* ── Sign out ──────────────────────────────────────────────────────────── */}

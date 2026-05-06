@@ -41,6 +41,7 @@ export interface UserProfile {
   displayName: string;
   avatarUrl: string | null;
   privacyLevel: "public" | "friends" | "private";
+  communityPostsPublic: boolean;
   createdAt: string;
 }
 
@@ -126,6 +127,22 @@ export function useUpdatePrivacy() {
   });
 }
 
+export function useUpdateCommunityPostsPublic() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (communityPostsPublic: boolean) => {
+      const token = await getToken();
+      return apiFetchAuth<UserProfile>("/api/users/me/privacy", token, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ communityPostsPublic }),
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Search
 // ---------------------------------------------------------------------------
@@ -161,13 +178,17 @@ export function useFriendProfile(username: string) {
 // ---------------------------------------------------------------------------
 // Friends list
 // ---------------------------------------------------------------------------
+export interface FriendWithBadge extends Pick<UserProfile, "id" | "username" | "displayName" | "avatarUrl"> {
+  masteredSkillsCount: number;
+}
+
 export function useFriends() {
   const { getToken } = useAuth();
-  return useQuery<Pick<UserProfile, "id" | "username" | "displayName" | "avatarUrl">[]>({
+  return useQuery<FriendWithBadge[]>({
     queryKey: ["/api/friends"],
     queryFn: async () => {
       const token = await getToken();
-      return apiFetchAuth<Pick<UserProfile, "id" | "username" | "displayName" | "avatarUrl">[]>("/api/friends", token).catch(() => []);
+      return apiFetchAuth<FriendWithBadge[]>("/api/friends", token).catch(() => []);
     },
     staleTime: 30_000,
     retry: false,

@@ -6,13 +6,16 @@ import {
   feedPostsTable,
   feedPostLikesTable,
   feedPostCommentsTable,
+  friendRequestsTable,
 } from "@workspace/db";
 import {
   eq,
   and,
+  or,
   desc,
   sql,
   ilike,
+  inArray,
 } from "drizzle-orm";
 import { ObjectStorageService } from "../lib/objectStorage";
 
@@ -42,6 +45,41 @@ router.get("/community-feed", async (req: Request, res: Response) => {
   const limit = Math.min(Number(req.query.limit ?? 20), 50);
   const offset = Number(req.query.offset ?? 0);
 
+  // Build privacy filter: show posts from users where communityPostsPublic=true
+  // OR the logged-in user is friends with the poster (always see friends' posts)
+  let friendIds: number[] = [];
+  if (myUserId) {
+    const friendRows = await db
+      .select({ fromUserId: friendRequestsTable.fromUserId, toUserId: friendRequestsTable.toUserId })
+      .from(friendRequestsTable)
+      .where(
+        and(
+          eq(friendRequestsTable.status, "accepted"),
+          or(
+            eq(friendRequestsTable.fromUserId, myUserId),
+            eq(friendRequestsTable.toUserId, myUserId),
+          ),
+        ),
+      );
+    friendIds = friendRows.map((r) =>
+      r.fromUserId === myUserId ? r.toUserId : r.fromUserId,
+    );
+    // Always include own posts
+    friendIds.push(myUserId);
+  }
+
+  const exerciseFilter =
+    exercise && exercise !== "all"
+      ? ilike(feedPostsTable.exerciseName, `%${exercise}%`)
+      : undefined;
+
+  const privacyFilter =
+    friendIds.length > 0
+      ? or(eq(usersTable.communityPostsPublic, true), inArray(usersTable.id, friendIds))
+      : eq(usersTable.communityPostsPublic, true);
+
+  const baseFilter = exerciseFilter ? and(exerciseFilter, privacyFilter) : privacyFilter;
+
   const posts = await db
     .select({
       id: feedPostsTable.id,
@@ -59,11 +97,7 @@ router.get("/community-feed", async (req: Request, res: Response) => {
     })
     .from(feedPostsTable)
     .innerJoin(usersTable, eq(feedPostsTable.userId, usersTable.id))
-    .where(
-      exercise && exercise !== "all"
-        ? ilike(feedPostsTable.exerciseName, `%${exercise}%`)
-        : undefined,
-    )
+    .where(baseFilter)
     .orderBy(desc(feedPostsTable.createdAt))
     .limit(limit)
     .offset(offset);

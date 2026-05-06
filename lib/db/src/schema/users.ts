@@ -5,6 +5,7 @@ import {
   timestamp,
   text,
   jsonb,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -22,6 +23,11 @@ export const usersTable = pgTable("users", {
   country:      varchar("country",       { length: 2   }),
   /** Saved body proportions from the one-time global calibration screen. */
   calibrationData: jsonb("calibration_data"),
+  /**
+   * When true (default), the user's community-feed posts are visible to everyone.
+   * When false, posts are only visible to the user's friends in the community feed.
+   */
+  communityPostsPublic: boolean("community_posts_public").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

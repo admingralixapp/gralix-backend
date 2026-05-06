@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useLeaderboard, useMyProfile } from "@/lib/social";
 import type { LeaderboardEntry } from "@/lib/social";
+import { getBadge } from "@/lib/badge-status";
 import {
   DIFFICULTY_WEIGHTS, getDifficultyTier, TIER_COLOR, type DifficultyTier,
 } from "@/lib/exercise-registry";
@@ -90,6 +91,18 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
               You
             </span>
           )}
+          {(() => {
+            const badge = getBadge(entry.masteredSkills);
+            return badge ? (
+              <span className={cn(
+                "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0",
+                badge.bgColor, badge.textColor, badge.borderColor,
+              )}>
+                <span className="text-[9px]">{badge.icon}</span>
+                {badge.label}
+              </span>
+            ) : null;
+          })()}
         </div>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <span>@{entry.username}</span>

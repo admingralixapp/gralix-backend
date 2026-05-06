@@ -11,6 +11,7 @@ import {
   useRespondToRequest,
   useRemoveFriend,
 } from "@/lib/social";
+import { getBadge } from "@/lib/badge-status";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -310,7 +311,9 @@ export function Friends() {
             </div>
           ) : (
             <div className="rounded-xl border border-border bg-card overflow-hidden">
-              {friends.map((friend, i) => (
+              {friends.map((friend, i) => {
+                const badge = getBadge(friend.masteredSkillsCount ?? 0);
+                return (
                 <div
                   key={friend.id}
                   className={cn(
@@ -320,7 +323,18 @@ export function Friends() {
                 >
                   <Avatar name={friend.displayName} url={friend.avatarUrl} />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm">{friend.displayName}</div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-medium text-sm">{friend.displayName}</span>
+                      {badge && (
+                        <span className={cn(
+                          "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold border",
+                          badge.bgColor, badge.textColor, badge.borderColor,
+                        )}>
+                          <span className="text-[9px]">{badge.icon}</span>
+                          {badge.label}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       @{friend.username}
                     </div>
@@ -344,7 +358,7 @@ export function Friends() {
                     </button>
                   </div>
                 </div>
-              ))}
+              ); })}
             </div>
           )}
         </section>
