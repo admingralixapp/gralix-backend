@@ -37,6 +37,7 @@ Required Environment Variables:
 - `artifacts/api-server`: Backend API (Express 5).
 - `artifacts/api-spec`: OpenAPI specification for API codegen.
 - `artifacts/cali-coach/src/lib/ghost-poses.ts`: Ghost Mode AR Overlay configurations.
+- `artifacts/cali-coach/src/lib/workout-settings.ts`: Rest duration localStorage helpers (`getRestDuration`, `setRestDuration`).
 - `artifacts/api-server/src/lib/skillTree.ts`: Logic for skill tree evaluation and mastery points.
 - `artifacts/cali-coach/src/lib/skill-tree.ts`: All 32 skill node definitions, `evaluateSkillTree()`, `ALL_SKILL_NODES`.
 - `artifacts/cali-coach/src/components/skill-map.tsx`: Dashboard Dynamic Window (3 nodes/branch).
@@ -68,6 +69,7 @@ Required Environment Variables:
 - Community video feed for sharing and interacting with workout posts.
 - Video history: clips saved to device storage (7-day TTL), viewable from History and Session Detail.
 - Background upload manager: uploads persist across tab navigation with a floating progress toast.
+- Multi-Set Hands-Free Flow: 1–5 sets per workout, auto rest timer, voice commands ("start" / "end set" / "end workout"), haptic cues, set counter badge, animated listening indicator; rest duration configurable in Settings.
 
 ## User preferences
 

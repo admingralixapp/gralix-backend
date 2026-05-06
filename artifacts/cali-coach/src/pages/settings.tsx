@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/react";
-import { Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video, AlertTriangle } from "lucide-react";
+import { Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video, AlertTriangle, Timer } from "lucide-react";
 import { useMyProfile, useUpdatePrivacy, useUpsertProfile } from "@/lib/social";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -17,6 +17,12 @@ import {
   getClipCount,
   type RetentionDays,
 } from "@/lib/clip-store";
+import {
+  getRestDuration,
+  setRestDuration,
+  REST_DURATION_OPTIONS,
+  type RestDuration,
+} from "@/lib/workout-settings";
 
 type PrivacyLevel = "public" | "friends" | "private";
 
@@ -70,6 +76,14 @@ export function Settings() {
   const [retention,   setRetention]   = useState<RetentionDays>(() => getRetentionDays());
   const [clipCount,   setClipCount]   = useState<number>(() => getClipCount());
   const [confirmClear, setConfirmClear] = useState(false);
+
+  // Workout settings
+  const [restDuration, setRestDurationState] = useState<RestDuration>(() => getRestDuration());
+
+  function handleRestDurationChange(d: RestDuration) {
+    setRestDuration(d);
+    setRestDurationState(d);
+  }
 
   useEffect(() => {
     if (!mobilityStatus?.settings) return;
@@ -402,6 +416,39 @@ export function Settings() {
                 Clear All Clips
               </button>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Workout ──────────────────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader icon={<Timer className="w-4 h-4" />} label="Workout" />
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="font-medium text-sm mb-1">Rest Duration</div>
+          <div className="text-xs text-muted-foreground mb-3">
+            Time between sets during a multi-set workout.
+          </div>
+          <div
+            className="flex rounded-xl overflow-hidden border border-white/10 p-0.5 gap-0.5"
+            style={{ background: "rgba(255,255,255,0.04)" }}
+          >
+            {REST_DURATION_OPTIONS.map((d) => {
+              const active = restDuration === d;
+              return (
+                <button
+                  key={d}
+                  onClick={() => handleRestDurationChange(d)}
+                  className={[
+                    "flex-1 text-sm font-semibold py-2 rounded-[9px] transition-all duration-200",
+                    active
+                      ? "bg-primary text-black shadow-md"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06]",
+                  ].join(" ")}
+                >
+                  {d}s
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>

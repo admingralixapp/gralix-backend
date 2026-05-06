@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus } from "lucide-react";
+import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, cancelSpeech } from "@/lib/voice-service";
+import { getRestDuration, type RestDuration, REST_DURATION_OPTIONS } from "@/lib/workout-settings";
 import {
   getPhaseTransitionCue,
   getMilestoneCue,
@@ -448,6 +449,34 @@ export function Workout() {
   const [manualReps, setManualReps] = useState(10);
   const [manualRpe, setManualRpe] = useState<number | null>(null);
   const [isSavingManual, setIsSavingManual] = useState(false);
+
+  // ── Multi-set tracking ─────────────────────────────────────────────────────
+  const [totalSets,  setTotalSets]  = useState(3);
+  const [currentSet, setCurrentSet] = useState(1);
+  const [setsLog,    setSetsLog]    = useState<Array<{ reps: number; holdSec: number }>>([]);
+  const setStartRepCountRef  = useRef(0);
+  const setStartHoldSecRef   = useRef(0);
+
+  // ── Rest timer ─────────────────────────────────────────────────────────────
+  const [isResting,   setIsResting]   = useState(false);
+  const [restSeconds, setRestSeconds] = useState(0);
+  const restIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── Voice commands ─────────────────────────────────────────────────────────
+  const [voiceCommandsEnabled, setVoiceCommandsEnabled] = useState(false);
+  const [isListening,          setIsListening]          = useState(false);
+  const speechRecognitionRef   = useRef<{ stop: () => void; start: () => void } | null>(null);
+  const voiceCommandsEnabledRef = useRef(false);
+  /** Mirror of critical boolean states — kept current so the voice onresult
+   *  handler (captured in a closure) can read the latest values without
+   *  causing the SpeechRecognition effect to restart on every render. */
+  const voiceStateRef = useRef({ isResting: false, isWorkoutActive: false, isCalibrating: false });
+
+  // Stable refs to the latest handler versions (avoids stale closures in voice)
+  const handleEndSetRef       = useRef<() => Promise<void>>(async () => {});
+  const handleStartNextSetRef = useRef<() => void>(() => {});
+  const handleStopRef         = useRef<() => Promise<void>>(async () => {});
+  const handleStartRef        = useRef<() => Promise<void>>(async () => {});
 
   // ── Equipment selection ────────────────────────────────────────────────────
   const [equipment, setEquipment] = useState<EquipmentSelection>(DEFAULT_EQUIPMENT);
@@ -1122,9 +1151,9 @@ export function Workout() {
     calibFrameRef.current = requestAnimationFrame(calibrationLoop);
   }, []); // stable — reads all state from refs or setter fns
 
-  // ── Camera on/off: runs whenever calibrating or workout state changes ──────
+  // ── Camera on/off: runs whenever calibrating, workout, or resting ───────────
   useEffect(() => {
-    const anyActive = isCalibrating || isWorkoutActive;
+    const anyActive = isCalibrating || isWorkoutActive || isResting;
     if (anyActive) {
       startCamera();
     }
@@ -1135,7 +1164,7 @@ export function Workout() {
       cancelSpeech();
     }
     return () => {
-      if (!isCalibrating && !isWorkoutActive) {
+      if (!isCalibrating && !isWorkoutActive && !isResting) {
         cancelAnimationFrame(requestRef.current);
         cancelAnimationFrame(calibFrameRef.current);
         stopCamera();
@@ -1143,7 +1172,7 @@ export function Workout() {
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCalibrating, isWorkoutActive]);
+  }, [isCalibrating, isWorkoutActive, isResting]);
 
   // ── Calibration loop lifecycle ─────────────────────────────────────────────
   useEffect(() => {
@@ -1163,8 +1192,9 @@ export function Workout() {
       return;
     }
 
-    // Start canvas recording for POV review
-    if (videoRef.current && canvasRef.current) {
+    // Start canvas recording for POV review on the FIRST set only.
+    // Sets 2+ inherit the recorder that was started in handleStart().
+    if (!recorderRef.current && videoRef.current && canvasRef.current) {
       const recorder = new RepRecorder();
       if (recorder.isSupported) {
         recorder.attach(videoRef.current, canvasRef.current);
@@ -1178,12 +1208,19 @@ export function Workout() {
     requestRef.current = requestAnimationFrame(predictWebcam);
     return () => {
       cancelAnimationFrame(requestRef.current);
-      // Destroy recorder if workout stops without handleStop (e.g. navigate away)
-      recorderRef.current?.destroy();
-      recorderRef.current = null;
+      // NOTE: recorder is NOT destroyed here — it persists across sets so the
+      // full multi-set session can be reviewed. handleStop() destroys it.
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWorkoutActive]);
+
+  // ── Unmount cleanup: destroy recorder if component unmounts mid-workout ─────
+  useEffect(() => {
+    return () => {
+      recorderRef.current?.destroy();
+      recorderRef.current = null;
+    };
+  }, []);
 
   // ── Start — enters Calibration Phase ──────────────────────────────────────
   const handleStart = async () => {
@@ -1239,11 +1276,25 @@ export function Workout() {
       setFormScore(100);
       setSyncPct(100);
 
+      // ── Reset multi-set tracking for the first set ─────────────────────────
+      setCurrentSet(1);
+      setSetsLog([]);
+      setStartRepCountRef.current = 0;
+      setStartHoldSecRef.current  = 0;
+      setIsResting(false);
+      if (restIntervalRef.current) {
+        clearInterval(restIntervalRef.current);
+        restIntervalRef.current = null;
+      }
+
       // ── Begin calibration ──────────────────────────────────────────────────
       calibRef.current = { holdStartMs: 0, userScale: null };
       setCalibPhase("detecting");
       setCalibCountdown(3);
       setIsCalibrating(true); // triggers camera + calibration loop effects
+
+      // Haptic: set starting
+      try { navigator.vibrate(200); } catch {}
     } catch {
       toast({ title: "Error", description: "Could not start session.", variant: "destructive" });
     }
@@ -1332,6 +1383,124 @@ export function Workout() {
       recorder?.destroy();
       toast({ title: "Save error", description: "Failed to save session.", variant: "destructive" });
     }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Utility functions (defined inside component so they use component state/refs)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /** Plays a short "ding" tone via Web Audio API. */
+  function playDing() {
+    try {
+      const ctx  = new AudioContext();
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.6);
+      osc.onended = () => void ctx.close();
+    } catch { /* AudioContext unavailable */ }
+  }
+
+  /** Triggers device haptic feedback (silently ignored if not supported). */
+  function triggerHaptic(pattern: number | number[]) {
+    try { navigator.vibrate(pattern); } catch { /* not supported */ }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Multi-set: end current set (start rest or finish workout)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const handleEndSet = async () => {
+    if (!isWorkoutActive) return;
+
+    // Haptic: set ended
+    triggerHaptic([100, 50, 100]);
+
+    setIsWorkoutActive(false);
+
+    const setRepsThisSet = isStaticExercise
+      ? Math.round(stateRef.current.holdSeconds - setStartHoldSecRef.current)
+      : stateRef.current.repCount - setStartRepCountRef.current;
+
+    const newSetsLog = [...setsLog, { reps: setRepsThisSet, holdSec: stateRef.current.holdSeconds }];
+    setSetsLog(newSetsLog);
+
+    if (currentSet >= totalSets) {
+      // Last set — finish the workout
+      voiceSpeak(`Set ${currentSet} done. Workout complete!`);
+      await handleStop();
+    } else {
+      // More sets to go — start rest timer
+      voiceSpeak(`Set ${currentSet} done. Rest up.`, "encouraging");
+      const restDur = getRestDuration();
+      setRestSeconds(restDur);
+      setIsResting(true);
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Multi-set: begin calibration for the next set (no new DB session)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const handleStartNextSet = () => {
+    // Stop rest timer
+    if (restIntervalRef.current) {
+      clearInterval(restIntervalRef.current);
+      restIntervalRef.current = null;
+    }
+    setIsResting(false);
+
+    const nextSet = currentSet + 1;
+    setCurrentSet(nextSet);
+
+    // Record where this set starts in the cumulative counters
+    setStartRepCountRef.current = stateRef.current.repCount;
+    setStartHoldSecRef.current  = stateRef.current.holdSeconds;
+
+    // Reset per-set perception state (keep sessionId, repCount, repFormScores)
+    const exercise = exercises?.find(e => e.id.toString() === selectedExerciseId);
+    const config   = exercise ? getExerciseConfig(exercise.name) : null;
+    stateRef.current.phase            = config?.initialPhase ?? "up";
+    stateRef.current.lastSpokenTime   = Date.now();
+    stateRef.current.lastPhaseCueMs   = 0;
+    stateRef.current.lastRepTime      = Date.now();
+    stateRef.current.avgRepDurationMs = 0;
+    stateRef.current.holdActive       = false;
+    stateRef.current.lastHoldTickMs   = 0;
+    stateRef.current.lastHoldSpeakSec = -1;
+    stateRef.current.bestSyncPct      = 0;
+    stateRef.current.lastSyncDropMs   = 0;
+
+    frozenDetectedRef.current   = false;
+    frozenCheckRef.current      = { lastTime: -1, sinceMs: 0 };
+    clearPacerTimeouts();
+    smootherRef.current.reset();
+    currSmoothedRef.current    = null;
+    prevSmoothedRef.current    = null;
+    currGhostRef.current       = null;
+    currGhostConfigRef.current = null;
+    lastDetectMsRef.current    = 0;
+    prevDetectMsRef.current    = 0;
+    currSyncPctRef.current     = 100;
+
+    setFormScore(100);
+    setSyncPct(100);
+    setIsInActiveZone(false);
+
+    // Haptic: set starting
+    triggerHaptic(200);
+
+    // Re-enter calibration for the next set
+    calibRef.current = { holdStartMs: 0, userScale: null };
+    setCalibPhase("detecting");
+    setCalibCountdown(3);
+    setIsCalibrating(true);
   };
 
   /** Manual Log: saves a user-entered rep count (no camera / AI form scoring). */
@@ -1468,6 +1637,119 @@ export function Workout() {
     }
   };
 
+  // ── Keep handler refs current (runs every render — no hooks violation) ────────
+  handleEndSetRef.current       = handleEndSet;
+  handleStartNextSetRef.current = handleStartNextSet;
+  handleStopRef.current         = handleStop;
+  handleStartRef.current        = handleStart;
+
+  // ── Sync voiceStateRef so recognition closure reads fresh booleans ──────────
+  useEffect(() => {
+    voiceStateRef.current = { isResting, isWorkoutActive, isCalibrating };
+  }, [isResting, isWorkoutActive, isCalibrating]);
+
+  // ── Rest timer countdown ───────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isResting) {
+      if (restIntervalRef.current) {
+        clearInterval(restIntervalRef.current);
+        restIntervalRef.current = null;
+      }
+      return;
+    }
+    restIntervalRef.current = setInterval(() => {
+      setRestSeconds(prev => {
+        if (prev <= 1) {
+          clearInterval(restIntervalRef.current!);
+          restIntervalRef.current = null;
+          playDing();
+          try { navigator.vibrate([200, 100, 200, 100, 200]); } catch {}
+          voiceSpeak("Rest over. Get ready for the next set.");
+          handleStartNextSetRef.current();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => {
+      if (restIntervalRef.current) {
+        clearInterval(restIntervalRef.current);
+        restIntervalRef.current = null;
+      }
+    };
+  }, [isResting]);
+
+  // ── Voice command recognition ──────────────────────────────────────────────
+  useEffect(() => {
+    const cameraOn = isCalibrating || isWorkoutActive || isResting;
+    if (!voiceCommandsEnabled || !cameraOn) {
+      voiceCommandsEnabledRef.current = false;
+      try { speechRecognitionRef.current?.stop(); } catch {}
+      speechRecognitionRef.current = null;
+      setIsListening(false);
+      return;
+    }
+
+    const SRCtor = (
+      (window as unknown as Record<string, unknown>)["SpeechRecognition"] ??
+      (window as unknown as Record<string, unknown>)["webkitSpeechRecognition"]
+    ) as (new () => {
+      continuous:     boolean;
+      interimResults: boolean;
+      lang:           string;
+      start():  void;
+      stop():   void;
+      onstart:  (() => void) | null;
+      onend:    (() => void) | null;
+      onresult: ((e: { results: { [i: number]: { [j: number]: { transcript: string } } }; resultIndex: number }) => void) | null;
+      onerror:  (() => void) | null;
+    }) | undefined;
+
+    if (!SRCtor) {
+      toast({ title: "Voice commands not supported", description: "Try Chrome or Edge for voice control." });
+      setVoiceCommandsEnabled(false);
+      return;
+    }
+
+    const recognition = new SRCtor();
+    recognition.continuous     = true;
+    recognition.interimResults = false;
+    recognition.lang           = "en-US";
+    voiceCommandsEnabledRef.current = true;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend   = () => {
+      setIsListening(false);
+      if (voiceCommandsEnabledRef.current) {
+        setTimeout(() => { try { recognition.start(); } catch {} }, 300);
+      }
+    };
+    recognition.onerror = () => {};
+    recognition.onresult = (e) => {
+      const t  = e.results[e.resultIndex][0].transcript.toLowerCase().trim();
+      const vs = voiceStateRef.current;
+      if (t.includes("start")) {
+        if (vs.isResting) handleStartNextSetRef.current();
+        else if (!vs.isWorkoutActive && !vs.isCalibrating) void handleStartRef.current();
+      } else if (t.includes("end set") || t.includes("finish set") || t.includes("done")) {
+        if (vs.isWorkoutActive) void handleEndSetRef.current();
+      } else if (t.includes("end workout") || t.includes("stop workout") || t.includes("finish workout")) {
+        if (vs.isWorkoutActive || vs.isResting) void handleStopRef.current();
+      }
+    };
+
+    try { recognition.start(); } catch {}
+    speechRecognitionRef.current = recognition;
+
+    return () => {
+      voiceCommandsEnabledRef.current = false;
+      try { recognition.stop(); } catch {}
+      speechRecognitionRef.current = null;
+      setIsListening(false);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceCommandsEnabled, isCalibrating, isWorkoutActive, isResting, toast]);
+
   // ── Derived flags ──────────────────────────────────────────────────────────
   const selectedExerciseConfig = (() => {
     const exercise = exercises?.find(e => e.id.toString() === selectedExerciseId);
@@ -1493,7 +1775,7 @@ export function Workout() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  const cameraActive = isCalibrating || isWorkoutActive;
+  const cameraActive = isCalibrating || isWorkoutActive || isResting;
 
   return (
     <div className="bg-black text-white min-h-full">
@@ -1655,6 +1937,19 @@ export function Workout() {
             />
           )}
 
+          {/* Set counter badge — top center */}
+          {isWorkoutActive && totalSets > 1 && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 border border-white/15 backdrop-blur-sm">
+                <Layers className="w-3.5 h-3.5 text-primary" />
+                <span className="text-sm font-bold text-white">
+                  Set <span className="text-primary">{currentSet}</span>
+                  <span className="text-white/35"> / {totalSets}</span>
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Top-left workout controls */}
           {isWorkoutActive && (
             <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
@@ -1682,6 +1977,20 @@ export function Workout() {
                 {voicePacing ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
                 Voice Pacing
               </button>
+              {/* Listening wave indicator */}
+              {voiceCommandsEnabled && isListening && (
+                <div
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold select-none animate-pulse"
+                  style={{
+                    background:  "rgba(34,197,94,0.15)",
+                    borderColor: "rgba(34,197,94,0.5)",
+                    color:       "#86efac",
+                  }}
+                >
+                  <Mic className="w-3.5 h-3.5" />
+                  Listening
+                </div>
+              )}
             </div>
           )}
 
@@ -1735,7 +2044,7 @@ export function Workout() {
                 <div className="flex flex-col items-center">
                   <span className="text-sm font-mono text-white/70 uppercase tracking-widest">Reps</span>
                   <span className="text-8xl font-black text-primary leading-none tracking-tighter drop-shadow-lg">
-                    {reps}
+                    {reps - setStartRepCountRef.current}
                   </span>
                 </div>
               )}
@@ -1771,21 +2080,72 @@ export function Workout() {
             </div>
           )}
 
-          {/* FINISH button — raised above nav bar on mobile */}
+          {/* Rest timer overlay */}
+          {isResting && (
+            <div
+              className="absolute inset-0 z-20 flex flex-col items-center justify-center"
+              style={{ background: "rgba(0,0,0,0.80)", backdropFilter: "blur(10px)" }}
+            >
+              <div
+                className="flex flex-col items-center gap-5 p-10 rounded-3xl border border-white/10"
+                style={{
+                  background: "linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))",
+                  boxShadow:  "0 8px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.10)",
+                }}
+              >
+                <div className="flex items-center gap-2 text-white/45 text-xs font-bold uppercase tracking-widest">
+                  <Timer className="w-4 h-4" />
+                  Rest
+                </div>
+                <div
+                  className="text-9xl font-black tabular-nums leading-none tracking-tighter"
+                  style={{ color: restSeconds <= 10 ? "#ef4444" : "#22c55e" }}
+                >
+                  {restSeconds}
+                </div>
+                <div className="text-white/35 text-sm font-medium">
+                  Next: Set {currentSet + 1} of {totalSets}
+                </div>
+                <button
+                  onClick={handleStartNextSet}
+                  className="flex items-center gap-2 px-6 py-3 rounded-full border border-primary/40 bg-primary/10 text-primary text-sm font-bold hover:bg-primary/20 transition-colors"
+                >
+                  <SkipForward className="w-4 h-4" />
+                  Start Now
+                </button>
+                <button
+                  onClick={handleStop}
+                  className="text-xs text-white/25 hover:text-white/50 transition-colors"
+                >
+                  End Workout
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* END SET / FINISH button — raised above nav bar on mobile */}
           {isWorkoutActive && (
             <div
-              className="absolute left-0 right-0 flex justify-center bg-gradient-to-t from-black to-transparent pt-8 pb-4 md:pb-6"
+              className="absolute left-0 right-0 flex flex-col items-center gap-2 bg-gradient-to-t from-black to-transparent pt-8 pb-4 md:pb-6"
               style={{ bottom: "env(safe-area-inset-bottom, 0px)" }}
             >
               <Button
                 variant="destructive"
                 size="lg"
-                className="w-48 h-14 text-xl font-bold rounded-full shadow-[0_0_20px_rgba(220,38,38,0.5)]"
-                onClick={handleStop}
+                className="w-56 h-14 text-xl font-bold rounded-full shadow-[0_0_20px_rgba(220,38,38,0.5)]"
+                onClick={handleEndSet}
               >
                 <Square className="w-6 h-6 mr-2 fill-current" />
-                FINISH
+                END SET {currentSet}
               </Button>
+              {totalSets > 1 && (
+                <button
+                  className="text-xs text-white/30 hover:text-white/60 transition-colors"
+                  onClick={handleStop}
+                >
+                  End Workout Early
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -1885,6 +2245,70 @@ export function Workout() {
                 })}
               </PopoverContent>
             </Popover>
+          </div>
+
+          {/* ── Sets & Voice card ────────────────────────────────────────── */}
+          <div
+            className="rounded-2xl border border-white/10 p-4 space-y-4"
+            style={{
+              background: "linear-gradient(135deg,rgba(255,255,255,0.06) 0%,rgba(255,255,255,0.02) 100%)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)",
+            }}
+          >
+            {/* Sets picker */}
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-white/35 mb-2.5 flex items-center gap-1.5">
+                <Layers className="w-3 h-3" />
+                Sets
+              </div>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setTotalSets(n)}
+                    className={[
+                      "flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all",
+                      totalSets === n
+                        ? "bg-primary/20 border-primary/60 text-primary shadow-[0_0_12px_rgba(34,197,94,0.15)]"
+                        : "border-white/10 text-white/40 hover:border-white/20 hover:text-white/70",
+                    ].join(" ")}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Voice commands toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-semibold text-white/80 flex items-center gap-1.5">
+                  <Mic className="w-3.5 h-3.5 text-primary/70" />
+                  Voice Commands
+                </div>
+                <div className="text-[11px] text-white/30 mt-0.5">
+                  "start" · "end set" · "end workout"
+                </div>
+              </div>
+              <button
+                onClick={() => setVoiceCommandsEnabled(!voiceCommandsEnabled)}
+                className={[
+                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
+                  voiceCommandsEnabled ? "bg-primary" : "bg-white/10",
+                ].join(" ")}
+                role="switch"
+                aria-checked={voiceCommandsEnabled}
+              >
+                <span
+                  className={[
+                    "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg transform transition duration-200",
+                    voiceCommandsEnabled ? "translate-x-5" : "translate-x-0",
+                  ].join(" ")}
+                />
+              </button>
+            </div>
           </div>
 
           {/* ── Manual Log view ──────────────────────────────────────────── */}
