@@ -95,7 +95,18 @@ export function useUpsertProfile() {
         body: JSON.stringify(data),
       });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
+    onSuccess: () => {
+      // Invalidate own profile
+      void qc.invalidateQueries({ queryKey: ["/api/users/me"] });
+      // Bust leaderboard (all tabs) so the updated username appears immediately
+      void qc.invalidateQueries({ queryKey: ["/api/leaderboard"] });
+      // Bust search cache so find-friends shows the new username right away
+      void qc.invalidateQueries({ queryKey: ["/api/users/search"] });
+      // Bust public profile pages (e.g. /profile/:username)
+      void qc.invalidateQueries({ queryKey: ["/api/users"] });
+      // Bust friends list in case display name changed
+      void qc.invalidateQueries({ queryKey: ["/api/friends"] });
+    },
   });
 }
 

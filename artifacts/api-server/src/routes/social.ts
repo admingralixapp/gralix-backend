@@ -7,7 +7,7 @@ import {
   sessionsTable,
   exercisesTable,
 } from "@workspace/db";
-import { eq, ilike, or, and, desc, inArray } from "drizzle-orm";
+import { eq, ne, ilike, or, and, desc, inArray } from "drizzle-orm";
 
 const router = Router();
 
@@ -94,6 +94,8 @@ router.post("/users/me", requireAuthMiddleware, async (req: Request, res: Respon
     return;
   }
 
+  req.log.info({ clerkId, requestedUsername: username, safeUsername }, "profile upsert — received");
+
   try {
     const country = detectCountry(req);
     const [user] = await db
@@ -115,9 +117,12 @@ router.post("/users/me", requireAuthMiddleware, async (req: Request, res: Respon
         },
       })
       .returning();
+
+    req.log.info({ storedUsername: user.username, storedDisplayName: user.displayName, userId: user.id }, "profile upsert — stored");
     res.json(user);
   } catch {
     // Unique violation on username
+    req.log.warn({ clerkId, safeUsername }, "profile upsert — username conflict");
     res.status(409).json({ error: "Username already taken" });
   }
 });
@@ -229,13 +234,13 @@ router.get(
             ilike(usersTable.username, `%${q}%`),
             ilike(usersTable.displayName, `%${q}%`),
           ),
-          // Exclude self
-          me ? eq(usersTable.id, usersTable.id) : undefined,
+          // Exclude self directly in SQL
+          me ? ne(usersTable.id, me.id) : undefined,
         ),
       )
       .limit(20);
 
-    // Remove self from results
+    // Safety filter: also remove self in JS
     const filtered = me ? results.filter((u) => u.id !== me.id) : results;
     res.json(filtered);
   },
