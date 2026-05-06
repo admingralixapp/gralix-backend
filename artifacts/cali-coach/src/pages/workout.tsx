@@ -450,6 +450,7 @@ export function Workout() {
   const [manualReps, setManualReps] = useState(10);
   const [manualRpe, setManualRpe] = useState<number | null>(null);
   const [isSavingManual, setIsSavingManual] = useState(false);
+  const [isEnding,       setIsEnding]       = useState(false);
 
   // ── Multi-set tracking ─────────────────────────────────────────────────────
   const [totalSets,  setTotalSets]  = useState(3);
@@ -478,6 +479,8 @@ export function Workout() {
   const handleStartNextSetRef = useRef<() => void>(() => {});
   const handleStopRef         = useRef<() => Promise<void>>(async () => {});
   const handleStartRef        = useRef<() => Promise<void>>(async () => {});
+  /** Guards against double-firing End Workout (button + voice command race). */
+  const isEndingRef           = useRef(false);
 
   // ── Equipment selection ────────────────────────────────────────────────────
   const [equipment, setEquipment] = useState<EquipmentSelection>(DEFAULT_EQUIPMENT);
@@ -1224,11 +1227,24 @@ export function Workout() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWorkoutActive]);
 
-  // ── Unmount cleanup: destroy recorder if component unmounts mid-workout ─────
+  // ── Unmount cleanup: destroy recorder and release all media resources ────────
+  // This runs unconditionally when the component unmounts — even mid-workout —
+  // so camera tracks are always released and the mic is always stopped.
   useEffect(() => {
     return () => {
       recorderRef.current?.destroy();
       recorderRef.current = null;
+      cancelAnimationFrame(requestRef.current);
+      cancelAnimationFrame(calibFrameRef.current);
+      // Release camera tracks
+      if (videoRef.current?.srcObject) {
+        (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+        videoRef.current.srcObject = null;
+      }
+      cancelSpeech();
+      voiceCommandsEnabledRef.current = false;
+      try { speechRecognitionRef.current?.stop(); } catch {}
+      speechRecognitionRef.current = null;
     };
   }, []);
 
@@ -1311,6 +1327,19 @@ export function Workout() {
   };
 
   const handleStop = async () => {
+    // Prevent double-fire from simultaneous button click + voice command.
+    if (isEndingRef.current) return;
+    isEndingRef.current = true;
+    setIsEnding(true);
+
+    // Immediately silence TTS and stop the mic so neither stays active
+    // during the async save / navigation transition.
+    cancelSpeech();
+    voiceCommandsEnabledRef.current = false;
+    try { speechRecognitionRef.current?.stop(); } catch {}
+    speechRecognitionRef.current = null;
+    setIsListening(false);
+
     setIsWorkoutActive(false);
     setIsCalibrating(false);
     voiceSpeak("Workout complete.");
@@ -1321,6 +1350,8 @@ export function Workout() {
 
     if (!stateRef.current.sessionId) {
       recorder?.destroy();
+      isEndingRef.current = false;
+      setIsEnding(false);
       return;
     }
 
@@ -1348,6 +1379,7 @@ export function Workout() {
     const prevEvaluated = evaluateSkillTree(history);
 
     try {
+      // Wait for the DB write to succeed before showing the summary screen.
       await updateSession.mutateAsync({
         id:   finalSessionId,
         data: {
@@ -1391,7 +1423,10 @@ export function Workout() {
       setSessionResults(resultsProps);
     } catch {
       recorder?.destroy();
-      toast({ title: "Save error", description: "Failed to save session.", variant: "destructive" });
+      toast({ title: "Save error", description: "Failed to save session. Please try again.", variant: "destructive" });
+    } finally {
+      isEndingRef.current = false;
+      setIsEnding(false);
     }
   };
 
@@ -2125,9 +2160,10 @@ export function Workout() {
                 </button>
                 <button
                   onClick={handleStop}
-                  className="text-xs text-white/25 hover:text-white/50 transition-colors"
+                  disabled={isEnding}
+                  className="text-xs text-white/25 hover:text-white/50 transition-colors disabled:opacity-40 disabled:pointer-events-none"
                 >
-                  End Workout
+                  {isEnding ? "Saving…" : "End Workout"}
                 </button>
               </div>
             </div>
@@ -2150,10 +2186,11 @@ export function Workout() {
               </Button>
               {totalSets > 1 && (
                 <button
-                  className="text-xs text-white/30 hover:text-white/60 transition-colors"
+                  className="text-xs text-white/30 hover:text-white/60 transition-colors disabled:opacity-40 disabled:pointer-events-none"
                   onClick={handleStop}
+                  disabled={isEnding}
                 >
-                  End Workout Early
+                  {isEnding ? "Saving…" : "End Workout Early"}
                 </button>
               )}
             </div>
