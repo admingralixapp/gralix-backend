@@ -7,8 +7,12 @@ import {
   sessionsTable,
   exercisesTable,
 } from "@workspace/db";
-import { eq, ilike, or, and, desc, inArray, isNotNull } from "drizzle-orm";
+import { eq, ilike, or, and, desc, inArray, isNotNull, isNull } from "drizzle-orm";
 import { computeMasteryPoints, type SessionRow } from "../lib/skillTree";
+import {
+  computeLifetimeRepsFromSessions,
+  computeEarnedBadgeIds,
+} from "../lib/milestoneBadges";
 
 const router = Router();
 
@@ -120,7 +124,51 @@ router.post("/users/me", requireAuthMiddleware, async (req: Request, res: Respon
       .returning();
 
     req.log.info({ storedUsername: user.username, storedDisplayName: user.displayName, userId: user.id }, "profile upsert — stored");
-    res.json(user);
+
+    // ── Backfill: associate any sessions created with this clerkId but no userId ──
+    // This handles sessions created before the profile existed.
+    const backfilled = await db
+      .update(sessionsTable)
+      .set({ userId: user.id })
+      .where(
+        and(
+          eq(sessionsTable.clerkId, clerkId),
+          isNull(sessionsTable.userId),
+        ),
+      )
+      .returning({ id: sessionsTable.id });
+
+    if (backfilled.length > 0) {
+      req.log.info({ userId: user.id, count: backfilled.length }, "profile upsert — backfilled sessions");
+    }
+
+    // ── Sync lifetime reps and milestone badges from all associated sessions ──
+    const allSessions = await db
+      .select({
+        exerciseName: exercisesTable.name,
+        totalReps: sessionsTable.totalReps,
+        completedAt: sessionsTable.completedAt,
+      })
+      .from(sessionsTable)
+      .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
+      .where(eq(sessionsTable.userId, user.id));
+
+    const lifetimeReps = computeLifetimeRepsFromSessions(allSessions);
+    const earnedBadgeIds = computeEarnedBadgeIds(lifetimeReps);
+
+    const [updatedUser] = await db
+      .update(usersTable)
+      .set({
+        lifetimeRepsPush: lifetimeReps.push,
+        lifetimeRepsPull: lifetimeReps.pull,
+        lifetimeRepsCore: lifetimeReps.core,
+        lifetimeRepsLegs: lifetimeReps.legs,
+        earnedMilestoneBadges: earnedBadgeIds,
+      })
+      .where(eq(usersTable.id, user.id))
+      .returning();
+
+    res.json(updatedUser ?? user);
   } catch {
     // Unique violation on username
     req.log.warn({ clerkId, safeUsername }, "profile upsert — username conflict");
@@ -348,6 +396,16 @@ router.get(
       return;
     }
 
+    // For own profile: also pick up sessions by clerkId where userId is still null,
+    // and fully-unclaimed sessions (migration fallback for pre-clerkId sessions)
+    const sessionWhere = isSelf
+      ? or(
+          eq(sessionsTable.userId, targetUser.id),
+          and(isNull(sessionsTable.userId), eq(sessionsTable.clerkId, targetUser.clerkId)),
+          and(isNull(sessionsTable.userId), isNull(sessionsTable.clerkId)),
+        )!
+      : eq(sessionsTable.userId, targetUser.id);
+
     const sessions = await db
       .select({
         exerciseName: exercisesTable.name,
@@ -357,7 +415,7 @@ router.get(
       })
       .from(sessionsTable)
       .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
-      .where(eq(sessionsTable.userId, targetUser.id))
+      .where(sessionWhere)
       .orderBy(desc(sessionsTable.startedAt));
 
     const completedSessions = sessions.filter(
@@ -381,6 +439,13 @@ router.get(
       formMastery,
       totalSessions: completedSessions.length,
       totalReps: sessions.reduce((sum, s) => sum + (s.totalReps ?? 0), 0),
+      lifetimeReps: {
+        push: targetUser.lifetimeRepsPush,
+        pull: targetUser.lifetimeRepsPull,
+        core: targetUser.lifetimeRepsCore,
+        legs: targetUser.lifetimeRepsLegs,
+      },
+      earnedMilestoneBadges: (targetUser.earnedMilestoneBadges as string[]) ?? [],
     });
   },
 );

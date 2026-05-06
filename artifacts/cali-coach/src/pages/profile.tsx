@@ -9,6 +9,7 @@ import {
   UserCheck,
   Trophy,
   Dumbbell,
+  Medal,
 } from "lucide-react";
 import {
   useFriendProfile,
@@ -17,6 +18,7 @@ import {
 } from "@/lib/social";
 import { evaluateSkillTree, type SessionSummary } from "@/lib/skill-tree";
 import { getBadge } from "@/lib/badge-status";
+import { BadgeGallery } from "@/components/badge-gallery";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -139,7 +141,7 @@ export function ProfilePage() {
     );
   }
 
-  const { user, hidden, sessions, formMastery, totalSessions, totalReps } =
+  const { user, hidden, sessions, formMastery, totalSessions, totalReps, lifetimeReps, earnedMilestoneBadges } =
     profile;
 
   // Compute skill tree from the friend's sessions
@@ -296,6 +298,22 @@ export function ProfilePage() {
               </div>
             </div>
           )}
+
+          {/* ── Milestone Badge Gallery ──────────────────────────── */}
+          {(earnedMilestoneBadges?.length ?? 0) > 0 || lifetimeReps ? (
+            <section className="mb-4">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
+                <Medal className="w-4 h-4 text-primary" />
+                Volume Badges
+              </h2>
+              <div className="rounded-xl border border-border bg-card p-4">
+                <BadgeGallery
+                  earnedBadgeIds={earnedMilestoneBadges ?? []}
+                  lifetimeReps={lifetimeReps}
+                />
+              </div>
+            </section>
+          ) : null}
 
           {/* ── Elite Mastery Badges ──────────────────────────────── */}
           {eliteBadges.length > 0 && (

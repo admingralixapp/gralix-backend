@@ -9,6 +9,8 @@ export const sessionsTable = pgTable("sessions", {
   exerciseId:   integer("exercise_id").notNull().references(() => exercisesTable.id),
   /** Null for sessions created before auth was introduced */
   userId:       integer("user_id").references(() => usersTable.id),
+  /** Clerk user ID stored at session creation — used to backfill userId retroactively */
+  clerkId:      varchar("clerk_id", { length: 255 }),
   startedAt:    timestamp("started_at",   { withTimezone: true }).notNull().defaultNow(),
   completedAt:  timestamp("completed_at", { withTimezone: true }),
   totalReps:    integer("total_reps").notNull().default(0),

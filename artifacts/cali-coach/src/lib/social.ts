@@ -66,6 +66,8 @@ export interface PublicProfile {
   formMastery: number | null;
   totalSessions: number;
   totalReps: number;
+  lifetimeReps?: { push: number; pull: number; core: number; legs: number };
+  earnedMilestoneBadges?: string[];
 }
 
 // ---------------------------------------------------------------------------

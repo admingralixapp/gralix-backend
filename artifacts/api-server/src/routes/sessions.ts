@@ -11,12 +11,56 @@ import {
   UpdateSessionParams,
   UpdateSessionResponse,
 } from "@workspace/api-zod";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, or, and, isNull, sql } from "drizzle-orm";
+import {
+  getExerciseCategory,
+  getNewlyEarnedBadgeIds,
+  computeLifetimeRepsFromSessions,
+  computeEarnedBadgeIds,
+  MILESTONE_BADGE_MAP,
+  type MilestoneCategory,
+} from "../lib/milestoneBadges";
 
 const router: IRouter = Router();
 
+// ─── Helper: resolve DB user from Clerk auth ──────────────────────────────────
+
+async function resolveUser(req: Parameters<typeof getAuth>[0]) {
+  const auth = getAuth(req as any);
+  if (!auth?.userId) return { clerkId: null, userId: null };
+  const clerkId = auth.userId;
+  const [user] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.clerkId, clerkId));
+  return { clerkId, userId: user?.id ?? null };
+}
+
+// ─── GET /api/sessions ────────────────────────────────────────────────────────
+// Returns sessions for the authenticated user only.
+// Matches by userId first, then falls back to clerkId (for sessions created
+// before the user profile existed).
+
 router.get("/sessions", async (req, res) => {
   const { limit, offset } = ListSessionsQueryParams.parse(req.query);
+  const { clerkId, userId } = await resolveUser(req);
+
+  // Build where clause: match by DB userId OR by clerkId (for pre-profile sessions)
+  // Also include fully-unclaimed (userId IS NULL AND clerkId IS NULL) as migration fallback
+  const conditions = [];
+  if (userId !== null) conditions.push(eq(sessionsTable.userId, userId));
+  if (clerkId) conditions.push(and(isNull(sessionsTable.userId), eq(sessionsTable.clerkId, clerkId)));
+  // Migration fallback: sessions created before clerkId was tracked
+  if (userId !== null || clerkId) {
+    conditions.push(and(isNull(sessionsTable.userId), isNull(sessionsTable.clerkId)));
+  }
+
+  const whereClause = conditions.length === 0
+    ? sql`1 = 0` // unauthenticated → no sessions
+    : conditions.length === 1
+      ? conditions[0]!
+      : or(...(conditions as [typeof conditions[0], ...typeof conditions]));
+
   const sessions = await db
     .select({
       id: sessionsTable.id,
@@ -33,43 +77,41 @@ router.get("/sessions", async (req, res) => {
     })
     .from(sessionsTable)
     .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
+    .where(whereClause)
     .orderBy(desc(sessionsTable.startedAt))
     .limit(limit ?? 20)
     .offset(offset ?? 0);
+
   res.json(ListSessionsResponse.parse(sessions));
 });
 
+// ─── POST /api/sessions ───────────────────────────────────────────────────────
+
 router.post("/sessions", async (req, res) => {
   const body = CreateSessionBody.parse(req.body);
-
-  // Associate with authenticated user if possible
-  let userId: number | null = null;
-  try {
-    const auth = getAuth(req as any);
-    if (auth?.userId) {
-      const [user] = await db
-        .select({ id: usersTable.id })
-        .from(usersTable)
-        .where(eq(usersTable.clerkId, auth.userId));
-      userId = user?.id ?? null;
-    }
-  } catch {
-    // unauthenticated — fine
-  }
+  const { clerkId, userId } = await resolveUser(req);
 
   const [session] = await db
     .insert(sessionsTable)
-    .values({ exerciseId: body.exerciseId, notes: body.notes ?? null, logType: body.logType ?? "ai", userId })
+    .values({
+      exerciseId: body.exerciseId,
+      notes: body.notes ?? null,
+      logType: body.logType ?? "ai",
+      userId,
+      clerkId,
+    })
     .returning();
   const [exercise] = await db
     .select({ name: exercisesTable.name })
     .from(exercisesTable)
-    .where(eq(exercisesTable.id, session.exerciseId));
+    .where(eq(exercisesTable.id, session!.exerciseId));
   res.status(201).json({
     ...session,
     exerciseName: exercise?.name ?? "",
   });
 });
+
+// ─── GET /api/sessions/:id ────────────────────────────────────────────────────
 
 router.get("/sessions/:id", async (req, res) => {
   const { id } = GetSessionParams.parse(req.params);
@@ -101,6 +143,10 @@ router.get("/sessions/:id", async (req, res) => {
   res.json(GetSessionResponse.parse({ ...session, reps }));
 });
 
+// ─── PATCH /api/sessions/:id ──────────────────────────────────────────────────
+// When a session is completed (completedAt set), also updates the user's
+// lifetime rep totals and milestone badge list.
+
 router.patch("/sessions/:id", async (req, res) => {
   const { id } = UpdateSessionParams.parse(req.params);
   const body = UpdateSessionBody.parse(req.body);
@@ -124,7 +170,57 @@ router.patch("/sessions/:id", async (req, res) => {
     .from(exercisesTable)
     .where(eq(exercisesTable.id, updated.exerciseId));
 
-  res.json(UpdateSessionResponse.parse({ ...updated, exerciseName: exercise?.name ?? "" }));
+  const exerciseName = exercise?.name ?? "";
+
+  // ── Update lifetime reps + badges if session is being completed ──
+  let newBadges: { id: string; name: string; icon: string; category: string; tier: string }[] = [];
+
+  if (body.completedAt && updated.userId && (body.totalReps ?? 0) > 0) {
+    const cat: MilestoneCategory | null = getExerciseCategory(exerciseName);
+    if (cat) {
+      const [user] = await db
+        .select({
+          lifetimeRepsPush: usersTable.lifetimeRepsPush,
+          lifetimeRepsPull: usersTable.lifetimeRepsPull,
+          lifetimeRepsCore: usersTable.lifetimeRepsCore,
+          lifetimeRepsLegs: usersTable.lifetimeRepsLegs,
+          earnedMilestoneBadges: usersTable.earnedMilestoneBadges,
+        })
+        .from(usersTable)
+        .where(eq(usersTable.id, updated.userId));
+
+      if (user) {
+        const colKey = `lifetimeReps${cat.charAt(0).toUpperCase()}${cat.slice(1)}` as
+          | "lifetimeRepsPush"
+          | "lifetimeRepsPull"
+          | "lifetimeRepsCore"
+          | "lifetimeRepsLegs";
+        const currentReps = (user[colKey] ?? 0) as number;
+        const addedReps   = body.totalReps ?? 0;
+        const newReps     = currentReps + addedReps;
+
+        // Detect newly crossed thresholds
+        const newBadgeIds    = getNewlyEarnedBadgeIds(cat, currentReps, newReps);
+        const currentBadges  = (user.earnedMilestoneBadges as string[]) ?? [];
+        const updatedBadges  = [...new Set([...currentBadges, ...newBadgeIds])];
+
+        await db
+          .update(usersTable)
+          .set({ [colKey]: newReps, earnedMilestoneBadges: updatedBadges })
+          .where(eq(usersTable.id, updated.userId));
+
+        newBadges = newBadgeIds.flatMap((bid) => {
+          const def = MILESTONE_BADGE_MAP.get(bid);
+          return def ? [{ id: def.id, name: def.name, icon: def.icon, category: def.category, tier: def.tier }] : [];
+        });
+      }
+    }
+  }
+
+  res.json({
+    ...UpdateSessionResponse.parse({ ...updated, exerciseName }),
+    newBadges,
+  });
 });
 
 export default router;

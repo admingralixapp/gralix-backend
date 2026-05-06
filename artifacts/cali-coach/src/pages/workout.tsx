@@ -1272,7 +1272,7 @@ export function Workout() {
 
     try {
       // Wait for the DB write to succeed before showing the summary screen.
-      await updateSession.mutateAsync({
+      const sessionResult = await updateSession.mutateAsync({
         id:   finalSessionId,
         data: {
           completedAt:  new Date().toISOString(),
@@ -1280,7 +1280,18 @@ export function Workout() {
           avgFormScore: finalFormScore,
           ...(frozenDetectedRef.current ? { isVerified: false } : {}),
         },
-      });
+      }) as unknown as { newBadges?: Array<{ id: string; name: string; icon: string; category: string; tier: string }> };
+
+      // Show milestone badge toasts for newly earned badges
+      const milestones = sessionResult?.newBadges ?? [];
+      for (const badge of milestones) {
+        setTimeout(() => {
+          toast({
+            title: `🏅 Milestone Unlocked: ${badge.name}`,
+            description: `${badge.icon} You've earned the ${badge.tier} badge for ${badge.category} volume!`,
+          });
+        }, 800);
+      }
 
       const newSession: SessionSummary = {
         exerciseName,

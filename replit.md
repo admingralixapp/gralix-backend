@@ -39,6 +39,9 @@ Required Environment Variables:
 - `artifacts/cali-coach/src/lib/ghost-poses.ts`: Ghost Mode AR Overlay configurations.
 - `artifacts/cali-coach/src/lib/workout-settings.ts`: Rest duration localStorage helpers (`getRestDuration`, `setRestDuration`).
 - `artifacts/cali-coach/src/lib/badge-status.ts`: 7-tier status badge utility — `getBadge(masteredCount)` → `{ label, icon, bgColor, textColor, borderColor }`.
+- `artifacts/cali-coach/src/lib/milestone-badges.ts`: Milestone badge definitions (20 badges: 4 categories × 5 tiers: Starter/Bronze/Silver/Gold/Platinum at 10/100/500/1000/5000 lifetime reps).
+- `artifacts/api-server/src/lib/milestoneBadges.ts`: Server-side milestone logic — `getNewlyEarnedBadgeIds`, `computeLifetimeRepsFromSessions`, `computeEarnedBadgeIds`, exercise→category map.
+- `artifacts/cali-coach/src/components/badge-gallery.tsx`: Badge Gallery component with full gallery (earned/locked) and compact pill modes.
 - `artifacts/api-server/src/lib/skillTree.ts`: Logic for skill tree evaluation and mastery points.
 - `artifacts/cali-coach/src/lib/skill-tree.ts`: All 52 skill node definitions (4 branches × multiple sub-paths), `evaluateSkillTree()`, `ALL_SKILL_NODES`.
 - `artifacts/cali-coach/src/components/skill-map.tsx`: Dashboard Dynamic Window (3 nodes/branch).
@@ -64,6 +67,8 @@ Required Environment Variables:
 - Manual logging option for sessions without camera use.
 - Anti-cheat/verification system for AI-coached sessions.
 - Social features: friend management, shared profiles with skill trees and mastery. 7-tier status badges (Bronze→Master) shown on leaderboard rows, friend list, and profile pages based on mastered skill count.
+- Milestone Badge Gallery: 20 volume badges (4 categories × 5 tiers at 10/100/500/1000/5000 lifetime reps). Shown on profiles with locked/unlocked state and progress bars. Toast notifications on new badge earned.
+- Lifetime rep counters per category (Push/Pull/Core/Legs) tracked in DB and updated on every session completion.
 - Daily Mobility System with guided routines and streak tracking.
 - Global, national, and friends leaderboards based on mastery points.
 - Level-up celebration with confetti and social shoutouts for elite skill mastery.
@@ -85,6 +90,8 @@ _Populate as you build_
 - **Ghost Sync Gating**: Rep counting and hold timers are gated by Ghost Sync; ensure you are within 85% sync for progress to register.
 - **Clip Store**: Video clips are stored in localStorage (key `calicoach_clips_v1`), keyed by sessionId. 7-day TTL. `purgeExpiredClips()` runs on app startup in App.tsx.
 - **UploadManagerProvider**: Must be inside `QueryClientProvider`. Manages background uploads (history saves + feed posts) with a floating toast that persists across navigation.
+- **Session userId backfill**: Old sessions with `userId = NULL` are reclaimed on profile creation (POST /api/users/me) via `clerkId` match. Sessions with `userId = NULL AND clerkId = NULL` (pre-clerkId era) are included as a migration fallback in GET /api/sessions and own-profile queries.
+- **Milestone badges**: Stored as a jsonb array of badge IDs (`earned_milestone_badges`) in `usersTable`. Updated atomically in PATCH /api/sessions/:id when a session is completed. Lifetime rep columns are additive (not recomputed from scratch) — each session increments the appropriate counter.
 
 ## Pointers
 
