@@ -1,0 +1,100 @@
+🟠 PUSH Branch
+Main Path
+
+push-1 — First Push Up · L1 Beginner · (prereq: none)
+push-2 — Push-Up Strength · L2 Novice · (prereq: push-1)
+push-3 — Diamond Push Up · L3 Intermediate · (prereq: push-2)
+push-4 — Archer Push Up · L4 Advanced · (prereq: push-3)
+push-5 — Pseudo Planche Push Up · L4 Advanced · (prereq: push-4, core-hh-3, push-pp-1)
+
+Overhead Path (branches from push-1)
+
+push-oh-1 — Pike Push-Up · L2 Novice · (prereq: push-2)
+push-oh-2 — Elevated Pike Push-Up · L3 Intermediate · (prereq: push-oh-1)
+push-oh-3 — Wall Assisted Hand Stand Push up · L4 Advanced ·(prereq: push-hh-3)
+push-oh-4 — Hand Stand · L4 Advanced ·(prereq: push-oh-3)
+push-oh-5 — Hand Stand Push Up · L5 Elite · (prereq: push-oh-4)
+
+Full Planche Path
+
+push-pp-1 — Planche Leans · L3 intermediate · (prereq: push-3,)
+push-pp-2 — Tuck Planche · L3 intermediate · (prereq: push-pp-1,core-hh-3)
+push-pp-3 — Straddle Planche · L4 Advanced · (prereq: push-pp-2)
+push-pp-3 — Full Planche · L5 Elite · (prereq: push-pp-2)
+
+
+
+
+🔵 PULL Branch
+Shared Foundation
+
+pull-1 — First Pull-Up · L1 Beginner · (prereq: none)
+pull-2 — Pull-Up Consistency · L2 Novice · (prereq: pull-1)
+pull-3 — Negative Pull Up · L3 Intermediate · (prereq: pull-2)
+
+Front Lever Path (branches from pull-2)
+
+pull-fl-1 — Tuck Front Lever · L3 Intermediate · (prereq: pull-2, core-hh-3 )
+pull-fl-2 — Straddle Front Lever · L4 Advanced · (prereq: pull-fl-1)
+pull-fl-3 — Full Front Lever · L5 Elite · (prereq: pull-fl-2, core-hh-5)
+
+Muscle-Up Path (branches from pull-2)
+
+pull-mu-1 — Chest-to-Bar · L3 Intermediate · (prereq: pull-3)
+pull-mu-2 — Kipping Muscle-Up · L4 Advanced · (prereq: pull-mu-1)
+pull-mu-3 — Strict Muscle-Up · L5 Elite · (prereq: pull-mu-2)
+
+Advanced Move Path (branches from pull-2)
+
+pull-am-1 — Archer-Pull-Up · L4 Advanced · (prereq: pull-mu-1)
+pull-am-2 — Typewriter-Pull-Up · L5  Elite · (prereq: pull-am-1)
+
+🟣 CORE Branch
+Main Path
+
+core-1 — Plank Foundation · L1 Beginner · (prereq: none)
+core-2 — Side Plank · L2 Novice · (prereq: core-1)
+
+Hollow Holds Path (branches from core-1)
+
+core-hh-1 — Dead Bug · L2 Novice · (prereq: core-1)
+core-hh-2 — Back Extensions / Supermans:· L3 Intermediate · (prereq: core-hh-1)
+core-hh-3 — Hollow Body Hold ·L3 Intermediate · (prereq: core-hh-1)
+core-hh-4 — Dragon Flag Negatives· L4 Advanced · (prereq: core-hh-3)
+core-hh-5 — Dragon Flag · L5 Elite · (prereq: core-hh-4)
+
+Bar Based Movements Path (branches from core-1)
+
+core-bb-1 — Active Hang · L2 Novice · (prereq: core-1)
+core-bb-2 — Hanging Knee Tucks · L2 Novice · (prereq: core-1)
+core-bb-3 — Hanging Leg Raises · L3 Intermediate · (prereq: core-2)
+core-bb-4 — Toes to Bar · L4 Advanced · (prereq: core-3)
+
+Human Flag Path (Branches from core-1)
+core-hf-1 — Hanging Windshield Wipers · L2 Novice · (prereq: core-2)
+core-hf-2 — Tucked Human Flag · L3 Intermediate · (prereq: core-hf-1)
+core-hf-3 — 1 Legged Human Flag · L4 Advanced · (prereq: core-hf-2)
+core-hf-4 — Human Flag · L5 Elite · (prereq: core-hf-3)
+
+🟢 LEGS Branch
+Main Path
+
+legs-1 — Squat Foundation · L1 Beginner · (prereq: none)
+legs-2 — Squat Strength · L2 Novice · (prereq: legs-1)
+legs-3 — Shrimp Squat · L3 Intermediate · (prereq: legs-2)
+legs-4 — Bulgarian Split Squats · L4 Advanced · (prereq: legs-3)
+L-Sit Path (branches from legs-2)
+
+legs-ls-1 — Pike Stretch · L2 Novice · (prereq: legs-2)
+legs-ls-2 — L-Sit Compressions · L3 Intermediate · (prereq: legs-ls-1)
+legs-ls-3 — Tucked L-sit · L3 Intermediate · (prereq: legs-ls-2)
+legs-ls-4 — L-Sit Full · L3 Advanced · (prereq: legs-ls-3)
+
+Pistol Squat Path
+
+legs-ps-1 — Step Ups · L2 Novice · (prereq: legs-2)
+legs-ps-2 — Assisted Pistol Squat · L3 Intermediate · (prereq: legs-ps-1)
+legs-ps-3 — Close-Stance Squat · L3 Intermediate · (prereq: legs-ps-2)
+legs-ps-2 — Pistol Squat · L4 Advanced · (prereq: legs-ps-3)
+
+

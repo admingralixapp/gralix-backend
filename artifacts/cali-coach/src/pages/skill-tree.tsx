@@ -73,48 +73,74 @@ function nodeColor(id: string): string {
 
 const NODE_POS: Record<string, { x: number; y: number }> = {
   // ── PUSH (north) ──────────────────────────────────────────────────
-  "push-1":    { x: HUB_X,        y: HUB_Y - GAP * 1 },       // 1350
-  "push-2":    { x: HUB_X,        y: HUB_Y - GAP * 2 },       // 1200
-  "push-3":    { x: HUB_X,        y: HUB_Y - GAP * 3 },       // 1050
-  "push-4":    { x: HUB_X,        y: HUB_Y - GAP * 4 },       //  900
-  "push-5":    { x: HUB_X,        y: HUB_Y - GAP * 5 },       //  750
-  // Overhead/HSPU side branch (+SIDE east)
-  "push-oh-1": { x: HUB_X + SIDE, y: HUB_Y - GAP * 2 },       // (1665, 1200)
-  "push-oh-2": { x: HUB_X + SIDE, y: HUB_Y - GAP * 3 },       // (1665, 1050)
-  "push-hs":   { x: HUB_X + SIDE, y: HUB_Y - GAP * 5 },       // (1665,  750)
+  "push-1":    { x: HUB_X,           y: HUB_Y - GAP },           // (1500, 1350)
+  "push-2":    { x: HUB_X,           y: HUB_Y - GAP * 2 },       // (1500, 1200)
+  "push-3":    { x: HUB_X,           y: HUB_Y - GAP * 3 },       // (1500, 1050)
+  "push-4":    { x: HUB_X,           y: HUB_Y - GAP * 4 },       // (1500,  900)
+  "push-5":    { x: HUB_X,           y: HUB_Y - GAP * 5 },       // (1500,  750)
+  // Overhead path (+SIDE east, from push-2)
+  "push-oh-1": { x: HUB_X + SIDE,     y: HUB_Y - GAP * 2 },     // (1665, 1200)
+  "push-oh-2": { x: HUB_X + SIDE,     y: HUB_Y - GAP * 3 },     // (1665, 1050)
+  "push-oh-3": { x: HUB_X + SIDE,     y: HUB_Y - GAP * 4 },     // (1665,  900)
+  "push-oh-4": { x: HUB_X + SIDE,     y: HUB_Y - GAP * 5 },     // (1665,  750)
+  "push-oh-5": { x: HUB_X + SIDE,     y: HUB_Y - GAP * 6 },     // (1665,  600)
+  // Planche path (+SIDE*2 east, from push-3)
+  "push-pp-1": { x: HUB_X + SIDE * 2, y: HUB_Y - GAP * 3 },     // (1830, 1050)
+  "push-pp-2": { x: HUB_X + SIDE * 2, y: HUB_Y - GAP * 4 },     // (1830,  900)
+  "push-pp-3": { x: HUB_X + SIDE * 2, y: HUB_Y - GAP * 5 },     // (1830,  750)
+  "push-pp-4": { x: HUB_X + SIDE * 2, y: HUB_Y - GAP * 6 },     // (1830,  600)
 
   // ── PULL (east) ───────────────────────────────────────────────────
-  "pull-1":    { x: HUB_X + GAP * 1, y: HUB_Y },               // 1650
-  "pull-2":    { x: HUB_X + GAP * 2, y: HUB_Y },               // 1800
-  // Three-way fork from pull-2: FL up, MU center, EXP down
-  "pull-fl-1": { x: HUB_X + GAP * 3, y: HUB_Y - SIDE },       // (1950, 1335)
-  "pull-fl-2": { x: HUB_X + GAP * 4, y: HUB_Y - SIDE },       // (2100, 1335)
-  "pull-fl-3": { x: HUB_X + GAP * 5, y: HUB_Y - SIDE },       // (2250, 1335)
-  "pull-mu-1": { x: HUB_X + GAP * 3, y: HUB_Y },               // (1950, 1500)
-  "pull-mu-2": { x: HUB_X + GAP * 4, y: HUB_Y },               // (2100, 1500)
-  "pull-mu-3": { x: HUB_X + GAP * 5, y: HUB_Y },               // (2250, 1500)
-  "pull-exp-1":{ x: HUB_X + GAP * 3, y: HUB_Y + SIDE },       // (1950, 1665)
-  "pull-exp-2":{ x: HUB_X + GAP * 4, y: HUB_Y + SIDE },       // (2100, 1665)
+  "pull-1":    { x: HUB_X + GAP,      y: HUB_Y },                 // (1650, 1500)
+  "pull-2":    { x: HUB_X + GAP * 2,  y: HUB_Y },                 // (1800, 1500)
+  "pull-3":    { x: HUB_X + GAP * 3,  y: HUB_Y },                 // (1950, 1500)
+  // Front Lever (upper lane -SIDE, from pull-2)
+  "pull-fl-1": { x: HUB_X + GAP * 3,  y: HUB_Y - SIDE },         // (1950, 1335)
+  "pull-fl-2": { x: HUB_X + GAP * 4,  y: HUB_Y - SIDE },         // (2100, 1335)
+  "pull-fl-3": { x: HUB_X + GAP * 5,  y: HUB_Y - SIDE },         // (2250, 1335)
+  // Muscle-Up (center, from pull-3)
+  "pull-mu-1": { x: HUB_X + GAP * 4,  y: HUB_Y },                 // (2100, 1500)
+  "pull-mu-2": { x: HUB_X + GAP * 5,  y: HUB_Y },                 // (2250, 1500)
+  "pull-mu-3": { x: HUB_X + GAP * 6,  y: HUB_Y },                 // (2400, 1500)
+  // Advanced Moves (lower lane +SIDE, from pull-mu-1)
+  "pull-am-1": { x: HUB_X + GAP * 5,  y: HUB_Y + SIDE },         // (2250, 1665)
+  "pull-am-2": { x: HUB_X + GAP * 6,  y: HUB_Y + SIDE },         // (2400, 1665)
 
   // ── CORE (south) ──────────────────────────────────────────────────
-  "core-1":    { x: HUB_X,        y: HUB_Y + GAP * 1 },       // 1650
-  "core-2":    { x: HUB_X,        y: HUB_Y + GAP * 2 },       // 1800
-  "core-3":    { x: HUB_X,        y: HUB_Y + GAP * 3 },       // 1950
-  "core-4":    { x: HUB_X,        y: HUB_Y + GAP * 4 },       // 2100
-  "core-5":    { x: HUB_X,        y: HUB_Y + GAP * 5 },       // 2250
-  // Static Holds side branch (-SIDE west)
-  "core-sh-1": { x: HUB_X - SIDE, y: HUB_Y + GAP * 2 },       // (1335, 1800)
-  "core-sh-2": { x: HUB_X - SIDE, y: HUB_Y + GAP * 3 },       // (1335, 1950)
+  "core-1":    { x: HUB_X,            y: HUB_Y + GAP },           // (1500, 1650)
+  "core-2":    { x: HUB_X,            y: HUB_Y + GAP * 2 },       // (1500, 1800)
+  // Hollow Holds (-SIDE west, from core-1)
+  "core-hh-1": { x: HUB_X - SIDE,     y: HUB_Y + GAP },          // (1335, 1650)
+  "core-hh-2": { x: HUB_X - SIDE * 2, y: HUB_Y + GAP * 2 },     // (1170, 1800)
+  "core-hh-3": { x: HUB_X - SIDE,     y: HUB_Y + GAP * 2 },     // (1335, 1800)
+  "core-hh-4": { x: HUB_X - SIDE,     y: HUB_Y + GAP * 3 },     // (1335, 1950)
+  "core-hh-5": { x: HUB_X - SIDE,     y: HUB_Y + GAP * 4 },     // (1335, 2100)
+  // Bar Based (+SIDE east, from core-1 & core-2)
+  "core-bb-1": { x: HUB_X + SIDE,     y: HUB_Y + GAP },          // (1665, 1650)
+  "core-bb-2": { x: HUB_X + SIDE * 2, y: HUB_Y + GAP },          // (1830, 1650)
+  "core-bb-3": { x: HUB_X + SIDE,     y: HUB_Y + GAP * 2 },     // (1665, 1800)
+  "core-bb-4": { x: HUB_X + SIDE,     y: HUB_Y + GAP * 3 },     // (1665, 1950)
+  // Human Flag (+SIDE*2 east, from core-2)
+  "core-hf-1": { x: HUB_X + SIDE * 2, y: HUB_Y + GAP * 2 },     // (1830, 1800)
+  "core-hf-2": { x: HUB_X + SIDE * 2, y: HUB_Y + GAP * 3 },     // (1830, 1950)
+  "core-hf-3": { x: HUB_X + SIDE * 2, y: HUB_Y + GAP * 4 },     // (1830, 2100)
+  "core-hf-4": { x: HUB_X + SIDE * 2, y: HUB_Y + GAP * 5 },     // (1830, 2250)
 
   // ── LEGS (west) ───────────────────────────────────────────────────
-  "legs-1":    { x: HUB_X - GAP * 1, y: HUB_Y },               // 1350
-  "legs-2":    { x: HUB_X - GAP * 2, y: HUB_Y },               // 1200
-  "legs-3":    { x: HUB_X - GAP * 3, y: HUB_Y },               // 1050
-  "legs-4":    { x: HUB_X - GAP * 4, y: HUB_Y },               //  900
-  "legs-5":    { x: HUB_X - GAP * 5, y: HUB_Y },               //  750
-  // Unilateral side branch (-SIDE north)
-  "legs-uni-1":{ x: HUB_X - GAP * 3, y: HUB_Y - SIDE },       // (1050, 1335)
-  "legs-uni-2":{ x: HUB_X - GAP * 4, y: HUB_Y - SIDE },       //  (900, 1335)
+  "legs-1":    { x: HUB_X - GAP,      y: HUB_Y },                 // (1350, 1500)
+  "legs-2":    { x: HUB_X - GAP * 2,  y: HUB_Y },                 // (1200, 1500)
+  "legs-3":    { x: HUB_X - GAP * 3,  y: HUB_Y },                 // (1050, 1500)
+  "legs-4":    { x: HUB_X - GAP * 4,  y: HUB_Y },                 //  (900, 1500)
+  // L-Sit (upper lane -SIDE, from legs-2)
+  "legs-ls-1": { x: HUB_X - GAP * 2,  y: HUB_Y - SIDE },         // (1200, 1335)
+  "legs-ls-2": { x: HUB_X - GAP * 3,  y: HUB_Y - SIDE },         // (1050, 1335)
+  "legs-ls-3": { x: HUB_X - GAP * 4,  y: HUB_Y - SIDE },         //  (900, 1335)
+  "legs-ls-4": { x: HUB_X - GAP * 5,  y: HUB_Y - SIDE },         //  (750, 1335)
+  // Pistol Squat (lower lane +SIDE, from legs-2)
+  "legs-ps-1": { x: HUB_X - GAP * 2,  y: HUB_Y + SIDE },         // (1200, 1665)
+  "legs-ps-2": { x: HUB_X - GAP * 3,  y: HUB_Y + SIDE },         // (1050, 1665)
+  "legs-ps-3": { x: HUB_X - GAP * 4,  y: HUB_Y + SIDE },         //  (900, 1665)
+  "legs-ps-4": { x: HUB_X - GAP * 5,  y: HUB_Y + SIDE },         //  (750, 1665)
 };
 
 // Hub-to-branch edges (visual only, no lock state)
@@ -130,44 +156,63 @@ const EDGES: [string, string][] = [
   // PUSH main
   ["push-1", "push-2"], ["push-2", "push-3"],
   ["push-3", "push-4"], ["push-4", "push-5"],
-  // PUSH side
-  ["push-1", "push-oh-1"], ["push-oh-1", "push-oh-2"],
-  ["push-4", "push-hs"],
+  // PUSH overhead (from push-2)
+  ["push-2", "push-oh-1"], ["push-oh-1", "push-oh-2"],
+  ["push-oh-2", "push-oh-3"], ["push-oh-3", "push-oh-4"],
+  ["push-oh-4", "push-oh-5"],
+  // PUSH planche (from push-3)
+  ["push-3", "push-pp-1"], ["push-pp-1", "push-pp-2"],
+  ["push-pp-2", "push-pp-3"], ["push-pp-3", "push-pp-4"],
   // PULL shared
-  ["pull-1", "pull-2"],
-  // PULL 3-way fork
-  ["pull-2", "pull-fl-1"], ["pull-2", "pull-mu-1"], ["pull-2", "pull-exp-1"],
-  ["pull-fl-1", "pull-fl-2"], ["pull-fl-2", "pull-fl-3"],
-  ["pull-mu-1", "pull-mu-2"], ["pull-mu-2", "pull-mu-3"],
-  ["pull-exp-1", "pull-exp-2"],
+  ["pull-1", "pull-2"], ["pull-2", "pull-3"],
+  // PULL front lever (from pull-2)
+  ["pull-2", "pull-fl-1"], ["pull-fl-1", "pull-fl-2"], ["pull-fl-2", "pull-fl-3"],
+  // PULL muscle-up (from pull-3)
+  ["pull-3", "pull-mu-1"], ["pull-mu-1", "pull-mu-2"], ["pull-mu-2", "pull-mu-3"],
+  // PULL advanced moves (from pull-mu-1)
+  ["pull-mu-1", "pull-am-1"], ["pull-am-1", "pull-am-2"],
   // CORE main
-  ["core-1", "core-2"], ["core-2", "core-3"],
-  ["core-3", "core-4"], ["core-4", "core-5"],
-  // CORE side
-  ["core-1", "core-sh-1"], ["core-sh-1", "core-sh-2"],
+  ["core-1", "core-2"],
+  // CORE hollow holds (from core-1)
+  ["core-1", "core-hh-1"],
+  ["core-hh-1", "core-hh-2"], ["core-hh-1", "core-hh-3"],
+  ["core-hh-3", "core-hh-4"], ["core-hh-4", "core-hh-5"],
+  // CORE bar based (from core-1 and core-2)
+  ["core-1", "core-bb-1"], ["core-1", "core-bb-2"],
+  ["core-2", "core-bb-3"], ["core-bb-3", "core-bb-4"],
+  // CORE human flag (from core-2)
+  ["core-2", "core-hf-1"], ["core-hf-1", "core-hf-2"],
+  ["core-hf-2", "core-hf-3"], ["core-hf-3", "core-hf-4"],
   // LEGS main
-  ["legs-1", "legs-2"], ["legs-2", "legs-3"],
-  ["legs-3", "legs-4"], ["legs-4", "legs-5"],
-  // LEGS side
-  ["legs-2", "legs-uni-1"], ["legs-uni-1", "legs-uni-2"],
+  ["legs-1", "legs-2"], ["legs-2", "legs-3"], ["legs-3", "legs-4"],
+  // LEGS l-sit (from legs-2)
+  ["legs-2", "legs-ls-1"], ["legs-ls-1", "legs-ls-2"],
+  ["legs-ls-2", "legs-ls-3"], ["legs-ls-3", "legs-ls-4"],
+  // LEGS pistol squat (from legs-2)
+  ["legs-2", "legs-ps-1"], ["legs-ps-1", "legs-ps-2"],
+  ["legs-ps-2", "legs-ps-3"], ["legs-ps-3", "legs-ps-4"],
 ];
 
 // Section labels (positioned at branch tips + outward)
 const SECTION_LABELS = [
-  { x: HUB_X,            y: HUB_Y - GAP * 5 - 52, label: "PUSH", color: BRANCH_COLOR.PUSH, anchor: "middle" },
-  { x: HUB_X + GAP * 5 + 64, y: HUB_Y,            label: "PULL", color: BRANCH_COLOR.PULL, anchor: "start" },
-  { x: HUB_X,            y: HUB_Y + GAP * 5 + 56, label: "CORE", color: BRANCH_COLOR.CORE, anchor: "middle" },
-  { x: HUB_X - GAP * 5 - 64, y: HUB_Y,            label: "LEGS", color: BRANCH_COLOR.LEGS, anchor: "end" },
+  { x: HUB_X,                y: HUB_Y - GAP * 5 - 52,  label: "PUSH", color: BRANCH_COLOR.PUSH, anchor: "middle" },
+  { x: HUB_X + GAP * 6 + 64, y: HUB_Y,                 label: "PULL", color: BRANCH_COLOR.PULL, anchor: "start" },
+  { x: HUB_X,                y: HUB_Y + GAP * 5 + 56,  label: "CORE", color: BRANCH_COLOR.CORE, anchor: "middle" },
+  { x: HUB_X - GAP * 5 - 64, y: HUB_Y,                 label: "LEGS", color: BRANCH_COLOR.LEGS, anchor: "end" },
 ];
 
 // Sub-path labels
 const PATH_LABELS = [
-  { x: HUB_X + SIDE + 12, y: HUB_Y - GAP * 1.6,   text: "Overhead / HSPU", color: BRANCH_COLOR.PUSH },
-  { x: HUB_X + GAP * 3,   y: HUB_Y - SIDE - 32,    text: "Front Lever",     color: BRANCH_COLOR.PULL },
-  { x: HUB_X + GAP * 3,   y: HUB_Y - 32,            text: "Muscle-Up",      color: BRANCH_COLOR.PULL },
-  { x: HUB_X + GAP * 3,   y: HUB_Y + SIDE + 22,     text: "Explosive",      color: BRANCH_COLOR.PULL },
-  { x: HUB_X - SIDE - 12, y: HUB_Y + GAP * 1.6,    text: "Static Holds",   color: BRANCH_COLOR.CORE },
-  { x: HUB_X - GAP * 3,   y: HUB_Y - SIDE - 32,    text: "Unilateral",     color: BRANCH_COLOR.LEGS },
+  { x: HUB_X + SIDE + 14,     y: HUB_Y - GAP * 1.5,   text: "Overhead",     color: BRANCH_COLOR.PUSH },
+  { x: HUB_X + SIDE * 2 + 14, y: HUB_Y - GAP * 2.4,   text: "Planche",      color: BRANCH_COLOR.PUSH },
+  { x: HUB_X + GAP * 3,       y: HUB_Y - SIDE - 32,    text: "Front Lever",  color: BRANCH_COLOR.PULL },
+  { x: HUB_X + GAP * 4,       y: HUB_Y - 32,           text: "Muscle-Up",    color: BRANCH_COLOR.PULL },
+  { x: HUB_X + GAP * 5,       y: HUB_Y + SIDE + 22,    text: "Advanced",     color: BRANCH_COLOR.PULL },
+  { x: HUB_X - SIDE - 14,     y: HUB_Y + GAP * 0.55,  text: "Hollow Holds", color: BRANCH_COLOR.CORE },
+  { x: HUB_X + SIDE + 14,     y: HUB_Y + GAP * 0.55,  text: "Bar Based",    color: BRANCH_COLOR.CORE },
+  { x: HUB_X + SIDE * 2 + 14, y: HUB_Y + GAP * 1.6,   text: "Human Flag",   color: BRANCH_COLOR.CORE },
+  { x: HUB_X - GAP * 2,       y: HUB_Y - SIDE - 32,   text: "L-Sit",        color: BRANCH_COLOR.LEGS },
+  { x: HUB_X - GAP * 2,       y: HUB_Y + SIDE + 22,   text: "Pistol Squat", color: BRANCH_COLOR.LEGS },
 ];
 
 // ─── Bezier path builder (direction-aware) ───────────────────────────────────
@@ -782,7 +827,7 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
     if (!el) return;
     const { width, height } = el.getBoundingClientRect();
     setContainerSize({ w: width, h: height });
-    const TREE_SPAN = 1620; // bounding span of radial tree
+    const TREE_SPAN = 1800; // bounding span of radial tree (expanded 48-node layout)
     const z = Math.min(0.72, (Math.min(width, height) - 60) / TREE_SPAN);
     centerOn(HUB_X, HUB_Y, z);
   }, [centerOn]);

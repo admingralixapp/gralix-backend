@@ -39,7 +39,7 @@ Required Environment Variables:
 - `artifacts/cali-coach/src/lib/ghost-poses.ts`: Ghost Mode AR Overlay configurations.
 - `artifacts/cali-coach/src/lib/workout-settings.ts`: Rest duration localStorage helpers (`getRestDuration`, `setRestDuration`).
 - `artifacts/api-server/src/lib/skillTree.ts`: Logic for skill tree evaluation and mastery points.
-- `artifacts/cali-coach/src/lib/skill-tree.ts`: All 32 skill node definitions, `evaluateSkillTree()`, `ALL_SKILL_NODES`.
+- `artifacts/cali-coach/src/lib/skill-tree.ts`: All 52 skill node definitions (4 branches × multiple sub-paths), `evaluateSkillTree()`, `ALL_SKILL_NODES`.
 - `artifacts/cali-coach/src/components/skill-map.tsx`: Dashboard Dynamic Window (3 nodes/branch).
 - `artifacts/cali-coach/src/pages/skill-tree.tsx`: SVG pan/zoom tech-tree (NODE_POS, EDGES, TreeCanvas, SkillOverlay).
 - `exercise-registry.ts`: AI coaching configurations and exercise definitions.
