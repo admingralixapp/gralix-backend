@@ -1,5 +1,5 @@
 /**
- * Community Feed — scrollable video card feed with exercise filter,
+ * Community Feed — scrollable video card feed with category filter bar,
  * fire (like) + comment interactions, glassmorphism/neon styling.
  */
 
@@ -16,8 +16,10 @@ import {
   Video,
   Loader2,
   Users,
+  Dumbbell,
 } from "lucide-react";
 import { useUser } from "@clerk/react";
+import { useLocation } from "wouter";
 import {
   useCommunityFeed,
   useToggleLike,
@@ -26,48 +28,102 @@ import {
   type FeedPost,
   type FeedComment,
 } from "@/lib/community-feed";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// ─── Exercise filter options ──────────────────────────────────────────────────
+// ─── Category filter definitions ──────────────────────────────────────────────
 
-const EXERCISE_FILTERS = [
-  { value: "all",       label: "All" },
-  { value: "push-up",  label: "Push-Up" },
-  { value: "pull-up",  label: "Pull-Up" },
-  { value: "dip",      label: "Dips" },
-  { value: "squat",    label: "Squats" },
-  { value: "planche",  label: "Planche" },
-  { value: "muscle-up",label: "Muscle-Up" },
-  { value: "l-sit",    label: "L-Sit" },
-  { value: "handstand",label: "Handstand" },
+type CategoryKey = "all" | "push" | "pull" | "core" | "legs";
+
+interface CategoryFilter {
+  key: CategoryKey;
+  label: string;
+  color: string;
+  glow: string;
+  emptyLine1: string;
+  emptyLine2: string;
+}
+
+const CATEGORY_FILTERS: CategoryFilter[] = [
+  {
+    key:       "all",
+    label:     "All",
+    color:     "#22c55e",
+    glow:      "rgba(34,197,94,0.35)",
+    emptyLine1: "No posts yet",
+    emptyLine2: "Share a clip after your next workout to be the first!",
+  },
+  {
+    key:       "push",
+    label:     "Push",
+    color:     "#f97316",
+    glow:      "rgba(249,115,22,0.35)",
+    emptyLine1: "No Push Day clips yet!",
+    emptyLine2: "Be the first to post a push workout.",
+  },
+  {
+    key:       "pull",
+    label:     "Pull",
+    color:     "#3b82f6",
+    glow:      "rgba(59,130,246,0.35)",
+    emptyLine1: "No Pull Day clips yet!",
+    emptyLine2: "Be the first to post a pull workout.",
+  },
+  {
+    key:       "core",
+    label:     "Core",
+    color:     "#a855f7",
+    glow:      "rgba(168,85,247,0.35)",
+    emptyLine1: "No Core clips yet!",
+    emptyLine2: "Be the first to post a core workout.",
+  },
+  {
+    key:       "legs",
+    label:     "Legs",
+    color:     "#10b981",
+    glow:      "rgba(16,185,129,0.35)",
+    emptyLine1: "No Leg Day clips yet! Be the first to post.",
+    emptyLine2: "Hit the gym and show your leg strength.",
+  },
 ];
 
-// ─── Branch colours ───────────────────────────────────────────────────────────
+// ─── Exercise → category branch ───────────────────────────────────────────────
 
-const BRANCH_NEON: Record<string, string> = {
-  push: "#f97316",
-  pull: "#3b82f6",
-  core: "#a855f7",
-  legs: "#10b981",
-};
-
-function exerciseToColor(name: string): string {
+function exerciseBranch(name: string): CategoryKey {
   const n = name.toLowerCase();
-  if (n.includes("push") || n.includes("dip") || n.includes("planche")) return BRANCH_NEON.push;
-  if (n.includes("pull") || n.includes("muscle") || n.includes("row"))   return BRANCH_NEON.pull;
-  if (n.includes("sit") || n.includes("plank") || n.includes("core"))    return BRANCH_NEON.core;
-  if (n.includes("squat") || n.includes("lunge") || n.includes("pistol"))return BRANCH_NEON.legs;
-  return "#22c55e";
+  if (/push|dip|planche|handstand|pike/.test(n))                                          return "push";
+  if (/pull|muscle.up|row|shrug|lever|chin|explosive|chest.to.bar|archer pull/.test(n))  return "pull";
+  if (/plank|dragon|human flag|l.sit|core|burpee/.test(n))                               return "core";
+  if (/squat|lunge|pistol|nordic|archer squat/.test(n))                                  return "legs";
+  return "all";
+}
+
+function exerciseColor(name: string): string {
+  const branch = exerciseBranch(name);
+  const cat = CATEGORY_FILTERS.find((c) => c.key === branch);
+  return cat?.color ?? "#22c55e";
+}
+
+// ─── Hashtag formatter ────────────────────────────────────────────────────────
+
+function toHashtag(name: string): string {
+  return (
+    "#" +
+    name
+      .replace(/[^a-zA-Z0-9 ]/g, " ")
+      .trim()
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join("")
+  );
 }
 
 // ─── Time formatter ───────────────────────────────────────────────────────────
 
 function timeAgo(iso: string): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60)   return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400)return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 60)    return "just now";
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
@@ -96,22 +152,17 @@ function Avatar({ url, name, size = 8 }: { url: string | null; name: string; siz
 // ─── Video card ───────────────────────────────────────────────────────────────
 
 function VideoCard({ post }: { post: FeedPost }) {
-  const videoRef     = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying]       = useState(false);
+  const videoRef                      = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying]         = useState(false);
   const [showComments, setShowComments] = useState(false);
-
-  const toggleLike    = useToggleLike(post.id);
-  const accentColor   = exerciseToColor(post.exerciseName);
+  const toggleLike                    = useToggleLike(post.id);
+  const accentColor                   = exerciseColor(post.exerciseName);
 
   const handleTogglePlay = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
     if (v.paused) { v.play().catch(() => {}); } else { v.pause(); }
   }, []);
-
-  const handleLike = () => {
-    toggleLike.mutate();
-  };
 
   return (
     <motion.div
@@ -141,7 +192,8 @@ function VideoCard({ post }: { post: FeedPost }) {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-0.5">
+          {/* Exercise pill + hashtag + time */}
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span
               className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
               style={{
@@ -151,6 +203,13 @@ function VideoCard({ post }: { post: FeedPost }) {
               }}
             >
               {post.exerciseName}
+            </span>
+            {/* Subtle hashtag */}
+            <span
+              className="text-[10px] font-mono font-medium opacity-40 select-none"
+              style={{ color: accentColor }}
+            >
+              {toHashtag(post.exerciseName)}
             </span>
             <span className="text-[10px] text-white/30">{timeAgo(post.createdAt)}</span>
           </div>
@@ -175,7 +234,6 @@ function VideoCard({ post }: { post: FeedPost }) {
             onPause={() => setPlaying(false)}
             data-no-swipe
           />
-          {/* Play overlay */}
           {!playing && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/30">
               <div className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
@@ -183,7 +241,6 @@ function VideoCard({ post }: { post: FeedPost }) {
               </div>
             </div>
           )}
-          {/* Neon accent line at bottom */}
           <div
             className="absolute bottom-0 left-0 right-0 h-0.5 opacity-60"
             style={{ background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)` }}
@@ -210,25 +267,18 @@ function VideoCard({ post }: { post: FeedPost }) {
 
       {/* ── Action bar ─────────────────────────────────────────────────────── */}
       <div className="px-4 py-3 flex items-center gap-4">
-        {/* Fire button */}
         <button
-          onClick={handleLike}
+          onClick={() => toggleLike.mutate()}
           disabled={toggleLike.isPending}
           className={cn(
             "flex items-center gap-1.5 text-sm font-semibold transition-all active:scale-110",
             post.likedByMe ? "text-orange-400" : "text-white/40 hover:text-orange-400",
           )}
         >
-          <Flame
-            className={cn(
-              "w-5 h-5 transition-all",
-              post.likedByMe && "fill-orange-400",
-            )}
-          />
+          <Flame className={cn("w-5 h-5 transition-all", post.likedByMe && "fill-orange-400")} />
           <span className="tabular-nums">{post.likeCount}</span>
         </button>
 
-        {/* Comment toggle */}
         <button
           onClick={() => setShowComments((v) => !v)}
           className={cn(
@@ -238,9 +288,7 @@ function VideoCard({ post }: { post: FeedPost }) {
         >
           <MessageCircle className={cn("w-5 h-5", showComments && "fill-cyan-400/20")} />
           <span>Comment</span>
-          <ChevronDown
-            className={cn("w-3.5 h-3.5 transition-transform", showComments && "rotate-180")}
-          />
+          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showComments && "rotate-180")} />
         </button>
       </div>
 
@@ -278,7 +326,6 @@ function CommentsPanel({ postId }: { postId: number }) {
 
   return (
     <div className="px-4 py-3 space-y-3">
-      {/* Comment list */}
       <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
         {isLoading && (
           <div className="flex justify-center py-3">
@@ -299,7 +346,6 @@ function CommentsPanel({ postId }: { postId: number }) {
         ))}
       </div>
 
-      {/* Input */}
       {user ? (
         <form onSubmit={handleSubmit} className="flex gap-2 items-center">
           <input
@@ -328,36 +374,118 @@ function CommentsPanel({ postId }: { postId: number }) {
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
-function EmptyFeed({ filter }: { filter: string }) {
+function EmptyFeed({ category }: { category: CategoryFilter }) {
+  const [, navigate] = useLocation();
+
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex flex-col items-center justify-center py-24 gap-4 text-center"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col items-center justify-center py-20 gap-5 text-center"
     >
+      {/* Icon bubble */}
       <div
         className="w-16 h-16 rounded-2xl flex items-center justify-center"
-        style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)" }}
+        style={{
+          background: `${category.color}14`,
+          border: `1px solid ${category.color}28`,
+          boxShadow: `0 0 24px ${category.glow}`,
+        }}
       >
-        <Users className="w-7 h-7 text-primary/60" />
+        {category.key === "all"
+          ? <Users className="w-7 h-7" style={{ color: category.color, opacity: 0.7 }} />
+          : <Dumbbell className="w-7 h-7" style={{ color: category.color, opacity: 0.7 }} />}
       </div>
+
       <div>
-        <p className="font-semibold text-white/60">
-          {filter === "all" ? "No posts yet" : `No ${filter} posts yet`}
-        </p>
-        <p className="text-sm text-white/30 mt-1">
-          Share a clip after your next workout to be the first!
-        </p>
+        <p className="font-bold text-base text-white/70">{category.emptyLine1}</p>
+        <p className="text-sm text-white/35 mt-1 max-w-[260px] mx-auto">{category.emptyLine2}</p>
       </div>
+
+      {/* Start Workout shortcut */}
+      <button
+        onClick={() => navigate("/workout")}
+        className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-95"
+        style={{
+          background: `linear-gradient(135deg, ${category.color}22 0%, ${category.color}10 100%)`,
+          border: `1px solid ${category.color}40`,
+          color: category.color,
+          boxShadow: `0 0 16px ${category.glow}`,
+        }}
+      >
+        <Dumbbell className="w-4 h-4" />
+        Start Workout
+      </button>
     </motion.div>
+  );
+}
+
+// ─── Category filter bar ──────────────────────────────────────────────────────
+
+function CategoryFilterBar({
+  active,
+  onChange,
+}: {
+  active: CategoryKey;
+  onChange: (key: CategoryKey) => void;
+}) {
+  return (
+    <div className="flex items-center justify-center gap-2 flex-wrap">
+      {CATEGORY_FILTERS.map((cat) => {
+        const isActive = active === cat.key;
+        return (
+          <button
+            key={cat.key}
+            onClick={() => onChange(cat.key)}
+            className="relative px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 active:scale-95"
+            style={
+              isActive
+                ? {
+                    background: `linear-gradient(135deg, ${cat.color}22 0%, ${cat.color}10 100%)`,
+                    border: `1.5px solid ${cat.color}70`,
+                    color: cat.color,
+                    boxShadow: `0 0 16px ${cat.glow}, inset 0 1px 0 ${cat.color}20`,
+                    backdropFilter: "blur(12px)",
+                  }
+                : {
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1.5px solid rgba(255,255,255,0.08)",
+                    color: "rgba(255,255,255,0.38)",
+                    backdropFilter: "blur(8px)",
+                  }
+            }
+          >
+            {isActive && (
+              /* Subtle glow dot */
+              <span
+                className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: cat.color, boxShadow: `0 0 4px ${cat.color}` }}
+              />
+            )}
+            {cat.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function CommunityFeedPage() {
-  const [filter, setFilter] = useState("all");
-  const { data: posts, isLoading, error } = useCommunityFeed(filter);
+  const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
+
+  // Always fetch all posts; filter client-side for instant switching between categories
+  const { data: allPosts, isLoading, error } = useCommunityFeed();
+
+  const category = CATEGORY_FILTERS.find((c) => c.key === activeCategory)!;
+
+  const posts =
+    !allPosts
+      ? undefined
+      : activeCategory === "all"
+      ? allPosts
+      : allPosts.filter((p) => exerciseBranch(p.exerciseName) === activeCategory);
 
   return (
     <div className="min-h-screen p-4 md:p-6 space-y-5">
@@ -365,47 +493,21 @@ export function CommunityFeedPage() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 pt-2">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white">
-            Community
-          </h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-white">Community</h1>
           <p className="text-sm text-white/40 mt-0.5">Workouts from athletes around the world</p>
         </div>
-        {/* Neon accent dot */}
         <div
           className="w-2 h-2 rounded-full mt-3 shrink-0"
           style={{ backgroundColor: "#22c55e", boxShadow: "0 0 8px 3px rgba(34,197,94,0.5)" }}
         />
       </div>
 
-      {/* ── Exercise filter chips ───────────────────────────────────────────── */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none" data-no-swipe>
-        {EXERCISE_FILTERS.map((f) => {
-          const active = filter === f.value;
-          return (
-            <button
-              key={f.value}
-              onClick={() => setFilter(f.value)}
-              className={cn(
-                "shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border",
-                active
-                  ? "bg-primary/15 text-primary border-primary/40"
-                  : "bg-white/[0.04] text-white/40 border-white/10 hover:border-white/20 hover:text-white/60",
-              )}
-              style={
-                active
-                  ? { boxShadow: "0 0 10px rgba(34,197,94,0.25)" }
-                  : undefined
-              }
-            >
-              {f.label}
-            </button>
-          );
-        })}
-      </div>
+      {/* ── Category filter bar ─────────────────────────────────────────────── */}
+      <CategoryFilterBar active={activeCategory} onChange={setActiveCategory} />
 
       {/* ── Feed ───────────────────────────────────────────────────────────── */}
       {isLoading && (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 pt-2">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
@@ -433,7 +535,7 @@ export function CommunityFeedPage() {
       )}
 
       {!isLoading && !error && posts && posts.length === 0 && (
-        <EmptyFeed filter={filter} />
+        <EmptyFeed category={category} />
       )}
 
       {!isLoading && !error && posts && posts.length > 0 && (
