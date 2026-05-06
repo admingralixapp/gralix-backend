@@ -17,10 +17,12 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  BodyCalibrationData,
   CreateRepBody,
   CreateSessionBody,
   Exercise,
   ExerciseProgress,
+  GetCalibrationResponse,
   GetProgressTimelineParams,
   GetRecentSessionsParams,
   HealthStatus,
@@ -30,6 +32,7 @@ import type {
   MobilityStatus,
   ProgressSummary,
   Rep,
+  SaveCalibrationResponse,
   Session,
   SessionSummary,
   SessionWithReps,
@@ -46,6 +49,167 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary Get saved body calibration data
+ */
+export const getGetCalibrationUrl = () => {
+  return `/api/calibration`;
+};
+
+export const getCalibration = async (
+  options?: RequestInit,
+): Promise<GetCalibrationResponse> => {
+  return customFetch<GetCalibrationResponse>(getGetCalibrationUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCalibrationQueryKey = () => {
+  return [`/api/calibration`] as const;
+};
+
+export const getGetCalibrationQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCalibration>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCalibration>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCalibrationQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCalibration>>> = ({
+    signal,
+  }) => getCalibration({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCalibration>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCalibrationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCalibration>>
+>;
+export type GetCalibrationQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get saved body calibration data
+ */
+
+export function useGetCalibration<
+  TData = Awaited<ReturnType<typeof getCalibration>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCalibration>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCalibrationQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Save body calibration data
+ */
+export const getSaveCalibrationUrl = () => {
+  return `/api/calibration`;
+};
+
+export const saveCalibration = async (
+  bodyCalibrationData: BodyCalibrationData,
+  options?: RequestInit,
+): Promise<SaveCalibrationResponse> => {
+  return customFetch<SaveCalibrationResponse>(getSaveCalibrationUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(bodyCalibrationData),
+  });
+};
+
+export const getSaveCalibrationMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveCalibration>>,
+    TError,
+    { data: BodyType<BodyCalibrationData> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveCalibration>>,
+  TError,
+  { data: BodyType<BodyCalibrationData> },
+  TContext
+> => {
+  const mutationKey = ["saveCalibration"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveCalibration>>,
+    { data: BodyType<BodyCalibrationData> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return saveCalibration(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveCalibrationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveCalibration>>
+>;
+export type SaveCalibrationMutationBody = BodyType<BodyCalibrationData>;
+export type SaveCalibrationMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Save body calibration data
+ */
+export const useSaveCalibration = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveCalibration>>,
+    TError,
+    { data: BodyType<BodyCalibrationData> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof saveCalibration>>,
+  TError,
+  { data: BodyType<BodyCalibrationData> },
+  TContext
+> => {
+  return useMutation(getSaveCalibrationMutationOptions(options));
+};
 
 /**
  * @summary Health check

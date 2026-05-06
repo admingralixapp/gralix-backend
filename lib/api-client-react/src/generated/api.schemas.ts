@@ -5,6 +5,29 @@
  * CaliCoach API - calisthenics motion capture coaching app
  * OpenAPI spec version: 0.1.0
  */
+export interface BodyCalibrationData {
+  /** Wrist-to-wrist span (normalized 0-1) */
+  wingspan: number;
+  /** Nose-to-ankle distance (normalized 0-1) */
+  height: number;
+  /** Shoulder-to-shoulder span (normalized 0-1) */
+  shoulderWidth: number;
+  /** Shoulder midpoint to hip midpoint (normalized 0-1) */
+  torsoLength: number;
+  /** Hip midpoint to ankle midpoint (normalized 0-1) */
+  legLength: number;
+  /** When the calibration was performed */
+  capturedAt: string;
+}
+
+export interface GetCalibrationResponse {
+  calibrationData: BodyCalibrationData | null;
+}
+
+export interface SaveCalibrationResponse {
+  ok: boolean;
+}
+
 export interface HealthStatus {
   status: string;
 }

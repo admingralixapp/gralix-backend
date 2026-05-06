@@ -8,6 +8,53 @@
 import * as zod from "zod";
 
 /**
+ * @summary Get saved body calibration data
+ */
+export const GetCalibrationResponse = zod.object({
+  calibrationData: zod.union([
+    zod.object({
+      wingspan: zod.number().describe("Wrist-to-wrist span (normalized 0-1)"),
+      height: zod.number().describe("Nose-to-ankle distance (normalized 0-1)"),
+      shoulderWidth: zod
+        .number()
+        .describe("Shoulder-to-shoulder span (normalized 0-1)"),
+      torsoLength: zod
+        .number()
+        .describe("Shoulder midpoint to hip midpoint (normalized 0-1)"),
+      legLength: zod
+        .number()
+        .describe("Hip midpoint to ankle midpoint (normalized 0-1)"),
+      capturedAt: zod.coerce
+        .date()
+        .describe("When the calibration was performed"),
+    }),
+    zod.null(),
+  ]),
+});
+
+/**
+ * @summary Save body calibration data
+ */
+export const SaveCalibrationBody = zod.object({
+  wingspan: zod.number().describe("Wrist-to-wrist span (normalized 0-1)"),
+  height: zod.number().describe("Nose-to-ankle distance (normalized 0-1)"),
+  shoulderWidth: zod
+    .number()
+    .describe("Shoulder-to-shoulder span (normalized 0-1)"),
+  torsoLength: zod
+    .number()
+    .describe("Shoulder midpoint to hip midpoint (normalized 0-1)"),
+  legLength: zod
+    .number()
+    .describe("Hip midpoint to ankle midpoint (normalized 0-1)"),
+  capturedAt: zod.coerce.date().describe("When the calibration was performed"),
+});
+
+export const SaveCalibrationResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({

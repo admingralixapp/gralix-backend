@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
-import { Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video, AlertTriangle, Timer, Camera, Volume2, FlipHorizontal2 } from "lucide-react";
+import { Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video, AlertTriangle, Timer, Camera, Volume2, FlipHorizontal2, Ruler } from "lucide-react";
 import {
   getVoiceCues, setVoiceCues,
   getCameraFacing, setCameraFacing, type CameraFacing,
@@ -56,6 +57,7 @@ const RETENTION_LABELS: Record<RetentionDays, string> = {
 };
 
 export function Settings() {
+  const [, setLocation] = useLocation();
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
   const { data: profile, isLoading: profileLoading } = useMyProfile();
@@ -703,6 +705,29 @@ export function Settings() {
                   mirrorVideoOn ? "translate-x-5" : "translate-x-0",
                 ].join(" ")}
               />
+            </button>
+          </div>
+
+          <div className="h-px bg-white/[0.07]" />
+
+          {/* Body Calibration */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center shrink-0">
+                <Ruler className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-foreground">Body Calibration</div>
+                <div className="text-[11px] text-muted-foreground">
+                  Re-run the one-time T-Pose body scan
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setLocation("/calibration")}
+              className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+            >
+              Recalibrate
             </button>
           </div>
         </div>

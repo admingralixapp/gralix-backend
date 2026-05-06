@@ -20,8 +20,40 @@ tags:
     description: Progress and analytics
   - name: mobility
     description: Daily mobility routines and notifications
+  - name: calibration
+    description: One-time body calibration for dynamic scaling
 
 paths:
+  /calibration:
+    get:
+      operationId: getCalibration
+      tags: [calibration]
+      summary: Get saved body calibration data
+      responses:
+        "200":
+          description: Calibration data or null if not yet calibrated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCalibrationResponse"
+    post:
+      operationId: saveCalibration
+      tags: [calibration]
+      summary: Save body calibration data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BodyCalibrationData"
+      responses:
+        "200":
+          description: Saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaveCalibrationResponse"
+
   /healthz:
     get:
       operationId: healthCheck
@@ -342,6 +374,54 @@ paths:
 
 components:
   schemas:
+    BodyCalibrationData:
+      type: object
+      properties:
+        wingspan:
+          type: number
+          description: Wrist-to-wrist span (normalized 0-1)
+        height:
+          type: number
+          description: Nose-to-ankle distance (normalized 0-1)
+        shoulderWidth:
+          type: number
+          description: Shoulder-to-shoulder span (normalized 0-1)
+        torsoLength:
+          type: number
+          description: Shoulder midpoint to hip midpoint (normalized 0-1)
+        legLength:
+          type: number
+          description: Hip midpoint to ankle midpoint (normalized 0-1)
+        capturedAt:
+          type: string
+          format: date-time
+          description: When the calibration was performed
+      required:
+        - wingspan
+        - height
+        - shoulderWidth
+        - torsoLength
+        - legLength
+        - capturedAt
+
+    GetCalibrationResponse:
+      type: object
+      properties:
+        calibrationData:
+          oneOf:
+            - $ref: "#/components/schemas/BodyCalibrationData"
+            - type: "null"
+      required:
+        - calibrationData
+
+    SaveCalibrationResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required:
+        - ok
+
     HealthStatus:
       type: object
       properties:

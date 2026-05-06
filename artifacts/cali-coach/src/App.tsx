@@ -32,6 +32,7 @@ import { SignUpPage } from "@/pages/sign-up";
 import { Landing } from "@/pages/landing";
 import { MobilityPage } from "@/pages/mobility";
 import { DailyTasksPage } from "@/pages/daily-tasks";
+import { BodyCalibration } from "@/pages/body-calibration";
 import NotFound from "@/pages/not-found";
 import { useMyProfile, useUpsertProfile } from "@/lib/social";
 
@@ -235,6 +236,7 @@ function AppRouter() {
                 <Route path="/friends" component={Friends} />
                 <Route path="/profile/:username" component={ProfilePage} />
                 <Route path="/settings" component={Settings} />
+                <Route path="/calibration" component={BodyCalibration} />
                 <Route path="/mobility" component={MobilityPage} />
                 <Route path="/daily-tasks" component={DailyTasksPage} />
                 <Route component={NotFound} />

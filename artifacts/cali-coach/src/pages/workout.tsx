@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLocation, useSearch } from "wouter";
-import { useListExercises, useListSessions, useCreateSession, useUpdateSession, useCreateRep } from "@workspace/api-client-react";
+import { useListExercises, useListSessions, useCreateSession, useUpdateSession, useCreateRep, useGetCalibration } from "@workspace/api-client-react";
 import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-vision";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Volume2, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock } from "lucide-react";
+import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, cancelSpeech, setVoiceMuted } from "@/lib/voice-service";
@@ -375,196 +375,6 @@ function drawMinimalistJoints(
   }
 }
 
-// ─── Calibration ─────────────────────────────────────────────────────────────
-
-type CalibPhase = "idle" | "detecting" | "holding" | "done";
-
-/** Landmark indices used for T-Pose detection and body-scale capture. */
-const LM_NOSE    = 0;
-const LM_L_SH    = 11;
-const LM_R_SH    = 12;
-const LM_L_WR    = 15;
-const LM_R_WR    = 16;
-const LM_L_HI    = 23;
-const LM_R_HI    = 24;
-const LM_L_AN    = 27;
-const LM_R_AN    = 28;
-
-/** Required visibility threshold for calibration landmarks. */
-const CALIB_VIS = 0.5;
-/** How long the user must hold a stable T-Pose (ms). */
-const HOLD_DURATION_MS = 3000;
-
-/**
- * Returns true when the detected landmarks represent a stable T-Pose:
- *  - All key landmarks are visible
- *  - Both wrists are near shoulder height (arms horizontal)
- *  - Wrist-to-wrist span is notably wider than shoulder-to-shoulder span
- *  - Ankles are below hips (standing upright)
- */
-function detectTPose(lms: Landmark[]): boolean {
-  const L_SH = lms[LM_L_SH];
-  const R_SH = lms[LM_R_SH];
-  const L_WR = lms[LM_L_WR];
-  const R_WR = lms[LM_R_WR];
-  const L_HI = lms[LM_L_HI];
-  const R_HI = lms[LM_R_HI];
-  const L_AN = lms[LM_L_AN];
-  const R_AN = lms[LM_R_AN];
-  const NOSE = lms[LM_NOSE];
-
-  const keyLms = [L_SH, R_SH, L_WR, R_WR, L_HI, R_HI, L_AN, R_AN, NOSE];
-  if (keyLms.some(lm => !lm || (lm.visibility ?? 1) < CALIB_VIS)) return false;
-
-  // Arms must be roughly horizontal: wrist y ≈ shoulder y (within 12% of frame height)
-  if (Math.abs(L_WR.y - L_SH.y) > 0.12) return false;
-  if (Math.abs(R_WR.y - R_SH.y) > 0.12) return false;
-
-  // Wrists must be spread wider than shoulders (arms fully extended outward)
-  const shoulderSpan = Math.abs(R_SH.x - L_SH.x);
-  const wristSpan    = Math.abs(R_WR.x - L_WR.x);
-  if (wristSpan < shoulderSpan * 1.4) return false;
-
-  // Ankles must be below hips (person is upright, not inverted)
-  if (L_AN.y < L_HI.y + 0.05) return false;
-  if (R_AN.y < R_HI.y + 0.05) return false;
-
-  return true;
-}
-
-// ─── T-Pose silhouette SVG ────────────────────────────────────────────────────
-
-function TPoseSilhouette({ detected }: { detected: boolean }) {
-  const color = detected ? "#22c55e" : "rgba(255,255,255,0.35)";
-  return (
-    <svg
-      viewBox="0 0 120 240"
-      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none"
-      style={{ height: "72%", filter: detected ? `drop-shadow(0 0 12px #22c55e)` : undefined }}
-      aria-hidden
-    >
-      {/* Head */}
-      <circle cx="60" cy="14" r="12" fill="none" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Neck */}
-      <line x1="60" y1="26" x2="60" y2="42" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Shoulders */}
-      <line x1="4"  y1="60" x2="116" y2="60" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Torso */}
-      <line x1="60" y1="42" x2="60" y2="136" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Left upper arm */}
-      <line x1="60" y1="60" x2="4"   y2="60" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Left forearm */}
-      <line x1="4"  y1="60" x2="4"   y2="100" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Right upper arm */}
-      <line x1="60" y1="60" x2="116" y2="60" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Right forearm */}
-      <line x1="116" y1="60" x2="116" y2="100" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Hips */}
-      <line x1="40" y1="136" x2="80" y2="136" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Left leg */}
-      <line x1="40" y1="136" x2="30" y2="230" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
-      {/* Right leg */}
-      <line x1="80" y1="136" x2="90" y2="230" stroke={color} strokeWidth="3.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-// ─── Calibration overlay ──────────────────────────────────────────────────────
-
-interface CalibrationOverlayProps {
-  phase: CalibPhase;
-  countdown: number;
-}
-
-function CalibrationOverlay({ phase, countdown }: CalibrationOverlayProps) {
-  const detected = phase === "holding" || phase === "done";
-
-  return (
-    <div className="absolute inset-0 z-20 flex flex-col items-center justify-between pointer-events-none select-none">
-
-      {/* Top instruction banner */}
-      <div className="w-full flex justify-center pt-20">
-        <div
-          className="px-5 py-3 rounded-2xl text-center max-w-xs backdrop-blur-sm"
-          style={{
-            background: "rgba(0,0,0,0.65)",
-            border: "1px solid rgba(255,255,255,0.12)",
-          }}
-        >
-          <p className="text-sm font-semibold text-white/90 leading-snug">
-            Step back and stand in a T-Pose
-          </p>
-          <p className="text-xs text-white/55 mt-1">
-            Ensure your hands and feet are in the frame
-          </p>
-        </div>
-      </div>
-
-      {/* Centre: T-Pose silhouette */}
-      <TPoseSilhouette detected={detected} />
-
-      {/* Bottom: status */}
-      <div className="w-full flex justify-center pb-28">
-        {phase === "idle" || phase === "detecting" ? (
-          <div
-            className="px-6 py-2.5 rounded-full text-sm font-bold uppercase tracking-widest"
-            style={{
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.18)",
-              color: "rgba(255,255,255,0.6)",
-            }}
-          >
-            ○ Waiting for T-Pose…
-          </div>
-        ) : phase === "holding" ? (
-          <div
-            className="flex flex-col items-center gap-2"
-          >
-            <div
-              className="px-6 py-2.5 rounded-full text-sm font-bold uppercase tracking-widest"
-              style={{
-                background: "rgba(34,197,94,0.18)",
-                border: "1px solid rgba(34,197,94,0.5)",
-                color: "#86efac",
-              }}
-            >
-              ● Holding…
-            </div>
-            <div
-              className="text-7xl font-black tabular-nums leading-none"
-              style={{ color: "#22c55e", textShadow: "0 0 24px rgba(34,197,94,0.7)" }}
-            >
-              {countdown}
-            </div>
-          </div>
-        ) : (
-          <div
-            className="px-6 py-2.5 rounded-full text-sm font-bold uppercase tracking-widest"
-            style={{
-              background: "rgba(34,197,94,0.25)",
-              border: "1px solid rgba(34,197,94,0.7)",
-              color: "#4ade80",
-            }}
-          >
-            ✓ Calibrated!
-          </div>
-        )}
-      </div>
-
-      {/* Corner label */}
-      <div
-        className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded"
-        style={{
-          background: "rgba(0,0,0,0.5)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          color: "rgba(255,255,255,0.4)",
-        }}
-      >
-        Calibration
-      </div>
-    </div>
-  );
-}
 
 // ─── Workout component ────────────────────────────────────────────────────────
 
@@ -655,7 +465,7 @@ export function Workout() {
   /** Mirror of critical boolean states — kept current so the voice onresult
    *  handler (captured in a closure) can read the latest values without
    *  causing the SpeechRecognition effect to restart on every render. */
-  const voiceStateRef = useRef({ isResting: false, isWorkoutActive: false, isCalibrating: false });
+  const voiceStateRef = useRef({ isResting: false, isWorkoutActive: false, isCameraInitializing: false });
 
   // Stable refs to the latest handler versions (avoids stale closures in voice)
   const handleEndSetRef       = useRef<() => Promise<void>>(async () => {});
@@ -668,17 +478,14 @@ export function Workout() {
   // ── Equipment selection ────────────────────────────────────────────────────
   const [equipment, setEquipment] = useState<EquipmentSelection>(DEFAULT_EQUIPMENT);
 
-  // ── Calibration state ──────────────────────────────────────────────────────
-  const [isCalibrating, setIsCalibrating] = useState(false);
-  const [calibPhase, setCalibPhase] = useState<CalibPhase>("idle");
-  const [calibCountdown, setCalibCountdown] = useState(3);
+  // ── Camera-init state (1-second ramp before workout goes live) ─────────────
+  const [isCameraInitializing, setIsCameraInitializing] = useState(false);
 
   // ── Refs ───────────────────────────────────────────────────────────────────
   const videoRef    = useRef<HTMLVideoElement>(null);
   const canvasRef   = useRef<HTMLCanvasElement>(null);
   const landmarkerRef      = useRef<PoseLandmarker | null>(null);
   const requestRef         = useRef<number>(0);
-  const calibFrameRef      = useRef<number>(0);
   const lastVideoTimeRef   = useRef<number>(-1);
   const workoutStartMsRef  = useRef<number>(0);
 
@@ -701,9 +508,16 @@ export function Workout() {
   });
 
   const calibRef = useRef<{
-    holdStartMs: number;
     userScale: { wingspan: number; height: number } | null;
-  }>({ holdStartMs: 0, userScale: null });
+  }>({ userScale: null });
+
+  // ── Saved body calibration data from the one-time calibration screen ───────
+  const { data: calibrationApiData } = useGetCalibration();
+  const savedCalibrationRef = useRef<{ wingspan: number; height: number } | null>(null);
+  useEffect(() => {
+    const d = calibrationApiData?.calibrationData;
+    savedCalibrationRef.current = d ? { wingspan: d.wingspan, height: d.height } : null;
+  }, [calibrationApiData]);
 
   /** RepRecorder instance — active for the duration of a workout set. */
   const recorderRef     = useRef<RepRecorder | null>(null);
@@ -1251,148 +1065,26 @@ export function Workout() {
     requestRef.current = requestAnimationFrame(predictWebcam);
   }, [exercises, selectedExerciseId, processFrame, equipment]);
 
-  // ── Calibration loop ───────────────────────────────────────────────────────
-  const calibrationLoop = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current || !landmarkerRef.current) {
-      calibFrameRef.current = requestAnimationFrame(calibrationLoop);
-      return;
-    }
-
-    const video  = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx    = canvas.getContext("2d");
-    if (!ctx) {
-      calibFrameRef.current = requestAnimationFrame(calibrationLoop);
-      return;
-    }
-
-    if (video.currentTime !== lastVideoTimeRef.current) {
-      lastVideoTimeRef.current = video.currentTime;
-
-      if (
-        video.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA ||
-        video.videoWidth === 0 ||
-        video.videoHeight === 0
-      ) {
-        calibFrameRef.current = requestAnimationFrame(calibrationLoop);
-        return;
-      }
-
-      if (canvas.width  !== video.videoWidth)  canvas.width  = video.videoWidth;
-      if (canvas.height !== video.videoHeight) canvas.height = video.videoHeight;
-
-      let results;
-      try {
-        results = landmarkerRef.current.detectForVideo(video, performance.now());
-      } catch {
-        calibFrameRef.current = requestAnimationFrame(calibrationLoop);
-        return;
-      }
-
-      ctx.save();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (results.landmarks?.length > 0) {
-        const lms = results.landmarks[0];
-
-        // Draw user skeleton in green so they can see themselves
-        const drawingUtils = new DrawingUtils(ctx);
-        drawingUtils.drawLandmarks(lms, { radius: 3, color: "#00FF00", lineWidth: 2 });
-        drawingUtils.drawConnectors(lms, PoseLandmarker.POSE_CONNECTIONS, { color: "#00FF00", lineWidth: 2 });
-
-        const inTPose = detectTPose(lms);
-        const now = Date.now();
-
-        if (inTPose) {
-          if (calibRef.current.holdStartMs === 0) {
-            calibRef.current.holdStartMs = now;
-          }
-
-          const elapsed   = now - calibRef.current.holdStartMs;
-          const remaining = Math.max(0, Math.ceil((HOLD_DURATION_MS - elapsed) / 1000));
-          setCalibCountdown(remaining);
-          setCalibPhase("holding");
-
-          if (elapsed >= HOLD_DURATION_MS) {
-            // ── Capture body scale ──────────────────────────────────────────
-            const L_WR = lms[LM_L_WR];
-            const R_WR = lms[LM_R_WR];
-            const NOSE = lms[LM_NOSE];
-            const L_AN = lms[LM_L_AN];
-            const R_AN = lms[LM_R_AN];
-
-            const wingspan = Math.hypot(R_WR.x - L_WR.x, R_WR.y - L_WR.y);
-            const ankleY   = (L_AN.y + R_AN.y) / 2;
-            const height   = Math.abs(ankleY - NOSE.y);
-            calibRef.current.userScale = { wingspan, height };
-
-            // ── Transition ──────────────────────────────────────────────────
-            setCalibPhase("done");
-            setIsCalibrating(false);
-
-            // Play audio cue immediately
-            voiceSpeak("Calibration successful. Getting Ghost Mode ready.");
-
-            // After audio has started (~2.2 s), begin the workout
-            setTimeout(() => {
-              workoutStartMsRef.current = Date.now();
-              setIsWorkoutActive(true);
-            }, 2200);
-
-            ctx.restore();
-            return; // Stop the calibration loop — workout effect takes over
-          }
-        } else {
-          // Lost T-Pose — reset hold timer
-          calibRef.current.holdStartMs = 0;
-          setCalibPhase("detecting");
-          setCalibCountdown(3);
-        }
-      } else {
-        calibRef.current.holdStartMs = 0;
-        setCalibPhase("detecting");
-        setCalibCountdown(3);
-      }
-
-      ctx.restore();
-    }
-
-    calibFrameRef.current = requestAnimationFrame(calibrationLoop);
-  }, []); // stable — reads all state from refs or setter fns
-
-  // ── Camera on/off: runs whenever calibrating, workout, or resting ───────────
+  // ── Camera on/off: runs whenever camera-init, workout, or resting ────────────
   useEffect(() => {
-    const anyActive = isCalibrating || isWorkoutActive || isResting;
+    const anyActive = isCameraInitializing || isWorkoutActive || isResting;
     if (anyActive) {
       startCamera();
     }
     if (!anyActive) {
       cancelAnimationFrame(requestRef.current);
-      cancelAnimationFrame(calibFrameRef.current);
       stopCamera();
       cancelSpeech();
     }
     return () => {
-      if (!isCalibrating && !isWorkoutActive && !isResting) {
+      if (!isCameraInitializing && !isWorkoutActive && !isResting) {
         cancelAnimationFrame(requestRef.current);
-        cancelAnimationFrame(calibFrameRef.current);
         stopCamera();
         cancelSpeech();
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCalibrating, isWorkoutActive, isResting]);
-
-  // ── Calibration loop lifecycle ─────────────────────────────────────────────
-  useEffect(() => {
-    if (!isCalibrating) {
-      cancelAnimationFrame(calibFrameRef.current);
-      return;
-    }
-    // Give camera a frame to initialise before starting detection
-    calibFrameRef.current = requestAnimationFrame(calibrationLoop);
-    return () => { cancelAnimationFrame(calibFrameRef.current); };
-  }, [isCalibrating, calibrationLoop]);
+  }, [isCameraInitializing, isWorkoutActive, isResting]);
 
   // ── Workout loop lifecycle ─────────────────────────────────────────────────
   useEffect(() => {
@@ -1432,7 +1124,6 @@ export function Workout() {
       recorderRef.current?.destroy();
       recorderRef.current = null;
       cancelAnimationFrame(requestRef.current);
-      cancelAnimationFrame(calibFrameRef.current);
       // Null out srcObject first — this causes any pending play() promise to
       // reject with AbortError, which is caught in startCamera's .catch(() => {}).
       if (videoRef.current?.srcObject) {
@@ -1511,11 +1202,14 @@ export function Workout() {
         restIntervalRef.current = null;
       }
 
-      // ── Begin calibration ──────────────────────────────────────────────────
-      calibRef.current = { holdStartMs: 0, userScale: null };
-      setCalibPhase("detecting");
-      setCalibCountdown(3);
-      setIsCalibrating(true); // triggers camera + calibration loop effects
+      // ── Apply saved calibration & start camera ─────────────────────────────
+      calibRef.current = { userScale: savedCalibrationRef.current };
+      setIsCameraInitializing(true);
+      setTimeout(() => {
+        workoutStartMsRef.current = Date.now();
+        setIsCameraInitializing(false);
+        setIsWorkoutActive(true);
+      }, 1200);
 
       // Haptic: set starting
       try { navigator.vibrate(200); } catch {}
@@ -1539,7 +1233,7 @@ export function Workout() {
     setIsListening(false);
 
     setIsWorkoutActive(false);
-    setIsCalibrating(false);
+    setIsCameraInitializing(false);
     voiceSpeak("Workout complete.");
 
     // Grab and detach the recorder before any awaits so it stops capturing immediately
@@ -1739,11 +1433,14 @@ export function Workout() {
     // Haptic: set starting
     triggerHaptic(200);
 
-    // Re-enter calibration for the next set
-    calibRef.current = { holdStartMs: 0, userScale: null };
-    setCalibPhase("detecting");
-    setCalibCountdown(3);
-    setIsCalibrating(true);
+    // Apply saved calibration & start camera for the next set
+    calibRef.current = { userScale: savedCalibrationRef.current };
+    setIsCameraInitializing(true);
+    setTimeout(() => {
+      workoutStartMsRef.current = Date.now();
+      setIsCameraInitializing(false);
+      setIsWorkoutActive(true);
+    }, 1200);
   };
 
   /** Manual Log: saves a user-entered rep count (no camera / AI form scoring). */
@@ -1888,8 +1585,8 @@ export function Workout() {
 
   // ── Sync voiceStateRef so recognition closure reads fresh booleans ──────────
   useEffect(() => {
-    voiceStateRef.current = { isResting, isWorkoutActive, isCalibrating };
-  }, [isResting, isWorkoutActive, isCalibrating]);
+    voiceStateRef.current = { isResting, isWorkoutActive, isCameraInitializing };
+  }, [isResting, isWorkoutActive, isCameraInitializing]);
 
   // ── Rest timer countdown ───────────────────────────────────────────────────
   useEffect(() => {
@@ -1924,7 +1621,7 @@ export function Workout() {
 
   // ── Voice command recognition ──────────────────────────────────────────────
   useEffect(() => {
-    const cameraOn = isCalibrating || isWorkoutActive || isResting;
+    const cameraOn = isCameraInitializing || isWorkoutActive || isResting;
     if (!voiceCommandsEnabled || !cameraOn) {
       voiceCommandsEnabledRef.current = false;
       try { speechRecognitionRef.current?.stop(); } catch {}
@@ -1973,7 +1670,7 @@ export function Workout() {
       const vs = voiceStateRef.current;
       if (t.includes("start")) {
         if (vs.isResting) handleStartNextSetRef.current();
-        else if (!vs.isWorkoutActive && !vs.isCalibrating) void handleStartRef.current();
+        else if (!vs.isWorkoutActive && !vs.isCameraInitializing) void handleStartRef.current();
       } else if (t.includes("end set") || t.includes("finish set") || t.includes("done")) {
         if (vs.isWorkoutActive) void handleEndSetRef.current();
       } else if (t.includes("end workout") || t.includes("stop workout") || t.includes("finish workout")) {
@@ -1991,7 +1688,7 @@ export function Workout() {
       setIsListening(false);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [voiceCommandsEnabled, isCalibrating, isWorkoutActive, isResting, toast]);
+  }, [voiceCommandsEnabled, isCameraInitializing, isWorkoutActive, isResting, toast]);
 
   // ── Derived flags ──────────────────────────────────────────────────────────
   const selectedExerciseConfig = (() => {
@@ -2018,7 +1715,7 @@ export function Workout() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  const cameraActive = isCalibrating || isWorkoutActive || isResting;
+  const cameraActive = isCameraInitializing || isWorkoutActive || isResting;
 
   return (
     <div className="bg-black text-white min-h-full">
@@ -2201,9 +1898,17 @@ export function Workout() {
             className={`absolute inset-0 w-full h-full object-cover pointer-events-none${mirrorVideo ? " -scale-x-100" : ""}`}
           />
 
-          {/* Calibration overlay */}
-          {isCalibrating && (
-            <CalibrationOverlay phase={calibPhase} countdown={calibCountdown} />
+          {/* Camera-initializing spinner */}
+          {isCameraInitializing && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none select-none">
+              <div
+                className="px-6 py-5 rounded-2xl text-center backdrop-blur-sm flex flex-col items-center gap-3"
+                style={{ background: "rgba(0,0,0,0.72)", border: "1px solid rgba(255,255,255,0.12)" }}
+              >
+                <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <p className="text-sm font-semibold text-white/90">Camera Initializing…</p>
+              </div>
+            </div>
           )}
 
           {/* Border glow */}

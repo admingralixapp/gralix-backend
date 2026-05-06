@@ -11,6 +11,7 @@ import communityFeedRouter from "./community-feed";
 import storageRouter from "./storage";
 import ttsRouter from "./tts";
 import mobilityRouter from "./mobility";
+import calibrationRouter from "./calibration";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(sessionsRouter);
 router.use(repsRouter);
 router.use(progressRouter);
 router.use(mobilityRouter);
+router.use(calibrationRouter);
 
 export default router;
