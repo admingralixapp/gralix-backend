@@ -77,16 +77,21 @@ function UserSection() {
   const { signOut }        = useClerk();
   const { data: profile }  = useMyProfile();
   const { data: requests } = useFriendRequests();
+  const [, setLocation]    = useLocation();
   void requests;
 
   if (!isLoaded) return null;
+
+  const profileHref = profile?.username
+    ? `/profile/${profile.username}`
+    : "/settings";
 
   return (
     <>
       <Show when="signed-in">
         <div className="p-4 border-t border-border">
           <button
-            onClick={() => window.location.assign("/settings")}
+            onClick={() => setLocation(profileHref)}
             className="w-full flex items-center gap-3 group hover:bg-secondary/50 rounded-md p-2 transition-colors text-left"
           >
             {user?.imageUrl ? (

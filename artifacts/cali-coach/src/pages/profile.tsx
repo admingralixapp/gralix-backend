@@ -1,5 +1,6 @@
 import { useParams, Link } from "wouter";
 import { Show } from "@clerk/react";
+import React from "react";
 import {
   ArrowLeft,
   Lock,
@@ -23,6 +24,39 @@ import { MasteryGallery } from "@/components/mastery-gallery";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { type ExerciseStatsMap } from "@/lib/exercise-mastery";
+
+// ─── Error boundary ────────────────────────────────────────────────────────────
+
+interface ErrorBoundaryState { hasError: boolean; message: string }
+
+class ProfileErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  ErrorBoundaryState
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, message: "" };
+  }
+  static getDerivedStateFromError(err: unknown): ErrorBoundaryState {
+    return { hasError: true, message: err instanceof Error ? err.message : "Unknown error" };
+  }
+  override render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-center">
+          <p className="text-muted-foreground mb-2">Could not load this profile.</p>
+          <p className="text-xs text-destructive mb-4">{this.state.message}</p>
+          <Link href="/friends" className="text-primary text-sm hover:underline">
+            ← Back to Friends
+          </Link>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const BRANCH_COLORS: Record<string, string> = {
   PUSH: "bg-orange-500/20 text-orange-400 border-orange-500/30",
@@ -57,50 +91,28 @@ function FormMasteryRing({ score }: { score: number }) {
   const dash = (score / 100) * circ;
   return (
     <svg width="96" height="96" viewBox="0 0 96 96" className="shrink-0">
+      <circle cx="48" cy="48" r={r} fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
       <circle
-        cx="48"
-        cy="48"
-        r={r}
-        fill="none"
-        stroke="hsl(var(--border))"
-        strokeWidth="8"
-      />
-      <circle
-        cx="48"
-        cy="48"
-        r={r}
-        fill="none"
-        stroke="hsl(var(--primary))"
-        strokeWidth="8"
+        cx="48" cy="48" r={r} fill="none"
+        stroke="hsl(var(--primary))" strokeWidth="8"
         strokeDasharray={`${dash} ${circ - dash}`}
         strokeLinecap="round"
         strokeDashoffset={circ / 4}
         transform="rotate(-90 48 48)"
       />
-      <text
-        x="48"
-        y="44"
-        textAnchor="middle"
-        className="fill-foreground"
-        fontSize="18"
-        fontWeight="bold"
-      >
+      <text x="48" y="44" textAnchor="middle" className="fill-foreground" fontSize="18" fontWeight="bold">
         {score}%
       </text>
-      <text
-        x="48"
-        y="60"
-        textAnchor="middle"
-        className="fill-muted-foreground"
-        fontSize="10"
-      >
+      <text x="48" y="60" textAnchor="middle" className="fill-muted-foreground" fontSize="10">
         Mastery
       </text>
     </svg>
   );
 }
 
-export function ProfilePage() {
+// ─── Main component ────────────────────────────────────────────────────────────
+
+function ProfileContent() {
   const params = useParams<{ username: string }>();
   const username = params.username ?? "";
   const { toast } = useToast();
@@ -112,8 +124,7 @@ export function ProfilePage() {
   function handleSendRequest() {
     sendRequest.mutate(username, {
       onSuccess: () => toast({ title: "Friend request sent!" }),
-      onError: (err: Error) =>
-        toast({ title: err.message, variant: "destructive" }),
+      onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
     });
   }
 
@@ -143,25 +154,44 @@ export function ProfilePage() {
     );
   }
 
-  const { user, hidden, sessions, formMastery, totalSessions, totalReps, lifetimeReps, earnedMilestoneBadges, exerciseStats } =
-    profile;
+  // Safe destructure — all optional fields default to safe values
+  const {
+    user,
+    hidden = false,
+    sessions = null,
+    formMastery = null,
+    totalSessions = 0,
+    totalReps = 0,
+    lifetimeReps,
+    earnedMilestoneBadges,
+    exerciseStats,
+  } = profile;
 
-  // Compute skill tree from the friend's sessions
-  const skillTree =
-    sessions && !hidden
-      ? evaluateSkillTree(sessions as SessionSummary[])
-      : null;
+  const safeLifetimeReps = lifetimeReps ?? { push: 0, pull: 0, core: 0, legs: 0 };
+  const safeBadgeIds = Array.isArray(earnedMilestoneBadges) ? earnedMilestoneBadges : [];
+  const safeExerciseStats: ExerciseStatsMap = (
+    exerciseStats && typeof exerciseStats === "object" && !Array.isArray(exerciseStats)
+      ? exerciseStats
+      : {}
+  ) as ExerciseStatsMap;
+
+  // Compute skill tree safely
+  let skillTree = null;
+  try {
+    skillTree = sessions && !hidden ? evaluateSkillTree(sessions as SessionSummary[]) : null;
+  } catch {
+    skillTree = null;
+  }
 
   const masteredSkills = skillTree?.filter((s) => s.status === "mastered") ?? [];
-  const eliteBadges = skillTree?.filter((s) => s.level === 5 && s.status === "mastered") ?? [];
-  const inProgressSkills =
-    skillTree?.filter(
-      (s) =>
-        s.status === "unlocked" && s.progress.qualifyingSessions > 0,
-    ) ?? [];
+  const eliteBadges    = skillTree?.filter((s) => s.level === 5 && s.status === "mastered") ?? [];
+  const inProgressSkills = skillTree?.filter(
+    (s) => s.status === "unlocked" && s.progress.qualifyingSessions > 0,
+  ) ?? [];
 
-  // Friend request controls
   const { friendRequestStatus, friendRequestId, friendRequestFromMe } = profile as any;
+
+  const displayName = user.displayName || user.username || "Athlete";
 
   return (
     <div className="p-6 max-w-2xl">
@@ -179,17 +209,17 @@ export function ProfilePage() {
         {user.avatarUrl ? (
           <img
             src={user.avatarUrl}
-            alt={user.displayName}
+            alt={displayName}
             className="w-16 h-16 rounded-full object-cover shrink-0"
           />
         ) : (
           <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary shrink-0">
-            {user.displayName[0]?.toUpperCase() ?? "?"}
+            {displayName[0]?.toUpperCase() ?? "?"}
           </div>
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold">{user.displayName}</h1>
+            <h1 className="text-xl font-bold">{displayName}</h1>
             {(() => {
               const badge = getBadge(masteredSkills.length);
               return badge ? (
@@ -263,9 +293,7 @@ export function ProfilePage() {
         <>
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="rounded-xl border border-border bg-card p-4 text-center">
-              <div className="text-2xl font-bold text-primary">
-                {totalSessions}
-              </div>
+              <div className="text-2xl font-bold text-primary">{totalSessions}</div>
               <div className="text-xs text-muted-foreground mt-0.5">Sessions</div>
             </div>
             <div className="rounded-xl border border-border bg-card p-4 text-center">
@@ -273,12 +301,8 @@ export function ProfilePage() {
               <div className="text-xs text-muted-foreground mt-0.5">Total Reps</div>
             </div>
             <div className="rounded-xl border border-border bg-card p-4 text-center">
-              <div className="text-2xl font-bold text-amber-400">
-                {masteredSkills.length}
-              </div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                Skills Mastered
-              </div>
+              <div className="text-2xl font-bold text-amber-400">{masteredSkills.length}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Skills Mastered</div>
             </div>
           </div>
 
@@ -308,12 +332,14 @@ export function ProfilePage() {
               Mastery Gallery
             </h2>
             <div className="rounded-xl border border-border bg-card p-4">
-              <MasteryGallery exerciseStats={(exerciseStats ?? {}) as ExerciseStatsMap} />
+              <MasteryGallery exerciseStats={safeExerciseStats} />
             </div>
           </section>
 
           {/* ── Volume Badges ─────────────────────────────────────── */}
-          {(earnedMilestoneBadges?.length ?? 0) > 0 || lifetimeReps ? (
+          {(safeBadgeIds.length > 0 ||
+            safeLifetimeReps.push + safeLifetimeReps.pull +
+            safeLifetimeReps.core + safeLifetimeReps.legs > 0) && (
             <section className="mb-4">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
                 <Medal className="w-4 h-4 text-primary" />
@@ -321,12 +347,12 @@ export function ProfilePage() {
               </h2>
               <div className="rounded-xl border border-border bg-card p-4">
                 <BadgeGallery
-                  earnedBadgeIds={earnedMilestoneBadges ?? []}
-                  lifetimeReps={lifetimeReps}
+                  earnedBadgeIds={safeBadgeIds}
+                  lifetimeReps={safeLifetimeReps}
                 />
               </div>
             </section>
-          ) : null}
+          )}
 
           {/* ── Elite Mastery Badges ──────────────────────────────── */}
           {eliteBadges.length > 0 && (
@@ -402,22 +428,14 @@ export function ProfilePage() {
               </h2>
               <div className="rounded-xl border border-border bg-card overflow-hidden">
                 {inProgressSkills.map((skill, i) => {
-                  const req = skill.masteryRequirement.minQualifyingSessions;
+                  const req    = skill.masteryRequirement.minQualifyingSessions;
                   const capped = Math.min(skill.progress.qualifyingSessions, req);
-                  const pct = Math.min(100, (capped / req) * 100);
+                  const pct    = Math.min(100, (capped / req) * 100);
                   return (
-                    <div
-                      key={skill.id}
-                      className={cn(
-                        "p-3",
-                        i !== 0 && "border-t border-border",
-                      )}
-                    >
+                    <div key={skill.id} className={cn("p-3", i !== 0 && "border-t border-border")}>
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-sm font-medium">{skill.title}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {capped}/{req}
-                        </span>
+                        <span className="text-xs text-muted-foreground">{capped}/{req}</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
                         <div
@@ -432,17 +450,22 @@ export function ProfilePage() {
             </section>
           )}
 
-          {!skillTree?.length ||
-            (masteredSkills.length === 0 && inProgressSkills.length === 0 && (
-              <div className="rounded-xl border border-border bg-card p-8 text-center">
-                <Dumbbell className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  No workout data to display yet.
-                </p>
-              </div>
-            ))}
+          {masteredSkills.length === 0 && inProgressSkills.length === 0 && (
+            <div className="rounded-xl border border-border bg-card p-8 text-center">
+              <Dumbbell className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No workout data to display yet.</p>
+            </div>
+          )}
         </>
       )}
     </div>
+  );
+}
+
+export function ProfilePage() {
+  return (
+    <ProfileErrorBoundary>
+      <ProfileContent />
+    </ProfileErrorBoundary>
   );
 }

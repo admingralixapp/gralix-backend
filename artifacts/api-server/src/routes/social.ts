@@ -398,6 +398,9 @@ router.get(
         formMastery: null,
         totalSessions: 0,
         totalReps: 0,
+        lifetimeReps: { push: 0, pull: 0, core: 0, legs: 0 },
+        earnedMilestoneBadges: [],
+        exerciseStats: {},
       });
       return;
     }
