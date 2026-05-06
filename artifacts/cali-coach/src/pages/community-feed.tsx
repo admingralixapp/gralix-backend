@@ -17,6 +17,7 @@ import {
   Loader2,
   Users,
   Dumbbell,
+  Search,
 } from "lucide-react";
 import { useUser } from "@clerk/react";
 import { useLocation } from "wouter";
@@ -474,18 +475,28 @@ function CategoryFilterBar({
 
 export function CommunityFeedPage() {
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
+  const [searchQuery,    setSearchQuery]    = useState("");
 
-  // Always fetch all posts; filter client-side for instant switching between categories
+  // Always fetch all posts; filter client-side for instant category/search switching
   const { data: allPosts, isLoading, error } = useCommunityFeed();
 
   const category = CATEGORY_FILTERS.find((c) => c.key === activeCategory)!;
 
-  const posts =
-    !allPosts
-      ? undefined
-      : activeCategory === "all"
-      ? allPosts
-      : allPosts.filter((p) => exerciseBranch(p.exerciseName) === activeCategory);
+  const q = searchQuery.trim().toLowerCase();
+
+  const posts = !allPosts
+    ? undefined
+    : allPosts
+        .filter((p) => activeCategory === "all" || exerciseBranch(p.exerciseName) === activeCategory)
+        .filter((p) => {
+          if (!q) return true;
+          return (
+            p.displayName.toLowerCase().includes(q) ||
+            (p.username ?? "").toLowerCase().includes(q) ||
+            p.exerciseName.toLowerCase().includes(q) ||
+            toHashtag(p.exerciseName).toLowerCase().includes(q)
+          );
+        });
 
   return (
     <div className="min-h-screen p-4 md:p-6 space-y-5">
@@ -503,7 +514,34 @@ export function CommunityFeedPage() {
       </div>
 
       {/* ── Category filter bar ─────────────────────────────────────────────── */}
-      <CategoryFilterBar active={activeCategory} onChange={setActiveCategory} />
+      <CategoryFilterBar active={activeCategory} onChange={(k) => { setActiveCategory(k); setSearchQuery(""); }} />
+
+      {/* ── Search bar ──────────────────────────────────────────────────────── */}
+      <div
+        className="relative"
+        style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.09)",
+          borderRadius: 14,
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+        <input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by athlete, exercise or #hashtag…"
+          className="w-full bg-transparent pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-white/28 focus:outline-none rounded-[13px]"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
 
       {/* ── Feed ───────────────────────────────────────────────────────────── */}
       {isLoading && (
