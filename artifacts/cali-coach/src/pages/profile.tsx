@@ -1,6 +1,7 @@
 import { useParams, Link } from "wouter";
 import { Show } from "@clerk/react";
-import React from "react";
+import React, { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Lock,
@@ -17,6 +18,7 @@ import { useLocation } from "wouter";
 import {
   useFriendProfile,
   useMyProfile,
+  useUpsertProfile,
   useSendFriendRequest,
   useRespondToRequest,
 } from "@/lib/social";
@@ -121,10 +123,43 @@ function ProfileContent() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
+  const qc = useQueryClient();
   const { data: myProfile } = useMyProfile();
   const { data: profile, isLoading, error } = useFriendProfile(username);
-  const sendRequest = useSendFriendRequest();
+  const sendRequest    = useSendFriendRequest();
   const respondRequest = useRespondToRequest();
+  const upsertProfile  = useUpsertProfile();
+
+  // Edit-name modal state
+  const [editOpen,    setEditOpen]    = useState(false);
+  const [editName,    setEditName]    = useState("");
+  const [editUsername, setEditUsername] = useState("");
+
+  function openEditModal() {
+    setEditName(profile?.user.displayName ?? "");
+    setEditUsername(profile?.user.username ?? "");
+    setEditOpen(true);
+  }
+
+  function handleSaveProfile() {
+    if (!editName.trim() || !editUsername.trim()) return;
+    upsertProfile.mutate(
+      { displayName: editName.trim(), username: editUsername.trim() },
+      {
+        onSuccess: () => {
+          toast({ title: "Profile updated" });
+          setEditOpen(false);
+          // Invalidate all profile queries so leaderboard/community reflect new username
+          void qc.invalidateQueries();
+          // Navigate to new profile URL if username changed
+          if (editUsername.trim() !== username) {
+            setLocation(`/profile/${editUsername.trim()}`);
+          }
+        },
+        onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
+      },
+    );
+  }
 
   function handleSendRequest() {
     sendRequest.mutate(username, {
@@ -249,11 +284,11 @@ function ProfileContent() {
         <Show when="signed-in">
           {isOwnProfile ? (
             <button
-              onClick={() => setLocation("/settings")}
+              onClick={openEditModal}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-sm font-medium hover:bg-secondary/50 transition-colors"
             >
               <Pencil className="w-4 h-4" />
-              Edit Profile
+              Change Name or Username
             </button>
           ) : (
             <>
@@ -475,6 +510,72 @@ function ProfileContent() {
             </div>
           )}
         </>
+      )}
+
+      {/* ── Edit name/username modal ──────────────────────────────────────── */}
+      {editOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setEditOpen(false); }}
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl">
+            <h2 className="text-lg font-bold mb-4">Change Name or Username</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                  Display Name
+                </label>
+                <input
+                  autoFocus
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  maxLength={128}
+                  className="w-full px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                  Username
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                  <input
+                    value={editUsername}
+                    onChange={(e) =>
+                      setEditUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))
+                    }
+                    maxLength={32}
+                    placeholder="e.g. john_doe"
+                    className="w-full pl-7 pr-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Letters, numbers and underscores only.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={handleSaveProfile}
+                disabled={upsertProfile.isPending || !editName.trim() || !editUsername.trim()}
+                className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {upsertProfile.isPending ? "Saving…" : "Save"}
+              </button>
+              <button
+                onClick={() => setEditOpen(false)}
+                disabled={upsertProfile.isPending}
+                className="flex-1 px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-secondary/50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

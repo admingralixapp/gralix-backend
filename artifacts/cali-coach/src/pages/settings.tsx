@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
-import { Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video, AlertTriangle, Timer, Camera, Volume2, FlipHorizontal2, Ruler } from "lucide-react";
+import { Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video, AlertTriangle, Timer, Camera, Volume2, FlipHorizontal2, Ruler, ExternalLink } from "lucide-react";
 import {
   getVoiceCues, setVoiceCues,
   getCameraFacing, setCameraFacing, type CameraFacing,
@@ -69,9 +69,6 @@ export function Settings() {
   const { data: mobilityStatus } = useMobilityStatus();
   const updateMobilitySettings = useUpdateMobilitySettings();
 
-  const [displayName,    setDisplayName]    = useState("");
-  const [username,       setUsername]       = useState("");
-  const [editing,        setEditing]        = useState(false);
   const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -166,12 +163,6 @@ export function Settings() {
   // Resolved avatar URL: local upload preview → saved DB value → Clerk OAuth photo
   const displayAvatarUrl = localAvatarUrl ?? profile?.avatarUrl ?? user?.imageUrl ?? null;
 
-  function startEditing() {
-    setDisplayName(profile?.displayName ?? user?.fullName ?? "");
-    setUsername(profile?.username ?? user?.username ?? "");
-    setEditing(true);
-  }
-
   async function handleAvatarSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -228,24 +219,6 @@ export function Settings() {
     } finally {
       setAvatarUploading(false);
     }
-  }
-
-  function saveProfile() {
-    upsertProfile.mutate(
-      {
-        username,
-        displayName,
-        avatarUrl: localAvatarUrl ?? profile?.avatarUrl ?? user?.imageUrl ?? undefined,
-      },
-      {
-        onSuccess: () => {
-          toast({ title: "Profile Updated", description: "Your profile changes have been saved." });
-          setEditing(false);
-        },
-        onError: (err: Error) =>
-          toast({ title: err.message, variant: "destructive" }),
-      },
-    );
   }
 
   async function handleNotifToggle() {
@@ -387,47 +360,13 @@ export function Settings() {
             </div>
           </div>
 
-          {editing ? (
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1">Display Name</label>
-                <input
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1">Username</label>
-                <input
-                  value={username}
-                  onChange={(e) =>
-                    setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))
-                  }
-                  className="w-full px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="e.g. john_doe"
-                />
-                <p className="text-xs text-muted-foreground mt-1">Letters, numbers and underscores only.</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={saveProfile}
-                  disabled={upsertProfile.isPending}
-                  className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-                >
-                  {upsertProfile.isPending ? "Saving…" : "Save"}
-                </button>
-                <button
-                  onClick={() => setEditing(false)}
-                  className="px-4 py-2 rounded-md border border-border text-sm font-medium hover:bg-secondary transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button onClick={startEditing} className="text-sm text-primary hover:underline">
-              Edit profile
+          {profile?.username && (
+            <button
+              onClick={() => setLocation(`/profile/${profile.username}`)}
+              className="flex items-center gap-2 text-sm text-primary hover:underline"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              View Profile
             </button>
           )}
         </div>
