@@ -42,6 +42,9 @@ Required Environment Variables:
 - `artifacts/cali-coach/src/lib/milestone-badges.ts`: Milestone badge definitions (20 badges: 4 categories × 5 tiers: Starter/Bronze/Silver/Gold/Platinum at 10/100/500/1000/5000 lifetime reps).
 - `artifacts/api-server/src/lib/milestoneBadges.ts`: Server-side milestone logic — `getNewlyEarnedBadgeIds`, `computeLifetimeRepsFromSessions`, `computeEarnedBadgeIds`, exercise→category map.
 - `artifacts/cali-coach/src/components/badge-gallery.tsx`: Badge Gallery component with full gallery (earned/locked) and compact pill modes.
+- `artifacts/cali-coach/src/lib/exercise-mastery.ts`: Per-exercise mastery definitions — 63 exercises with milestoneType ('reps'|'seconds'), 5 tier titles each, and Tailwind color helpers.
+- `artifacts/api-server/src/lib/exerciseMastery.ts`: Server-side mirror — `getExerciseMasteryDef`, `getAchievedTier`, `getNewlyEarnedExerciseTiers`, `computeExerciseStatsFromSessions`.
+- `artifacts/cali-coach/src/components/mastery-gallery.tsx`: Mastery Gallery UI — shows highest tier card per exercise that has been started, with progress bar to next tier.
 - `artifacts/api-server/src/lib/skillTree.ts`: Logic for skill tree evaluation and mastery points.
 - `artifacts/cali-coach/src/lib/skill-tree.ts`: All 52 skill node definitions (4 branches × multiple sub-paths), `evaluateSkillTree()`, `ALL_SKILL_NODES`.
 - `artifacts/cali-coach/src/components/skill-map.tsx`: Dashboard Dynamic Window (3 nodes/branch).
@@ -69,6 +72,7 @@ Required Environment Variables:
 - Social features: friend management, shared profiles with skill trees and mastery. 7-tier status badges (Bronze→Master) shown on leaderboard rows, friend list, and profile pages based on mastered skill count.
 - Milestone Badge Gallery: 20 volume badges (4 categories × 5 tiers at 10/100/500/1000/5000 lifetime reps). Shown on profiles with locked/unlocked state and progress bars. Toast notifications on new badge earned.
 - Lifetime rep counters per category (Push/Pull/Core/Legs) tracked in DB and updated on every session completion.
+- Per-Exercise Mastery Gallery: 63 exercises each with a milestoneType ('reps' or 'seconds'), 5 specialist tier titles (Starter→Platinum at 10/100/500/1000/5000), and unique icons. Shown on profiles as tier cards for started exercises. Toast notification on new title earned. Totals stored in `users.exerciseStats` (JSONB). Static-hold exercises use `totalReps` as seconds (1:1 ratio).
 - Daily Mobility System with guided routines and streak tracking.
 - Global, national, and friends leaderboards based on mastery points.
 - Level-up celebration with confetti and social shoutouts for elite skill mastery.
@@ -92,6 +96,7 @@ _Populate as you build_
 - **UploadManagerProvider**: Must be inside `QueryClientProvider`. Manages background uploads (history saves + feed posts) with a floating toast that persists across navigation.
 - **Session userId backfill**: Old sessions with `userId = NULL` are reclaimed on profile creation (POST /api/users/me) via `clerkId` match. Sessions with `userId = NULL AND clerkId = NULL` (pre-clerkId era) are included as a migration fallback in GET /api/sessions and own-profile queries.
 - **Milestone badges**: Stored as a jsonb array of badge IDs (`earned_milestone_badges`) in `usersTable`. Updated atomically in PATCH /api/sessions/:id when a session is completed. Lifetime rep columns are additive (not recomputed from scratch) — each session increments the appropriate counter.
+- **Exercise mastery stats**: Stored as `exerciseStats` jsonb in `usersTable` — `Record<exerciseName, {total: number}>`. Updated on every session PATCH. Backfilled during POST /api/users/me. `total` is reps for dynamic exercises, seconds for static holds (sessionsTable.totalReps stores both).
 
 ## Pointers
 

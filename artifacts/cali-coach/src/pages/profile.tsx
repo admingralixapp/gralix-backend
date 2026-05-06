@@ -19,8 +19,10 @@ import {
 import { evaluateSkillTree, type SessionSummary } from "@/lib/skill-tree";
 import { getBadge } from "@/lib/badge-status";
 import { BadgeGallery } from "@/components/badge-gallery";
+import { MasteryGallery } from "@/components/mastery-gallery";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { type ExerciseStatsMap } from "@/lib/exercise-mastery";
 
 const BRANCH_COLORS: Record<string, string> = {
   PUSH: "bg-orange-500/20 text-orange-400 border-orange-500/30",
@@ -141,7 +143,7 @@ export function ProfilePage() {
     );
   }
 
-  const { user, hidden, sessions, formMastery, totalSessions, totalReps, lifetimeReps, earnedMilestoneBadges } =
+  const { user, hidden, sessions, formMastery, totalSessions, totalReps, lifetimeReps, earnedMilestoneBadges, exerciseStats } =
     profile;
 
   // Compute skill tree from the friend's sessions
@@ -299,7 +301,18 @@ export function ProfilePage() {
             </div>
           )}
 
-          {/* ── Milestone Badge Gallery ──────────────────────────── */}
+          {/* ── Mastery Gallery ───────────────────────────────────── */}
+          <section className="mb-4">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-primary" />
+              Mastery Gallery
+            </h2>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <MasteryGallery exerciseStats={(exerciseStats ?? {}) as ExerciseStatsMap} />
+            </div>
+          </section>
+
+          {/* ── Volume Badges ─────────────────────────────────────── */}
           {(earnedMilestoneBadges?.length ?? 0) > 0 || lifetimeReps ? (
             <section className="mb-4">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">

@@ -1280,9 +1280,12 @@ export function Workout() {
           avgFormScore: finalFormScore,
           ...(frozenDetectedRef.current ? { isVerified: false } : {}),
         },
-      }) as unknown as { newBadges?: Array<{ id: string; name: string; icon: string; category: string; tier: string }> };
+      }) as unknown as {
+        newBadges?: Array<{ id: string; name: string; icon: string; category: string; tier: string }>;
+        newExerciseTiers?: Array<{ exerciseName: string; tier: string; title: string; icon: string }>;
+      };
 
-      // Show milestone badge toasts for newly earned badges
+      // Show milestone badge toasts for newly earned category badges
       const milestones = sessionResult?.newBadges ?? [];
       for (const badge of milestones) {
         setTimeout(() => {
@@ -1291,6 +1294,17 @@ export function Workout() {
             description: `${badge.icon} You've earned the ${badge.tier} badge for ${badge.category} volume!`,
           });
         }, 800);
+      }
+
+      // Show mastery tier toasts for newly earned per-exercise titles
+      const exerciseTiers = sessionResult?.newExerciseTiers ?? [];
+      for (const et of exerciseTiers) {
+        setTimeout(() => {
+          toast({
+            title: `${et.icon} New Title: "${et.title}"`,
+            description: `${et.exerciseName} · ${et.tier} mastery unlocked!`,
+          });
+        }, 1200);
       }
 
       const newSession: SessionSummary = {

@@ -68,6 +68,7 @@ export interface PublicProfile {
   totalReps: number;
   lifetimeReps?: { push: number; pull: number; core: number; legs: number };
   earnedMilestoneBadges?: string[];
+  exerciseStats?: Record<string, { total: number }>;
 }
 
 // ---------------------------------------------------------------------------

@@ -13,6 +13,10 @@ import {
   computeLifetimeRepsFromSessions,
   computeEarnedBadgeIds,
 } from "../lib/milestoneBadges";
+import {
+  computeExerciseStatsFromSessions,
+  type ExerciseStatsMap,
+} from "../lib/exerciseMastery";
 
 const router = Router();
 
@@ -155,6 +159,7 @@ router.post("/users/me", requireAuthMiddleware, async (req: Request, res: Respon
 
     const lifetimeReps = computeLifetimeRepsFromSessions(allSessions);
     const earnedBadgeIds = computeEarnedBadgeIds(lifetimeReps);
+    const exerciseStats = computeExerciseStatsFromSessions(allSessions);
 
     const [updatedUser] = await db
       .update(usersTable)
@@ -164,6 +169,7 @@ router.post("/users/me", requireAuthMiddleware, async (req: Request, res: Respon
         lifetimeRepsCore: lifetimeReps.core,
         lifetimeRepsLegs: lifetimeReps.legs,
         earnedMilestoneBadges: earnedBadgeIds,
+        exerciseStats,
       })
       .where(eq(usersTable.id, user.id))
       .returning();
@@ -446,6 +452,7 @@ router.get(
         legs: targetUser.lifetimeRepsLegs,
       },
       earnedMilestoneBadges: (targetUser.earnedMilestoneBadges as string[]) ?? [],
+      exerciseStats: (targetUser.exerciseStats as ExerciseStatsMap) ?? {},
     });
   },
 );

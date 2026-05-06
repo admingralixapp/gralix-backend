@@ -39,6 +39,12 @@ export const usersTable = pgTable("users", {
    * Updated server-side whenever a lifetime rep milestone is crossed.
    */
   earnedMilestoneBadges: jsonb("earned_milestone_badges").notNull().default([]),
+  /**
+   * Per-exercise totals: Record<exerciseName, { total: number }>.
+   * `total` stores reps for dynamic exercises, seconds for static holds.
+   * Incremented after every completed session.
+   */
+  exerciseStats: jsonb("exercise_stats").notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

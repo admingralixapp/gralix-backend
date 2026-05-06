@@ -20,6 +20,13 @@ import {
   MILESTONE_BADGE_MAP,
   type MilestoneCategory,
 } from "../lib/milestoneBadges";
+import {
+  getExerciseMasteryDef,
+  getNewlyEarnedExerciseTiers,
+  getTierTitle,
+  TIER_LABELS,
+  type ExerciseStatsMap,
+} from "../lib/exerciseMastery";
 
 const router: IRouter = Router();
 
@@ -172,54 +179,74 @@ router.patch("/sessions/:id", async (req, res) => {
 
   const exerciseName = exercise?.name ?? "";
 
-  // ── Update lifetime reps + badges if session is being completed ──
+  // ── Update lifetime reps + badges + exerciseStats if session is being completed ──
   let newBadges: { id: string; name: string; icon: string; category: string; tier: string }[] = [];
+  let newExerciseTiers: { exerciseName: string; tier: string; title: string; icon: string }[] = [];
 
   if (body.completedAt && updated.userId && (body.totalReps ?? 0) > 0) {
-    const cat: MilestoneCategory | null = getExerciseCategory(exerciseName);
-    if (cat) {
-      const [user] = await db
-        .select({
-          lifetimeRepsPush: usersTable.lifetimeRepsPush,
-          lifetimeRepsPull: usersTable.lifetimeRepsPull,
-          lifetimeRepsCore: usersTable.lifetimeRepsCore,
-          lifetimeRepsLegs: usersTable.lifetimeRepsLegs,
-          earnedMilestoneBadges: usersTable.earnedMilestoneBadges,
-        })
-        .from(usersTable)
-        .where(eq(usersTable.id, updated.userId));
+    const [user] = await db
+      .select({
+        lifetimeRepsPush: usersTable.lifetimeRepsPush,
+        lifetimeRepsPull: usersTable.lifetimeRepsPull,
+        lifetimeRepsCore: usersTable.lifetimeRepsCore,
+        lifetimeRepsLegs: usersTable.lifetimeRepsLegs,
+        earnedMilestoneBadges: usersTable.earnedMilestoneBadges,
+        exerciseStats: usersTable.exerciseStats,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, updated.userId));
 
-      if (user) {
+    if (user) {
+      const addedReps = body.totalReps ?? 0;
+      const userUpdate: Record<string, unknown> = {};
+
+      // ── Category milestone badges ──
+      const cat: MilestoneCategory | null = getExerciseCategory(exerciseName);
+      if (cat) {
         const colKey = `lifetimeReps${cat.charAt(0).toUpperCase()}${cat.slice(1)}` as
           | "lifetimeRepsPush"
           | "lifetimeRepsPull"
           | "lifetimeRepsCore"
           | "lifetimeRepsLegs";
         const currentReps = (user[colKey] ?? 0) as number;
-        const addedReps   = body.totalReps ?? 0;
         const newReps     = currentReps + addedReps;
-
-        // Detect newly crossed thresholds
-        const newBadgeIds    = getNewlyEarnedBadgeIds(cat, currentReps, newReps);
-        const currentBadges  = (user.earnedMilestoneBadges as string[]) ?? [];
-        const updatedBadges  = [...new Set([...currentBadges, ...newBadgeIds])];
-
-        await db
-          .update(usersTable)
-          .set({ [colKey]: newReps, earnedMilestoneBadges: updatedBadges })
-          .where(eq(usersTable.id, updated.userId));
-
+        const newBadgeIds = getNewlyEarnedBadgeIds(cat, currentReps, newReps);
+        const currentBadges = (user.earnedMilestoneBadges as string[]) ?? [];
+        userUpdate[colKey] = newReps;
+        userUpdate.earnedMilestoneBadges = [...new Set([...currentBadges, ...newBadgeIds])];
         newBadges = newBadgeIds.flatMap((bid) => {
           const def = MILESTONE_BADGE_MAP.get(bid);
           return def ? [{ id: def.id, name: def.name, icon: def.icon, category: def.category, tier: def.tier }] : [];
         });
       }
+
+      // ── Per-exercise mastery ──
+      const exerciseDef = getExerciseMasteryDef(exerciseName);
+      if (exerciseDef) {
+        const currentStats = (user.exerciseStats as ExerciseStatsMap) ?? {};
+        const oldTotal = currentStats[exerciseName]?.total ?? 0;
+        const newTotal = oldTotal + addedReps;
+        userUpdate.exerciseStats = {
+          ...currentStats,
+          [exerciseName]: { total: newTotal },
+        };
+        const newTiers = getNewlyEarnedExerciseTiers(oldTotal, newTotal);
+        newExerciseTiers = newTiers.map((tier) => ({
+          exerciseName,
+          tier: TIER_LABELS[tier],
+          title: getTierTitle(exerciseDef, tier),
+          icon: exerciseDef.icon,
+        }));
+      }
+
+      await db.update(usersTable).set(userUpdate).where(eq(usersTable.id, updated.userId));
     }
   }
 
   res.json({
     ...UpdateSessionResponse.parse({ ...updated, exerciseName }),
     newBadges,
+    newExerciseTiers,
   });
 });
 
