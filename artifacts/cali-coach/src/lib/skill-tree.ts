@@ -53,6 +53,11 @@ export interface SkillNode {
   masteryRequirement: MasteryRequirement;
   /** id of the SkillNode that must be mastered first. null = always unlocked. */
   prerequisiteId: string | null;
+  /**
+   * Cross-branch prerequisite ids — ALL must be mastered before this skill
+   * unlocks, in addition to the primary prerequisiteId.
+   */
+  secondaryPrerequisiteIds?: string[];
   /** Identifies which fork a node belongs to (e.g. 'front-lever', 'muscle-up') */
   path?: string;
   /** Human-readable path label shown in the UI */
@@ -234,6 +239,7 @@ const PULL_NODES: SkillNode[] = [
       minQualifyingSessions: 4,
     },
     prerequisiteId: "pull-2",
+    secondaryPrerequisiteIds: ["core-sh-1"],
     path: "front-lever",
     pathLabel: "Front Lever Path",
   },
@@ -274,6 +280,7 @@ const PULL_NODES: SkillNode[] = [
       minQualifyingSessions: 5,
     },
     prerequisiteId: "pull-fl-2",
+    secondaryPrerequisiteIds: ["core-sh-2"],
     path: "front-lever",
     pathLabel: "Front Lever Path",
   },
@@ -316,6 +323,7 @@ const PULL_NODES: SkillNode[] = [
       minQualifyingSessions: 4,
     },
     prerequisiteId: "pull-mu-1",
+    secondaryPrerequisiteIds: ["push-2"],
     path: "muscle-up",
     pathLabel: "Muscle-Up Path",
   },
@@ -336,6 +344,7 @@ const PULL_NODES: SkillNode[] = [
       minQualifyingSessions: 5,
     },
     prerequisiteId: "pull-mu-2",
+    secondaryPrerequisiteIds: ["push-3"],
     path: "muscle-up",
     pathLabel: "Muscle-Up Path",
   },
@@ -430,6 +439,7 @@ const CORE_NODES: SkillNode[] = [
       minQualifyingSessions: 4,
     },
     prerequisiteId: "core-4",
+    secondaryPrerequisiteIds: ["pull-2", "push-3"],
   },
 ];
 
@@ -1092,14 +1102,21 @@ export function evaluateSkillTree(
 
     const mastered = qualifying.length >= req.minQualifyingSessions;
 
+    const primaryMet =
+      node.prerequisiteId === null ||
+      evaluated.get(node.prerequisiteId)?.status === "mastered";
+
+    const secondaryMet = (node.secondaryPrerequisiteIds ?? []).every(
+      (id) => evaluated.get(id)?.status === "mastered",
+    );
+
     let status: SkillStatus;
     if (mastered) {
       status = "mastered";
-    } else if (node.prerequisiteId === null) {
+    } else if (primaryMet && secondaryMet) {
       status = "unlocked";
     } else {
-      const prereq = evaluated.get(node.prerequisiteId);
-      status = prereq?.status === "mastered" ? "unlocked" : "locked";
+      status = "locked";
     }
 
     evaluated.set(node.id, {

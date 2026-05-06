@@ -258,6 +258,41 @@ function ConnectorPath({
   );
 }
 
+// ─── CrossBranchConnector ─────────────────────────────────────────────────────
+// Renders a cross-branch dependency arc when a multi-prereq node is selected.
+// met=true  → solid colored glow (requirement satisfied)
+// met=false → red dashed line  (requirement still needed)
+
+function CrossBranchConnector({
+  fromPos, toPos, prereqMastered, prereqColor,
+}: {
+  fromPos: { x: number; y: number };
+  toPos:   { x: number; y: number };
+  prereqMastered: boolean;
+  prereqColor: string;
+}) {
+  const { x1, y1, x2, y2 } = edgePoints(fromPos, toPos, NODE_R, NODE_R);
+  const d = makeBezier(x1, y1, x2, y2);
+  const color = prereqMastered ? prereqColor : "#ef4444";
+  return (
+    <g>
+      {/* wide soft glow */}
+      <path d={d} fill="none" stroke={color}
+        strokeWidth={20} opacity={0.05} strokeLinecap="round" />
+      {/* core line */}
+      <path d={d} fill="none" stroke={color}
+        strokeWidth={2}
+        opacity={prereqMastered ? 0.42 : 0.70}
+        strokeDasharray={prereqMastered ? undefined : "5 4"}
+        strokeLinecap="round"
+        style={{ transition: "stroke 0.2s, opacity 0.2s" }} />
+      {/* arrowhead dot at target */}
+      <circle cx={x2} cy={y2} r={4} fill={color}
+        opacity={prereqMastered ? 0.55 : 0.80} />
+    </g>
+  );
+}
+
 // ─── Hub visual ───────────────────────────────────────────────────────────────
 
 function HubNode() {
@@ -466,13 +501,14 @@ function GlassNode({
 const OVERLAY_W = 252;
 
 function SkillOverlay({
-  skill, screenX, screenY, containerW, containerH, color, onClose,
+  skill, screenX, screenY, containerW, containerH, color, onClose, skillMap,
 }: {
   skill:      EvaluatedSkill;
   screenX:    number; screenY:    number;
   containerW: number; containerH: number;
   color:      string;
   onClose:    () => void;
+  skillMap:   Map<string, EvaluatedSkill>;
 }) {
   const OVERLAY_H_EST = 340;
   let left = screenX + 48;
@@ -581,6 +617,40 @@ function SkillOverlay({
             : skill.description}
         </p>
       </div>
+
+      {/* Cross-branch requirements */}
+      {skill.secondaryPrerequisiteIds && skill.secondaryPrerequisiteIds.length > 0 && (
+        <div className="mb-3">
+          <p className="text-[9px] font-bold uppercase tracking-widest mb-1.5 text-zinc-500">
+            Also Requires
+          </p>
+          <div className="space-y-1">
+            {skill.secondaryPrerequisiteIds.map((reqId) => {
+              const reqNode = ALL_SKILL_NODES.find((n) => n.id === reqId);
+              if (!reqNode) return null;
+              const reqColor = nodeColor(reqId);
+              const isMet = skillMap.get(reqId)?.status === "mastered";
+              return (
+                <div key={reqId}
+                  className="flex items-center gap-1.5 rounded-lg px-2 py-1"
+                  style={{ backgroundColor: isMet ? `${reqColor}14` : "rgba(239,68,68,0.09)" }}>
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{ backgroundColor: isMet ? reqColor : "#ef4444" }} />
+                  <span className="text-[10px] text-zinc-300 flex-1 truncate">
+                    {reqNode.title}
+                  </span>
+                  <span className={cn(
+                    "text-[9px] font-bold",
+                    isMet ? "text-green-400" : "text-red-400",
+                  )}>
+                    {isMet ? "✓" : "✗"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Mastery progress */}
       {!isLocked && (
@@ -922,6 +992,23 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
               );
             })}
 
+            {/* ── Cross-branch dependency lines (shown when a node is selected) ── */}
+            {overlay?.skill.secondaryPrerequisiteIds?.map((reqId) => {
+              const fromPos = NODE_POS[overlay.skill.id];
+              const toPos   = NODE_POS[reqId];
+              if (!fromPos || !toPos) return null;
+              const prereqMastered = skillMap.get(reqId)?.status === "mastered";
+              return (
+                <CrossBranchConnector
+                  key={`cross-${overlay.skill.id}-${reqId}`}
+                  fromPos={fromPos}
+                  toPos={toPos}
+                  prereqMastered={prereqMastered ?? false}
+                  prereqColor={nodeColor(reqId)}
+                />
+              );
+            })}
+
             {/* ── Hub ── */}
             <HubNode />
 
@@ -977,6 +1064,7 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
               containerH={containerSize.h}
               color={overlayColor}
               onClose={() => setOverlay(null)}
+              skillMap={skillMap}
             />
           )}
         </AnimatePresence>
