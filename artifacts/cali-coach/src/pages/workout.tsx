@@ -663,6 +663,10 @@ export function Workout() {
     return () => { landmarkerRef.current?.close(); };
   }, [toast]);
 
+  // ── Mounted guard — prevents async continuations from touching state/DOM
+  //    after the component has already unmounted.
+  const mountedRef = useRef(true);
+
   // ── Camera ─────────────────────────────────────────────────────────────────
   /** Idempotent: does nothing if camera is already streaming. */
   const startCamera = useCallback(async () => {
@@ -672,10 +676,19 @@ export function Workout() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 1280, height: 720, facingMode: getCameraFacing() },
       });
+      // Bail out if the component unmounted while getUserMedia was in-flight.
+      if (!mountedRef.current || !videoRef.current) {
+        stream.getTracks().forEach(t => t.stop());
+        return;
+      }
       videoRef.current.srcObject = stream;
-      videoRef.current.play();
+      // Catch AbortError: play() is interrupted when srcObject is cleared on
+      // unmount before the promise resolves — not a real error, safe to ignore.
+      videoRef.current.play().catch(() => {});
     } catch {
-      toast({ title: "Camera error", description: "Could not access camera. Check browser permissions.", variant: "destructive" });
+      if (mountedRef.current) {
+        toast({ title: "Camera error", description: "Could not access camera. Check browser permissions.", variant: "destructive" });
+      }
     }
   }, [toast]);
 
@@ -1232,11 +1245,13 @@ export function Workout() {
   // so camera tracks are always released and the mic is always stopped.
   useEffect(() => {
     return () => {
+      mountedRef.current = false;
       recorderRef.current?.destroy();
       recorderRef.current = null;
       cancelAnimationFrame(requestRef.current);
       cancelAnimationFrame(calibFrameRef.current);
-      // Release camera tracks
+      // Null out srcObject first — this causes any pending play() promise to
+      // reject with AbortError, which is caught in startCamera's .catch(() => {}).
       if (videoRef.current?.srcObject) {
         (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
         videoRef.current.srcObject = null;

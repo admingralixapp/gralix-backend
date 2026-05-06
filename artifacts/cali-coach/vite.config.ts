@@ -66,6 +66,11 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    hmr: {
+      // Disable the full-screen red error overlay so transient AbortErrors
+      // (play() interrupted on component unmount) don't block the UI.
+      overlay: false,
+    },
   },
   preview: {
     port,
