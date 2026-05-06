@@ -47,7 +47,7 @@ const HUB_X    = 1500;
 const HUB_Y    = 1500;
 const GOLD     = "#eab308";
 const MUTED    = "#6b7280";
-const HIT_R    = NODE_R + 14;  // ≥44px touch target
+const HIT_R    = NODE_R + 20;  // 48px+ touch/mouse target
 
 const BRANCH_COLOR: Record<SkillBranch, string> = {
   PUSH: "#f97316",
@@ -354,10 +354,12 @@ function GlassNode({
   return (
     <g
       onClick={(e) => { e.stopPropagation(); onClick(skill, e); }}
-      onMouseEnter={() => onHover(nodeId)}
-      onMouseLeave={() => onHover(null)}
+      onPointerDown={(e) => e.stopPropagation()}
+      onPointerEnter={() => onHover(nodeId)}
+      onPointerLeave={() => onHover(null)}
       style={{
         cursor: "pointer",
+        pointerEvents: "auto",
         transformOrigin: `${x}px ${y}px`,
         transform: isHovered ? "scale(1.12)" : "scale(1)",
         transition: "transform 0.14s cubic-bezier(0.34,1.56,0.64,1)",
@@ -369,8 +371,8 @@ function GlassNode({
         if (e.key === "Enter" || e.key === " ") onClick(skill, e as unknown as React.MouseEvent);
       }}
     >
-      {/* Touch target */}
-      <circle cx={x} cy={y} r={HIT_R} fill="transparent" />
+      {/* Enlarged hit area — transparent fill keeps pointer-events active */}
+      <circle cx={x} cy={y} r={HIT_R} fill="transparent" style={{ cursor: "pointer", pointerEvents: "all" }} />
 
       {/* Hover pulse ring */}
       {isHovered && (
@@ -780,12 +782,16 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
   }, []);
 
   // Pointer drag pan
+  // NOTE: nodes call e.stopPropagation() on their own onPointerDown, so this
+  // handler only fires when the user presses on empty space / edges / labels.
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     isPanning.current = true;
     didDrag.current   = false;
     lastPos.current   = { x: e.clientX, y: e.clientY };
     downPos.current   = { x: e.clientX, y: e.clientY };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    // Imperatively update cursor so grabbing feedback works without re-render
+    if (containerRef.current) containerRef.current.style.cursor = "grabbing";
     if (overlay) setOverlay(null);
   }
 
@@ -794,12 +800,15 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
     const dx = e.clientX - lastPos.current.x;
     const dy = e.clientY - lastPos.current.y;
     const totalD = Math.abs(e.clientX - downPos.current.x) + Math.abs(e.clientY - downPos.current.y);
-    if (totalD > 4) didDrag.current = true;
+    if (totalD > 6) didDrag.current = true;
     setPan((p) => ({ x: p.x + dx, y: p.y + dy }));
     lastPos.current = { x: e.clientX, y: e.clientY };
   }
 
-  function onPointerUp() { isPanning.current = false; }
+  function onPointerUp() {
+    isPanning.current = false;
+    if (containerRef.current) containerRef.current.style.cursor = "grab";
+  }
 
   // Node click → open overlay
   function handleNodeClick(skill: EvaluatedSkill, _e: React.MouseEvent) {
@@ -868,6 +877,7 @@ function TreeCanvas({ evaluated }: { evaluated: EvaluatedSkill[] }) {
           style={{
             filter: overlay ? "blur(1.5px)" : "none",
             transition: "filter 0.22s ease",
+            pointerEvents: "visiblePainted",
           }}
         >
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
