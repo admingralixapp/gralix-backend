@@ -1492,8 +1492,36 @@ export function Workout() {
                     { bg: "rgba(239,68,68,0.18)",  border: "rgba(239,68,68,0.5)",  text: "#fca5a5" };
 
   // ── Render ─────────────────────────────────────────────────────────────────
+
+  const cameraActive = isCalibrating || isWorkoutActive;
+
   return (
-    <div className="flex flex-col h-screen bg-black text-white relative">
+    <div className="bg-black text-white min-h-full">
+
+      {/* ── POV Review — fixed overlay, covers nav bar ──────────────────────── */}
+      {povReview && (
+        <div className="fixed inset-0 z-[200] bg-black">
+          <PovReview
+            {...povReview.payload}
+            sessionId={povReview.results.sessionId}
+            onComplete={() => {
+              const results = povReview.results;
+              setPovReview(null);
+              setSessionResults(results);
+            }}
+          />
+        </div>
+      )}
+
+      {/* ── Session Results — fixed overlay, covers nav bar ─────────────────── */}
+      {sessionResults && !povReview && (
+        <div className="fixed inset-0 z-[200] bg-black">
+          <SessionResults
+            {...sessionResults}
+            onClose={() => setSessionResults(null)}
+          />
+        </div>
+      )}
 
       {/* ── Exercise Info Modal ─────────────────────────────────────────────── */}
       <Dialog open={!!infoExercise} onOpenChange={(open) => { if (!open) setInfoExercise(null); }}>
@@ -1585,392 +1613,392 @@ export function Workout() {
         </DialogContent>
       </Dialog>
 
-      {/* POV Performance Review — shown before SessionResults when recording available */}
-      {povReview && (
-        <PovReview
-          {...povReview.payload}
-          sessionId={povReview.results.sessionId}
-          onComplete={() => {
-            const results = povReview.results;
-            setPovReview(null);
-            setSessionResults(results);
-          }}
-        />
-      )}
+      {/* ═══════════════════════════════════════════════════════════════════
+          CAMERA MODE — fills the content pane while workout / calibration runs
+          absolute inset-0 breaks out of the max-w-6xl wrapper in the layout
+          so the camera fills the full scrollable area. The nav bar (z-50) is
+          fixed above it, so we push the FINISH button up on mobile.
+      ══════════════════════════════════════════════════════════════════════ */}
+      {cameraActive && (
+        <div className="absolute inset-0 bg-zinc-900 overflow-hidden">
+          <video
+            ref={videoRef}
+            className="absolute inset-0 w-full h-full object-cover -scale-x-100"
+            playsInline
+            muted
+          />
+          <canvas
+            ref={canvasRef}
+            width={1280}
+            height={720}
+            className="absolute inset-0 w-full h-full object-cover -scale-x-100 pointer-events-none"
+          />
 
-      {/* Session Results overlay */}
-      {sessionResults && !povReview && (
-        <SessionResults
-          {...sessionResults}
-          onClose={() => setSessionResults(null)}
-        />
-      )}
+          {/* Calibration overlay */}
+          {isCalibrating && (
+            <CalibrationOverlay phase={calibPhase} countdown={calibCountdown} />
+          )}
 
-      {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
-        <Button
-          variant="ghost"
-          onClick={() => setLocation("/")}
-          className="text-white hover:bg-white/20"
-        >
-          Cancel
-        </Button>
-        {!isWorkoutActive && !isCalibrating && (
-          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
-            <PopoverTrigger asChild>
+          {/* Border glow */}
+          {isWorkoutActive && (
+            <div
+              className="absolute inset-0 pointer-events-none transition-all duration-300"
+              style={{
+                boxShadow: isStaticExercise
+                  ? (isInActiveZone
+                      ? "inset 0 0 0 5px rgba(34,197,94,0.75)"
+                      : "inset 0 0 0 5px rgba(239,68,68,0.55)")
+                  : (syncPct >= SYNC_GATE
+                      ? "inset 0 0 0 4px rgba(0,212,255,0.5)"
+                      : "inset 0 0 0 4px rgba(255,160,0,0.4)"),
+              }}
+            />
+          )}
+
+          {/* Top-left workout controls */}
+          {isWorkoutActive && (
+            <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
               <button
-                disabled={isModelLoading}
-                className="flex items-center gap-2 bg-black/50 border border-white/20 text-white rounded-md px-3 py-2 text-sm min-w-[220px] max-w-[280px] disabled:opacity-40 hover:bg-black/70 transition-colors"
+                onClick={() => setMinimalistMode(!minimalistMode)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-all select-none"
+                style={{
+                  background:  minimalistMode ? "rgba(34,197,94,0.18)" : "rgba(0,0,0,0.50)",
+                  borderColor: minimalistMode ? "rgba(34,197,94,0.6)"  : "rgba(255,255,255,0.15)",
+                  color:       minimalistMode ? "#86efac"               : "rgba(255,255,255,0.50)",
+                }}
               >
-                <span className="flex-1 text-left truncate text-white/80">
-                  {isModelLoading
-                    ? "Loading model…"
-                    : (() => {
-                        for (const cat of EXERCISE_CATEGORIES) {
-                          const entry = cat.exercises.find(e => {
-                            const dbEx = exercises?.find(ex => ex.name === e.dbName);
-                            return dbEx?.id.toString() === selectedExerciseId;
-                          });
-                          if (entry) return entry.label;
-                        }
-                        return "Select Exercise";
-                      })()}
-                </span>
-                <ChevronDown className="w-4 h-4 shrink-0 text-white/40" />
+                {minimalistMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                {minimalistMode ? "Minimalist" : "Full Skeleton"}
               </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-0 max-h-[440px] overflow-y-auto" align="end">
-              {EXERCISE_CATEGORIES.map(cat => {
-                const items = cat.exercises
-                  .map(entry => {
-                    const dbEx = exercises?.find(e => e.name === entry.dbName);
-                    return dbEx ? { ...entry, id: dbEx.id } : null;
-                  })
-                  .filter(Boolean) as Array<{ dbName: string; label: string; id: number }>;
-                if (items.length === 0) return null;
+              <button
+                onClick={() => setVoicePacing(!voicePacing)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-all select-none"
+                style={{
+                  background:  voicePacing ? "rgba(139,92,246,0.20)" : "rgba(0,0,0,0.50)",
+                  borderColor: voicePacing ? "rgba(139,92,246,0.60)" : "rgba(255,255,255,0.15)",
+                  color:       voicePacing ? "#c4b5fd"               : "rgba(255,255,255,0.50)",
+                }}
+              >
+                {voicePacing ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
+                Voice Pacing
+              </button>
+            </div>
+          )}
+
+          {/* Ghost Mode badge */}
+          {isWorkoutActive && hasGhostConfig && (
+            <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5 select-none">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 border border-cyan-500/40 text-xs font-semibold text-cyan-300">
+                <Ghost className="w-3.5 h-3.5" />
+                Ghost Mode
+              </div>
+              {(() => {
+                const ex = exercises?.find(e => e.id.toString() === selectedExerciseId);
+                if (!ex) return null;
+                const label = getGhostGripLabel(equipment, isPushExercise(ex.name), isPullExercise(ex.name));
+                if (!label) return null;
                 return (
-                  <div key={cat.label}>
-                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/70 bg-secondary/30 border-b border-border sticky top-0">
-                      {cat.label}
-                    </div>
-                    {items.map(item => (
-                      <div
-                        key={item.id}
-                        className={`flex items-center gap-1 border-b border-border/40 group hover:bg-secondary/40 transition-colors ${
-                          item.id.toString() === selectedExerciseId ? "bg-primary/10" : ""
-                        }`}
-                      >
-                        <button
-                          className={`flex-1 text-left text-sm px-3 py-2.5 truncate ${
-                            item.id.toString() === selectedExerciseId
-                              ? "text-primary font-medium"
-                              : "text-foreground"
-                          }`}
-                          onClick={() => {
-                            setSelectedExerciseId(item.id.toString());
-                            setPickerOpen(false);
-                          }}
-                        >
-                          {item.label}
-                        </button>
-                        <button
-                          className="p-2 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setInfoExercise({ name: item.dbName, id: item.id });
-                          }}
-                          title="View coaching info"
-                        >
-                          <Info className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                  <div className="px-2 py-0.5 rounded text-[9px] font-medium text-white/45 bg-black/50 border border-white/10">
+                    {label}
                   </div>
                 );
-              })}
-            </PopoverContent>
-          </Popover>
-        )}
-      </div>
+              })()}
+            </div>
+          )}
 
-      {/* Video + Canvas */}
-      <div className="flex-1 relative overflow-hidden bg-zinc-900">
-        <video
-          ref={videoRef}
-          className="absolute inset-0 w-full h-full object-cover -scale-x-100"
-          playsInline
-          muted
-        />
-        <canvas
-          ref={canvasRef}
-          width={1280}
-          height={720}
-          className="absolute inset-0 w-full h-full object-cover -scale-x-100 pointer-events-none"
-        />
+          {/* Live HUD — above the FINISH button */}
+          {isWorkoutActive && (
+            <div className="absolute left-0 right-0 px-8 flex justify-between items-end pointer-events-none"
+                 style={{ bottom: "calc(6rem + env(safe-area-inset-bottom, 0px))" }}>
 
-        {/* ── Calibration overlay ─────────────────────────────────────────── */}
-        {isCalibrating && (
-          <CalibrationOverlay phase={calibPhase} countdown={calibCountdown} />
-        )}
+              {isStaticExercise ? (
+                <div className="flex flex-col items-start gap-2">
+                  <span className="text-sm font-mono text-white/70 uppercase tracking-widest">Hold Time</span>
+                  <span
+                    className="text-8xl font-black leading-none tracking-tighter drop-shadow-lg"
+                    style={{ color: isInActiveZone ? "#22c55e" : "#ef4444" }}
+                  >
+                    {formatHoldTime(holdSeconds)}
+                  </span>
+                  <div
+                    className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest"
+                    style={{
+                      backgroundColor: isInActiveZone ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)",
+                      color:           isInActiveZone ? "#86efac" : "#fca5a5",
+                      border: `1px solid ${isInActiveZone ? "rgba(34,197,94,0.5)" : "rgba(239,68,68,0.5)"}`,
+                    }}
+                  >
+                    {isInActiveZone ? "● Synced — hold it" : "○ Match ghost position"}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <span className="text-sm font-mono text-white/70 uppercase tracking-widest">Reps</span>
+                  <span className="text-8xl font-black text-primary leading-none tracking-tighter drop-shadow-lg">
+                    {reps}
+                  </span>
+                </div>
+              )}
 
-        {/* Border glow */}
-        {isWorkoutActive && (
+              {hasGhostConfig && (
+                <div className="flex flex-col items-center gap-1 mb-1">
+                  <span className="text-[10px] font-mono text-white/50 uppercase tracking-widest">Ghost Sync</span>
+                  <div className="text-4xl font-black tabular-nums leading-none" style={{ color: syncColor.text }}>
+                    {syncPct}%
+                  </div>
+                  <div
+                    className="mt-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                    style={{ backgroundColor: syncColor.bg, border: `1px solid ${syncColor.border}`, color: syncColor.text }}
+                  >
+                    {syncPct >= SYNC_GATE ? "● Locked In" : "○ Adjust"}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col items-center w-28">
+                <span className="text-sm font-mono text-white/70 uppercase tracking-widest mb-2">Form</span>
+                <div className="w-full h-28 bg-black/40 rounded-full border border-white/10 relative overflow-hidden flex flex-col justify-end p-1">
+                  <div
+                    className="w-full rounded-full transition-all duration-200"
+                    style={{
+                      height: `${formScore}%`,
+                      backgroundColor: formScore > 80 ? "hsl(var(--primary))" : formScore > 50 ? "#eab308" : "#ef4444",
+                    }}
+                  />
+                </div>
+                <span className="mt-2 font-mono font-bold text-xl">{Math.round(formScore)}</span>
+              </div>
+            </div>
+          )}
+
+          {/* FINISH button — raised above nav bar on mobile */}
+          {isWorkoutActive && (
+            <div
+              className="absolute left-0 right-0 flex justify-center bg-gradient-to-t from-black to-transparent pt-8 pb-4 md:pb-6"
+              style={{ bottom: "env(safe-area-inset-bottom, 0px)" }}
+            >
+              <Button
+                variant="destructive"
+                size="lg"
+                className="w-48 h-14 text-xl font-bold rounded-full shadow-[0_0_20px_rgba(220,38,38,0.5)]"
+                onClick={handleStop}
+              >
+                <Square className="w-6 h-6 mr-2 fill-current" />
+                FINISH
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          SETUP MODE — standard page view, nav bar always visible
+      ══════════════════════════════════════════════════════════════════════ */}
+      {!cameraActive && (
+        <div className="px-4 py-6 sm:px-6 max-w-xl mx-auto space-y-4">
+
+          {/* ── Page header ─────────────────────────────────────────────── */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
+              <Activity className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-extrabold tracking-tight leading-none">Workout</h1>
+              <p className="text-xs text-white/40 mt-0.5">AI form coaching with Ghost Mode</p>
+            </div>
+          </div>
+
+          {/* ── Exercise picker card ─────────────────────────────────────── */}
           <div
-            className="absolute inset-0 pointer-events-none transition-all duration-300"
+            className="rounded-2xl border border-white/10 p-4"
             style={{
-              boxShadow: isStaticExercise
-                ? (isInActiveZone
-                    ? "inset 0 0 0 5px rgba(34,197,94,0.75)"
-                    : "inset 0 0 0 5px rgba(239,68,68,0.55)")
-                : (syncPct >= SYNC_GATE
-                    ? "inset 0 0 0 4px rgba(0,212,255,0.5)"
-                    : "inset 0 0 0 4px rgba(255,160,0,0.4)"),
+              background: "linear-gradient(135deg,rgba(255,255,255,0.06) 0%,rgba(255,255,255,0.02) 100%)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)",
             }}
-          />
-        )}
-
-        {/* Top-left controls — visible during workout */}
-        {isWorkoutActive && (
-          <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-
-            {/* Minimalist Mode toggle */}
-            <button
-              onClick={() => setMinimalistMode(!minimalistMode)}
-              title={minimalistMode ? "Show full skeleton" : "Minimalist Mode"}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-all select-none"
-              style={{
-                background:   minimalistMode ? "rgba(34,197,94,0.18)" : "rgba(0,0,0,0.50)",
-                borderColor:  minimalistMode ? "rgba(34,197,94,0.6)"  : "rgba(255,255,255,0.15)",
-                color:        minimalistMode ? "#86efac"               : "rgba(255,255,255,0.50)",
-              }}
-            >
-              {minimalistMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              {minimalistMode ? "Minimalist" : "Full Skeleton"}
-            </button>
-
-            {/* Voice Pacing toggle */}
-            <button
-              onClick={() => setVoicePacing(!voicePacing)}
-              title={voicePacing ? "Disable Voice Pacing" : "Enable Voice Pacing — AI counts your tempo"}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-all select-none"
-              style={{
-                background:  voicePacing ? "rgba(139,92,246,0.20)" : "rgba(0,0,0,0.50)",
-                borderColor: voicePacing ? "rgba(139,92,246,0.60)" : "rgba(255,255,255,0.15)",
-                color:       voicePacing ? "#c4b5fd"               : "rgba(255,255,255,0.50)",
-              }}
-            >
-              {voicePacing ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
-              {voicePacing ? "Voice Pacing" : "Voice Pacing"}
-            </button>
-          </div>
-        )}
-
-        {/* Ghost Mode badge + grip label */}
-        {isWorkoutActive && hasGhostConfig && (
-          <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5 select-none">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 border border-cyan-500/40 text-xs font-semibold text-cyan-300">
-              <Ghost className="w-3.5 h-3.5" />
-              Ghost Mode
-            </div>
-            {(() => {
-              const ex = exercises?.find(e => e.id.toString() === selectedExerciseId);
-              if (!ex) return null;
-              const label = getGhostGripLabel(equipment, isPushExercise(ex.name), isPullExercise(ex.name));
-              if (!label) return null;
-              return (
-                <div className="px-2 py-0.5 rounded text-[9px] font-medium text-white/45 bg-black/50 border border-white/10">
-                  {label}
-                </div>
-              );
-            })()}
-          </div>
-        )}
-
-        {/* Live HUD */}
-        {isWorkoutActive && (
-          <div className="absolute bottom-24 left-0 right-0 px-8 flex justify-between items-end pointer-events-none">
-
-            {isStaticExercise ? (
-              <div className="flex flex-col items-start gap-2">
-                <span className="text-sm font-mono text-white/70 uppercase tracking-widest">
-                  Hold Time
-                </span>
-                <span
-                  className="text-8xl font-black leading-none tracking-tighter drop-shadow-lg"
-                  style={{ color: isInActiveZone ? "#22c55e" : "#ef4444" }}
+          >
+            <div className="text-[10px] font-bold uppercase tracking-widest text-white/35 mb-2">Exercise</div>
+            <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  disabled={isModelLoading}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.09] transition-colors disabled:opacity-40"
                 >
-                  {formatHoldTime(holdSeconds)}
-                </span>
-                <div
-                  className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest"
-                  style={{
-                    backgroundColor: isInActiveZone ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)",
-                    color:           isInActiveZone ? "#86efac" : "#fca5a5",
-                    border: `1px solid ${isInActiveZone ? "rgba(34,197,94,0.5)" : "rgba(239,68,68,0.5)"}`,
-                  }}
-                >
-                  {isInActiveZone ? "● Synced — hold it" : "○ Match ghost position"}
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center">
-                <span className="text-sm font-mono text-white/70 uppercase tracking-widest">Reps</span>
-                <span className="text-8xl font-black text-primary leading-none tracking-tighter drop-shadow-lg">
-                  {reps}
-                </span>
-              </div>
-            )}
-
-            {hasGhostConfig && (
-              <div className="flex flex-col items-center gap-1 mb-1">
-                <span className="text-[10px] font-mono text-white/50 uppercase tracking-widest">
-                  Ghost Sync
-                </span>
-                <div
-                  className="text-4xl font-black tabular-nums leading-none"
-                  style={{ color: syncColor.text }}
-                >
-                  {syncPct}%
-                </div>
-                <div
-                  className="mt-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                  style={{
-                    backgroundColor: syncColor.bg,
-                    border:          `1px solid ${syncColor.border}`,
-                    color:           syncColor.text,
-                  }}
-                >
-                  {syncPct >= SYNC_GATE ? "● Locked In" : "○ Adjust"}
-                </div>
-              </div>
-            )}
-
-            <div className="flex flex-col items-center w-28">
-              <span className="text-sm font-mono text-white/70 uppercase tracking-widest mb-2">Form</span>
-              <div className="w-full h-28 bg-black/40 rounded-full border border-white/10 relative overflow-hidden flex flex-col justify-end p-1">
-                <div
-                  className="w-full rounded-full transition-all duration-200"
-                  style={{
-                    height: `${formScore}%`,
-                    backgroundColor:
-                      formScore > 80 ? "hsl(var(--primary))" :
-                      formScore > 50 ? "#eab308" : "#ef4444",
-                  }}
-                />
-              </div>
-              <span className="mt-2 font-mono font-bold text-xl">
-                {Math.round(formScore)}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Pre-start overlay */}
-        {!isWorkoutActive && !isCalibrating && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="text-center space-y-6 px-6 max-w-sm">
-
-              {/* ── Manual Log Screen ──────────────────────────────── */}
-              {isManualLog ? (
-                <>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => { setIsManualLog(false); setManualReps(10); setManualRpe(null); }}
-                      className="p-1.5 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <div className="text-left">
-                      <h2 className="text-xl font-bold leading-tight">Manual Log</h2>
-                      <p className="text-xs text-white/40">
-                        {exercises?.find(e => e.id.toString() === selectedExerciseId)?.name ?? "Select exercise"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Reps input */}
-                  <div className="w-full">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-3 text-left">
-                      Reps Completed
-                    </div>
-                    <div className="flex items-center justify-center gap-4">
-                      <button
-                        onClick={() => setManualReps(r => Math.max(0, r - 1))}
-                        className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center transition-all active:scale-95"
-                      >
-                        <Minus className="w-5 h-5" />
-                      </button>
-                      <div className="text-6xl font-black font-mono text-primary w-24 text-center tabular-nums">
-                        {manualReps}
+                  <span className="flex-1 text-left font-semibold text-sm truncate">
+                    {isModelLoading
+                      ? "Loading model…"
+                      : (() => {
+                          for (const cat of EXERCISE_CATEGORIES) {
+                            const entry = cat.exercises.find(e => {
+                              const dbEx = exercises?.find(ex => ex.name === e.dbName);
+                              return dbEx?.id.toString() === selectedExerciseId;
+                            });
+                            if (entry) return entry.label;
+                          }
+                          return "Select an exercise…";
+                        })()}
+                  </span>
+                  <ChevronDown className="w-4 h-4 shrink-0 text-white/35" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0 max-h-[440px] overflow-y-auto" align="start">
+                {EXERCISE_CATEGORIES.map(cat => {
+                  const items = cat.exercises
+                    .map(entry => {
+                      const dbEx = exercises?.find(e => e.name === entry.dbName);
+                      return dbEx ? { ...entry, id: dbEx.id } : null;
+                    })
+                    .filter(Boolean) as Array<{ dbName: string; label: string; id: number }>;
+                  if (items.length === 0) return null;
+                  return (
+                    <div key={cat.label}>
+                      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/70 bg-secondary/30 border-b border-border sticky top-0">
+                        {cat.label}
                       </div>
-                      <button
-                        onClick={() => setManualReps(r => r + 1)}
-                        className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center transition-all active:scale-95"
-                      >
-                        <Plus className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* RPE input */}
-                  <div className="w-full">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2 text-left flex justify-between">
-                      <span>RPE — How Hard Was It?</span>
-                      {manualRpe && (
-                        <span className="text-primary">{manualRpe}/10</span>
-                      )}
-                    </div>
-                    <div className="flex gap-1.5 justify-center flex-wrap">
-                      {[1,2,3,4,5,6,7,8,9,10].map(n => (
-                        <button
-                          key={n}
-                          onClick={() => setManualRpe(prev => prev === n ? null : n)}
-                          className={`w-9 h-9 rounded-full text-sm font-bold transition-all active:scale-95 ${
-                            manualRpe === n
-                              ? "bg-primary text-black border-2 border-primary shadow-[0_0_12px_rgba(var(--primary)/0.6)]"
-                              : "bg-white/8 border border-white/15 text-white/60 hover:border-white/35"
+                      {items.map(item => (
+                        <div
+                          key={item.id}
+                          className={`flex items-center gap-1 border-b border-border/40 group hover:bg-secondary/40 transition-colors ${
+                            item.id.toString() === selectedExerciseId ? "bg-primary/10" : ""
                           }`}
                         >
-                          {n}
-                        </button>
+                          <button
+                            className={`flex-1 text-left text-sm px-3 py-2.5 truncate ${
+                              item.id.toString() === selectedExerciseId ? "text-primary font-medium" : "text-foreground"
+                            }`}
+                            onClick={() => { setSelectedExerciseId(item.id.toString()); setPickerOpen(false); }}
+                          >
+                            {item.label}
+                          </button>
+                          <button
+                            className="p-2 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
+                            onClick={(e) => { e.stopPropagation(); setInfoExercise({ name: item.dbName, id: item.id }); }}
+                            title="View coaching info"
+                          >
+                            <Info className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       ))}
                     </div>
-                    <p className="text-[10px] text-white/25 mt-2 text-center">
-                      1 = very easy · 10 = all-out effort · optional
-                    </p>
-                  </div>
+                  );
+                })}
+              </PopoverContent>
+            </Popover>
+          </div>
 
-                  <Button
-                    size="lg"
-                    className="w-48 h-12 text-base font-bold rounded-full"
-                    onClick={handleManualLog}
-                    disabled={!selectedExerciseId || isSavingManual}
-                  >
-                    <PenLine className="w-4 h-4 mr-2" />
-                    {isSavingManual ? "Saving…" : "Log It"}
-                  </Button>
-                </>
-              ) : (
-                <>
-              <Activity className="w-16 h-16 text-primary mx-auto opacity-50" />
+          {/* ── Manual Log view ──────────────────────────────────────────── */}
+          {isManualLog ? (
+            <div
+              className="rounded-2xl border border-white/10 p-5 space-y-5"
+              style={{
+                background: "linear-gradient(135deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0.02) 100%)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)",
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setIsManualLog(false); setManualReps(10); setManualRpe(null); }}
+                  className="p-1.5 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div>
+                  <h2 className="text-lg font-bold leading-tight">Manual Log</h2>
+                  <p className="text-xs text-white/40">
+                    {exercises?.find(e => e.id.toString() === selectedExerciseId)?.name ?? "Select exercise above"}
+                  </p>
+                </div>
+              </div>
+
               <div>
-                <h2 className="text-2xl font-bold mb-2">Ready to train?</h2>
-                <p className="text-muted-foreground text-sm">
-                  A Ghost Skeleton will show perfect form — sync your body with it to earn reps and hold time.
+                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-3">Reps Completed</div>
+                <div className="flex items-center justify-center gap-6">
+                  <button
+                    onClick={() => setManualReps(r => Math.max(0, r - 1))}
+                    className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center transition-all active:scale-95"
+                  >
+                    <Minus className="w-5 h-5" />
+                  </button>
+                  <div className="text-6xl font-black font-mono text-primary w-24 text-center tabular-nums">
+                    {manualReps}
+                  </div>
+                  <button
+                    onClick={() => setManualReps(r => r + 1)}
+                    className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center transition-all active:scale-95"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2 flex justify-between">
+                  <span>RPE — How Hard Was It?</span>
+                  {manualRpe && <span className="text-primary">{manualRpe}/10</span>}
+                </div>
+                <div className="flex gap-1.5 justify-center flex-wrap">
+                  {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setManualRpe(prev => prev === n ? null : n)}
+                      className={`w-9 h-9 rounded-full text-sm font-bold transition-all active:scale-95 ${
+                        manualRpe === n
+                          ? "bg-primary text-black border-2 border-primary"
+                          : "bg-white/8 border border-white/15 text-white/60 hover:border-white/35"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-white/25 mt-2 text-center">
+                  1 = very easy · 10 = all-out effort · optional
                 </p>
               </div>
 
-              {/* ── Gear Check ──────────────────────────────────────────── */}
-              <div className="w-full text-left space-y-3">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/40">
+              <Button
+                size="lg"
+                className="w-full h-12 text-base font-bold rounded-xl"
+                onClick={handleManualLog}
+                disabled={!selectedExerciseId || isSavingManual}
+              >
+                <PenLine className="w-4 h-4 mr-2" />
+                {isSavingManual ? "Saving…" : "Log It"}
+              </Button>
+            </div>
+
+          ) : (
+            /* ── Ready to Train card ─────────────────────────────────────── */
+            <div
+              className="rounded-2xl border border-white/10 p-5 space-y-5"
+              style={{
+                background: "linear-gradient(135deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0.02) 100%)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)",
+              }}
+            >
+              <div>
+                <h2 className="text-lg font-bold mb-1">Ready to train?</h2>
+                <p className="text-sm text-white/45 leading-snug">
+                  A Ghost Skeleton shows perfect form — sync your body with it to earn reps and hold time.
+                </p>
+              </div>
+
+              {/* Gear Check */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/35">
                   <Settings2 className="w-3 h-3" />
                   Gear Check
                 </div>
                 <div className="space-y-2">
                   {([
-                    { label: "Push", options: PUSH_GEAR_OPTIONS as Array<{ value: string; label: string }>, current: equipment.pushGear, onChange: (v: string) => setEquipment(e => ({ ...e, pushGear: v as EquipmentSelection["pushGear"] })) },
-                    { label: "Pull", options: PULL_GEAR_OPTIONS as Array<{ value: string; label: string }>, current: equipment.pullGear, onChange: (v: string) => setEquipment(e => ({ ...e, pullGear: v as EquipmentSelection["pullGear"] })) },
-                    { label: "Add-on", options: ADD_ON_OPTIONS as Array<{ value: string; label: string }>, current: equipment.addOn, onChange: (v: string) => setEquipment(e => ({ ...e, addOn: v as EquipmentSelection["addOn"] })) },
+                    { label: "Push",   options: PUSH_GEAR_OPTIONS  as Array<{ value: string; label: string }>, current: equipment.pushGear, onChange: (v: string) => setEquipment(e => ({ ...e, pushGear: v as EquipmentSelection["pushGear"] })) },
+                    { label: "Pull",   options: PULL_GEAR_OPTIONS  as Array<{ value: string; label: string }>, current: equipment.pullGear, onChange: (v: string) => setEquipment(e => ({ ...e, pullGear: v as EquipmentSelection["pullGear"] })) },
+                    { label: "Add-on", options: ADD_ON_OPTIONS     as Array<{ value: string; label: string }>, current: equipment.addOn,    onChange: (v: string) => setEquipment(e => ({ ...e, addOn:    v as EquipmentSelection["addOn"]    })) },
                   ]).map(row => (
                     <div key={row.label} className="flex items-start gap-3">
                       <span className="text-[10px] text-white/30 uppercase tracking-wider w-12 pt-1.5 shrink-0 text-right">
@@ -1996,7 +2024,7 @@ export function Workout() {
                 </div>
               </div>
 
-              {/* ── Pro-Tip ────────────────────────────────────────────── */}
+              {/* Pro Tip */}
               {(() => {
                 const ex = exercises?.find(e => e.id.toString() === selectedExerciseId);
                 if (!ex) return null;
@@ -2004,90 +2032,74 @@ export function Workout() {
                 const tip = ex.coachingCues?.[0] ?? config?.criticalJoints?.[0]?.description;
                 if (!tip) return null;
                 return (
-                  <div className="w-full text-left">
-                    <div className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-lg bg-primary/10 border border-primary/25">
-                      <Zap className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                      <div>
-                        <div className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-0.5">
-                          Pro Tip
-                        </div>
-                        <p className="text-xs text-white/70 leading-snug">{tip}</p>
-                      </div>
+                  <div className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl bg-primary/10 border border-primary/25">
+                    <Zap className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                    <div>
+                      <div className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-0.5">Pro Tip</div>
+                      <p className="text-xs text-white/70 leading-snug">{tip}</p>
                     </div>
                   </div>
                 );
               })()}
 
+              {/* START */}
               <Button
                 size="lg"
-                className="w-48 h-14 text-xl rounded-full font-bold"
+                className="w-full h-13 text-lg rounded-xl font-bold"
                 onClick={handleStart}
                 disabled={!selectedExerciseId || isModelLoading}
               >
-                <Play className="w-6 h-6 mr-2 fill-current" />
-                START
+                <Play className="w-5 h-5 mr-2 fill-current" />
+                {isModelLoading ? "Loading…" : "START"}
               </Button>
 
+              {/* Divider */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-white/10" />
                 </div>
-                <div className="relative flex justify-center text-xs text-muted-foreground uppercase tracking-widest">
-                  <span className="bg-black px-3">or</span>
+                <div className="relative flex justify-center text-xs text-white/30 uppercase tracking-widest">
+                  <span className="bg-transparent px-3">or</span>
                 </div>
               </div>
 
-              {/* Manual Log — no camera */}
+              {/* Manual Log */}
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-400/50 transition-all"
+                className="w-full border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-400/50 transition-all rounded-xl"
                 onClick={() => { setIsManualLog(true); setManualReps(10); setManualRpe(null); }}
                 disabled={!selectedExerciseId}
               >
                 <PenLine className="w-4 h-4 mr-2" />
                 Manual Log (No AI)
               </Button>
-
-              <Card className="bg-white/5 border-white/10">
-                <CardContent className="p-4 space-y-3">
-                  <div className="text-sm text-white/70 font-medium flex items-center gap-2">
-                    <FlaskConical className="w-4 h-4 text-primary" />
-                    Complete Workout (Test Mode)
-                  </div>
-                  <p className="text-xs text-white/40 text-left">
-                    Saves a synthetic workout entry directly to the database — no camera needed. Use this to populate charts and history.
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full border-white/20 text-white hover:bg-white/10"
-                    onClick={handleSaveTestWorkout}
-                    disabled={!selectedExerciseId || isSavingTest}
-                  >
-                    {isSavingTest ? "Saving..." : "Save Test Workout"}
-                  </Button>
-                </CardContent>
-              </Card>
-                </>
-              )}
             </div>
-          </div>
-        )}
-      </div>
+          )}
 
-      {/* Stop button — shown during workout only */}
-      {isWorkoutActive && (
-        <div className="absolute bottom-0 left-0 right-0 p-6 flex justify-center bg-gradient-to-t from-black to-transparent">
-          <Button
-            variant="destructive"
-            size="lg"
-            className="w-48 h-14 text-xl font-bold rounded-full shadow-[0_0_20px_rgba(220,38,38,0.5)]"
-            onClick={handleStop}
-          >
-            <Square className="w-6 h-6 mr-2 fill-current" />
-            FINISH
-          </Button>
+          {/* ── Test Mode card ───────────────────────────────────────────── */}
+          <Card className="bg-white/5 border-white/10">
+            <CardContent className="p-4 space-y-3">
+              <div className="text-sm text-white/70 font-medium flex items-center gap-2">
+                <FlaskConical className="w-4 h-4 text-primary" />
+                Complete Workout (Test Mode)
+              </div>
+              <p className="text-xs text-white/40">
+                Saves a synthetic workout entry directly to the database — no camera needed.
+                Use this to populate charts and history.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full border-white/20 text-white hover:bg-white/10"
+                onClick={handleSaveTestWorkout}
+                disabled={!selectedExerciseId || isSavingTest}
+              >
+                {isSavingTest ? "Saving..." : "Save Test Workout"}
+              </Button>
+            </CardContent>
+          </Card>
+
         </div>
       )}
     </div>

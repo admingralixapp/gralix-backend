@@ -209,7 +209,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   // ── Full-screen pages ────────────────────────────────────────────────────
   const isFullscreen =
-    location === "/workout" ||
     location.startsWith("/sign-in") ||
     location.startsWith("/sign-up");
 
