@@ -578,7 +578,7 @@ export function Workout() {
   const [sessionResults, setSessionResults] = useState<Omit<SessionResultsProps, "onClose"> | null>(null);
   const [povReview,      setPovReview]      = useState<{ payload: RepReviewPayload; results: Omit<SessionResultsProps, "onClose"> } | null>(null);
   const [pickerOpen,     setPickerOpen]     = useState(false);
-  const [infoExercise,   setInfoExercise]   = useState<{ name: string; id: number } | null>(null);
+  const [infoExercise,   setInfoExercise]   = useState<{ name: string; id: number; nodeId: string | null } | null>(null);
 
   const { data: sessionHistory } = useListSessions(
     { limit: 500, offset: 0 },
@@ -2052,19 +2052,68 @@ export function Workout() {
       <Dialog open={!!infoExercise} onOpenChange={(open) => { if (!open) setInfoExercise(null); }}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           {infoExercise && (() => {
-            const infoEx     = exercises?.find(e => e.name === infoExercise.name);
-            const infoConfig = getExerciseConfig(infoExercise.name);
+            const infoEx      = exercises?.find(e => e.name === infoExercise.name);
+            const infoConfig  = getExerciseConfig(infoExercise.name);
+            const isLocked    = isExerciseLocked(infoExercise.nodeId);
+            const infoNode    = infoExercise.nodeId ? ALL_SKILL_NODES.find(n => n.id === infoExercise.nodeId) : null;
+            const prereqNode  = infoNode?.prerequisiteId ? ALL_SKILL_NODES.find(n => n.id === infoNode.prerequisiteId) : null;
             return (
               <>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2 text-base">
-                    <Activity className="w-4 h-4 text-primary shrink-0" />
+                    {isLocked
+                      ? <Lock className="w-4 h-4 text-white/40 shrink-0" />
+                      : <Activity className="w-4 h-4 text-primary shrink-0" />
+                    }
                     {infoExercise.name}
                   </DialogTitle>
                 </DialogHeader>
 
                 <div className="space-y-5 mt-1">
-                  {/* Target Muscles */}
+
+                  {/* ── Locked banner ─────────────────────────────────────── */}
+                  {isLocked && (
+                    <div
+                      className="rounded-xl border p-4 space-y-3"
+                      style={{
+                        background: "rgba(239,68,68,0.06)",
+                        borderColor: "rgba(239,68,68,0.25)",
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Lock className="w-4 h-4 text-red-400 shrink-0" />
+                        <span className="text-sm font-bold text-red-400">Exercise Locked</span>
+                      </div>
+                      {prereqNode ? (
+                        <p className="text-xs text-white/60 leading-relaxed">
+                          Complete{" "}
+                          <span className="font-semibold text-white/80">
+                            Lv.{prereqNode.level} {prereqNode.title}
+                          </span>{" "}
+                          in the Skill Tree to unlock this exercise.
+                        </p>
+                      ) : (
+                        <p className="text-xs text-white/60 leading-relaxed">
+                          Complete the prerequisite skill in the Skill Tree to unlock this exercise.
+                        </p>
+                      )}
+                      <button
+                        className="flex items-center gap-2 w-full justify-center px-4 py-2.5 rounded-lg border border-white/15 bg-white/[0.06] text-sm font-semibold text-white/80 hover:bg-white/[0.10] transition-colors"
+                        onClick={() => {
+                          setInfoExercise(null);
+                          setLocation(infoExercise.nodeId
+                            ? `/skill-tree?node=${infoExercise.nodeId}`
+                            : "/skill-tree"
+                          );
+                        }}
+                      >
+                        <Activity className="w-3.5 h-3.5 text-primary" />
+                        View in Skill Tree
+                      </button>
+                    </div>
+                  )}
+
+                  {/* ── Target Muscles ────────────────────────────────────── */}
                   {infoEx && infoEx.muscleGroups.length > 0 && (
                     <div>
                       <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
@@ -2083,7 +2132,7 @@ export function Workout() {
                     </div>
                   )}
 
-                  {/* Critical Joints */}
+                  {/* ── Critical Joints ───────────────────────────────────── */}
                   {infoConfig && infoConfig.criticalJoints.length > 0 && (
                     <div>
                       <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
@@ -2104,33 +2153,26 @@ export function Workout() {
                     </div>
                   )}
 
-                  {/* Audio Cues */}
-                  {infoEx && infoEx.coachingCues.length > 0 && (
-                    <div>
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
-                        <Volume2 className="w-3 h-3" /> Audio Cues
-                      </div>
-                      <ul className="space-y-2">
-                        {infoEx.coachingCues.slice(0, 4).map((cue, i) => (
-                          <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                            <span className="text-primary mt-0.5 shrink-0">▸</span>
-                            <span className="italic">"{cue}"</span>
-                          </li>
-                        ))}
-                      </ul>
+                  {/* ── Train / Locked action button ──────────────────────── */}
+                  {isLocked ? (
+                    <div
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm font-bold text-white/30"
+                      style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
+                    >
+                      <Lock className="w-4 h-4" />
+                      Locked — complete prerequisite first
                     </div>
+                  ) : (
+                    <Button
+                      className="w-full font-bold mt-2"
+                      onClick={() => {
+                        if (infoExercise) setSelectedExerciseId(infoExercise.id.toString());
+                        setInfoExercise(null);
+                      }}
+                    >
+                      Train {infoExercise.name}
+                    </Button>
                   )}
-
-                  {/* Train button */}
-                  <Button
-                    className="w-full font-bold mt-2"
-                    onClick={() => {
-                      if (infoExercise) setSelectedExerciseId(infoExercise.id.toString());
-                      setInfoExercise(null);
-                    }}
-                  >
-                    Train {infoExercise.name}
-                  </Button>
                 </div>
               </>
             );
@@ -2500,30 +2542,33 @@ export function Workout() {
                                   <div
                                     key={item.id}
                                     className={`flex items-center gap-1 border-b border-border/30 group transition-colors ${
-                                      isSelected ? "" : locked ? "opacity-50" : "hover:bg-white/[0.04]"
+                                      isSelected ? "" : locked ? "opacity-50 hover:opacity-70" : "hover:bg-white/[0.04]"
                                     }`}
                                     style={isSelected ? { background: `${branchColor}20` } : undefined}
                                   >
                                     <button
-                                      className={`flex-1 text-left text-sm px-3 py-2.5 truncate flex items-center gap-2 ${
-                                        locked ? "cursor-not-allowed" : "cursor-pointer"
-                                      }`}
+                                      className="flex-1 text-left text-sm px-3 py-2.5 truncate flex items-center gap-2 cursor-pointer"
                                       style={isSelected ? { color: branchColor, fontWeight: 600 } : undefined}
-                                      disabled={locked}
-                                      onClick={() => { if (!locked) { setSelectedExerciseId(item.id.toString()); setPickerOpen(false); } }}
+                                      onClick={() => {
+                                        if (locked) {
+                                          setPickerOpen(false);
+                                          setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId });
+                                        } else {
+                                          setSelectedExerciseId(item.id.toString());
+                                          setPickerOpen(false);
+                                        }
+                                      }}
                                     >
                                       {locked && <Lock className="w-3 h-3 shrink-0 text-white/30" />}
                                       <span className="truncate">{item.label}</span>
                                     </button>
-                                    {!locked && (
-                                      <button
-                                        className="p-2 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
-                                        onClick={(e) => { e.stopPropagation(); setInfoExercise({ name: item.dbName, id: item.id }); }}
-                                        title="View coaching info"
-                                      >
-                                        <Info className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
+                                    <button
+                                      className="p-2 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
+                                      onClick={(e) => { e.stopPropagation(); setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId }); }}
+                                      title={locked ? "View requirements" : "View coaching info"}
+                                    >
+                                      {locked ? <Lock className="w-3.5 h-3.5" /> : <Info className="w-3.5 h-3.5" />}
+                                    </button>
                                   </div>
                                 );
                               })}
