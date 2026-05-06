@@ -17,7 +17,7 @@ import {
   ilike,
   inArray,
 } from "drizzle-orm";
-import { ObjectStorageService } from "../lib/objectStorage";
+import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 
 const router = Router();
 const storage = new ObjectStorageService();
@@ -172,6 +172,161 @@ router.post("/community-feed", async (req: Request, res: Response) => {
     ...post,
     videoUrl: post.videoObjectPath ? `/api/storage${post.videoObjectPath}` : null,
   });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/community-feed/mine — own posts (no privacy filter)
+// ---------------------------------------------------------------------------
+router.get("/community-feed/mine", async (req: Request, res: Response) => {
+  const clerkId = getClerkId(req);
+  if (!clerkId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const me = await getMe(clerkId);
+  if (!me) {
+    res.status(403).json({ error: "Profile required" });
+    return;
+  }
+
+  const limit  = Math.min(Number(req.query.limit  ?? 50), 100);
+  const offset = Number(req.query.offset ?? 0);
+
+  const posts = await db
+    .select({
+      id:              feedPostsTable.id,
+      exerciseName:    feedPostsTable.exerciseName,
+      caption:         feedPostsTable.caption,
+      videoObjectPath: feedPostsTable.videoObjectPath,
+      isAiVerified:    feedPostsTable.isAiVerified,
+      sessionId:       feedPostsTable.sessionId,
+      likeCount:       feedPostsTable.likeCount,
+      createdAt:       feedPostsTable.createdAt,
+      userId:          usersTable.id,
+      username:        usersTable.username,
+      displayName:     usersTable.displayName,
+      avatarUrl:       usersTable.avatarUrl,
+    })
+    .from(feedPostsTable)
+    .innerJoin(usersTable, eq(feedPostsTable.userId, usersTable.id))
+    .where(eq(feedPostsTable.userId, me.id))
+    .orderBy(desc(feedPostsTable.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  const result = posts.map((p) => ({
+    ...p,
+    likedByMe: false,
+    videoUrl: p.videoObjectPath ? `/api/storage${p.videoObjectPath}` : null,
+  }));
+
+  res.json({ posts: result });
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /api/community-feed/:id — owner only
+// ---------------------------------------------------------------------------
+router.delete("/community-feed/:id", async (req: Request, res: Response) => {
+  const clerkId = getClerkId(req);
+  if (!clerkId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const me = await getMe(clerkId);
+  if (!me) {
+    res.status(403).json({ error: "Profile required" });
+    return;
+  }
+
+  const postId = Number(req.params.id);
+  if (isNaN(postId)) {
+    res.status(400).json({ error: "Invalid post id" });
+    return;
+  }
+
+  const [post] = await db
+    .select({ userId: feedPostsTable.userId, videoObjectPath: feedPostsTable.videoObjectPath })
+    .from(feedPostsTable)
+    .where(eq(feedPostsTable.id, postId));
+
+  if (!post) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  if (post.userId !== me.id) {
+    res.status(403).json({ error: "Not your post" });
+    return;
+  }
+
+  // Delete video from object storage if present
+  if (post.videoObjectPath) {
+    try {
+      const objectFile = await storage.getObjectEntityFile(post.videoObjectPath);
+      await objectFile.delete();
+    } catch (err) {
+      // Non-fatal — object may already be gone or path not found
+      if (!(err instanceof ObjectNotFoundError)) {
+        req.log.warn({ err }, "Could not delete video from storage");
+      }
+    }
+  }
+
+  // Cascade delete likes + comments first (FK)
+  await db.delete(feedPostLikesTable).where(eq(feedPostLikesTable.postId, postId));
+  await db.delete(feedPostCommentsTable).where(eq(feedPostCommentsTable.postId, postId));
+  await db.delete(feedPostsTable).where(eq(feedPostsTable.id, postId));
+
+  res.json({ deleted: true });
+});
+
+// ---------------------------------------------------------------------------
+// PATCH /api/community-feed/:id — owner only, update caption
+// ---------------------------------------------------------------------------
+router.patch("/community-feed/:id", async (req: Request, res: Response) => {
+  const clerkId = getClerkId(req);
+  if (!clerkId) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const me = await getMe(clerkId);
+  if (!me) {
+    res.status(403).json({ error: "Profile required" });
+    return;
+  }
+
+  const postId = Number(req.params.id);
+  if (isNaN(postId)) {
+    res.status(400).json({ error: "Invalid post id" });
+    return;
+  }
+
+  const [post] = await db
+    .select({ userId: feedPostsTable.userId })
+    .from(feedPostsTable)
+    .where(eq(feedPostsTable.id, postId));
+
+  if (!post) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  if (post.userId !== me.id) {
+    res.status(403).json({ error: "Not your post" });
+    return;
+  }
+
+  const { caption } = req.body as { caption?: string };
+  if (caption === undefined) {
+    res.status(400).json({ error: "caption is required" });
+    return;
+  }
+
+  const [updated] = await db
+    .update(feedPostsTable)
+    .set({ caption: caption.trim() })
+    .where(eq(feedPostsTable.id, postId))
+    .returning();
+
+  res.json({ ...updated, videoUrl: updated.videoObjectPath ? `/api/storage${updated.videoObjectPath}` : null });
 });
 
 // ---------------------------------------------------------------------------

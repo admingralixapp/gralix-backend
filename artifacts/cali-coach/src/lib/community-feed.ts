@@ -175,3 +175,53 @@ export function useAddComment(postId: number) {
     },
   });
 }
+
+export function useMyPosts() {
+  const { getToken } = useAuth();
+  return useQuery({
+    queryKey: ["community-feed-mine"],
+    queryFn: async () => {
+      const token = await getToken();
+      return apiFetchAuth<{ posts: FeedPost[] }>("/api/community-feed/mine", token).then(
+        (r) => r.posts,
+      );
+    },
+    staleTime: 15_000,
+  });
+}
+
+export function useDeletePost() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (postId: number) => {
+      const token = await getToken();
+      return apiFetchAuth<{ deleted: boolean }>(`/api/community-feed/${postId}`, token, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["community-feed"] });
+      void qc.invalidateQueries({ queryKey: ["community-feed-mine"] });
+    },
+  });
+}
+
+export function useUpdatePost() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async ({ postId, caption }: { postId: number; caption: string }) => {
+      const token = await getToken();
+      return apiFetchAuth<FeedPost>(`/api/community-feed/${postId}`, token, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ caption }),
+      });
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["community-feed"] });
+      void qc.invalidateQueries({ queryKey: ["community-feed-mine"] });
+    },
+  });
+}
