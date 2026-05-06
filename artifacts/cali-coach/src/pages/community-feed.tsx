@@ -231,8 +231,19 @@ function VideoCard({ post }: { post: FeedPost }) {
             loop
             playsInline
             muted
+            crossOrigin="anonymous"
             onPlay={() => setPlaying(true)}
             onPause={() => setPlaying(false)}
+            onError={(e) => {
+              const v = e.currentTarget;
+              console.error("[VideoCard] playback error", {
+                src: v.src,
+                networkState: v.networkState,
+                readyState: v.readyState,
+                errorCode: v.error?.code,
+                errorMsg: v.error?.message,
+              });
+            }}
             data-no-swipe
           />
           {!playing && (

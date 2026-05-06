@@ -655,7 +655,18 @@ function ProfileContent() {
                             controls
                             muted
                             playsInline
+                            crossOrigin="anonymous"
                             preload="metadata"
+                            onError={(e) => {
+                              const v = e.currentTarget;
+                              console.error("[MyPosts] video error", {
+                                src: v.src,
+                                networkState: v.networkState,
+                                readyState: v.readyState,
+                                errorCode: v.error?.code,
+                                errorMsg: v.error?.message,
+                              });
+                            }}
                           />
                         </div>
                       )}

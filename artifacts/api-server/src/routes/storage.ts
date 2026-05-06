@@ -5,7 +5,6 @@ import {
   RequestUploadUrlResponse,
 } from "@workspace/api-zod";
 import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
-import { ObjectPermission } from "../lib/objectAcl";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -81,8 +80,7 @@ router.get("/storage/public-objects/*filePath", async (req: Request, res: Respon
  * GET /storage/objects/*
  *
  * Serve object entities from PRIVATE_OBJECT_DIR.
- * These are served from a separate path from /public-objects and can optionally
- * be protected with authentication or ACL checks based on the use case.
+ * Supports HTTP Range requests (required for video streaming in browsers).
  */
 router.get("/storage/objects/*path", async (req: Request, res: Response) => {
   try {
@@ -91,31 +89,40 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
     const objectPath = `/objects/${wildcardPath}`;
     const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
 
-    // --- Protected route example (uncomment when using replit-auth) ---
-    // if (!req.isAuthenticated()) {
-    //   res.status(401).json({ error: "Unauthorized" });
-    //   return;
-    // }
-    // const canAccess = await objectStorageService.canAccessObjectEntity({
-    //   userId: req.user.id,
-    //   objectFile,
-    //   requestedPermission: ObjectPermission.READ,
-    // });
-    // if (!canAccess) {
-    //   res.status(403).json({ error: "Forbidden" });
-    //   return;
-    // }
+    const [metadata] = await objectFile.getMetadata();
+    const contentType = (metadata.contentType as string | undefined) || "application/octet-stream";
+    const totalSize = Number(metadata.size ?? 0);
 
-    const response = await objectStorageService.downloadObject(objectFile);
+    // Always advertise range support so browsers know to use it for video
+    res.setHeader("Accept-Ranges", "bytes");
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Cache-Control", "private, max-age=3600");
 
-    res.status(response.status);
-    response.headers.forEach((value, key) => res.setHeader(key, value));
+    const rangeHeader = req.headers.range;
 
-    if (response.body) {
-      const nodeStream = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
+    if (rangeHeader && totalSize > 0) {
+      // Parse "bytes=start-end"
+      const [, rangeStr] = rangeHeader.split("=");
+      const [startStr, endStr] = (rangeStr ?? "").split("-");
+      const start = parseInt(startStr ?? "0", 10) || 0;
+      const end   = endStr ? parseInt(endStr, 10) : totalSize - 1;
+      const chunkSize = end - start + 1;
+
+      res.setHeader("Content-Range", `bytes ${start}-${end}/${totalSize}`);
+      res.setHeader("Content-Length", String(chunkSize));
+      res.status(206);
+
+      const nodeStream = objectFile.createReadStream({ start, end });
       nodeStream.pipe(res);
     } else {
-      res.end();
+      // Full file — no Range header (or zero-length file)
+      if (totalSize > 0) {
+        res.setHeader("Content-Length", String(totalSize));
+      }
+      res.status(200);
+
+      const nodeStream = objectFile.createReadStream();
+      nodeStream.pipe(res);
     }
   } catch (error) {
     if (error instanceof ObjectNotFoundError) {
