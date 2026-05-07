@@ -42,29 +42,7 @@ import {
 
 type PrivacyLevel = "public" | "friends" | "private";
 
-const PRIVACY_OPTIONS: { value: PrivacyLevel; label: string; desc: string }[] = [
-  {
-    value: "public",
-    label: "Public",
-    desc: "Anyone can view your profile, skill tree, and mastery badges.",
-  },
-  {
-    value: "friends",
-    label: "Friends Only",
-    desc: "Only accepted friends can view your profile. Your badge is always visible to friends.",
-  },
-  {
-    value: "private",
-    label: "Private",
-    desc: "Your profile is hidden — even from friends. Badges still appear on the leaderboard.",
-  },
-];
-
-const RETENTION_LABELS: Record<RetentionDays, string> = {
-  3:  "3 Days",
-  7:  "7 Days",
-  14: "14 Days",
-};
+const RETENTION_DAYS_LIST: RetentionDays[] = [3, 7, 14];
 
 export function Settings() {
   const [, setLocation] = useLocation();
@@ -74,7 +52,7 @@ export function Settings() {
   const updatePrivacy = useUpdatePrivacy();
   const updateCommunityPostsPublic = useUpdateCommunityPostsPublic();
   const { toast } = useToast();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // Language selector state
   const [langSearch, setLangSearch] = useState("");
@@ -93,7 +71,6 @@ export function Settings() {
 
   function handleLanguageChange(code: string) {
     i18n.changeLanguage(code);
-    // Sync speech and aura audio to the new language
     setVoiceLanguage(code);
     setAuraLanguage(code);
     toast({ title: `Language changed to ${getLang(code)?.nativeName ?? code}` });
@@ -110,8 +87,8 @@ export function Settings() {
   const [savingNotif,     setSavingNotif]     = useState(false);
 
   // Video storage settings
-  const [retention,   setRetention]   = useState<RetentionDays>(() => getRetentionDays());
-  const [clipCount,   setClipCount]   = useState<number>(() => getClipCount());
+  const [retention,    setRetention]    = useState<RetentionDays>(() => getRetentionDays());
+  const [clipCount,    setClipCount]    = useState<number>(() => getClipCount());
   const [confirmClear, setConfirmClear] = useState(false);
 
   // Workout settings
@@ -168,24 +145,36 @@ export function Settings() {
   if (!user) {
     return (
       <div className="p-8 text-center text-muted-foreground">
-        Sign in to access settings.
+        {t("errors.unauthorized")}
       </div>
     );
   }
 
   const currentPrivacy: PrivacyLevel = (profile?.privacyLevel as PrivacyLevel) ?? "friends";
 
+  const PRIVACY_OPTIONS: { value: PrivacyLevel; label: string; desc: string }[] = [
+    { value: "public",  label: t("privacy.public"),  desc: t("privacy.publicDesc")  },
+    { value: "friends", label: t("privacy.friends"), desc: t("privacy.friendsDesc") },
+    { value: "private", label: t("privacy.private"), desc: t("privacy.privateDesc") },
+  ];
+
+  const RETENTION_LABELS: Record<RetentionDays, string> = {
+    3:  t("daily.days", { defaultValue: "3 Days" }) !== "days" ? `3 ${t("daily.days")}` : "3 Days",
+    7:  t("daily.days", { defaultValue: "7 Days" }) !== "days" ? `7 ${t("daily.days")}` : "7 Days",
+    14: t("daily.days", { defaultValue: "14 Days" }) !== "days" ? `14 ${t("daily.days")}` : "14 Days",
+  };
+
   function handlePrivacyChange(level: PrivacyLevel) {
     if (!profile) {
-      toast({ title: "Complete your profile setup first", variant: "destructive" });
+      toast({ title: t("settings.setUpProfile"), variant: "destructive" });
       return;
     }
     if (level === currentPrivacy) return;
     updatePrivacy.mutate(level, {
       onSuccess: () =>
-        toast({ title: "Privacy updated", description: `Your profile is now ${level}.` }),
+        toast({ title: t("privacy." + level), description: `${t("privacy." + level + "Desc")}` }),
       onError: () =>
-        toast({ title: "Failed to update privacy", variant: "destructive" }),
+        toast({ title: t("common.error"), variant: "destructive" }),
     });
   }
 
@@ -197,8 +186,7 @@ export function Settings() {
       const granted = await requestNotificationPermission();
       if (!granted) {
         toast({
-          title: "Notifications blocked",
-          description: "Please allow notifications in your browser settings, then try again.",
+          title: t("settings.notificationsBlocked"),
           variant: "destructive",
         });
         return;
@@ -215,15 +203,15 @@ export function Settings() {
       {
         onSuccess: () => {
           toast({
-            title: "Notification settings saved",
+            title: t("common.save"),
             description: notifEnabled
-              ? `You'll be reminded at ${notifTime} each day.`
-              : "Daily reminders disabled.",
+              ? `${t("settings.reminderTime")}: ${notifTime}`
+              : t("settings.enableDailyReminders"),
           });
           setSavingNotif(false);
         },
         onError: () => {
-          toast({ title: "Failed to save settings", variant: "destructive" });
+          toast({ title: t("common.error"), variant: "destructive" });
           setSavingNotif(false);
         },
       },
@@ -235,10 +223,7 @@ export function Settings() {
     setRetentionDays(days);
     purgeExpiredClips();
     setClipCount(getClipCount());
-    toast({
-      title: "Auto-delete updated",
-      description: `Clips will now be kept for ${RETENTION_LABELS[days]}.`,
-    });
+    toast({ title: RETENTION_LABELS[days] });
   }
 
   function handleClearAll() {
@@ -250,18 +235,18 @@ export function Settings() {
     setClipCount(0);
     setConfirmClear(false);
     toast({
-      title: `${removed} clip${removed !== 1 ? "s" : ""} cleared`,
-      description: "Video files removed. Your workout stats are safe.",
+      title: t("settings.clearAllClips"),
+      description: t("settings.freeUpSpace"),
     });
   }
 
   return (
     <div className="p-6 max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold">Settings</h1>
+      <h1 className="text-2xl font-bold">{t("settings.title")}</h1>
 
       {/* ── Account ──────────────────────────────────────────────────────────── */}
       <section>
-        <SectionHeader icon={<User className="w-4 h-4" />} label="Account" />
+        <SectionHeader icon={<User className="w-4 h-4" />} label={t("settings.account")} />
         <div className="rounded-xl border border-border bg-card p-5 space-y-4">
           <div className="flex items-center gap-4">
             <div className="relative w-14 h-14 rounded-full shrink-0">
@@ -289,7 +274,7 @@ export function Settings() {
                 <div className="text-xs text-primary mt-0.5">@{profile.username}</div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Edit your photo and name from your Profile page.
+                {t("settings.editFromProfile")}
               </p>
             </div>
           </div>
@@ -300,7 +285,7 @@ export function Settings() {
               className="flex items-center gap-2 text-sm text-primary hover:underline"
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              View Profile
+              {t("settings.viewProfile")}
             </button>
           )}
         </div>
@@ -308,7 +293,7 @@ export function Settings() {
 
       {/* ── Language ──────────────────────────────────────────────────────────── */}
       <section>
-        <SectionHeader icon={<Globe className="w-4 h-4" />} label="Language" />
+        <SectionHeader icon={<Globe className="w-4 h-4" />} label={t("settings.language")} />
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           {/* Current language pill */}
           <div className="p-4 flex items-center gap-3 border-b border-border/60">
@@ -330,7 +315,7 @@ export function Settings() {
               ref={langSearchRef}
               value={langSearch}
               onChange={(e) => setLangSearch(e.target.value)}
-              placeholder="Search 100 languages..."
+              placeholder={t("settings.searchLanguages")}
               className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-muted/40 border border-border/50 placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/40"
             />
           </div>
@@ -338,7 +323,7 @@ export function Settings() {
           {/* Scrollable list */}
           <div className="max-h-56 overflow-y-auto overscroll-contain divide-y divide-border/40">
             {filteredLangs.length === 0 ? (
-              <div className="p-4 text-sm text-muted-foreground text-center">No languages found</div>
+              <div className="p-4 text-sm text-muted-foreground text-center">{t("settings.noLanguagesFound")}</div>
             ) : (
               filteredLangs.map((lang) => {
                 const isSelected = lang.code === currentLang.code;
@@ -375,7 +360,7 @@ export function Settings() {
 
       {/* ── Video Storage ─────────────────────────────────────────────────────── */}
       <section>
-        <SectionHeader icon={<HardDrive className="w-4 h-4" />} label="Video Storage" />
+        <SectionHeader icon={<HardDrive className="w-4 h-4" />} label={t("settings.videoStorage")} />
 
         {/* Glassmorphism card */}
         <div
@@ -396,11 +381,11 @@ export function Settings() {
             <div>
               <div className="text-sm font-semibold text-foreground">
                 {clipCount === 0
-                  ? "No clips stored"
-                  : `${clipCount} clip${clipCount !== 1 ? "s" : ""} on this device`}
+                  ? t("settings.noClipsStored")
+                  : t("settings.clipsOnDevice", { count: clipCount })}
               </div>
               <div className="text-[11px] text-muted-foreground">
-                Video files only — workout stats are always kept
+                {t("settings.videoFilesOnly")}
               </div>
             </div>
           </div>
@@ -412,9 +397,9 @@ export function Settings() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <div>
-                <div className="text-sm font-semibold text-foreground">Auto-Delete Clips After</div>
+                <div className="text-sm font-semibold text-foreground">{t("settings.autoDeleteAfter")}</div>
                 <div className="text-[11px] text-muted-foreground mt-0.5">
-                  Clips older than this are removed on app launch
+                  {t("settings.clipsOlderRemoved")}
                 </div>
               </div>
             </div>
@@ -424,7 +409,7 @@ export function Settings() {
               className="flex rounded-xl overflow-hidden border border-white/10 p-0.5 gap-0.5"
               style={{ background: "rgba(255,255,255,0.04)" }}
             >
-              {([3, 7, 14] as RetentionDays[]).map((days) => {
+              {RETENTION_DAYS_LIST.map((days) => {
                 const active = retention === days;
                 return (
                   <button
@@ -451,9 +436,9 @@ export function Settings() {
           <div>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-sm font-semibold text-foreground">Clear All Clips</div>
+                <div className="text-sm font-semibold text-foreground">{t("settings.clearAllClips")}</div>
                 <div className="text-[11px] text-muted-foreground mt-0.5">
-                  Free up space immediately. Reps, sets, and form scores are unaffected.
+                  {t("settings.freeUpSpace")}
                 </div>
               </div>
             </div>
@@ -463,20 +448,20 @@ export function Settings() {
                 <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-xs text-red-300 font-medium mb-2">
-                    This will delete {clipCount} clip{clipCount !== 1 ? "s" : ""} from this device. Are you sure?
+                    {t("settings.deleteConfirm", { count: clipCount })}
                   </p>
                   <div className="flex gap-2">
                     <button
                       onClick={handleClearAll}
                       className="px-3.5 py-1.5 rounded-lg bg-red-500 hover:bg-red-400 text-white text-xs font-bold transition-colors"
                     >
-                      Yes, Clear All
+                      {t("settings.yesClearAll")}
                     </button>
                     <button
                       onClick={() => setConfirmClear(false)}
                       className="px-3.5 py-1.5 rounded-lg border border-white/15 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      Cancel
+                      {t("common.cancel")}
                     </button>
                   </div>
                 </div>
@@ -493,7 +478,7 @@ export function Settings() {
                 ].join(" ")}
               >
                 <Trash2 className="w-4 h-4" />
-                Clear All Clips
+                {t("settings.clearAllClips")}
               </button>
             )}
           </div>
@@ -502,11 +487,11 @@ export function Settings() {
 
       {/* ── Workout ──────────────────────────────────────────────────────────── */}
       <section>
-        <SectionHeader icon={<Timer className="w-4 h-4" />} label="Workout" />
+        <SectionHeader icon={<Timer className="w-4 h-4" />} label={t("settings.workout")} />
         <div className="rounded-xl border border-border bg-card p-5">
-          <div className="font-medium text-sm mb-1">Rest Duration</div>
+          <div className="font-medium text-sm mb-1">{t("settings.restDuration")}</div>
           <div className="text-xs text-muted-foreground mb-3">
-            Time between sets during a multi-set workout.
+            {t("settings.restDurationDesc")}
           </div>
           <div
             className="flex rounded-xl overflow-hidden border border-white/10 p-0.5 gap-0.5"
@@ -535,7 +520,7 @@ export function Settings() {
 
       {/* ── Workout Camera & Audio ────────────────────────────────────────────── */}
       <section>
-        <SectionHeader icon={<Camera className="w-4 h-4" />} label="Workout Camera & Audio" />
+        <SectionHeader icon={<Camera className="w-4 h-4" />} label={t("settings.cameraAudio")} />
         <div
           className="rounded-2xl border border-white/10 p-5 space-y-5"
           style={{
@@ -552,9 +537,9 @@ export function Settings() {
                 <Volume2 className="w-4 h-4 text-primary" />
               </div>
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-foreground">AI Voice Coaching</div>
+                <div className="text-sm font-semibold text-foreground">{t("settings.aiVoiceCoaching")}</div>
                 <div className="text-[11px] text-muted-foreground">
-                  Spoken coaching cues during workouts
+                  {t("settings.spokenCues")}
                 </div>
               </div>
             </div>
@@ -585,9 +570,9 @@ export function Settings() {
                 <Camera className="w-4 h-4 text-blue-400" />
               </div>
               <div>
-                <div className="text-sm font-semibold text-foreground">Default Camera</div>
+                <div className="text-sm font-semibold text-foreground">{t("settings.defaultCamera")}</div>
                 <div className="text-[11px] text-muted-foreground">
-                  Which camera opens when you start a workout
+                  {t("settings.defaultCameraDesc")}
                 </div>
               </div>
             </div>
@@ -597,7 +582,7 @@ export function Settings() {
             >
               {(["user", "environment"] as const).map((facing) => {
                 const active = cameraFacing === facing;
-                const label  = facing === "user" ? "Front" : "Back";
+                const label  = facing === "user" ? t("settings.cameraFacingFront") : t("settings.cameraFacingBack");
                 return (
                   <button
                     key={facing}
@@ -625,9 +610,9 @@ export function Settings() {
                 <FlipHorizontal2 className="w-4 h-4 text-violet-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-foreground">Mirror Camera Preview</div>
+                <div className="text-sm font-semibold text-foreground">{t("settings.mirrorCameraPreview")}</div>
                 <div className="text-[11px] text-muted-foreground">
-                  Flip the front-facing camera like a mirror
+                  {t("settings.flipCamera")}
                 </div>
               </div>
             </div>
@@ -658,9 +643,9 @@ export function Settings() {
                 <Ruler className="w-4 h-4 text-emerald-400" />
               </div>
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-foreground">Body Calibration</div>
+                <div className="text-sm font-semibold text-foreground">{t("settings.bodyCalibration")}</div>
                 <div className="text-[11px] text-muted-foreground">
-                  Re-run the one-time T-Pose body scan
+                  {t("settings.recalibrateDesc")}
                 </div>
               </div>
             </div>
@@ -668,7 +653,7 @@ export function Settings() {
               onClick={() => setLocation("/calibration")}
               className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
             >
-              Recalibrate
+              {t("settings.recalibrate")}
             </button>
           </div>
         </div>
@@ -676,13 +661,13 @@ export function Settings() {
 
       {/* ── Daily Mobility Reminders ──────────────────────────────────────────── */}
       <section>
-        <SectionHeader icon={<Bell className="w-4 h-4" />} label="Daily Mobility Reminders" />
+        <SectionHeader icon={<Bell className="w-4 h-4" />} label={t("settings.mobility")} />
         <div className="rounded-xl border border-border bg-card p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-sm">Enable daily reminders</div>
+              <div className="font-medium text-sm">{t("settings.enableDailyReminders")}</div>
               <div className="text-xs text-muted-foreground mt-0.5">
-                Get a browser notification at your chosen time each day.
+                {t("settings.browserNotification")}
               </div>
             </div>
             <button
@@ -706,7 +691,7 @@ export function Settings() {
           {notifEnabled && notifPermission === "denied" && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs">
               <BellOff className="w-4 h-4 shrink-0" />
-              Notifications are blocked in your browser. Please allow them in your browser/OS settings and reload the page.
+              {t("settings.notificationsBlocked")}
             </div>
           )}
 
@@ -714,7 +699,7 @@ export function Settings() {
             <div className="space-y-3 pt-1">
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">
-                  Reminder time
+                  {t("settings.reminderTime")}
                 </label>
                 <input
                   type="time"
@@ -725,7 +710,7 @@ export function Settings() {
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">
-                  Mobility goal
+                  {t("settings.mobilityGoal")}
                 </label>
                 <select
                   value={notifGoal}
@@ -737,7 +722,7 @@ export function Settings() {
                   ))}
                 </select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  The routine on your /mobility page will be tailored to this goal.
+                  {t("settings.mobilityGoalDesc")}
                 </p>
               </div>
             </div>
@@ -748,14 +733,14 @@ export function Settings() {
             disabled={savingNotif || updateMobilitySettings.isPending}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
           >
-            {savingNotif || updateMobilitySettings.isPending ? "Saving…" : "Save"}
+            {savingNotif || updateMobilitySettings.isPending ? t("settings.saving") : t("common.save")}
           </button>
         </div>
       </section>
 
       {/* ── Profile Privacy ───────────────────────────────────────────────────── */}
       <section>
-        <SectionHeader icon={<Shield className="w-4 h-4" />} label="Profile Privacy" />
+        <SectionHeader icon={<Shield className="w-4 h-4" />} label={t("settings.profilePrivacy")} />
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           {PRIVACY_OPTIONS.map(({ value, label, desc }, i) => {
             const active   = currentPrivacy === value;
@@ -790,16 +775,16 @@ export function Settings() {
         </div>
         {!profile && (
           <p className="text-xs text-muted-foreground mt-2">
-            Set up your profile to enable privacy controls.
+            {t("settings.setUpProfile")}
           </p>
         )}
 
         {/* Community Posts visibility toggle */}
         <div className="mt-3 rounded-xl border border-border bg-card p-4 flex items-start justify-between gap-4">
           <div>
-            <div className="font-medium text-sm">Show Community Posts to Everyone</div>
+            <div className="font-medium text-sm">{t("settings.showCommunityPosts")}</div>
             <div className="text-xs text-muted-foreground mt-0.5">
-              When off, only your friends can see your posts in the Community tab.
+              {t("settings.communityPostsDesc")}
             </div>
           </div>
           <button
@@ -808,11 +793,9 @@ export function Settings() {
               const next = !(profile.communityPostsPublic ?? true);
               updateCommunityPostsPublic.mutate(next, {
                 onSuccess: () =>
-                  toast({
-                    title: next ? "Community posts are now public" : "Community posts hidden from non-friends",
-                  }),
+                  toast({ title: t("settings.showCommunityPosts") }),
                 onError: () =>
-                  toast({ title: "Failed to update setting", variant: "destructive" }),
+                  toast({ title: t("common.error"), variant: "destructive" }),
               });
             }}
             disabled={updateCommunityPostsPublic.isPending || !profile}
@@ -835,10 +818,10 @@ export function Settings() {
 
       {/* ── Sign out ──────────────────────────────────────────────────────────── */}
       <section>
-        <SectionHeader icon={<LogOut className="w-4 h-4" />} label="Session" />
+        <SectionHeader icon={<LogOut className="w-4 h-4" />} label={t("settings.session")} />
         <div className="rounded-xl border border-border bg-card p-5">
           <p className="text-sm text-muted-foreground mb-4">
-            Signed in as{" "}
+            {t("settings.signedInAs")}{" "}
             <span className="font-medium text-foreground">
               {user.primaryEmailAddress?.emailAddress}
             </span>
@@ -848,7 +831,7 @@ export function Settings() {
             className="flex items-center gap-2 px-4 py-2 rounded-md border border-border text-sm font-medium hover:bg-destructive/10 hover:text-destructive hover:border-destructive transition-colors"
           >
             <LogOut className="w-4 h-4" />
-            Sign out
+            {t("settings.signOut")}
           </button>
         </div>
       </section>

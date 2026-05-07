@@ -11,6 +11,7 @@ import {
   DIFFICULTY_WEIGHTS, getDifficultyTier, TIER_COLOR, type DifficultyTier,
 } from "@/lib/exercise-registry";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -52,6 +53,7 @@ function PointsBar({ points }: { points: number }) {
 // ─── LeaderboardRow ───────────────────────────────────────────────────────────
 
 function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolean }) {
+  const { t } = useTranslation();
   const medal = MEDAL[entry.rank];
   return (
     <Link
@@ -88,7 +90,7 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
           </span>
           {isMe && (
             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
-              You
+              {t("leaderboard.you")}
             </span>
           )}
           {entry.showVerifiedBadge && (
@@ -102,7 +104,7 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
               }}
             >
               <ShieldCheck className="w-3 h-3" />
-              Pro
+              {t("common.pro")}
             </span>
           )}
           {(() => {
@@ -125,7 +127,7 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
           )}
           <span>·</span>
           <Dumbbell className="w-3 h-3" />
-          <span>{entry.masteredSkills} skills</span>
+          <span>{t("leaderboard.skillsLabel", { count: entry.masteredSkills })}</span>
         </div>
       </div>
 
@@ -154,6 +156,7 @@ const EXERCISES_BY_TIER = TIER_ORDER.map((tier) => ({
 }));
 
 function MoveValueGuide() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
@@ -164,9 +167,9 @@ function MoveValueGuide() {
       >
         <div className="flex items-center gap-2">
           <Zap className="w-4 h-4 text-amber-400" />
-          <span className="text-sm font-semibold">Move Value Guide</span>
+          <span className="text-sm font-semibold">{t("leaderboard.moveValueGuide")}</span>
           <span className="text-xs text-muted-foreground hidden sm:inline">
-            · Points per rep at 100% form
+            · {t("leaderboard.pointsPerRep")}
           </span>
         </div>
         {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -175,9 +178,7 @@ function MoveValueGuide() {
       {open && (
         <div className="px-4 pb-4 border-t border-border">
           <p className="text-[11px] text-muted-foreground mt-3 mb-4 leading-relaxed">
-            Each AI-verified rep (or second held) earns{" "}
-            <span className="text-foreground font-medium">weight × reps × (form% / 100)</span> points.
-            Manual logs count toward Skill Tree XP only — no leaderboard points.
+            {t("leaderboard.moveValueDesc")}
           </p>
 
           <div className="space-y-4">
@@ -216,7 +217,7 @@ function MoveValueGuide() {
                             {weight.toFixed(1)}
                           </span>
                           <span className="text-[9px] text-muted-foreground">
-                            {isStatic ? "pts/s" : "pts/rep"}
+                            {isStatic ? t("leaderboard.ptsSec") : t("leaderboard.ptsRep")}
                           </span>
                         </div>
                       </div>
@@ -228,8 +229,7 @@ function MoveValueGuide() {
           </div>
 
           <p className="text-[10px] text-muted-foreground mt-3 pt-3 border-t border-border/50">
-            Example: 10 Muscle-Up reps at 90% form = 10 × 10.0 × 0.9 ={" "}
-            <span className="text-foreground font-medium">90 pts</span>
+            {t("leaderboard.exampleCalc", { defaultValue: 'Example: 10 Muscle-Up reps at 90% form = 10 × 10.0 × 0.9 = 90 pts' })}
           </p>
         </div>
       )}
@@ -241,19 +241,20 @@ function MoveValueGuide() {
 
 type Tab = "global" | "national" | "friends";
 
-const TABS: { id: Tab; label: string; icon: typeof Globe }[] = [
-  { id: "global",   label: "Global",   icon: Globe  },
-  { id: "national", label: "National", icon: Flag   },
-  { id: "friends",  label: "Friends",  icon: Users  },
-];
-
 export function Leaderboard() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("global");
   const { data: myProfile } = useMyProfile();
   const { data, isLoading, error } = useLeaderboard(tab);
 
   const myUserId = myProfile?.id;
   const hasCountry = tab !== "national" || data?.country != null || isLoading;
+
+  const TABS: { id: Tab; label: string; icon: typeof Globe }[] = [
+    { id: "global",   label: t("leaderboard.global"),   icon: Globe  },
+    { id: "national", label: t("leaderboard.national"), icon: Flag   },
+    { id: "friends",  label: t("leaderboard.friends"),  icon: Users  },
+  ];
 
   return (
     <>
@@ -262,10 +263,10 @@ export function Leaderboard() {
         <div className="p-6 pb-4">
           <h1 className="text-2xl font-bold flex items-center gap-2 mb-1">
             <Trophy className="w-6 h-6 text-yellow-400" />
-            Leaderboard
+            {t("leaderboard.title")}
           </h1>
           <p className="text-xs text-muted-foreground mb-5">
-            Total Points Earned · AI-verified reps only
+            {t("leaderboard.subtitle")}
           </p>
 
           {/* Tabs */}
@@ -296,16 +297,16 @@ export function Leaderboard() {
           <Show when="signed-out">
             <div className="mx-6 rounded-xl border border-border bg-card p-10 text-center">
               <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Sign in to see friends</h3>
+              <h3 className="font-semibold mb-2">{t("leaderboard.signInToSeeFriends")}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Compare your rank against the people you train with.
+                {t("leaderboard.compareRank")}
               </p>
               <Link
                 href="/sign-in"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
               >
                 <LogIn className="w-4 h-4" />
-                Sign In
+                {t("common.signIn")}
               </Link>
             </div>
           </Show>
@@ -315,11 +316,11 @@ export function Leaderboard() {
         {tab === "national" && !isLoading && !data?.country && (
           <div className="mx-6 rounded-xl border border-border bg-card p-10 text-center">
             <Flag className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <h3 className="font-semibold mb-2">Country not detected</h3>
+            <h3 className="font-semibold mb-2">{t("leaderboard.countryNotDetected")}</h3>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-              We couldn't detect your country. Set it in{" "}
-              <Link href="/settings" className="text-primary hover:underline">Settings</Link>{" "}
-              to unlock the national leaderboard.
+              {t("leaderboard.countryNotDetectedDesc").split("Settings")[0]}
+              <Link href="/settings" className="text-primary hover:underline">{t("nav.settings")}</Link>
+              {t("leaderboard.countryNotDetectedDesc").split("Settings")[1]}
             </p>
           </div>
         )}
@@ -334,7 +335,7 @@ export function Leaderboard() {
         {/* Error */}
         {!isLoading && error && (
           <div className="mx-6 rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-            Failed to load leaderboard. Try again shortly.
+            {t("leaderboard.failedToLoad")}
           </div>
         )}
 
@@ -344,8 +345,8 @@ export function Leaderboard() {
             <Star className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
               {tab === "friends"
-                ? "None of your friends have trained yet — or you have no friends added."
-                : "No athletes in this region yet. Be the first!"}
+                ? t("leaderboard.noFriendsEmpty")
+                : t("leaderboard.noAthletesRegion")}
             </p>
           </div>
         )}
@@ -358,10 +359,10 @@ export function Leaderboard() {
               <div className="w-8" />
               <div className="w-8" />
               <div className="flex-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Athlete
+                {t("leaderboard.athlete")}
               </div>
               <div className="w-36 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">
-                Total Points
+                {t("leaderboard.totalPoints")}
               </div>
             </div>
 
@@ -382,10 +383,10 @@ export function Leaderboard() {
         <div className="text-center mt-4 px-6 space-y-1">
           <p className="text-xs text-amber-400/80 flex items-center justify-center gap-1.5">
             <ShieldCheck className="w-3 h-3 shrink-0" />
-            Only AI-verified reps earn leaderboard points. Manual logs = Skill Tree XP only.
+            {t("leaderboard.onlyVerified")}
           </p>
           <p className="text-xs text-muted-foreground">
-            Formula: difficulty × reps × (form% / 100) · Unlimited ceiling
+            {t("leaderboard.formula")}
           </p>
         </div>
       </div>
@@ -398,7 +399,7 @@ export function Leaderboard() {
               <Trophy className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">Your Rank</div>
+              <div className="text-xs text-muted-foreground">{t("leaderboard.yourRank")}</div>
               <div className="font-bold text-sm leading-tight">
                 {data?.myRank != null ? `#${data.myRank}` : "—"}
                 {data?.myRank === 1 && " 🥇"}
@@ -410,13 +411,13 @@ export function Leaderboard() {
 
           <div className="flex items-center gap-6 text-sm">
             <div className="text-center">
-              <div className="text-xs text-muted-foreground">Points</div>
+              <div className="text-xs text-muted-foreground">{t("leaderboard.points")}</div>
               <div className="font-bold text-primary tabular-nums">
                 {(data?.myPoints ?? 0).toLocaleString()}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-xs text-muted-foreground">Skills</div>
+              <div className="text-xs text-muted-foreground">{t("leaderboard.skills")}</div>
               <div className="font-bold tabular-nums">{data?.myMasteredSkills ?? 0}</div>
             </div>
           </div>
