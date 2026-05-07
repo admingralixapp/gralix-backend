@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useUser } from "@clerk/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocalizedPrices, detectCurrency } from "@/lib/locale";
+import { useLocalizedPrices } from "@/lib/locale";
 import {
   ShoppingBag,
   Crown,
@@ -250,8 +251,9 @@ export function ShopPage() {
   const redeemCode = useRedeemCode();
   const updateAura = useUpdateActiveAura();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
   const prices = useLocalizedPrices();
-  const currency = detectCurrency();
+  void i18n; // language change triggers re-render, prices update reactively
 
   const activatePro = useActivatePro();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
@@ -345,15 +347,15 @@ export function ShopPage() {
       <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <ShoppingBag className="w-12 h-12 text-muted-foreground/40" />
         <div className="text-center">
-          <h2 className="text-lg font-bold mb-1">CaliShop</h2>
-          <p className="text-sm text-muted-foreground">Sign in to subscribe, browse Aura Packs, and redeem codes.</p>
+          <h2 className="text-lg font-bold mb-1">{t("shop.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("shop.signInPrompt")}</p>
         </div>
         <a
           href="/sign-in"
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold"
         >
           <LogIn className="w-4 h-4" />
-          Sign In
+          {t("common.signIn")}
         </a>
       </div>
     );
@@ -368,8 +370,8 @@ export function ShopPage() {
           <ShoppingBag className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-black">CaliShop</h1>
-          <p className="text-xs text-muted-foreground">Subscription, Aura Packs, and exclusive upgrades</p>
+          <h1 className="text-2xl font-black">{t("shop.title")}</h1>
+          <p className="text-xs text-muted-foreground">{t("shop.subtitle")}</p>
         </div>
       </div>
 
@@ -409,10 +411,10 @@ export function ShopPage() {
                     className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                     style={{ background: "rgba(168,85,247,0.22)", color: "#c084fc", border: "1px solid rgba(168,85,247,0.4)" }}
                   >
-                    ✓ Active
+                    {t("shop.proActive")}
                   </span>
                 ) : (
-                  <div className="text-[11px] text-white/50">Unlock the complete experience</div>
+                  <div className="text-[11px] text-white/50">{t("shop.proSubtitle")}</div>
                 )}
               </div>
             </div>
@@ -495,7 +497,7 @@ export function ShopPage() {
                   boxShadow: "0 4px 24px rgba(168,85,247,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
                 }}
               >
-                {activatePro.isPending ? "Activating…" : "Start 3-Day Free Trial"}
+                {activatePro.isPending ? t("common.loading") : t("shop.startTrial")}
               </button>
             </>
           )}

@@ -9,7 +9,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
-import { speak as voiceSpeak, cancelSpeech, setVoiceMuted } from "@/lib/voice-service";
+import { speak as voiceSpeak, cancelSpeech, setVoiceMuted, setVoiceLanguage } from "@/lib/voice-service";
+import { useTranslation } from "react-i18next";
 import { getRestDuration, type RestDuration, REST_DURATION_OPTIONS } from "@/lib/workout-settings";
 import { getVoiceCues, getCameraFacing, getMirrorVideo } from "@/lib/workout-preferences";
 import {
@@ -472,6 +473,11 @@ export function Workout() {
   const search = useSearch();
   const { toast } = useToast();
   const { data: exercises } = useListExercises();
+  // Keep Web Speech API locale in sync with the app's chosen language
+  const { i18n } = useTranslation();
+  useEffect(() => {
+    setVoiceLanguage(i18n.language);
+  }, [i18n.language]);
 
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>("");
   const [sessionResults, setSessionResults] = useState<Omit<SessionResultsProps, "onClose"> | null>(null);

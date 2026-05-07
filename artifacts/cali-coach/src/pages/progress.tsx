@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { useLocalizedPrices } from "@/lib/locale";
 import { useLocation } from "wouter";
 import {
   useGetProgressTimeline,
@@ -115,6 +117,8 @@ const glassCardClass =
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function Progress() {
+  const { t } = useTranslation();
+  const prices = useLocalizedPrices();
   const [, setLocation] = useLocation();
   const { data: profile } = useMyProfile();
   const activatePro = useActivatePro();
@@ -242,25 +246,25 @@ export function Progress() {
             className="text-[10px] font-black uppercase tracking-[0.18em] mb-1.5"
             style={{ color: "#c084fc" }}
           >
-            Premium Analytics
+            {t("progress.premiumAnalytics")}
           </div>
           <h2 className="text-2xl font-black" style={{ color: "#e9d5ff" }}>
-            Unlock Your Performance Data
+            {t("progress.unlockTitle")}
           </h2>
         </div>
 
         {/* Pitch */}
         <p className="text-sm text-white/60 leading-relaxed max-w-xs">
-          Track joint-angle improvements, form consistency, and projected mastery dates with Pro.
+          {t("progress.unlockDesc")}
         </p>
 
         {/* Feature bullets */}
         <div className="w-full space-y-2.5 text-left">
           {[
-            { icon: "📐", label: "Joint-angle form scoring over time" },
-            { icon: "📈", label: "Form vs. Volume trend analysis" },
-            { icon: "🗓️", label: "Projected mastery dates per skill" },
-            { icon: "🎯", label: "Skill Unlock Timeline & branch radar" },
+            { icon: "📐", label: t("progress.featureForm") },
+            { icon: "📈", label: t("progress.featureVolume") },
+            { icon: "🗓️", label: t("progress.featureMastery") },
+            { icon: "🎯", label: t("progress.featureTimeline") },
           ].map(({ icon, label }) => (
             <div key={label} className="flex items-center gap-3">
               <div
@@ -286,10 +290,10 @@ export function Progress() {
               boxShadow: "0 4px 24px rgba(168,85,247,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
             }}
           >
-            Start 3-Day Free Trial
+            {t("progress.startTrial")}
           </button>
           <p className="text-[10px] text-white/30">
-            Cancel anytime · £14.99/mo or £149.99/yr
+            {t("progress.trialNote", { price: prices.monthly })}
           </p>
         </div>
       </div>

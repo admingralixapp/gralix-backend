@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { Show, useUser, useClerk } from "@clerk/react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -27,21 +28,22 @@ import { SkillWatcher } from "./skill-watcher";
 interface NavItem {
   href: string;
   label: string;
+  labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/",            label: "Dashboard",  icon: LayoutDashboard },
-  { href: "/workout",     label: "Workout",    icon: Activity },
-  { href: "/daily-tasks", label: "Daily",      icon: ClipboardList },
-  { href: "/community",   label: "Community",  icon: Rss },
-  { href: "/history",     label: "History",    icon: History },
-  { href: "/progress",    label: "Progress",   icon: TrendingUp },
-  { href: "/skill-tree",  label: "Skill Tree", icon: GitBranch },
-  { href: "/leaderboard", label: "Leaderboard",icon: Trophy },
-  { href: "/friends",     label: "Friends",    icon: Users },
-  { href: "/shop",        label: "Shop",       icon: ShoppingBag },
-  { href: "/settings",    label: "Settings",   icon: Settings },
+  { href: "/",            label: "Dashboard",   labelKey: "nav.dashboard",   icon: LayoutDashboard },
+  { href: "/workout",     label: "Workout",     labelKey: "nav.workout",     icon: Activity },
+  { href: "/daily-tasks", label: "Daily",       labelKey: "nav.daily",       icon: ClipboardList },
+  { href: "/community",   label: "Community",   labelKey: "nav.community",   icon: Rss },
+  { href: "/history",     label: "History",     labelKey: "nav.history",     icon: History },
+  { href: "/progress",    label: "Progress",    labelKey: "nav.progress",    icon: TrendingUp },
+  { href: "/skill-tree",  label: "Skill Tree",  labelKey: "nav.skillTree",   icon: GitBranch },
+  { href: "/leaderboard", label: "Leaderboard", labelKey: "nav.leaderboard", icon: Trophy },
+  { href: "/friends",     label: "Friends",     labelKey: "nav.friends",     icon: Users },
+  { href: "/shop",        label: "Shop",        labelKey: "nav.shop",        icon: ShoppingBag },
+  { href: "/settings",    label: "Settings",    labelKey: "nav.settings",    icon: Settings },
 ];
 
 /** The three tabs reachable by swiping left / right. */
@@ -76,6 +78,7 @@ function getNavIndex(path: string): number {
 // ─── UserSection ──────────────────────────────────────────────────────────────
 
 function UserSection() {
+  const { t }              = useTranslation();
   const { user, isLoaded } = useUser();
   const { signOut }        = useClerk();
   const { data: profile }  = useMyProfile();
@@ -120,7 +123,7 @@ function UserSection() {
             className="mt-2 w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
-            Sign out
+            {t("common.signOut", "Sign out")}
           </button>
         </div>
       </Show>
@@ -132,7 +135,7 @@ function UserSection() {
             className="flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
           >
             <LogIn className="w-4 h-4" />
-            Sign In
+            {t("common.signIn", "Sign In")}
           </a>
         </div>
       </Show>
@@ -143,6 +146,7 @@ function UserSection() {
 // ─── Layout ───────────────────────────────────────────────────────────────────
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const [direction, setDirection] = useState(0);
   const { data: layoutProfile } = useMyProfile();
@@ -264,7 +268,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )}
               >
                 <Icon className={cn("w-5 h-5 shrink-0", active && "nav-icon-active")} />
-                <span className="flex-1">{item.label}</span>
+                <span className="flex-1">{t(item.labelKey, item.label)}</span>
                 {isProgressLocked && (
                   <span
                     className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md shrink-0"
@@ -338,7 +342,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 "text-[9px] mt-0.5 whitespace-nowrap",
                 active ? "font-bold" : "font-light opacity-80",
               )}>
-                {item.label}
+                {t(item.labelKey, item.label)}
               </span>
 
               {/* Active indicator dot */}
