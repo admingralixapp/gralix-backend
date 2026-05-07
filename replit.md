@@ -9,6 +9,7 @@ CaliCoach is a calisthenics motion capture coaching app that provides real-time 
 - `pnpm --filter @workspace/api-spec run codegen`: Regenerate API hooks and Zod schemas from OpenAPI spec.
 - `pnpm --filter @workspace/db run push`: Push database schema changes (development only).
 - `pnpm --filter @workspace/api-server run dev`: Run the API server locally.
+- `pnpm --filter @workspace/scripts run translate`: AI-translate `en/translation.json` into all 99 other languages (uses Replit AI / OpenAI, resumes from partial state).
 
 Required Environment Variables:
 - `VITE_CLERK_PUBLISHABLE_KEY`
@@ -30,6 +31,7 @@ Required Environment Variables:
 - **Charts**: Recharts
 - **Styling**: Tailwind CSS v4, dark athletic theme (neon green primary)
 - **Auth**: Clerk
+- **i18n**: i18next + react-i18next + i18next-http-backend; 100 languages; lazy-loaded from `public/locales/{lang}/translation.json`
 
 ## Where things live
 

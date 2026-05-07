@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { isRTL } from "@/i18n/languages";
 import {
   ClerkProvider,
   SignIn,
@@ -111,6 +113,20 @@ const clerkAppearance = {
 const queryClient = new QueryClient();
 
 // ---------------------------------------------------------------------------
+// Applies RTL direction whenever the active language changes
+// ---------------------------------------------------------------------------
+function RTLDirectionSync() {
+  const { i18n } = useTranslation();
+  useEffect(() => {
+    const lang = i18n.language?.split("-")[0] ?? "en";
+    const dir = isRTL(lang) ? "rtl" : "ltr";
+    document.documentElement.dir = dir;
+    document.documentElement.lang = i18n.language ?? "en";
+  }, [i18n.language]);
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Syncs the Clerk user to the app's DB on first sign-in
 // ---------------------------------------------------------------------------
 function ProfileSync() {
@@ -217,6 +233,7 @@ function AppRouter() {
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
       <QueryClientProvider client={queryClient}>
+        <RTLDirectionSync />
         <ClerkQueryClientCacheInvalidator />
         <ProfileSync />
         <UploadManagerProvider>

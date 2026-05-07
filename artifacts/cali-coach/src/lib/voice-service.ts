@@ -168,6 +168,18 @@ function stopCurrentSource(): void {
   _currentSource = null;
 }
 
+// ─── Locale for speech synthesis ──────────────────────────────────────────────
+
+let _speechLang = "en-US";
+
+/**
+ * Set the BCP-47 locale used by the Web Speech API fallback.
+ * Call this whenever the user changes their language in Settings.
+ */
+export function setVoiceLanguage(bcp47: string): void {
+  _speechLang = bcp47;
+}
+
 // ─── Web Speech API fallback ──────────────────────────────────────────────────
 
 function fallbackSpeak(text: string): void {
@@ -177,6 +189,7 @@ function fallbackSpeak(text: string): void {
     u.rate = 1.1;
     u.pitch = 0.95;
     u.volume = 1;
+    u.lang = _speechLang;
 
     // Duck non-speech audio via gain node even for the fallback path.
     const { ac, duckGain } = getGains();

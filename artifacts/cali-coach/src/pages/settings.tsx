@@ -1,10 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
 import {
   Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video,
   AlertTriangle, Timer, Camera, Volume2, FlipHorizontal2, Ruler, ExternalLink,
+  Globe, Search, Check,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { LANGUAGES, getLang } from "@/i18n/languages";
+import { setVoiceLanguage } from "@/lib/voice-service";
+import { setAuraLanguage } from "@/lib/aura-audio";
 import {
   getVoiceCues, setVoiceCues,
   getCameraFacing, setCameraFacing, type CameraFacing,
@@ -69,6 +74,30 @@ export function Settings() {
   const updatePrivacy = useUpdatePrivacy();
   const updateCommunityPostsPublic = useUpdateCommunityPostsPublic();
   const { toast } = useToast();
+  const { i18n } = useTranslation();
+
+  // Language selector state
+  const [langSearch, setLangSearch] = useState("");
+  const langSearchRef = useRef<HTMLInputElement>(null);
+
+  const currentLang = getLang(i18n.language ?? "en") ?? LANGUAGES[0]!;
+
+  const filteredLangs = langSearch.trim()
+    ? LANGUAGES.filter(
+        (l) =>
+          l.name.toLowerCase().includes(langSearch.toLowerCase()) ||
+          l.nativeName.toLowerCase().includes(langSearch.toLowerCase()) ||
+          l.code.toLowerCase().includes(langSearch.toLowerCase()),
+      )
+    : LANGUAGES;
+
+  function handleLanguageChange(code: string) {
+    i18n.changeLanguage(code);
+    // Sync speech and aura audio to the new language
+    setVoiceLanguage(code);
+    setAuraLanguage(code);
+    toast({ title: `Language changed to ${getLang(code)?.nativeName ?? code}` });
+  }
 
   const { data: mobilityStatus } = useMobilityStatus();
   const updateMobilitySettings = useUpdateMobilitySettings();
@@ -274,6 +303,73 @@ export function Settings() {
               View Profile
             </button>
           )}
+        </div>
+      </section>
+
+      {/* ── Language ──────────────────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader icon={<Globe className="w-4 h-4" />} label="Language" />
+        <div className="rounded-xl border border-border bg-card overflow-hidden">
+          {/* Current language pill */}
+          <div className="p-4 flex items-center gap-3 border-b border-border/60">
+            <div className="flex-1">
+              <div className="font-medium text-sm">{currentLang.nativeName}</div>
+              <div className="text-xs text-muted-foreground">{currentLang.name}</div>
+            </div>
+            {currentLang.rtl && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-primary/10 text-primary uppercase tracking-wide">
+                RTL
+              </span>
+            )}
+          </div>
+
+          {/* Search */}
+          <div className="p-3 border-b border-border/60 relative">
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            <input
+              ref={langSearchRef}
+              value={langSearch}
+              onChange={(e) => setLangSearch(e.target.value)}
+              placeholder="Search 100 languages..."
+              className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-muted/40 border border-border/50 placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary/40"
+            />
+          </div>
+
+          {/* Scrollable list */}
+          <div className="max-h-56 overflow-y-auto overscroll-contain divide-y divide-border/40">
+            {filteredLangs.length === 0 ? (
+              <div className="p-4 text-sm text-muted-foreground text-center">No languages found</div>
+            ) : (
+              filteredLangs.map((lang) => {
+                const isSelected = lang.code === currentLang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    onClick={() => handleLanguageChange(lang.code)}
+                    className={[
+                      "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
+                      isSelected
+                        ? "bg-primary/8 text-primary"
+                        : "hover:bg-muted/40 text-foreground",
+                    ].join(" ")}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium">{lang.nativeName}</span>
+                      <span className="text-xs text-muted-foreground ml-2">{lang.name}</span>
+                    </div>
+                    {lang.rtl && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground uppercase tracking-wide shrink-0">
+                        RTL
+                      </span>
+                    )}
+                    {isSelected && (
+                      <Check className="w-4 h-4 text-primary shrink-0" />
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
       </section>
 

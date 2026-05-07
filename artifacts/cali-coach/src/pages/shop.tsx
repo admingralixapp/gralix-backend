@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useUser } from "@clerk/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocalizedPrices, detectCurrency } from "@/lib/locale";
 import {
   ShoppingBag,
   Crown,
@@ -249,6 +250,8 @@ export function ShopPage() {
   const redeemCode = useRedeemCode();
   const updateAura = useUpdateActiveAura();
   const { toast } = useToast();
+  const prices = useLocalizedPrices();
+  const currency = detectCurrency();
 
   const activatePro = useActivatePro();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
@@ -474,7 +477,7 @@ export function ShopPage() {
               {/* Price */}
               <div className="text-center py-1 relative">
                 <span className="text-4xl font-black" style={{ color: "#e9d5ff" }}>
-                  {billingCycle === "monthly" ? "£14.99" : "£149.99"}
+                  {billingCycle === "monthly" ? prices.monthly : prices.yearly}
                 </span>
                 <span className="text-sm text-white/40 ml-1">
                   {billingCycle === "monthly" ? "/ month" : "/ year"}
