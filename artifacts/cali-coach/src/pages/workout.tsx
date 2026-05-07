@@ -2545,15 +2545,15 @@ export function Workout() {
             };
 
             return (
-              <div className="grid grid-cols-2 gap-3">
+              /* position+zIndex creates ONE stacking context above Sets/Ready cards */
+              <div className="grid grid-cols-2 gap-3" style={{ position: "relative", zIndex: 50 }}>
 
                 {/* ══ LEFT: Bodyweight Fundamentals ══════════════════════════ */}
+                {/* No backdropFilter — avoids creating a nested stacking context that clips the dropdown */}
                 <div
                   className="rounded-2xl border border-white/10 p-3 flex flex-col gap-2"
                   style={{
                     background: "linear-gradient(135deg,rgba(255,255,255,0.06) 0%,rgba(255,255,255,0.02) 100%)",
-                    backdropFilter: "blur(16px)",
-                    WebkitBackdropFilter: "blur(16px)",
                     boxShadow: "0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)",
                   }}
                 >
@@ -2659,13 +2659,12 @@ export function Workout() {
                 </div>
 
                 {/* ══ RIGHT: Equipment Specialty ══════════════════════════════ */}
+                {/* No backdropFilter — avoids nested stacking context that clips the dropdown */}
                 <div
                   className="rounded-2xl border p-3 flex flex-col gap-2"
                   style={{
                     background: "linear-gradient(135deg,rgba(245,158,11,0.06) 0%,rgba(245,158,11,0.02) 100%)",
                     borderColor: "#f59e0b22",
-                    backdropFilter: "blur(16px)",
-                    WebkitBackdropFilter: "blur(16px)",
                     boxShadow: "0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(245,158,11,0.08)",
                   }}
                 >
