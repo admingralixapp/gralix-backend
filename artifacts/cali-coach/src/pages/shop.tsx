@@ -19,6 +19,7 @@ import {
   useClaimFreeAura,
   useRedeemCode,
   useUpdateActiveAura,
+  useActivatePro,
 } from "@/lib/social";
 import { AURA_PACKS, PAID_PACKS, type AuraPack } from "@/lib/aura-packs";
 import { useToast } from "@/hooks/use-toast";
@@ -249,9 +250,23 @@ export function ShopPage() {
   const updateAura = useUpdateActiveAura();
   const { toast } = useToast();
 
+  const activatePro = useActivatePro();
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [redeemInput, setRedeemInput] = useState("");
   const [activatingId, setActivatingId] = useState<string | null>(null);
+
+  function handleActivateTrial() {
+    activatePro.mutate(undefined, {
+      onSuccess: () =>
+        toast({
+          title: "3-Day Free Trial started! 🎉",
+          description: "You now have full access to CaliCoach Pro.",
+        }),
+      onError: () =>
+        toast({ title: "Something went wrong", variant: "destructive" }),
+    });
+  }
 
   const inventory: string[] = profile?.inventory ?? ["classic"];
   const activeAura = profile?.activeAura ?? {};
@@ -328,7 +343,7 @@ export function ShopPage() {
         <ShoppingBag className="w-12 h-12 text-muted-foreground/40" />
         <div className="text-center">
           <h2 className="text-lg font-bold mb-1">CaliShop</h2>
-          <p className="text-sm text-muted-foreground">Sign in to browse and buy Aura Packs.</p>
+          <p className="text-sm text-muted-foreground">Sign in to subscribe, browse Aura Packs, and redeem codes.</p>
         </div>
         <a
           href="/sign-in"
@@ -351,9 +366,145 @@ export function ShopPage() {
         </div>
         <div>
           <h1 className="text-2xl font-black">CaliShop</h1>
-          <p className="text-xs text-muted-foreground">Aura Packs bundle a Voice Tone + Ghost Skin</p>
+          <p className="text-xs text-muted-foreground">Subscription, Aura Packs, and exclusive upgrades</p>
         </div>
       </div>
+
+      {/* ── Pro Subscription Card ── */}
+      <section>
+        <div
+          className="rounded-3xl border p-5 space-y-4 relative overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, rgba(168,85,247,0.14) 0%, rgba(109,40,217,0.07) 50%, rgba(168,85,247,0.04) 100%)",
+            borderColor: "rgba(168,85,247,0.35)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            boxShadow: "0 0 50px rgba(168,85,247,0.18), inset 0 1px 0 rgba(168,85,247,0.2)",
+          }}
+        >
+          {/* Ambient glow orb */}
+          <div
+            className="absolute -top-8 -right-8 w-36 h-36 rounded-full blur-3xl opacity-25 pointer-events-none"
+            style={{ background: "radial-gradient(circle, #a855f7 0%, transparent 70%)" }}
+          />
+
+          {/* Header row */}
+          <div className="flex items-center justify-between relative">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "rgba(168,85,247,0.22)", border: "1px solid rgba(168,85,247,0.45)" }}
+              >
+                <Crown className="w-5 h-5" style={{ color: "#c084fc" }} />
+              </div>
+              <div>
+                <div className="font-black text-base" style={{ color: "#e9d5ff" }}>
+                  CaliCoach Pro
+                </div>
+                {profile?.isPro ? (
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    style={{ background: "rgba(168,85,247,0.22)", color: "#c084fc", border: "1px solid rgba(168,85,247,0.4)" }}
+                  >
+                    ✓ Active
+                  </span>
+                ) : (
+                  <div className="text-[11px] text-white/50">Unlock the complete experience</div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Why go Pro list */}
+          <div className="space-y-2.5 relative">
+            {[
+              { icon: "🎥", label: "Real-time AI Camera Coaching" },
+              { icon: "💜", label: "Glowing Purple Verified Badge" },
+              { icon: "🎁", label: "1x Free Aura Pack Signing Bonus" },
+            ].map(({ icon, label }) => (
+              <div key={label} className="flex items-center gap-3">
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm"
+                  style={{ background: "rgba(168,85,247,0.14)", border: "1px solid rgba(168,85,247,0.25)" }}
+                >
+                  {icon}
+                </div>
+                <span className="text-sm text-white/80 flex-1">{label}</span>
+                <Check className="w-4 h-4 shrink-0" style={{ color: "#c084fc" }} />
+              </div>
+            ))}
+          </div>
+
+          {!profile?.isPro && (
+            <>
+              {/* Billing toggle */}
+              <div
+                className="flex rounded-xl overflow-hidden border border-white/10 p-0.5 gap-0.5 relative"
+                style={{ background: "rgba(255,255,255,0.04)" }}
+              >
+                {(["monthly", "yearly"] as const).map((cycle) => (
+                  <button
+                    key={cycle}
+                    onClick={() => setBillingCycle(cycle)}
+                    className={[
+                      "flex-1 py-2 rounded-[9px] text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5",
+                      billingCycle === cycle
+                        ? "text-white shadow-md"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06]",
+                    ].join(" ")}
+                    style={billingCycle === cycle ? { background: "#7c3aed" } : {}}
+                  >
+                    {cycle === "monthly" ? "Monthly" : "Yearly"}
+                    {cycle === "yearly" && (
+                      <span
+                        className={[
+                          "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+                          billingCycle === "yearly"
+                            ? "bg-white/20 text-white"
+                            : "bg-green-500/20 text-green-400",
+                        ].join(" ")}
+                      >
+                        Save 20%
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Price */}
+              <div className="text-center py-1 relative">
+                <span className="text-4xl font-black" style={{ color: "#e9d5ff" }}>
+                  {billingCycle === "monthly" ? "£14.99" : "£149.99"}
+                </span>
+                <span className="text-sm text-white/40 ml-1">
+                  {billingCycle === "monthly" ? "/ month" : "/ year"}
+                </span>
+              </div>
+
+              {/* CTA */}
+              <button
+                onClick={handleActivateTrial}
+                disabled={activatePro.isPending}
+                className="w-full py-3 rounded-xl text-sm font-black tracking-wide transition-all disabled:opacity-60 relative"
+                style={{
+                  background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+                  color: "#fff",
+                  boxShadow: "0 4px 24px rgba(168,85,247,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
+                }}
+              >
+                {activatePro.isPending ? "Activating…" : "Start 3-Day Free Trial"}
+              </button>
+            </>
+          )}
+
+          {profile?.isPro && (
+            <div className="flex items-center justify-center gap-2 py-1.5 text-sm relative" style={{ color: "#c084fc" }}>
+              <Zap className="w-4 h-4" />
+              Pro active — manage via your account portal
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* ── Pro Signing Bonus Banner ── */}
       <AnimatePresence>
@@ -441,25 +592,6 @@ export function ShopPage() {
           </section>
         );
       })()}
-
-      {/* ── Pro Upsell (if not Pro) ── */}
-      {!profile?.isPro && (
-        <section
-          className="rounded-2xl border p-4 flex items-center gap-4"
-          style={{
-            background: "rgba(234,179,8,0.05)",
-            borderColor: "rgba(234,179,8,0.2)",
-          }}
-        >
-          <Crown className="w-5 h-5 shrink-0" style={{ color: "#eab308" }} />
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-bold" style={{ color: "#fef08a" }}>
-              Go Pro to unlock a free Aura Pack
-            </div>
-            <div className="text-[11px] text-white/50">Subscribe in Settings → Subscription</div>
-          </div>
-        </section>
-      )}
 
       {/* ── Promo Code ── */}
       <section>
