@@ -2592,15 +2592,15 @@ export function Workout() {
                       </button>
                     </div>
 
-                    {/* Floating dropdown — opens upward */}
+                    {/* Floating dropdown — opens downward */}
                     {bwOpen && (
                       <div
                         className="absolute left-0 right-0 z-50 rounded-xl border border-white/15 overflow-hidden"
                         style={{
-                          bottom: "calc(100% + 6px)",
+                          top: "calc(100% + 6px)",
                           background: "hsl(var(--card))",
-                          boxShadow: "0 -8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
-                          maxHeight: "min(380px, calc(100vh - 200px))",
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
+                          maxHeight: "280px",
                           overflowY: "auto",
                         }}
                       >
@@ -2708,15 +2708,15 @@ export function Workout() {
                       </button>
                     </div>
 
-                    {/* Floating dropdown — opens upward */}
+                    {/* Floating dropdown — opens downward */}
                     {eqOpen && (
                       <div
                         className="absolute left-0 right-0 z-50 rounded-xl border border-white/15 overflow-hidden"
                         style={{
-                          bottom: "calc(100% + 6px)",
+                          top: "calc(100% + 6px)",
                           background: "hsl(var(--card))",
-                          boxShadow: "0 -8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,158,11,0.12)",
-                          maxHeight: "min(380px, calc(100vh - 200px))",
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,158,11,0.12)",
+                          maxHeight: "280px",
                           overflowY: "auto",
                         }}
                       >
