@@ -4,16 +4,18 @@ import { format } from "date-fns";
 import { Link } from "wouter";
 import { Calendar, ChevronRight, PenLine, ShieldCheck, Video } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "react-i18next";
 import { getClip } from "@/lib/clip-store";
 
 export function History() {
   const { data: sessions, isLoading } = useListSessions();
+  const { t } = useTranslation();
 
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Workout History</h1>
-        <p className="text-muted-foreground mt-1">Review your past performance.</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t("history.title")}</h1>
+        <p className="text-muted-foreground mt-1">{t("history.subtitle")}</p>
       </div>
 
       {isLoading ? (
@@ -25,7 +27,7 @@ export function History() {
       ) : sessions?.length === 0 ? (
         <div className="text-center py-20 border border-dashed rounded-lg">
           <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-          <p className="text-muted-foreground">No sessions recorded yet.</p>
+          <p className="text-muted-foreground">{t("history.noSessions")}</p>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -44,19 +46,18 @@ export function History() {
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
                             style={{ boxShadow: "0 0 6px 0 rgba(16,185,129,0.25)" }}>
                             <ShieldCheck className="w-2.5 h-2.5" />
-                            AI Verified
+                            {t("history.aiVerified")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-muted/60 border border-border text-muted-foreground">
                             <PenLine className="w-2.5 h-2.5" />
-                            Self-Reported
+                            {t("history.selfReported")}
                           </span>
                         )}
-                        {/* View Clip badge — only when a stored clip exists */}
                         {hasClip && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/15 border border-blue-500/30 text-blue-400">
                             <Video className="w-2.5 h-2.5" />
-                            View Clip
+                            {t("history.viewClip")}
                           </span>
                         )}
                       </h3>
@@ -72,7 +73,7 @@ export function History() {
                           {session.totalReps}
                         </div>
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          Reps
+                          {t("history.reps")}
                         </div>
                       </div>
                       <div className="text-right hidden sm:block">
@@ -80,7 +81,7 @@ export function History() {
                           <div className="flex flex-col items-end gap-1">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-muted/60 border border-border text-muted-foreground">
                               <PenLine className="w-2.5 h-2.5" />
-                              Self-Reported
+                              {t("history.selfReported")}
                             </span>
                             {session.rpe != null && (
                               <span className="text-xs text-muted-foreground">
@@ -94,7 +95,7 @@ export function History() {
                               {session.avgFormScore ? Math.round(session.avgFormScore) : '--'}
                             </div>
                             <span className="text-[10px] font-medium text-amber-400 uppercase tracking-wider">
-                              Unverified
+                              {t("history.unverified")}
                             </span>
                           </div>
                         ) : (
@@ -103,7 +104,7 @@ export function History() {
                               {session.avgFormScore ? Math.round(session.avgFormScore) : '--'}
                             </div>
                             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                              Avg Form
+                              {t("history.avgForm")}
                             </div>
                           </>
                         )}
@@ -121,7 +122,7 @@ export function History() {
       {/* Auto-delete policy info */}
       {(sessions?.some(s => getClip(s.id) !== null) ?? false) && (
         <p className="text-[11px] text-muted-foreground text-center">
-          Clips marked "View Clip" are saved locally for 7 days, then auto-deleted to save space.
+          {t("history.clipPolicy")}
         </p>
       )}
     </div>

@@ -33,6 +33,7 @@ const OUT_DIR = resolve(ROOT, "artifacts/cali-coach/public/locales");
 const openai = new OpenAI({
   baseURL: process.env["AI_INTEGRATIONS_OPENAI_BASE_URL"] ?? "https://api.openai.com/v1",
   apiKey: process.env["AI_INTEGRATIONS_OPENAI_API_KEY"] ?? process.env["OPENAI_API_KEY"] ?? "no-key",
+  timeout: 120_000, // 2 min per request
 });
 
 // ── Language list (must match src/i18n/languages.ts) ─────────────────────────
@@ -172,15 +173,11 @@ function unflattenKeys(flat: Record<string, string>): unknown {
 
 // ── Core translation function ─────────────────────────────────────────────────
 
-async function translateBatch(
-  strings: Record<string, string>,
-  targetLanguage: string,
-  retries = 5,
-): Promise<Record<string, string>> {
-  const jsonInput = JSON.stringify(strings, null, 2);
+const CHUNK_SIZE = 100; // keep each API call small and fast
 
-  const systemPrompt = `You are a professional calisthenics coach and expert translator. 
-Translate the provided JSON UI strings into ${targetLanguage} using athletic, motivating, and technically accurate fitness terminology.
+const SYSTEM_PROMPT_TEMPLATE = (lang: string) =>
+  `You are a professional calisthenics coach and expert translator.
+Translate the provided JSON UI strings into ${lang} using athletic, motivating, and technically accurate fitness terminology.
 
 Rules:
 - Keep the exact same JSON key names (do NOT translate keys)
@@ -189,11 +186,18 @@ Rules:
 - Use an energetic, motivating coaching tone appropriate for a fitness app
 - Return ONLY valid JSON with no additional commentary or markdown fences`;
 
+async function translateChunk(
+  chunk: Record<string, string>,
+  targetLanguage: string,
+  retries = 4,
+): Promise<Record<string, string>> {
+  const jsonInput = JSON.stringify(chunk, null, 2);
+  const systemPrompt = SYSTEM_PROMPT_TEMPLATE(targetLanguage);
+
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-5-mini",
-        max_completion_tokens: 8192,
+        model: "gpt-4.1-nano",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: jsonInput },
@@ -201,7 +205,6 @@ Rules:
       });
 
       const raw = response.choices[0]?.message?.content ?? "{}";
-      // Strip markdown fences if model includes them
       const cleaned = raw
         .replace(/^```(?:json)?\s*/i, "")
         .replace(/\s*```$/i, "")
@@ -212,16 +215,18 @@ Rules:
       const msg = err instanceof Error ? err.message : String(err);
       const isRateLimit = msg.includes("429") || msg.toLowerCase().includes("rate limit");
 
-      if (isRateLimit && attempt < retries - 1) {
-        const delay = Math.pow(2, attempt + 1) * 1000 + Math.random() * 500;
-        console.warn(`  ⚠ Rate limited — retrying in ${Math.round(delay / 1000)}s...`);
+      if (attempt < retries - 1) {
+        const delay = isRateLimit
+          ? Math.pow(2, attempt + 1) * 1000 + Math.random() * 500
+          : 2000;
+        if (isRateLimit) console.warn(`  ⚠ Rate limited — retrying in ${Math.round(delay / 1000)}s...`);
         await sleep(delay);
         continue;
       }
       throw err;
     }
   }
-  throw new Error(`All ${retries} retries exhausted for ${targetLanguage}`);
+  throw new Error(`All ${retries} retries exhausted for chunk in ${targetLanguage}`);
 }
 
 // ── Per-language runner ───────────────────────────────────────────────────────
@@ -239,14 +244,19 @@ async function translateLanguage(
     return;
   }
 
-  console.log(`  ⟳ ${name} (${code}) — translating ${Object.keys(flatEn).length} strings...`);
+  const entries = Object.entries(flatEn);
+  const totalChunks = Math.ceil(entries.length / CHUNK_SIZE);
+  console.log(`  ⟳ ${name} (${code}) — translating ${entries.length} strings in ${totalChunks} chunks...`);
 
-  // Translate in two passes to keep prompts manageable:
-  // Pass 1: all leaf string values (flattened)
-  const translated = await translateBatch(flatEn, name);
+  const translated: Record<string, string> = {};
+  for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
+    const chunkEntries = entries.slice(i, i + CHUNK_SIZE);
+    const chunkObj = Object.fromEntries(chunkEntries);
+    const chunkResult = await translateChunk(chunkObj, name);
+    Object.assign(translated, chunkResult);
+    await sleep(200); // brief pause between chunks
+  }
 
-  // Rebuild the nested structure using the original tree shape as template
-  // but with translated values
   const finalTree = rebuildTree(originalTree as Record<string, unknown>, translated);
 
   mkdirSync(resolve(OUT_DIR, code), { recursive: true });

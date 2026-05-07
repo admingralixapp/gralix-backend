@@ -53,11 +53,11 @@ const BRANCH_COLORS: Record<string, string> = {
   LEGS: "#8b5cf6",
 };
 
-const BRANCH_LABELS: Record<string, string> = {
-  PUSH: "Push",
-  PULL: "Pull",
-  CORE: "Core",
-  LEGS: "Legs",
+const BRANCH_LABEL_KEYS: Record<string, string> = {
+  PUSH: "skillTree.push",
+  PULL: "skillTree.pull",
+  CORE: "skillTree.core",
+  LEGS: "skillTree.legs",
 };
 
 // ─── Mastery date computation ─────────────────────────────────────────────────
@@ -155,10 +155,10 @@ export function Progress() {
       }
     });
     return Object.entries(branchReps).map(([key, value]) => ({
-      subject: BRANCH_LABELS[key],
+      subject: t(BRANCH_LABEL_KEYS[key] ?? key),
       reps: value,
     }));
-  }, [sessions]);
+  }, [sessions, t]);
 
   const hasAnyVolume = radarData.some((d) => d.reps > 0);
 
@@ -175,12 +175,12 @@ export function Progress() {
     return {
       donutData: [
         {
-          name: "AI Verified",
+          name: t("progress.aiVerified"),
           value: verified,
           color: "hsl(var(--primary))",
         },
         {
-          name: "Self-Reported",
+          name: t("progress.selfReported"),
           value: unverified,
           color: "hsl(var(--muted-foreground))",
         },
@@ -188,7 +188,7 @@ export function Progress() {
       totalReps: total,
       verifiedReps: verified,
     };
-  }, [sessions]);
+  }, [sessions, t]);
 
   const verificationPct =
     totalReps > 0 ? Math.round((verifiedReps / totalReps) * 100) : 0;
@@ -310,9 +310,9 @@ export function Progress() {
       >
     <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Progress</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t("progress.title")}</h1>
         <p className="text-muted-foreground mt-1">
-          Deep athletic insights and performance analytics.
+          {t("progress.subtitle")}
         </p>
       </div>
 
@@ -327,7 +327,7 @@ export function Progress() {
             <div className="text-2xl font-bold font-mono">
               {summary?.avgFormScore ? Math.round(summary.avgFormScore) : "--"}
             </div>
-            <div className="text-xs text-muted-foreground">Avg Form Score</div>
+            <div className="text-xs text-muted-foreground">{t("progress.avgFormScore")}</div>
           </CardContent>
         </Card>
 
@@ -342,7 +342,7 @@ export function Progress() {
                 ? Math.round(summary.bestFormScore)
                 : "--"}
             </div>
-            <div className="text-xs text-muted-foreground">Best Form Score</div>
+            <div className="text-xs text-muted-foreground">{t("progress.bestFormScore")}</div>
           </CardContent>
         </Card>
 
@@ -355,7 +355,7 @@ export function Progress() {
             <div className="text-2xl font-bold font-mono">
               {verificationPct}%
             </div>
-            <div className="text-xs text-muted-foreground">Verified Reps</div>
+            <div className="text-xs text-muted-foreground">{t("progress.verifiedReps")}</div>
           </CardContent>
         </Card>
 
@@ -371,7 +371,7 @@ export function Progress() {
                 : "--"}
             </div>
             <div className="text-xs text-muted-foreground">
-              Form Improvement
+              {t("progress.formImprovement")}
             </div>
           </CardContent>
         </Card>
@@ -380,10 +380,9 @@ export function Progress() {
       {/* ── Form Score vs. Volume (dual-axis) ───────────────────────────── */}
       <Card className={glassCardClass}>
         <CardHeader>
-          <CardTitle>Form Score vs. Volume</CardTitle>
+          <CardTitle>{t("progress.formVsVolume")}</CardTitle>
           <CardDescription>
-            See whether your form holds up as you increase intensity — last 90
-            days
+            {t("progress.formVsVolumeDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -449,7 +448,7 @@ export function Progress() {
                   <Bar
                     yAxisId="reps"
                     dataKey="totalReps"
-                    name="Reps"
+                    name={t("progress.repsLabel")}
                     fill="hsl(var(--primary))"
                     opacity={0.2}
                     radius={[4, 4, 0, 0]}
@@ -458,7 +457,7 @@ export function Progress() {
                     yAxisId="form"
                     type="monotone"
                     dataKey="avgFormScore"
-                    name="Form Score"
+                    name={t("progress.formScoreLabel")}
                     stroke="hsl(var(--primary))"
                     strokeWidth={3}
                     dot={{
@@ -474,7 +473,7 @@ export function Progress() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-muted-foreground">
-                Not enough data yet. Complete a few sessions to see your trend.
+                {t("progress.notEnoughData")}
               </div>
             )}
           </div>
@@ -486,9 +485,9 @@ export function Progress() {
         {/* Volume by Category Radar */}
         <Card className={glassCardClass}>
           <CardHeader>
-            <CardTitle>Volume by Category</CardTitle>
+            <CardTitle>{t("progress.volumeByCategory")}</CardTitle>
             <CardDescription>
-              Identify weak links — total reps per movement branch
+              {t("progress.volumeByCategoryDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -513,7 +512,7 @@ export function Progress() {
                       axisLine={false}
                     />
                     <Radar
-                      name="Volume"
+                      name={t("progress.volumeByCategory")}
                       dataKey="reps"
                       stroke="hsl(var(--primary))"
                       fill="hsl(var(--primary))"
@@ -535,7 +534,7 @@ export function Progress() {
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
-                  No session data yet.
+                  {t("progress.noSessionData")}
                 </div>
               )}
             </div>
@@ -543,8 +542,8 @@ export function Progress() {
             {hasAnyVolume && (
               <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 mt-3">
                 {radarData.map((d) => {
-                  const key = Object.keys(BRANCH_LABELS).find(
-                    (k) => BRANCH_LABELS[k] === d.subject,
+                  const key = Object.keys(BRANCH_LABEL_KEYS).find(
+                    (k) => t(BRANCH_LABEL_KEYS[k] ?? k) === d.subject,
                   )!;
                   return (
                     <div
@@ -570,10 +569,9 @@ export function Progress() {
         {/* Verification Donut */}
         <Card className={glassCardClass}>
           <CardHeader>
-            <CardTitle>Verification Ratio</CardTitle>
+            <CardTitle>{t("progress.verificationRatio")}</CardTitle>
             <CardDescription>
-              AI-Verified vs. Self-Reported reps — only verified reps count
-              toward rankings
+              {t("progress.verificationRatioDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -623,7 +621,7 @@ export function Progress() {
                       {verificationPct}%
                     </span>
                     <span className="text-xs text-muted-foreground mt-0.5">
-                      verified
+                      {t("progress.verified")}
                     </span>
                   </div>
                   {/* Legend */}
@@ -647,7 +645,7 @@ export function Progress() {
                 </>
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
-                  No sessions yet.
+                  {t("progress.noSessionsYet")}
                 </div>
               )}
             </div>
@@ -658,8 +656,8 @@ export function Progress() {
       {/* ── Reps by Exercise ─────────────────────────────────────────────── */}
       <Card className={glassCardClass}>
         <CardHeader>
-          <CardTitle>Reps by Exercise</CardTitle>
-          <CardDescription>Total volume per movement</CardDescription>
+          <CardTitle>{t("progress.repsByExercise")}</CardTitle>
+          <CardDescription>{t("progress.repsByExerciseDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[280px] w-full mt-4">
@@ -694,7 +692,7 @@ export function Progress() {
                   />
                   <Bar
                     dataKey="totalReps"
-                    name="Total Reps"
+                    name={t("progress.totalRepsLabel")}
                     fill="hsl(var(--primary))"
                     opacity={0.85}
                     radius={[4, 4, 0, 0]}
@@ -706,7 +704,7 @@ export function Progress() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-muted-foreground">
-                Not enough data to display chart.
+                {t("progress.notEnoughDataChart")}
               </div>
             )}
           </div>
@@ -716,9 +714,9 @@ export function Progress() {
       {/* ── Skill Unlock Timeline ─────────────────────────────────────────── */}
       <Card className={glassCardClass}>
         <CardHeader>
-          <CardTitle>Skill Unlock Timeline</CardTitle>
+          <CardTitle>{t("progress.skillUnlockTimeline")}</CardTitle>
           <CardDescription>
-            Every level-up in your skill tree — from first rep to elite mastery
+            {t("progress.skillUnlockTimelineDesc")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -788,8 +786,7 @@ export function Progress() {
             <div className="text-center py-12 text-muted-foreground">
               <GitBranch className="w-8 h-8 mx-auto mb-3 opacity-30" />
               <p className="text-sm">
-                No skills mastered yet. Complete sessions to unlock your first
-                skill!
+                {t("progress.noSkillsYet")}
               </p>
             </div>
           )}

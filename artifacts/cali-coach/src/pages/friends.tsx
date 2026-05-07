@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Show } from "@clerk/react";
 import { Search, UserPlus, UserCheck, UserX, ExternalLink, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   useMyProfile,
   useFriends,
@@ -49,6 +50,7 @@ function Avatar({
 export function Friends() {
   const [query, setQuery] = useState("");
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const { data: myProfile, isLoading: profileLoading } = useMyProfile();
   const { data: friends = [], isLoading: friendsLoading } = useFriends();
@@ -64,7 +66,7 @@ export function Friends() {
   function handleSend(username: string) {
     sendRequest.mutate(username, {
       onSuccess: () =>
-        toast({ title: "Friend request sent", description: `@${username}` }),
+        toast({ title: t("friends.requestSentTitle"), description: `@${username}` }),
       onError: (err: Error) =>
         toast({ title: err.message, variant: "destructive" }),
     });
@@ -76,10 +78,10 @@ export function Friends() {
       {
         onSuccess: () =>
           toast({
-            title: action === "accept" ? "Friend added!" : "Request declined",
+            title: action === "accept" ? t("friends.friendAdded") : t("friends.requestDeclined"),
           }),
         onError: () =>
-          toast({ title: "Something went wrong", variant: "destructive" }),
+          toast({ title: t("friends.somethingWentWrong"), variant: "destructive" }),
       },
     );
   }
@@ -87,9 +89,9 @@ export function Friends() {
   function handleRemove(friendId: number, username: string) {
     removeFriend.mutate(friendId, {
       onSuccess: () =>
-        toast({ title: "Friend removed", description: `@${username}` }),
+        toast({ title: t("friends.friendRemoved"), description: `@${username}` }),
       onError: () =>
-        toast({ title: "Something went wrong", variant: "destructive" }),
+        toast({ title: t("friends.somethingWentWrong"), variant: "destructive" }),
     });
   }
 
@@ -100,22 +102,22 @@ export function Friends() {
     <div className="p-6 max-w-2xl">
       <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
         <Users className="w-6 h-6 text-primary" />
-        Friends
+        {t("friends.title")}
       </h1>
 
       {/* Sign-in gate */}
       <Show when="signed-out">
         <div className="rounded-xl border border-border bg-card p-8 text-center">
           <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <h3 className="font-semibold mb-2">Sign in to use Friends</h3>
+          <h3 className="font-semibold mb-2">{t("friends.signInTitle")}</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Create an account to connect with other athletes.
+            {t("friends.signInDesc")}
           </p>
           <Link
             href="/sign-in"
             className="inline-block px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
           >
-            Sign In
+            {t("common.signIn")}
           </Link>
         </div>
       </Show>
@@ -124,25 +126,21 @@ export function Friends() {
         {/* Profile not yet set up */}
         {!profileLoading && !myProfile && (
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 mb-6 text-sm text-amber-300">
-            Your profile is being set up — if this persists, visit{" "}
-            <Link href="/settings" className="underline">
-              Settings
-            </Link>{" "}
-            to complete it.
+            {t("friends.profileSetupWarning")}
           </div>
         )}
 
         {/* ── Search ── */}
         <section className="mb-6">
           <label className="text-sm font-semibold text-muted-foreground uppercase tracking-wide block mb-2">
-            Find Athletes
+            {t("friends.findAthletes")}
           </label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by username…"
+              placeholder={t("friends.searchPlaceholder")}
               className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -152,12 +150,12 @@ export function Friends() {
             <div className="mt-2 rounded-xl border border-border bg-card overflow-hidden">
               {searching && (
                 <div className="p-4 text-sm text-muted-foreground text-center">
-                  Searching…
+                  {t("friends.searching")}
                 </div>
               )}
               {!searching && searchResults.length === 0 && (
                 <div className="p-4 text-sm text-muted-foreground text-center">
-                  No users found for "{query}"
+                  {t("friends.noUsersFound", { query })}
                 </div>
               )}
               {!searching &&
@@ -182,11 +180,11 @@ export function Friends() {
                       {isAlreadyFriend ? (
                         <span className="text-xs text-primary font-medium flex items-center gap-1">
                           <UserCheck className="w-3.5 h-3.5" />
-                          Friends
+                          {t("friends.friendsBadge")}
                         </span>
                       ) : isPending ? (
                         <span className="text-xs text-muted-foreground">
-                          Pending
+                          {t("friends.pending")}
                         </span>
                       ) : (
                         <button
@@ -195,7 +193,7 @@ export function Friends() {
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors disabled:opacity-50"
                         >
                           <UserPlus className="w-3.5 h-3.5" />
-                          Add
+                          {t("friends.add")}
                         </button>
                       )}
                     </div>
@@ -209,7 +207,7 @@ export function Friends() {
         {!requestsLoading && incomingRequests.length > 0 && (
           <section className="mb-6">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Pending Requests ({incomingRequests.length})
+              {t("friends.pendingRequestsCount", { count: incomingRequests.length })}
             </h2>
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               {incomingRequests.map((req, i) => (
@@ -239,7 +237,7 @@ export function Friends() {
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
                     >
                       <UserCheck className="w-3.5 h-3.5" />
-                      Accept
+                      {t("friends.accept")}
                     </button>
                     <button
                       onClick={() => handleRespond(req.id, "reject")}
@@ -247,7 +245,7 @@ export function Friends() {
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-border text-xs font-medium hover:bg-secondary transition-colors disabled:opacity-50"
                     >
                       <UserX className="w-3.5 h-3.5" />
-                      Decline
+                      {t("friends.decline")}
                     </button>
                   </div>
                 </div>
@@ -260,7 +258,7 @@ export function Friends() {
         {!requestsLoading && outgoingRequests.length > 0 && (
           <section className="mb-6">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Sent Requests ({outgoingRequests.length})
+              {t("friends.sentRequestsCount", { count: outgoingRequests.length })}
             </h2>
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               {outgoingRequests.map((req, i) => (
@@ -284,7 +282,7 @@ export function Friends() {
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground px-2 py-1 rounded-full border border-border">
-                    Pending
+                    {t("friends.pending")}
                   </span>
                 </div>
               ))}
@@ -295,7 +293,7 @@ export function Friends() {
         {/* ── Friends List ── */}
         <section>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-            My Friends{friends.length > 0 ? ` (${friends.length})` : ""}
+            {t("friends.myFriends")}{friends.length > 0 ? ` (${friends.length})` : ""}
           </h2>
 
           {friendsLoading ? (
@@ -306,7 +304,7 @@ export function Friends() {
             <div className="rounded-xl border border-border bg-card p-8 text-center">
               <Users className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">
-                No friends yet. Search above to add someone!
+                {t("friends.noFriendsYet")}
               </p>
             </div>
           ) : (
@@ -345,14 +343,14 @@ export function Friends() {
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-border text-xs font-medium hover:bg-secondary transition-colors"
                     >
                       <ExternalLink className="w-3 h-3" />
-                      View
+                      {t("common.view")}
                     </Link>
                     <button
                       onClick={() =>
                         handleRemove(friend.id, friend.username)
                       }
                       className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                      title="Remove friend"
+                      title={t("friends.removeFriend")}
                     >
                       <UserX className="w-3.5 h-3.5" />
                     </button>

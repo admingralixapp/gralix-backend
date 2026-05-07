@@ -36,7 +36,7 @@ export function detectCurrencyFromLang(lang: string): Currency {
   if (INR_LOCALES.has(base)) return "INR";
   if (EUR_LOCALES.has(base)) return "EUR";
   if (USD_LOCALES.has(full) || (base === "en" && !full.startsWith("en-gb"))) return "USD";
-  return "GBP";
+  return "USD";
 }
 
 export function detectCurrency(): Currency {

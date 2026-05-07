@@ -474,7 +474,7 @@ export function Workout() {
   const { toast } = useToast();
   const { data: exercises } = useListExercises();
   // Keep Web Speech API locale in sync with the app's chosen language
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   useEffect(() => {
     setVoiceLanguage(i18n.language);
   }, [i18n.language]);
@@ -2577,7 +2577,7 @@ export function Workout() {
                         ref={bwInputRef}
                         disabled={isModelLoading}
                         value={bwOpen ? bwInputVal : (bwSelectedLabel ?? "")}
-                        placeholder={isModelLoading ? "Loading…" : "Search or select exercise…"}
+                        placeholder={isModelLoading ? t("workout.loadingModel") : t("workout.searchPlaceholder")}
                         autoComplete="off"
                         className="w-full pl-7 pr-7 py-2.5 text-xs font-semibold bg-white/[0.06] border border-white/10 rounded-xl outline-none transition-colors placeholder:text-white/25 placeholder:font-normal disabled:opacity-40 truncate"
                         style={bwOpen ? { borderColor: "rgba(var(--primary-rgb),0.4)" } : undefined}
@@ -2656,7 +2656,7 @@ export function Workout() {
                               </div>
                             );
                           });
-                          if (!anyResults && q) return <div className="py-6 text-center text-xs text-white/35">No exercises found for "{bwInputVal}"</div>;
+                          if (!anyResults && q) return <div className="py-6 text-center text-xs text-white/35">{t("workout.noExercisesFound", { query: bwInputVal })}</div>;
                           return <>{sections}</>;
                         })()}
                       </div>
@@ -2688,7 +2688,7 @@ export function Workout() {
                         ref={eqInputRef}
                         disabled={isModelLoading}
                         value={eqOpen ? eqInputVal : (eqSelectedLabel ?? "")}
-                        placeholder={isModelLoading ? "Loading…" : "Search or select equipment…"}
+                        placeholder={isModelLoading ? t("workout.loadingModel") : t("workout.searchEquipmentPlaceholder")}
                         autoComplete="off"
                         className="w-full pl-7 pr-7 py-2.5 text-xs font-semibold border rounded-xl outline-none transition-colors placeholder:text-white/25 placeholder:font-normal disabled:opacity-40 truncate"
                         style={{
@@ -2799,7 +2799,7 @@ export function Workout() {
                               </div>
                             );
                           });
-                          if (!anyResults && q) return <div className="py-6 text-center text-xs text-white/35">No exercises found for "{eqInputVal}"</div>;
+                          if (!anyResults && q) return <div className="py-6 text-center text-xs text-white/35">{t("workout.noExercisesFound", { query: eqInputVal })}</div>;
                           return <>{sections}</>;
                         })()}
                       </div>
@@ -2954,7 +2954,7 @@ export function Workout() {
                 disabled={!selectedExerciseId || isSavingManual}
               >
                 <PenLine className="w-4 h-4 mr-2" />
-                {isSavingManual ? "Saving…" : "Log It"}
+                {isSavingManual ? t("workout.saving") : t("workout.logIt")}
               </Button>
             </div>
 
@@ -2970,9 +2970,9 @@ export function Workout() {
               }}
             >
               <div>
-                <h2 className="text-lg font-bold mb-1">Ready to train?</h2>
+                <h2 className="text-lg font-bold mb-1">{t("workout.readyToTrain")}</h2>
                 <p className="text-sm text-white/45 leading-snug">
-                  A Ghost Skeleton shows perfect form — sync your body with it to earn reps and hold time.
+                  {t("workout.ghostSkeletonDesc")}
                 </p>
               </div>
 
@@ -2980,13 +2980,13 @@ export function Workout() {
               <div className="space-y-3">
                 <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/35">
                   <Settings2 className="w-3 h-3" />
-                  Gear Check
+                  {t("workout.gearCheck")}
                 </div>
                 <div className="space-y-2">
                   {([
-                    { label: "Push",   options: PUSH_GEAR_OPTIONS  as Array<{ value: string; label: string }>, current: equipment.pushGear, onChange: (v: string) => setEquipment(e => ({ ...e, pushGear: v as EquipmentSelection["pushGear"] })) },
-                    { label: "Pull",   options: PULL_GEAR_OPTIONS  as Array<{ value: string; label: string }>, current: equipment.pullGear, onChange: (v: string) => setEquipment(e => ({ ...e, pullGear: v as EquipmentSelection["pullGear"] })) },
-                    { label: "Add-on", options: ADD_ON_OPTIONS     as Array<{ value: string; label: string }>, current: equipment.addOn,    onChange: (v: string) => setEquipment(e => ({ ...e, addOn:    v as EquipmentSelection["addOn"]    })) },
+                    { label: t("workout.push"),   options: PUSH_GEAR_OPTIONS  as Array<{ value: string; label: string }>, current: equipment.pushGear, onChange: (v: string) => setEquipment(e => ({ ...e, pushGear: v as EquipmentSelection["pushGear"] })) },
+                    { label: t("workout.pull"),   options: PULL_GEAR_OPTIONS  as Array<{ value: string; label: string }>, current: equipment.pullGear, onChange: (v: string) => setEquipment(e => ({ ...e, pullGear: v as EquipmentSelection["pullGear"] })) },
+                    { label: t("workout.addOn"),  options: ADD_ON_OPTIONS     as Array<{ value: string; label: string }>, current: equipment.addOn,    onChange: (v: string) => setEquipment(e => ({ ...e, addOn:    v as EquipmentSelection["addOn"]    })) },
                   ]).map(row => (
                     <div key={row.label} className="flex items-start gap-3">
                       <span className="text-[10px] text-white/30 uppercase tracking-wider w-12 pt-1.5 shrink-0 text-right">
@@ -3023,7 +3023,7 @@ export function Workout() {
                   <div className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl bg-primary/10 border border-primary/25">
                     <Zap className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
                     <div>
-                      <div className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-0.5">Pro Tip</div>
+                      <div className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-0.5">{t("workout.proTip")}</div>
                       <p className="text-xs text-white/70 leading-snug">{tip}</p>
                     </div>
                   </div>
@@ -3038,7 +3038,7 @@ export function Workout() {
                 disabled={!selectedExerciseId || isModelLoading}
               >
                 <Play className="w-5 h-5 mr-2 fill-current" />
-                {isModelLoading ? "Loading…" : "START"}
+                {isModelLoading ? t("workout.loadingModel") : t("workout.start")}
               </Button>
 
               {/* Divider */}
@@ -3047,7 +3047,7 @@ export function Workout() {
                   <span className="w-full border-t border-white/10" />
                 </div>
                 <div className="relative flex justify-center text-xs text-white/30 uppercase tracking-widest">
-                  <span className="bg-transparent px-3">or</span>
+                  <span className="bg-transparent px-3">{t("common.or")}</span>
                 </div>
               </div>
 
@@ -3060,7 +3060,7 @@ export function Workout() {
                 disabled={!selectedExerciseId}
               >
                 <PenLine className="w-4 h-4 mr-2" />
-                Manual Log (No AI)
+                {t("workout.manualLogNoAI")}
               </Button>
             </div>
           )}
@@ -3070,11 +3070,10 @@ export function Workout() {
             <CardContent className="p-4 space-y-3">
               <div className="text-sm text-white/70 font-medium flex items-center gap-2">
                 <FlaskConical className="w-4 h-4 text-primary" />
-                Complete Workout (Test Mode)
+                {t("workout.testMode")}
               </div>
               <p className="text-xs text-white/40">
-                Saves a synthetic workout entry directly to the database — no camera needed.
-                Use this to populate charts and history.
+                {t("workout.testModeDesc")}
               </p>
               <Button
                 variant="outline"
@@ -3083,7 +3082,7 @@ export function Workout() {
                 onClick={handleSaveTestWorkout}
                 disabled={!selectedExerciseId || isSavingTest}
               >
-                {isSavingTest ? "Saving..." : "Save Test Workout"}
+                {isSavingTest ? t("workout.savingTest") : t("workout.saveTest")}
               </Button>
             </CardContent>
           </Card>

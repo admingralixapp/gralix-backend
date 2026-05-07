@@ -15,6 +15,7 @@
 import {
   useMemo, useState, useRef, useEffect, useCallback,
 } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { useListSessions } from "@workspace/api-client-react";
@@ -1491,6 +1492,7 @@ function TreeCanvas({ evaluated, lensOn }: { evaluated: EvaluatedSkill[]; lensOn
 const LENS_STORAGE_KEY = "calicoach_equipment_lens";
 
 export function SkillTreePage() {
+  const { t } = useTranslation();
   const { data: sessions, isLoading } = useListSessions(
     { limit: 500, offset: 0 },
     { query: { queryKey: ["/api/sessions", { limit: 500 }] } },
@@ -1523,9 +1525,9 @@ export function SkillTreePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Skill Tree</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("skillTree.title")}</h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Four branches radiate from your Core Strength hub. Tap any node · drag to explore · pinch to zoom.
+            {t("skillTree.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-4 shrink-0">
@@ -1541,7 +1543,7 @@ export function SkillTreePage() {
               borderColor: "rgba(255,255,255,0.08)",
               background: "rgba(255,255,255,0.03)",
             }}
-            title={lensOn ? "Hide equipment specialty paths" : "Show equipment specialty paths in the tree"}
+            title={lensOn ? t("skillTree.hideEquipmentPaths") : t("skillTree.showEquipmentPaths")}
           >
             {/* Diamond icon representing equipment specialty nodes */}
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -1554,7 +1556,7 @@ export function SkillTreePage() {
             </svg>
             <span className="text-xs font-bold tracking-wide"
               style={{ color: lensOn ? "#f59e0b" : "#6b7280" }}>
-              Equipment Overlay
+              {t("skillTree.equipmentOverlay")}
             </span>
             {/* Toggle pill */}
             <span className="relative inline-flex w-9 h-5 rounded-full border transition-colors shrink-0"
@@ -1575,10 +1577,10 @@ export function SkillTreePage() {
               {totalMastered}
               <span className="text-muted-foreground text-base font-normal">/{TOTAL_SKILL_COUNT}</span>
             </p>
-            <p className="text-xs text-muted-foreground">Skills Mastered</p>
+            <p className="text-xs text-muted-foreground">{t("skillTree.skillsMastered")}</p>
           </div>
           <Button asChild>
-            <Link href="/workout">Train Now</Link>
+            <Link href="/workout">{t("skillTree.trainNow")}</Link>
           </Button>
         </div>
       </div>
@@ -1586,10 +1588,10 @@ export function SkillTreePage() {
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         {[
-          { color: BRANCH_COLOR.PUSH, label: "Push" },
-          { color: BRANCH_COLOR.PULL, label: "Pull" },
-          { color: BRANCH_COLOR.CORE, label: "Core" },
-          { color: BRANCH_COLOR.LEGS, label: "Legs" },
+          { color: BRANCH_COLOR.PUSH, label: t("skillTree.push") },
+          { color: BRANCH_COLOR.PULL, label: t("skillTree.pull") },
+          { color: BRANCH_COLOR.CORE, label: t("skillTree.core") },
+          { color: BRANCH_COLOR.LEGS, label: t("skillTree.legs") },
         ].map(({ color, label }) => (
           <span key={label} className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
@@ -1600,24 +1602,24 @@ export function SkillTreePage() {
           <span className="w-4 h-4 rounded-full bg-amber-400 flex items-center justify-center">
             <Star className="w-2.5 h-2.5 fill-white text-white" />
           </span>
-          Mastered
+          {t("skillTree.mastered")}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-4 h-4 rounded-full border-2 border-primary" />
-          In Progress
+          {t("skillTree.inProgress")}
         </span>
         <span className="flex items-center gap-1.5">
           <Lock className="w-3 h-3 text-zinc-600" />
-          Locked
+          {t("skillTree.locked")}
         </span>
         {/* Equipment legend items — shown only when lens is on */}
         {lensOn && (
           <>
             <span className="h-4 w-px bg-white/10" />
             {[
-              { color: EQUIPMENT_COLORS.bar,      label: "Bar ◆" },
-              { color: EQUIPMENT_COLORS.rings,    label: "Rings ◆" },
-              { color: EQUIPMENT_COLORS.weighted, label: "Weighted ◆" },
+              { color: EQUIPMENT_COLORS.bar,      label: `${t("skillTree.barOverlay")} ◆` },
+              { color: EQUIPMENT_COLORS.rings,    label: `${t("skillTree.ringsOverlay")} ◆` },
+              { color: EQUIPMENT_COLORS.weighted, label: `${t("skillTree.weightedOverlay")} ◆` },
             ].map(({ color, label }) => (
               <span key={label} className="flex items-center gap-1.5">
                 <svg width="12" height="12" viewBox="0 0 12 12">
