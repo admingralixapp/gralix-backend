@@ -203,6 +203,7 @@ router.get(
       country: (u as any).country ?? null,
       masteryPoints: u.masteryPoints,
       masteredSkills: u.masteredSkills,
+      showVerifiedBadge: (u as any).showVerifiedBadge ?? false,
     }));
 
     res.json({

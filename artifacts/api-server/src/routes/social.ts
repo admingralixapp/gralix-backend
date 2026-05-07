@@ -190,9 +190,10 @@ router.put(
   requireAuthMiddleware,
   async (req: Request, res: Response) => {
     const clerkId = (req as any).clerkId as string;
-    const { privacyLevel, communityPostsPublic } = req.body as {
+    const { privacyLevel, communityPostsPublic, showVerifiedBadge } = req.body as {
       privacyLevel?: string;
       communityPostsPublic?: boolean;
+      showVerifiedBadge?: boolean;
     };
 
     if (privacyLevel !== undefined && !["public", "friends", "private"].includes(privacyLevel)) {
@@ -206,9 +207,16 @@ router.put(
       return;
     }
 
+    // Verified badge requires Pro
+    if (showVerifiedBadge && !me.isPro) {
+      res.status(403).json({ error: "Pro subscription required to show verified badge" });
+      return;
+    }
+
     const updateSet: Record<string, unknown> = {};
     if (privacyLevel !== undefined) updateSet.privacyLevel = privacyLevel;
     if (communityPostsPublic !== undefined) updateSet.communityPostsPublic = communityPostsPublic;
+    if (showVerifiedBadge !== undefined) updateSet.showVerifiedBadge = showVerifiedBadge;
 
     if (Object.keys(updateSet).length === 0) {
       res.status(400).json({ error: "Nothing to update" });
@@ -221,6 +229,28 @@ router.put(
       .where(eq(usersTable.id, me.id))
       .returning();
 
+    res.json(updated);
+  },
+);
+
+// ---------------------------------------------------------------------------
+// PUT /api/users/me/subscription — activate Pro trial
+// ---------------------------------------------------------------------------
+router.put(
+  "/users/me/subscription",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const me = await getMe(clerkId);
+    if (!me) {
+      res.status(404).json({ error: "Profile not found" });
+      return;
+    }
+    const [updated] = await db
+      .update(usersTable)
+      .set({ isPro: true })
+      .where(eq(usersTable.id, me.id))
+      .returning();
     res.json(updated);
   },
 );

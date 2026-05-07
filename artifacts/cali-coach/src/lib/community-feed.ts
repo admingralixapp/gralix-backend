@@ -20,6 +20,7 @@ export interface FeedPost {
   username: string;
   displayName: string;
   avatarUrl: string | null;
+  showVerifiedBadge: boolean;
 }
 
 export interface FeedComment {

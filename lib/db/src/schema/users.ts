@@ -45,6 +45,13 @@ export const usersTable = pgTable("users", {
    * Incremented after every completed session.
    */
   exerciseStats: jsonb("exercise_stats").notNull().default({}),
+  /** True when the user has an active Pro subscription (or trial). */
+  isPro: boolean("is_pro").notNull().default(false),
+  /**
+   * When true, a Verified Pro badge appears next to the user's name
+   * in the Leaderboard and Community Feed.
+   */
+  showVerifiedBadge: boolean("show_verified_badge").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

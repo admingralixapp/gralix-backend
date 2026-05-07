@@ -73,6 +73,7 @@ Required Environment Variables:
 - Milestone Badge Gallery: 20 volume badges (4 categories × 5 tiers at 10/100/500/1000/5000 lifetime reps). Shown on profiles with locked/unlocked state and progress bars. Toast notifications on new badge earned.
 - Lifetime rep counters per category (Push/Pull/Core/Legs) tracked in DB and updated on every session completion.
 - Per-Exercise Mastery Gallery: 63 exercises each with a milestoneType ('reps' or 'seconds'), 5 specialist tier titles (Starter→Platinum at 10/100/500/1000/5000), and unique icons. Shown on profiles as tier cards for started exercises. Toast notification on new title earned. Totals stored in `users.exerciseStats` (JSONB). Static-hold exercises use `totalReps` as seconds (1:1 ratio).
+- Monetization & Subscription Hub: Settings has a gold-themed Subscription section (monthly/yearly toggle, 3-day free trial → `PUT /api/users/me/subscription`), Voice & Skin Shop (4 voice tones + 3 ghost skins, free/purchasable, localStorage `calicoach_shop_v1`), and Verified Badge toggle (Pro only, blue ShieldCheck pill in Community + Leaderboard). Ghost overlay opacity slider in PovReview (localStorage `calicoach_ghost_opacity_v1`).
 - Daily Mobility System with guided routines and streak tracking.
 - Global, national, and friends leaderboards based on mastery points.
 - Level-up celebration with confetti and social shoutouts for elite skill mastery.

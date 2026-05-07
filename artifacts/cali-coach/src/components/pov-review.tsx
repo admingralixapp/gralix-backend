@@ -28,10 +28,12 @@ import {
   Share2,
   History,
   CheckCircle2,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { drawGhostSkeleton } from "@/lib/ghost-poses";
 import { speak as voiceSpeak } from "@/lib/voice-service";
+import { getGhostOpacity, setGhostOpacity } from "@/lib/shop-preferences";
 import { ShareToFeedSheet } from "./share-to-feed-sheet";
 import { useUploadManager } from "@/lib/upload-manager";
 import type { BestRepData, RepReviewPayload } from "@/lib/rep-recorder";
@@ -215,12 +217,13 @@ export function PovReview({
   const ghostRafId = useRef(0);
   const blobUrl    = useRef("");
 
-  const [blobReady,  setBlobReady]  = useState(false);
-  const [isPlaying,  setIsPlaying]  = useState(false);
-  const [narration,  setNarration]  = useState<NarrationState>("idle");
-  const [videoError, setVideoError] = useState(false);
-  const [showShare,  setShowShare]  = useState(false);
-  const [saveState,  setSaveState]  = useState<SaveState>("idle");
+  const [blobReady,     setBlobReady]     = useState(false);
+  const [isPlaying,     setIsPlaying]     = useState(false);
+  const [narration,     setNarration]     = useState<NarrationState>("idle");
+  const [videoError,    setVideoError]    = useState(false);
+  const [showShare,     setShowShare]     = useState(false);
+  const [saveState,     setSaveState]     = useState<SaveState>("idle");
+  const [ghostOpacity,  setGhostOpacityState] = useState<number>(() => getGhostOpacity());
 
   const { enqueue } = useUploadManager();
 
@@ -438,13 +441,31 @@ export function PovReview({
             <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-300/50">
               Pro Ghost — Ideal Form
             </span>
+            {/* Overlay opacity slider */}
+            <div className="ml-auto flex items-center gap-1.5">
+              <Eye className="w-3 h-3 text-white/25 shrink-0" />
+              <input
+                type="range"
+                min={0.1}
+                max={1}
+                step={0.05}
+                value={ghostOpacity}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  setGhostOpacityState(v);
+                  setGhostOpacity(v);
+                }}
+                title={`Overlay opacity: ${Math.round(ghostOpacity * 100)}%`}
+                className="w-16 h-1 accent-cyan-400 cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
+              />
+            </div>
           </div>
 
           <div className="flex-1 relative overflow-hidden">
             <canvas
               ref={ghostRef}
-              className="absolute inset-0 w-full h-full object-contain"
-              style={{ transform: "scaleX(-1)" }}
+              className="absolute inset-0 w-full h-full object-contain transition-opacity"
+              style={{ transform: "scaleX(-1)", opacity: ghostOpacity }}
             />
             <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-black/50 rounded-full px-3 py-1">
               <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />

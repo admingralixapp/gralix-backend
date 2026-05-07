@@ -42,6 +42,8 @@ export interface UserProfile {
   avatarUrl: string | null;
   privacyLevel: "public" | "friends" | "private";
   communityPostsPublic: boolean;
+  isPro: boolean;
+  showVerifiedBadge: boolean;
   createdAt: string;
 }
 
@@ -140,6 +142,39 @@ export function useUpdateCommunityPostsPublic() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ communityPostsPublic }),
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
+  });
+}
+
+export function useUpdateShowVerifiedBadge() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (showVerifiedBadge: boolean) => {
+      const token = await getToken();
+      return apiFetchAuth<UserProfile>("/api/users/me/privacy", token, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ showVerifiedBadge }),
+      });
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["/api/users/me"] });
+      void qc.invalidateQueries({ queryKey: ["/api/leaderboard"] });
+    },
+  });
+}
+
+export function useActivatePro() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async () => {
+      const token = await getToken();
+      return apiFetchAuth<UserProfile>("/api/users/me/subscription", token, {
+        method: "PUT",
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
@@ -266,6 +301,7 @@ export interface LeaderboardEntry {
   country: string | null;
   masteryPoints: number;
   masteredSkills: number;
+  showVerifiedBadge: boolean;
 }
 
 export interface LeaderboardData {

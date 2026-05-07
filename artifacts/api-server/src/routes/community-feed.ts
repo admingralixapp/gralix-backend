@@ -94,6 +94,7 @@ router.get("/community-feed", async (req: Request, res: Response) => {
       username: usersTable.username,
       displayName: usersTable.displayName,
       avatarUrl: usersTable.avatarUrl,
+      showVerifiedBadge: usersTable.showVerifiedBadge,
     })
     .from(feedPostsTable)
     .innerJoin(usersTable, eq(feedPostsTable.userId, usersTable.id))

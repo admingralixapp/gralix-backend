@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Show } from "@clerk/react";
 import {
-  Trophy, Globe, Users, Flag, Star, Dumbbell, LogIn, ShieldCheck, ChevronDown, ChevronUp, Zap,
+  Trophy, Globe, Users, Flag, Star, Dumbbell, LogIn, ShieldCheck, ChevronDown, ChevronUp, Zap, BadgeCheck,
 } from "lucide-react";
 import { useLeaderboard, useMyProfile } from "@/lib/social";
 import type { LeaderboardEntry } from "@/lib/social";
@@ -89,6 +89,12 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
           {isMe && (
             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
               You
+            </span>
+          )}
+          {entry.showVerifiedBadge && (
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 bg-blue-500/10 text-blue-400 border-blue-500/30">
+              <BadgeCheck className="w-3 h-3" />
+              Pro
             </span>
           )}
           {(() => {
