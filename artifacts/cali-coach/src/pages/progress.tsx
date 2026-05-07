@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useLocation } from "wouter";
 import {
   useGetProgressTimeline,
   useGetProgressSummary,
@@ -26,12 +27,13 @@ import {
   Legend,
   BarChart,
 } from "recharts";
-import { Target, TrendingUp, ShieldCheck, GitBranch } from "lucide-react";
+import { Target, TrendingUp, ShieldCheck, GitBranch, Lock, Crown, Zap, Check } from "lucide-react";
 import { format } from "date-fns";
 import {
   ALL_SKILL_NODES,
   type SessionSummary as SkillSessionSummary,
 } from "@/lib/skill-tree";
+import { useMyProfile, useActivatePro } from "@/lib/social";
 
 // ─── Exercise → Branch lookup ────────────────────────────────────────────────
 
@@ -113,10 +115,14 @@ const glassCardClass =
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function Progress() {
+  const [, setLocation] = useLocation();
+  const { data: profile } = useMyProfile();
+  const activatePro = useActivatePro();
   const { data: timeline } = useGetProgressTimeline({ days: 90 });
   const { data: summary } = useGetProgressSummary();
   const { data: exerciseProgress } = useGetProgressByExercise();
   const { data: sessions } = useListSessions();
+  const isPro = profile?.isPro ?? false;
 
   // ── Form + Volume dual-axis ───────────────────────────────────────────────
   const formattedTimeline = useMemo(
@@ -195,7 +201,109 @@ export function Progress() {
     return computeMasteryDates(mapped);
   }, [sessions]);
 
+  // ── Paywall overlay for free users ───────────────────────────────────────
+  const paywallOverlay = !isPro && (
+    <div className="absolute inset-0 z-20 flex items-center justify-center px-6 py-12">
+      {/* Frosted backdrop */}
+      <div className="absolute inset-0 backdrop-blur-[2px]" />
+
+      {/* Card */}
+      <div
+        className="relative z-10 w-full max-w-md rounded-3xl border p-7 flex flex-col items-center text-center space-y-5 shadow-2xl"
+        style={{
+          background: "linear-gradient(145deg, rgba(168,85,247,0.16) 0%, rgba(109,40,217,0.08) 50%, rgba(15,10,20,0.95) 100%)",
+          borderColor: "rgba(168,85,247,0.35)",
+          backdropFilter: "blur(32px)",
+          WebkitBackdropFilter: "blur(32px)",
+          boxShadow: "0 0 80px rgba(168,85,247,0.2), inset 0 1px 0 rgba(168,85,247,0.15)",
+        }}
+      >
+        {/* Ambient glow */}
+        <div
+          className="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-40 rounded-full blur-3xl opacity-30 pointer-events-none"
+          style={{ background: "radial-gradient(circle, #a855f7 0%, transparent 70%)" }}
+        />
+
+        {/* Lock icon */}
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center relative"
+          style={{
+            background: "rgba(168,85,247,0.18)",
+            border: "1px solid rgba(168,85,247,0.4)",
+            boxShadow: "0 0 24px rgba(168,85,247,0.35)",
+          }}
+        >
+          <Crown className="w-8 h-8" style={{ color: "#c084fc" }} />
+        </div>
+
+        {/* Heading */}
+        <div>
+          <div
+            className="text-[10px] font-black uppercase tracking-[0.18em] mb-1.5"
+            style={{ color: "#c084fc" }}
+          >
+            Premium Analytics
+          </div>
+          <h2 className="text-2xl font-black" style={{ color: "#e9d5ff" }}>
+            Unlock Your Performance Data
+          </h2>
+        </div>
+
+        {/* Pitch */}
+        <p className="text-sm text-white/60 leading-relaxed max-w-xs">
+          Track joint-angle improvements, form consistency, and projected mastery dates with Pro.
+        </p>
+
+        {/* Feature bullets */}
+        <div className="w-full space-y-2.5 text-left">
+          {[
+            { icon: "📐", label: "Joint-angle form scoring over time" },
+            { icon: "📈", label: "Form vs. Volume trend analysis" },
+            { icon: "🗓️", label: "Projected mastery dates per skill" },
+            { icon: "🎯", label: "Skill Unlock Timeline & branch radar" },
+          ].map(({ icon, label }) => (
+            <div key={label} className="flex items-center gap-3">
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm"
+                style={{ background: "rgba(168,85,247,0.14)", border: "1px solid rgba(168,85,247,0.22)" }}
+              >
+                {icon}
+              </div>
+              <span className="text-sm text-white/75">{label}</span>
+              <Check className="w-3.5 h-3.5 shrink-0 ml-auto" style={{ color: "#c084fc" }} />
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div className="w-full space-y-2.5 pt-1">
+          <button
+            onClick={() => setLocation("/shop")}
+            className="w-full py-3.5 rounded-xl text-sm font-black tracking-wide transition-all"
+            style={{
+              background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+              color: "#fff",
+              boxShadow: "0 4px 24px rgba(168,85,247,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
+            }}
+          >
+            Start 3-Day Free Trial
+          </button>
+          <p className="text-[10px] text-white/30">
+            Cancel anytime · £14.99/mo or £149.99/yr
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
+    <div className="relative">
+      {/* Content — blurred when not Pro */}
+      <div
+        className={!isPro ? "pointer-events-none select-none" : undefined}
+        style={!isPro ? { filter: "blur(4px) brightness(0.45)", userSelect: "none" } : undefined}
+        aria-hidden={!isPro}
+      >
     <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Progress</h1>
@@ -684,5 +792,8 @@ export function Progress() {
         </CardContent>
       </Card>
     </div>
+    </div>{/* end blur wrapper */}
+    {paywallOverlay}
+  </div>
   );
 }

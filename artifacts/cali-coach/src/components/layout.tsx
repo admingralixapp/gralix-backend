@@ -16,6 +16,7 @@ import {
   ClipboardList,
   Rss,
   ShoppingBag,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMyProfile, useFriendRequests } from "@/lib/social";
@@ -144,6 +145,7 @@ function UserSection() {
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [direction, setDirection] = useState(0);
+  const { data: layoutProfile } = useMyProfile();
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
 
@@ -249,6 +251,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {NAV_ITEMS.map((item) => {
             const Icon   = item.icon;
             const active = isActive(item.href);
+            const isProgressLocked = item.href === "/progress" && !layoutProfile?.isPro;
             return (
               <button
                 key={item.href}
@@ -261,7 +264,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 )}
               >
                 <Icon className={cn("w-5 h-5 shrink-0", active && "nav-icon-active")} />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {isProgressLocked && (
+                  <span
+                    className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md shrink-0"
+                    style={{
+                      background: "rgba(168,85,247,0.15)",
+                      color: "#c084fc",
+                      border: "1px solid rgba(168,85,247,0.3)",
+                    }}
+                  >
+                    <Lock className="w-2.5 h-2.5" />
+                    Pro
+                  </span>
+                )}
               </button>
             );
           })}
@@ -288,6 +304,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {NAV_ITEMS.map((item) => {
           const Icon   = item.icon;
           const active = isActive(item.href);
+          const isProgressLocked = item.href === "/progress" && !layoutProfile?.isPro;
           return (
             <button
               key={item.href}
@@ -302,7 +319,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
               )}
               style={{ minWidth: 60 }}
             >
-              <Icon className={cn("w-5 h-5", active && "nav-icon-active")} />
+              <div className="relative">
+                <Icon className={cn("w-5 h-5", active && "nav-icon-active")} />
+                {/* Pro lock dot — top-right corner of icon */}
+                {isProgressLocked && (
+                  <div
+                    className="absolute -top-1 -right-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(135deg, #a855f7, #7c3aed)",
+                      boxShadow: "0 0 6px rgba(168,85,247,0.7)",
+                    }}
+                  >
+                    <Lock className="w-2 h-2 text-white" />
+                  </div>
+                )}
+              </div>
               <span className={cn(
                 "text-[9px] mt-0.5 whitespace-nowrap",
                 active ? "font-bold" : "font-light opacity-80",
