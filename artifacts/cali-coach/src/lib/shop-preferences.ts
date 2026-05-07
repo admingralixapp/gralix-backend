@@ -34,7 +34,7 @@ export const VOICE_TONES: VoiceTone[] = [
     description: "Intense military-style motivation",
     emoji: "🪖",
     free: false,
-    price: "£6.99",
+    price: "£4.99",
   },
   {
     id: "zen",
@@ -42,7 +42,7 @@ export const VOICE_TONES: VoiceTone[] = [
     description: "Calm, mindful breathwork cues",
     emoji: "🧘",
     free: false,
-    price: "£6.99",
+    price: "£4.99",
   },
   {
     id: "hype",
@@ -50,7 +50,7 @@ export const VOICE_TONES: VoiceTone[] = [
     description: "High-energy, hypeman energy",
     emoji: "🔥",
     free: false,
-    price: "£6.99",
+    price: "£4.99",
   },
 ];
 
@@ -70,7 +70,7 @@ export const GHOST_SKINS: GhostSkin[] = [
     description: "Electric grid with glitch FX",
     emoji: "⚡",
     free: false,
-    price: "£6.99",
+    price: "£4.99",
     primaryColor: "#39ff14",
   },
   {
@@ -79,8 +79,17 @@ export const GHOST_SKINS: GhostSkin[] = [
     description: "Ethereal purple energy field",
     emoji: "✨",
     free: false,
-    price: "£6.99",
+    price: "£4.99",
     primaryColor: "#a855f7",
+  },
+  {
+    id: "plasma-storm",
+    label: "Plasma Storm",
+    description: "Blazing fire and explosive energy",
+    emoji: "🌋",
+    free: false,
+    price: "£4.99",
+    primaryColor: "#f97316",
   },
 ];
 

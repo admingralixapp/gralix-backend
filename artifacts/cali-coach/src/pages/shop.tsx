@@ -1,0 +1,510 @@
+import { useState } from "react";
+import { useUser } from "@clerk/react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ShoppingBag,
+  Crown,
+  Sparkles,
+  Check,
+  Gift,
+  Tag,
+  X,
+  Zap,
+  LogIn,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  useMyProfile,
+  useShopPurchase,
+  useClaimFreeAura,
+  useRedeemCode,
+  useUpdateActiveAura,
+} from "@/lib/social";
+import { AURA_PACKS, PAID_PACKS, type AuraPack } from "@/lib/aura-packs";
+import { useToast } from "@/hooks/use-toast";
+
+// ─── Pack Card ──────────────────────────────────────────────────────────────
+
+function PackCard({
+  pack,
+  owned,
+  active,
+  onBuy,
+  onActivate,
+  isPending,
+}: {
+  pack: AuraPack;
+  owned: boolean;
+  active: boolean;
+  onBuy: () => void;
+  onActivate: () => void;
+  isPending: boolean;
+}) {
+  return (
+    <motion.div
+      layout
+      className={cn(
+        "relative rounded-2xl border p-4 flex flex-col gap-3 transition-all overflow-hidden",
+        active
+          ? "ring-2"
+          : owned
+          ? "border-white/15"
+          : "border-white/[0.08]",
+      )}
+      style={{
+        background: pack.gradient,
+        ...(active && { ringColor: pack.accentColor, borderColor: pack.accentColor }),
+      }}
+    >
+      {/* Active ribbon */}
+      {active && (
+        <div
+          className="absolute top-0 right-0 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-bl-xl"
+          style={{ background: pack.accentColor, color: "#000" }}
+        >
+          Active
+        </div>
+      )}
+
+      {/* Emoji */}
+      <div
+        className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
+        style={{
+          background: `${pack.accentColor}18`,
+          border: `1px solid ${pack.accentColor}30`,
+          boxShadow: active ? `0 0 16px ${pack.accentColor}40` : undefined,
+        }}
+      >
+        {pack.emoji}
+      </div>
+
+      {/* Info */}
+      <div className="flex-1">
+        <div className="font-bold text-sm text-white">{pack.name}</div>
+        <div className="text-[11px] text-white/50 mt-0.5 leading-tight">{pack.tagline}</div>
+
+        {/* Contents preview */}
+        <div className="flex flex-col gap-1 mt-2.5">
+          <div className="flex items-center gap-1.5 text-[10px] text-white/60">
+            <span className="text-base leading-none">🎙️</span>
+            <span>Voice: <span className="text-white/90 font-medium">{pack.voiceId.replace(/-/g, " ")}</span></span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-white/60">
+            <span className="text-base leading-none">👁️</span>
+            <span>Ghost: <span className="text-white/90 font-medium">{pack.skinId.replace(/-/g, " ")}</span></span>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA */}
+      {pack.free ? (
+        <button
+          onClick={onActivate}
+          disabled={active}
+          className="w-full py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-40"
+          style={
+            active
+              ? { background: `${pack.accentColor}20`, color: pack.accentColor }
+              : { background: `${pack.accentColor}15`, color: pack.accentColor, border: `1px solid ${pack.accentColor}30` }
+          }
+        >
+          {active ? "✓ Active" : "Select"}
+        </button>
+      ) : owned ? (
+        <button
+          onClick={onActivate}
+          disabled={active || isPending}
+          className="w-full py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-40"
+          style={
+            active
+              ? { background: `${pack.accentColor}20`, color: pack.accentColor }
+              : { background: `${pack.accentColor}15`, color: pack.accentColor, border: `1px solid ${pack.accentColor}30` }
+          }
+        >
+          {active ? "✓ Active" : isPending ? "Activating…" : "Activate"}
+        </button>
+      ) : (
+        <button
+          onClick={onBuy}
+          disabled={isPending}
+          className="w-full py-2.5 rounded-xl text-xs font-black transition-all disabled:opacity-50"
+          style={{
+            background: `linear-gradient(135deg, ${pack.accentColor} 0%, ${pack.accentColor}bb 100%)`,
+            color: "#000",
+            boxShadow: `0 4px 16px ${pack.accentColor}35`,
+          }}
+        >
+          {isPending ? "Processing…" : `Buy for ${pack.price}`}
+        </button>
+      )}
+    </motion.div>
+  );
+}
+
+// ─── Claim Free Aura Modal ───────────────────────────────────────────────────
+
+function ClaimModal({
+  onClaim,
+  onClose,
+  isPending,
+}: {
+  onClaim: (packId: string) => void;
+  onClose: () => void;
+  isPending: boolean;
+}) {
+  const [chosen, setChosen] = useState<string | null>(null);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        initial={{ scale: 0.92, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.92, opacity: 0 }}
+        className="relative z-10 w-full max-w-md rounded-3xl border border-yellow-500/30 overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #1a0f00 0%, #0f0a00 100%)",
+          boxShadow: "0 0 80px rgba(234,179,8,0.2)",
+        }}
+      >
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Gift className="w-5 h-5" style={{ color: "#eab308" }} />
+              <span className="font-black text-lg" style={{ color: "#fef08a" }}>Claim Your Free Aura</span>
+            </div>
+            <p className="text-xs text-white/50">Welcome to Pro! Pick any pack — yours free.</p>
+          </div>
+          <button onClick={onClose} className="text-white/30 hover:text-white/60 transition-colors ml-3 mt-0.5">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Pack grid */}
+        <div className="px-6 pb-4 grid grid-cols-1 gap-2">
+          {PAID_PACKS.map((pack) => (
+            <button
+              key={pack.id}
+              onClick={() => setChosen(pack.id)}
+              className={cn(
+                "flex items-center gap-3 p-3 rounded-xl border text-left transition-all",
+                chosen === pack.id
+                  ? "border-current"
+                  : "border-white/10 hover:border-white/20",
+              )}
+              style={
+                chosen === pack.id
+                  ? { borderColor: pack.accentColor, background: `${pack.accentColor}10` }
+                  : { background: "rgba(255,255,255,0.03)" }
+              }
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+                style={{ background: `${pack.accentColor}18`, border: `1px solid ${pack.accentColor}30` }}
+              >
+                {pack.emoji}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-white">{pack.name}</div>
+                <div className="text-[10px] text-white/50">{pack.tagline}</div>
+              </div>
+              {chosen === pack.id && (
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: pack.accentColor }}>
+                  <Check className="w-3 h-3 text-black" />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Confirm */}
+        <div className="px-6 pb-6">
+          <button
+            onClick={() => chosen && onClaim(chosen)}
+            disabled={!chosen || isPending}
+            className="w-full py-3 rounded-xl text-sm font-black transition-all disabled:opacity-40"
+            style={{
+              background: chosen ? "linear-gradient(135deg, #eab308, #ca8a04)" : "rgba(255,255,255,0.06)",
+              color: chosen ? "#000" : "#666",
+            }}
+          >
+            {isPending ? "Claiming…" : chosen ? `Claim ${PAID_PACKS.find(p => p.id === chosen)?.name}` : "Select a pack to continue"}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─── Main Shop Page ──────────────────────────────────────────────────────────
+
+export function ShopPage() {
+  const { isSignedIn } = useUser();
+  const { data: profile } = useMyProfile();
+  const purchase = useShopPurchase();
+  const claimFree = useClaimFreeAura();
+  const redeemCode = useRedeemCode();
+  const updateAura = useUpdateActiveAura();
+  const { toast } = useToast();
+
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [redeemInput, setRedeemInput] = useState("");
+  const [activatingId, setActivatingId] = useState<string | null>(null);
+
+  const inventory: string[] = profile?.inventory ?? ["classic"];
+  const activeAura = profile?.activeAura ?? {};
+  const activePack = activeAura.packId ?? "classic";
+  const canClaimBonus = !!profile?.isPro && !profile?.hasClaimedSigningBonus;
+
+  function handleBuy(pack: AuraPack) {
+    if (!isSignedIn) {
+      toast({ title: "Sign in to purchase", description: "Create an account to buy Aura Packs." });
+      return;
+    }
+    purchase.mutate(pack.id, {
+      onSuccess: () => {
+        toast({
+          title: `${pack.name} unlocked! 🎉`,
+          description: "Your new Aura Pack is ready to activate.",
+        });
+      },
+      onError: (err) => toast({ title: "Purchase failed", description: err.message, variant: "destructive" }),
+    });
+  }
+
+  function handleActivate(pack: AuraPack) {
+    if (!isSignedIn) return;
+    setActivatingId(pack.id);
+    updateAura.mutate(
+      { packId: pack.id, voiceId: pack.voiceId, skinId: pack.skinId },
+      {
+        onSuccess: () => {
+          toast({
+            title: `${pack.name} activated!`,
+            description: `Voice: ${pack.voiceId} · Ghost: ${pack.skinId}`,
+          });
+          setActivatingId(null);
+        },
+        onError: () => setActivatingId(null),
+      },
+    );
+  }
+
+  function handleClaim(packId: string) {
+    claimFree.mutate(packId, {
+      onSuccess: () => {
+        setShowClaimModal(false);
+        const pack = AURA_PACKS.find((p) => p.id === packId);
+        toast({
+          title: `${pack?.name ?? "Aura Pack"} claimed! 🎁`,
+          description: "Your Pro signing bonus has been applied.",
+        });
+      },
+      onError: (err) => toast({ title: "Claim failed", description: err.message, variant: "destructive" }),
+    });
+  }
+
+  function handleRedeem() {
+    const code = redeemInput.trim();
+    if (!code) return;
+    if (!isSignedIn) {
+      toast({ title: "Sign in to redeem codes" });
+      return;
+    }
+    redeemCode.mutate(code, {
+      onSuccess: (data) => {
+        toast({ title: "Code redeemed! 🎉", description: data.message });
+        setRedeemInput("");
+      },
+      onError: (err) => toast({ title: "Invalid code", description: err.message, variant: "destructive" }),
+    });
+  }
+
+  if (!isSignedIn) {
+    return (
+      <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <ShoppingBag className="w-12 h-12 text-muted-foreground/40" />
+        <div className="text-center">
+          <h2 className="text-lg font-bold mb-1">CaliShop</h2>
+          <p className="text-sm text-muted-foreground">Sign in to browse and buy Aura Packs.</p>
+        </div>
+        <a
+          href="/sign-in"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold"
+        >
+          <LogIn className="w-4 h-4" />
+          Sign In
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 max-w-2xl space-y-6">
+
+      {/* ── Header ── */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+          <ShoppingBag className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-black">CaliShop</h1>
+          <p className="text-xs text-muted-foreground">Aura Packs bundle a Voice Tone + Ghost Skin</p>
+        </div>
+      </div>
+
+      {/* ── Pro Signing Bonus Banner ── */}
+      <AnimatePresence>
+        {canClaimBonus && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="rounded-2xl border p-4 flex items-center gap-4 cursor-pointer"
+            style={{
+              background: "linear-gradient(135deg, rgba(234,179,8,0.12) 0%, rgba(234,179,8,0.04) 100%)",
+              borderColor: "rgba(234,179,8,0.4)",
+              boxShadow: "0 0 30px rgba(234,179,8,0.12)",
+            }}
+            onClick={() => setShowClaimModal(true)}
+          >
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-xl"
+              style={{ background: "rgba(234,179,8,0.2)", border: "1px solid rgba(234,179,8,0.4)" }}
+            >
+              🎁
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-black text-sm" style={{ color: "#fef08a" }}>
+                Claim Your Free Aura Pack
+              </div>
+              <div className="text-[11px] text-white/50 mt-0.5">
+                Welcome to Pro! Choose any paid pack for free.
+              </div>
+            </div>
+            <div
+              className="px-3 py-1.5 rounded-lg text-xs font-black shrink-0"
+              style={{ background: "#eab308", color: "#000" }}
+            >
+              Claim
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Aura Packs Grid ── */}
+      <section>
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Aura Packs</span>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {AURA_PACKS.map((pack) => (
+            <PackCard
+              key={pack.id}
+              pack={pack}
+              owned={pack.free || inventory.includes(pack.id)}
+              active={activePack === pack.id}
+              onBuy={() => handleBuy(pack)}
+              onActivate={() => handleActivate(pack)}
+              isPending={activatingId === pack.id || purchase.isPending}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* ── Active Aura Summary ── */}
+      {activePack !== "classic" && (() => {
+        const pack = AURA_PACKS.find((p) => p.id === activePack);
+        if (!pack) return null;
+        return (
+          <section
+            className="rounded-2xl border p-4 flex items-center gap-3"
+            style={{
+              background: `${pack.accentColor}0a`,
+              borderColor: `${pack.accentColor}35`,
+            }}
+          >
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+              style={{ background: `${pack.accentColor}18`, border: `1px solid ${pack.accentColor}30` }}
+            >
+              {pack.emoji}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs text-muted-foreground">Active Aura</div>
+              <div className="font-bold text-sm" style={{ color: pack.accentColor }}>{pack.name}</div>
+            </div>
+            <Zap className="w-4 h-4 shrink-0" style={{ color: pack.accentColor }} />
+          </section>
+        );
+      })()}
+
+      {/* ── Pro Upsell (if not Pro) ── */}
+      {!profile?.isPro && (
+        <section
+          className="rounded-2xl border p-4 flex items-center gap-4"
+          style={{
+            background: "rgba(234,179,8,0.05)",
+            borderColor: "rgba(234,179,8,0.2)",
+          }}
+        >
+          <Crown className="w-5 h-5 shrink-0" style={{ color: "#eab308" }} />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-bold" style={{ color: "#fef08a" }}>
+              Go Pro to unlock a free Aura Pack
+            </div>
+            <div className="text-[11px] text-white/50">Subscribe in Settings → Subscription</div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Promo Code ── */}
+      <section>
+        <div className="flex items-center gap-2 mb-3">
+          <Tag className="w-4 h-4 text-primary" />
+          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Redeem Code</span>
+        </div>
+        <div
+          className="rounded-2xl border border-white/10 p-4"
+          style={{ background: "rgba(255,255,255,0.03)" }}
+        >
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={redeemInput}
+              onChange={(e) => setRedeemInput(e.target.value.toUpperCase())}
+              onKeyDown={(e) => e.key === "Enter" && handleRedeem()}
+              placeholder="ENTER CODE"
+              maxLength={24}
+              className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2.5 text-sm font-mono font-bold text-white placeholder:text-white/20 focus:outline-none focus:border-primary/40 transition-colors uppercase tracking-widest"
+            />
+            <button
+              onClick={handleRedeem}
+              disabled={!redeemInput.trim() || redeemCode.isPending}
+              className="px-4 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
+            >
+              {redeemCode.isPending ? "…" : "Redeem"}
+            </button>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2">
+            Codes unlock packs, Pro access, or limited-time bonuses.
+          </p>
+        </div>
+      </section>
+
+      {/* Claim Free Aura Modal */}
+      <AnimatePresence>
+        {showClaimModal && (
+          <ClaimModal
+            onClaim={handleClaim}
+            onClose={() => setShowClaimModal(false)}
+            isPending={claimFree.isPending}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

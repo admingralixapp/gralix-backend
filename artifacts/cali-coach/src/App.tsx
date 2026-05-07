@@ -27,6 +27,7 @@ import { Friends } from "@/pages/friends";
 import { ProfilePage } from "@/pages/profile";
 import { Leaderboard } from "@/pages/leaderboard";
 import { Settings } from "@/pages/settings";
+import { ShopPage } from "@/pages/shop";
 import { SignInPage } from "@/pages/sign-in";
 import { SignUpPage } from "@/pages/sign-up";
 import { Landing } from "@/pages/landing";
@@ -236,6 +237,7 @@ function AppRouter() {
                 <Route path="/friends" component={Friends} />
                 <Route path="/profile/:username" component={ProfilePage} />
                 <Route path="/settings" component={Settings} />
+                <Route path="/shop" component={ShopPage} />
                 <Route path="/calibration" component={BodyCalibration} />
                 <Route path="/mobility" component={MobilityPage} />
                 <Route path="/daily-tasks" component={DailyTasksPage} />

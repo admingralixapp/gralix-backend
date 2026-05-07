@@ -256,6 +256,149 @@ router.put(
 );
 
 // ---------------------------------------------------------------------------
+// PUT /api/users/me/active-aura — set active aura (packId + voiceId + skinId)
+// ---------------------------------------------------------------------------
+router.put(
+  "/users/me/active-aura",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const me = await getMe(clerkId);
+    if (!me) { res.status(404).json({ error: "Profile not found" }); return; }
+
+    const { packId, voiceId, skinId } = req.body as {
+      packId?: string;
+      voiceId?: string;
+      skinId?: string;
+    };
+
+    const inventory = (me.inventory ?? ["classic"]) as string[];
+    if (packId && !inventory.includes(packId)) {
+      res.status(403).json({ error: "Pack not in inventory" });
+      return;
+    }
+
+    const aura = { ...(me.activeAura as object), ...(packId && { packId }), ...(voiceId && { voiceId }), ...(skinId && { skinId }) };
+    const [updated] = await db.update(usersTable).set({ activeAura: aura }).where(eq(usersTable.id, me.id)).returning();
+    res.json(updated);
+  },
+);
+
+// ---------------------------------------------------------------------------
+// POST /api/shop/purchase — buy an Aura Pack by ID
+// ---------------------------------------------------------------------------
+router.post(
+  "/shop/purchase",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const me = await getMe(clerkId);
+    if (!me) { res.status(404).json({ error: "Profile not found" }); return; }
+
+    const { packId } = req.body as { packId: string };
+    if (!packId) { res.status(400).json({ error: "packId is required" }); return; }
+
+    const inventory = (me.inventory ?? ["classic"]) as string[];
+    if (inventory.includes(packId)) {
+      res.json({ inventory, message: "Already owned" });
+      return;
+    }
+
+    const newInventory = [...inventory, packId];
+    const [updated] = await db
+      .update(usersTable)
+      .set({ inventory: newInventory })
+      .where(eq(usersTable.id, me.id))
+      .returning();
+    res.json({ inventory: updated.inventory, message: "Purchase successful" });
+  },
+);
+
+// ---------------------------------------------------------------------------
+// POST /api/shop/claim-free-aura — claim signing bonus (Pro users only)
+// ---------------------------------------------------------------------------
+router.post(
+  "/shop/claim-free-aura",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const me = await getMe(clerkId);
+    if (!me) { res.status(404).json({ error: "Profile not found" }); return; }
+    if (!me.isPro) { res.status(403).json({ error: "Pro subscription required" }); return; }
+    if (me.hasClaimedSigningBonus) { res.status(409).json({ error: "Signing bonus already claimed" }); return; }
+
+    const { packId } = req.body as { packId: string };
+    if (!packId) { res.status(400).json({ error: "packId is required" }); return; }
+
+    const inventory = (me.inventory ?? ["classic"]) as string[];
+    const newInventory = inventory.includes(packId) ? inventory : [...inventory, packId];
+
+    const [updated] = await db
+      .update(usersTable)
+      .set({ inventory: newInventory, hasClaimedSigningBonus: true })
+      .where(eq(usersTable.id, me.id))
+      .returning();
+    res.json({ inventory: updated.inventory, message: "Signing bonus claimed!" });
+  },
+);
+
+// ---------------------------------------------------------------------------
+// POST /api/shop/redeem — redeem a promo code
+// ---------------------------------------------------------------------------
+const PROMO_CODES: Record<string, { type: "pro_month" | "pack"; packId?: string }> = {
+  TESTER2026:  { type: "pro_month" },
+  GHOSTGIFT:   { type: "pack", packId: "iron-circuit" },
+  ZENGIFT:     { type: "pack", packId: "zen-garden" },
+  HYPEGIFT:    { type: "pack", packId: "hype-storm" },
+};
+
+router.post(
+  "/shop/redeem",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const me = await getMe(clerkId);
+    if (!me) { res.status(404).json({ error: "Profile not found" }); return; }
+
+    const rawCode = (req.body as { code?: string }).code ?? "";
+    const code = rawCode.trim().toUpperCase();
+    const promo = PROMO_CODES[code];
+    if (!promo) { res.status(400).json({ error: "Invalid or unknown code" }); return; }
+
+    const redeemed = (me.redeemedCodes ?? []) as string[];
+    if (redeemed.includes(code)) {
+      res.status(409).json({ error: "Code already redeemed" });
+      return;
+    }
+
+    const newRedeemed = [...redeemed, code];
+    const updateSet: Record<string, unknown> = { redeemedCodes: newRedeemed };
+
+    if (promo.type === "pro_month") {
+      updateSet.isPro = true;
+    } else if (promo.type === "pack" && promo.packId) {
+      const inventory = (me.inventory ?? ["classic"]) as string[];
+      if (!inventory.includes(promo.packId)) {
+        updateSet.inventory = [...inventory, promo.packId];
+      }
+    }
+
+    const [updated] = await db
+      .update(usersTable)
+      .set(updateSet as any)
+      .where(eq(usersTable.id, me.id))
+      .returning();
+
+    const message =
+      promo.type === "pro_month"
+        ? "1 free month of Pro activated!"
+        : `Pack "${promo.packId}" added to your inventory!`;
+
+    res.json({ user: updated, message });
+  },
+);
+
+// ---------------------------------------------------------------------------
 // PUT /api/users/me — update username / displayName
 // ---------------------------------------------------------------------------
 router.put(

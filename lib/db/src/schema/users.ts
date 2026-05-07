@@ -52,6 +52,24 @@ export const usersTable = pgTable("users", {
    * in the Leaderboard and Community Feed.
    */
   showVerifiedBadge: boolean("show_verified_badge").notNull().default(false),
+  /**
+   * Array of owned Aura Pack IDs, e.g. ["classic","iron-circuit"].
+   * Updated on purchase, promo redemption, and signing bonus claim.
+   */
+  inventory: jsonb("inventory").notNull().default(["classic"] as string[]),
+  /**
+   * Currently active aura: { packId, voiceId, skinId }.
+   * Drives voice-coaching tone and Ghost Skeleton colour in workouts.
+   */
+  activeAura: jsonb("active_aura").notNull().default({} as { packId?: string; voiceId?: string; skinId?: string }),
+  /**
+   * Promo codes already redeemed by this user — prevents double-use.
+   */
+  redeemedCodes: jsonb("redeemed_codes").notNull().default([] as string[]),
+  /**
+   * True after the user has claimed their one-time Pro signing bonus pack.
+   */
+  hasClaimedSigningBonus: boolean("has_claimed_signing_bonus").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

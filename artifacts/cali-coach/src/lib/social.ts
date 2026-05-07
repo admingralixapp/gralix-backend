@@ -34,6 +34,12 @@ async function apiFetchAuth<T>(
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+export interface ActiveAura {
+  packId?: string;
+  voiceId?: string;
+  skinId?: string;
+}
+
 export interface UserProfile {
   id: number;
   clerkId: string;
@@ -44,6 +50,9 @@ export interface UserProfile {
   communityPostsPublic: boolean;
   isPro: boolean;
   showVerifiedBadge: boolean;
+  inventory: string[];
+  activeAura: ActiveAura;
+  hasClaimedSigningBonus: boolean;
   createdAt: string;
 }
 
@@ -175,6 +184,70 @@ export function useActivatePro() {
       const token = await getToken();
       return apiFetchAuth<UserProfile>("/api/users/me/subscription", token, {
         method: "PUT",
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
+  });
+}
+
+export function useUpdateActiveAura() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (aura: ActiveAura) => {
+      const token = await getToken();
+      return apiFetchAuth<UserProfile>("/api/users/me/active-aura", token, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(aura),
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
+  });
+}
+
+export function useShopPurchase() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (packId: string) => {
+      const token = await getToken();
+      return apiFetchAuth<{ inventory: string[]; message: string }>("/api/shop/purchase", token, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packId }),
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
+  });
+}
+
+export function useClaimFreeAura() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (packId: string) => {
+      const token = await getToken();
+      return apiFetchAuth<{ inventory: string[]; message: string }>("/api/shop/claim-free-aura", token, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packId }),
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
+  });
+}
+
+export function useRedeemCode() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (code: string) => {
+      const token = await getToken();
+      return apiFetchAuth<{ message: string }>("/api/shop/redeem", token, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/users/me"] }),

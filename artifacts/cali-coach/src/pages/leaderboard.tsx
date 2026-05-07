@@ -92,8 +92,16 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
             </span>
           )}
           {entry.showVerifiedBadge && (
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 bg-blue-500/10 text-blue-400 border-blue-500/30">
-              <BadgeCheck className="w-3 h-3" />
+            <span
+              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold shrink-0"
+              style={{
+                background: "rgba(168,85,247,0.12)",
+                color: "#a855f7",
+                border: "1px solid rgba(168,85,247,0.35)",
+                filter: "drop-shadow(0 0 5px rgba(168,85,247,0.5))",
+              }}
+            >
+              <ShieldCheck className="w-3 h-3" />
               Pro
             </span>
           )}

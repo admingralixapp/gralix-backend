@@ -183,7 +183,15 @@ function VideoCard({ post }: { post: FeedPost }) {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-sm text-white truncate">{post.displayName}</span>
             {post.showVerifiedBadge && (
-              <span className="flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded-full border border-blue-400/25 shrink-0">
+              <span
+                className="flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full shrink-0"
+                style={{
+                  background: "rgba(168,85,247,0.12)",
+                  color: "#a855f7",
+                  border: "1px solid rgba(168,85,247,0.35)",
+                  filter: "drop-shadow(0 0 4px rgba(168,85,247,0.55))",
+                }}
+              >
                 <ShieldCheck className="w-2.5 h-2.5" />
                 Pro
               </span>

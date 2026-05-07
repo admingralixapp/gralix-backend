@@ -15,6 +15,7 @@ import {
   Trophy,
   ClipboardList,
   Rss,
+  ShoppingBag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMyProfile, useFriendRequests } from "@/lib/social";
@@ -38,6 +39,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/skill-tree",  label: "Skill Tree", icon: GitBranch },
   { href: "/leaderboard", label: "Leaderboard",icon: Trophy },
   { href: "/friends",     label: "Friends",    icon: Users },
+  { href: "/shop",        label: "Shop",       icon: ShoppingBag },
   { href: "/settings",    label: "Settings",   icon: Settings },
 ];
 

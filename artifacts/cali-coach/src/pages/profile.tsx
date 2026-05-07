@@ -18,6 +18,7 @@ import {
   Video,
   X,
   CheckCircle2,
+  ShieldCheck,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import {
@@ -326,6 +327,20 @@ function ProfileContent() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold">{displayName}</h1>
+            {(profile as any)?.showVerifiedBadge && (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold shrink-0"
+                style={{
+                  background: "rgba(168,85,247,0.12)",
+                  color: "#a855f7",
+                  border: "1px solid rgba(168,85,247,0.35)",
+                  filter: "drop-shadow(0 0 6px rgba(168,85,247,0.6))",
+                }}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Pro
+              </span>
+            )}
             {(() => {
               const badge = getBadge(masteredSkills.length);
               return badge ? (
