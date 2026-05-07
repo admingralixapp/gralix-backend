@@ -31,10 +31,9 @@ import {
 } from "@/lib/skill-tree";
 import { cn } from "@/lib/utils";
 import {
-  Star, Lock, ZoomIn, ZoomOut, Maximize2, Crosshair, Play,
+  Star, Lock, ZoomIn, ZoomOut, Maximize2, Crosshair,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // ─── Layout constants ─────────────────────────────────────────────────────────
@@ -1069,6 +1068,31 @@ function TreeCanvas({ evaluated, lensOn }: { evaluated: EvaluatedSkill[]; lensOn
     return lensOn ? { ...NODE_POS, ...EQUIPMENT_NODE_POS } : NODE_POS;
   }, [lensOn]);
 
+  // Focused-lens bodyweight filter: when lens is ON, compute the full ancestor
+  // chain (in EDGES) of bodyweight nodes that directly parent equipment nodes.
+  // Only these nodes (and their connecting edges) are rendered, revealing the
+  // minimal tree paths that lead to gear skills.
+  const focusedBodyweightIds = useMemo<Set<string> | null>(() => {
+    if (!lensOn) return null; // null = show all bodyweight nodes
+    // Equipment "parents" = bodyweight nodes that directly spawn equipment nodes
+    const equipParents = new Set(
+      EQUIPMENT_EDGES.map(([from]) => from).filter((id) => !!NODE_POS[id]),
+    );
+    // BFS backwards through EDGES to collect all bodyweight ancestors
+    const result = new Set<string>(equipParents);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const [from, to] of EDGES) {
+        if (result.has(to) && !result.has(from) && NODE_POS[from]) {
+          result.add(from);
+          changed = true;
+        }
+      }
+    }
+    return result;
+  }, [lensOn]);
+
   const skillMap = useMemo(() => {
     const m = new Map<string, EvaluatedSkill>();
     for (const s of evaluated) m.set(s.id, s);
@@ -1283,6 +1307,8 @@ function TreeCanvas({ evaluated, lensOn }: { evaluated: EvaluatedSkill[]; lensOn
             {HUB_EDGES.map(({ toId, branch }) => {
               const toPos = NODE_POS[toId];
               if (!toPos) return null;
+              // Focused-lens: only draw spoke if the target node is in the visible set
+              if (focusedBodyweightIds && !focusedBodyweightIds.has(toId)) return null;
               const fromSkill = skillMap.get(toId);
               const mastered = fromSkill?.status === "mastered";
               const lit = hoveredId === toId;
@@ -1304,6 +1330,8 @@ function TreeCanvas({ evaluated, lensOn }: { evaluated: EvaluatedSkill[]; lensOn
               const fromPos = NODE_POS[fromId];
               const toPos   = NODE_POS[toId];
               if (!fromPos || !toPos) return null;
+              // Focused-lens: skip edges where either endpoint is hidden
+              if (focusedBodyweightIds && !(focusedBodyweightIds.has(fromId) && focusedBodyweightIds.has(toId))) return null;
               const fromSkill = skillMap.get(fromId);
               const mastered = fromSkill?.status === "mastered";
               const lit = hoveredId === fromId || hoveredId === toId;
@@ -1393,6 +1421,8 @@ function TreeCanvas({ evaluated, lensOn }: { evaluated: EvaluatedSkill[]; lensOn
 
             {/* ── Bodyweight skill nodes (circles) ── */}
             {Object.keys(NODE_POS).map((nodeId) => {
+              // Focused-lens: hide nodes not in the ancestor chain
+              if (focusedBodyweightIds && !focusedBodyweightIds.has(nodeId)) return null;
               const skill = skillMap.get(nodeId);
               if (!skill) return null;
               return (
@@ -1455,287 +1485,8 @@ function TreeCanvas({ evaluated, lensOn }: { evaluated: EvaluatedSkill[]; lensOn
   );
 }
 
-// ─── Equipment Specialty (unchanged below the tree) ───────────────────────────
-
-const LEVEL_COLORS: Record<string, string> = {
-  Beginner:     "bg-slate-700 text-slate-200",
-  Novice:       "bg-sky-900 text-sky-200",
-  Intermediate: "bg-indigo-900 text-indigo-200",
-  Advanced:     "bg-amber-900 text-amber-200",
-  Elite:        "bg-rose-900 text-rose-200",
-};
-
-function EquipmentTagIcon({ tag, color, size = 18 }: { tag: EquipmentTag; color: string; size?: number }) {
-  if (tag === "rings") {
-    return (
-      <svg width={size} height={size} viewBox="-10 -10 20 20" aria-hidden="true">
-        <circle cx={0} cy={0} r={8} fill="none" stroke={color} strokeWidth={2.5} />
-      </svg>
-    );
-  }
-  if (tag === "weighted") {
-    return (
-      <svg width={size} height={size} viewBox="-10 -10 20 20" aria-hidden="true">
-        <circle cx={-5.5} cy={0} r={3.5} fill={color} />
-        <rect x={-2} y={-1.5} width={4} height={3} fill={color} />
-        <circle cx={5.5} cy={0} r={3.5} fill={color} />
-      </svg>
-    );
-  }
-  return (
-    <svg width={size} height={size} viewBox="-10 -10 20 20" aria-hidden="true">
-      <line x1={-9} y1={0} x2={9} y2={0} stroke={color} strokeWidth={2.5} strokeLinecap="round" />
-      <rect x={-9} y={-4} width={3} height={8} rx={1} fill={color} />
-      <rect x={6}  y={-4} width={3} height={8} rx={1} fill={color} />
-    </svg>
-  );
-}
-
-function SpecialtyNodeCard({ skill, isLast }: { skill: EvaluatedSkill; isLast: boolean }) {
-  const tag  = skill.equipmentTag!;
-  const spec = EQUIPMENT_SPECIALTIES[tag];
-  const req  = skill.masteryRequirement;
-  const { qualifyingSessions, bestReps, bestFormScore } = skill.progress;
-  const progressPct = Math.min(100, (qualifyingSessions / req.minQualifyingSessions) * 100);
-  const isLocked   = skill.status === "locked";
-  const isMastered = skill.status === "mastered";
-  const workoutUrl = `/workout?exercise=${encodeURIComponent(skill.exercises[0])}`;
-
-  return (
-    <div className="relative flex flex-col items-center">
-      {!isLast && (
-        // Dashed glowing connector — visually distinct from the solid bodyweight tree lines
-        <div className="absolute z-0" style={{ top: "100%", left: "50%", transform: "translateX(-50%)", width: 2, height: 28 }}>
-          <svg width="2" height="28" viewBox="0 0 2 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line
-              x1="1" y1="0" x2="1" y2="28"
-              stroke={isMastered ? spec.color : "hsl(var(--border))"}
-              strokeWidth="2"
-              strokeDasharray="5 4"
-              strokeLinecap="round"
-              style={isMastered ? { filter: `drop-shadow(0 0 3px ${spec.color}90)` } : undefined}
-            />
-          </svg>
-        </div>
-      )}
-      <div
-        className={cn(
-          "relative w-full rounded-xl border p-3 transition-all z-10",
-          isLocked && "border border-border/40 bg-card/30 opacity-60",
-          !isLocked && !isMastered && "border border-border bg-card hover:border-primary/20",
-        )}
-        style={isMastered ? { borderWidth: 2, borderColor: spec.color, backgroundColor: spec.bgColor } : {}}
-      >
-        <div className="flex items-start justify-between gap-2 mb-1.5">
-          <div className="flex items-center gap-2 min-w-0">
-            {isMastered
-              ? <Star className="w-4 h-4 fill-current shrink-0" style={{ color: spec.color }} />
-              : isLocked
-              ? <Lock className="w-4 h-4 text-muted-foreground/50 shrink-0" />
-              : <div className="w-4 h-4 rounded-full border-2 shrink-0" style={{ borderColor: spec.color }} />
-            }
-            <span className={cn("font-semibold text-[13px] leading-tight", isLocked && "text-muted-foreground")}>
-              {skill.title}
-            </span>
-          </div>
-          <Badge className={cn("text-[10px] px-1.5 py-0.5 shrink-0 font-medium", LEVEL_COLORS[skill.levelName])}>
-            {skill.levelName}
-          </Badge>
-        </div>
-        <p className="text-xs text-muted-foreground mb-2 leading-relaxed line-clamp-2">
-          {isLocked ? "🔒 Master the previous skill to unlock." : skill.description}
-        </p>
-        {!isLocked && (
-          <div className="mb-2 rounded-md bg-secondary/50 px-2 py-1.5">
-            <p className="text-[11px] font-medium text-foreground/80">{req.description}</p>
-          </div>
-        )}
-        {!isLocked && (
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Sessions</span>
-              <span className="text-[11px] font-bold tabular-nums" style={{ color: isMastered ? spec.color : undefined }}>
-                {Math.min(qualifyingSessions, req.minQualifyingSessions)}/{req.minQualifyingSessions}
-              </span>
-            </div>
-            <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-              <div className="h-full rounded-full transition-all"
-                style={{ width: `${progressPct}%`, backgroundColor: spec.color }} />
-            </div>
-            {(bestReps > 0 || bestFormScore > 0) && (
-              <div className="flex gap-3 mt-1.5">
-                {bestReps > 0 && (
-                  <span className="text-[10px] text-muted-foreground">
-                    Best: <span className="text-foreground font-medium">
-                      {(skill.type as SkillType) === "static" ? `${bestReps}s hold` : `${bestReps} reps`}
-                    </span>
-                  </span>
-                )}
-                {bestFormScore > 0 && (
-                  <span className="text-[10px] text-muted-foreground">
-                    Form: <span className="text-foreground font-medium">{Math.round(bestFormScore)}%</span>
-                  </span>
-                )}
-              </div>
-            )}
-            {isMastered && (
-              <div className="mt-1.5 text-[11px] font-semibold flex items-center gap-1" style={{ color: spec.color }}>
-                <Star className="w-3 h-3 fill-current" /> Mastered
-              </div>
-            )}
-          </div>
-        )}
-        {!isLocked && (
-          <Button asChild size="sm" variant="outline"
-            className="mt-2.5 w-full h-7 text-[11px] gap-1.5"
-            style={isMastered ? { borderColor: spec.color, color: spec.color } : {}}>
-            <Link href={workoutUrl}>
-              <Play className="w-3 h-3 fill-current" />
-              Start Workout
-            </Link>
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DoubleMasteryBanner({ evaluated }: { evaluated: EvaluatedSkill[] }) {
-  const doubleMasteries = useMemo(() => {
-    const result: Array<{ branch: SkillBranch; level: number; tags: EquipmentTag[] }> = [];
-    for (const branch of ["PUSH", "PULL"] as SkillBranch[]) {
-      for (let level = 1; level <= 5; level++) {
-        const tags = getEquipmentMasteriesForLevel(branch, level, evaluated);
-        if (tags.length >= 2) result.push({ branch, level, tags });
-      }
-    }
-    return result;
-  }, [evaluated]);
-
-  if (doubleMasteries.length === 0) return null;
-
-  return (
-    <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 px-4 py-3 flex flex-wrap items-center gap-3">
-      <Star className="w-5 h-5 fill-amber-400 text-amber-400 shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-amber-300">
-          Double {doubleMasteries.length === 1 ? "Mastery" : "Masteries"} Achieved!
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {doubleMasteries
-            .map(({ branch, level, tags }) =>
-              `${branch} L${level}: ${tags.map((t) => EQUIPMENT_SPECIALTIES[t].shortLabel).join(" + ")}`)
-            .join("  ·  ")}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// Map each equipment tag to which main-tree node it branches from and a human label
-const SPECIALTY_BRANCH_ORIGIN: Record<EquipmentTag, { fromLabel: string; fromNodeId: string }[]> = {
-  bar:      [{ fromLabel: "Pull-Up",     fromNodeId: "pull-2" }],
-  rings:    [{ fromLabel: "Pull-Up",     fromNodeId: "pull-2" }, { fromLabel: "Dip Intro", fromNodeId: "push-3" }],
-  weighted: [{ fromLabel: "Pull-Up",     fromNodeId: "pull-2" }, { fromLabel: "Dip Intro", fromNodeId: "push-3" }],
-};
-
-function EquipmentSpecialtyColumn({ tag, skills }: { tag: EquipmentTag; skills: EvaluatedSkill[] }) {
-  const spec          = EQUIPMENT_SPECIALTIES[tag];
-  const masteredCount = skills.filter((s) => s.status === "mastered").length;
-  const origins       = SPECIALTY_BRANCH_ORIGIN[tag] ?? [];
-
-  return (
-    <div className="flex flex-col gap-0">
-      {/* Column header */}
-      <div className="rounded-xl border-2 p-3 mb-2 flex items-center justify-between"
-        style={{ borderColor: spec.color, backgroundColor: spec.bgColor }}>
-        <div className="flex items-center gap-2">
-          <EquipmentTagIcon tag={tag} color={spec.color} />
-          <span className="font-bold text-base" style={{ color: spec.color }}>{spec.label}</span>
-        </div>
-        <span className="text-xs text-muted-foreground font-medium tabular-nums">
-          {masteredCount}/{skills.length}
-        </span>
-      </div>
-
-      {/* Branch-origin badge — shows which main tree node unlocks this path */}
-      {origins.length > 0 && (
-        <div className="flex items-center gap-1.5 mb-4 px-1">
-          <div className="flex-1 h-px" style={{
-            background: `repeating-linear-gradient(to right,${spec.color}60 0,${spec.color}60 4px,transparent 4px,transparent 8px)`,
-          }} />
-          <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border shrink-0"
-            style={{ color: spec.color, borderColor: `${spec.color}50`, background: `${spec.color}12` }}>
-            unlocks after{" "}
-            {origins.map(o => o.fromLabel).join(" / ")}
-          </span>
-          <div className="flex-1 h-px" style={{
-            background: `repeating-linear-gradient(to right,${spec.color}60 0,${spec.color}60 4px,transparent 4px,transparent 8px)`,
-          }} />
-        </div>
-      )}
-
-      <div className="flex flex-col gap-5">
-        {skills.map((skill, i) => (
-          <SpecialtyNodeCard key={skill.id} skill={skill} isLast={i === skills.length - 1} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function EquipmentSpecialtySection({ evaluated }: { evaluated: EvaluatedSkill[] }) {
-  const specialtyGroups = useMemo(() => {
-    const tags: EquipmentTag[] = ["bar", "rings", "weighted"];
-    return tags.map((tag) => ({
-      tag,
-      skills: evaluated
-        .filter((s) => s.equipmentSpecialty && s.equipmentTag === tag)
-        .sort((a, b) => a.branch.localeCompare(b.branch) || a.level - b.level),
-    }));
-  }, [evaluated]);
-
-  const masteredSpecialty = evaluated.filter((s) => s.equipmentSpecialty && s.status === "mastered").length;
-  const totalSpecialty    = evaluated.filter((s) => s.equipmentSpecialty).length;
-
-  return (
-    <div className="space-y-6">
-      {/* Section header */}
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-2xl font-bold tracking-tight">Equipment Specialty Paths</h2>
-            {/* Visual cue: dashed separator distinguishes specialty from main tree */}
-            <span className="hidden sm:flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full border border-dashed border-amber-500/40 text-amber-400/70 bg-amber-950/20">
-              <svg width="16" height="8" viewBox="0 0 16 8" fill="none" className="shrink-0">
-                <line x1="0" y1="4" x2="16" y2="4" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 3" strokeLinecap="round" />
-              </svg>
-              Branching Paths
-            </span>
-          </div>
-          <p className="text-muted-foreground text-sm">
-            Parallel specialty paths — dashed connectors indicate equipment-specific progressions.
-          </p>
-        </div>
-        <div className="text-right shrink-0">
-          <p className="text-xl font-bold tabular-nums">
-            {masteredSpecialty}
-            <span className="text-muted-foreground text-base font-normal">/{totalSpecialty}</span>
-          </p>
-          <p className="text-xs text-muted-foreground">Specialty Mastered</p>
-        </div>
-      </div>
-      <DoubleMasteryBanner evaluated={evaluated} />
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        {specialtyGroups.map(({ tag, skills }) => (
-          <EquipmentSpecialtyColumn key={tag} tag={tag} skills={skills} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
+
 
 const LENS_STORAGE_KEY = "calicoach_equipment_lens";
 
@@ -1885,9 +1636,6 @@ export function SkillTreePage() {
       ) : (
         <>
           <TreeCanvas evaluated={evaluated} lensOn={lensOn} />
-          <div className="border-t border-border/40 pt-8">
-            <EquipmentSpecialtySection evaluated={evaluated} />
-          </div>
         </>
       )}
     </div>
