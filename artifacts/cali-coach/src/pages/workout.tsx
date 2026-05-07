@@ -1535,6 +1535,14 @@ export function Workout() {
     isEndingRef.current = true;
     setIsEnding(true);
 
+    // Stop the rest timer immediately so it can't fire during the async save.
+    if (restIntervalRef.current) {
+      clearInterval(restIntervalRef.current);
+      restIntervalRef.current = null;
+    }
+    setIsResting(false);
+    setRestSeconds(0);
+
     // Immediately silence TTS and stop the mic so neither stays active
     // during the async save / navigation transition.
     cancelSpeech();
@@ -1656,6 +1664,89 @@ export function Workout() {
       isEndingRef.current = false;
       setIsEnding(false);
     }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Full workout state reset — called when the user dismisses the results overlay
+  // so the page returns cleanly to the exercise-selection state.
+  // ─────────────────────────────────────────────────────────────────────────────
+  const resetWorkoutState = () => {
+    // Kill the rest timer immediately so it doesn't keep firing
+    if (restIntervalRef.current) {
+      clearInterval(restIntervalRef.current);
+      restIntervalRef.current = null;
+    }
+
+    // Kill any pending pacer voice cues
+    clearPacerTimeouts();
+    if (cueFlushTimerRef.current) {
+      clearTimeout(cueFlushTimerRef.current);
+      cueFlushTimerRef.current = null;
+    }
+
+    // Silence TTS and stop voice recognition
+    cancelSpeech();
+    voiceCommandsEnabledRef.current = false;
+    try { speechRecognitionRef.current?.stop(); } catch {}
+    speechRecognitionRef.current = null;
+
+    // Reset all workout-active flags
+    setIsWorkoutActive(false);
+    setIsCameraInitializing(false);
+    setIsResting(false);
+    setRestSeconds(0);
+    setIsListening(false);
+    setIsEnding(false);
+    isEndingRef.current = false;
+
+    // Reset multi-set state
+    setCurrentSet(1);
+    setSetsLog([]);
+
+    // Reset per-rep display state
+    setReps(0);
+    setHoldSeconds(0);
+    setFormScore(100);
+    setSyncPct(100);
+    setIsInActiveZone(false);
+
+    // Reset internal rep-tracking ref so a new session starts clean
+    stateRef.current = {
+      ...stateRef.current,
+      phase:            "up",
+      repCount:         0,
+      lastSpokenTime:   0,
+      lastPhaseCueMs:   0,
+      sessionStartTime: 0,
+      sessionId:        0,
+      repFormScores:    [],
+      lastRepTime:      0,
+      avgRepDurationMs: 0,
+      holdSeconds:      0,
+      lastHoldTickMs:   0,
+      holdActive:       false,
+      lastHoldSpeakSec: -1,
+      bestSyncPct:      0,
+      lastSyncDropMs:   0,
+    };
+
+    frozenDetectedRef.current = false;
+    frozenCheckRef.current    = { lastTime: -1, sinceMs: 0 };
+    bestRepSyncRef.current    = 0;
+    prevKeyAngleRef.current   = null;
+
+    // Destroy any lingering recorder
+    if (recorderRef.current) {
+      recorderRef.current.destroy();
+      recorderRef.current = null;
+    }
+
+    // Close overlays
+    setSessionResults(null);
+    setPovReview(null);
+
+    // Return to exercise-selection state
+    setSelectedExerciseId("");
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -2076,7 +2167,7 @@ export function Workout() {
         <div className="fixed inset-0 z-[200] bg-black">
           <SessionResults
             {...sessionResults}
-            onClose={() => setSessionResults(null)}
+            onClose={resetWorkoutState}
           />
         </div>
       )}
