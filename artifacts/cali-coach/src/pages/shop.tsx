@@ -14,7 +14,6 @@ import {
   Zap,
   LogIn,
   Play,
-  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -25,7 +24,7 @@ import {
   useUpdateActiveAura,
   useActivatePro,
 } from "@/lib/social";
-import { AURA_PACKS, PAID_PACKS, type AuraPack } from "@/lib/aura-packs";
+import { AURA_PACKS, type AuraPack } from "@/lib/aura-packs";
 import { useToast } from "@/hooks/use-toast";
 import { VOICE_PROFILE_LIST } from "@/lib/voice-profiles";
 import { testCoachVoice } from "@/lib/voice-service";
@@ -149,7 +148,10 @@ function PackCard({
   );
 }
 
-// ─── Claim Free Aura Modal ───────────────────────────────────────────────────
+// ─── Claim Free Voice Modal (Pro signing bonus) ───────────────────────────────
+// Shows all paid voice profiles — Pro users pick one for free.
+
+const CLAIMABLE_VOICES = VOICE_PROFILE_LIST.filter((p) => !p.isFree);
 
 function ClaimModal({
   onClaim,
@@ -161,6 +163,7 @@ function ClaimModal({
   isPending: boolean;
 }) {
   const [chosen, setChosen] = useState<string | null>(null);
+  const chosenVoice = CLAIMABLE_VOICES.find((v) => v.id === chosen);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -180,46 +183,35 @@ function ClaimModal({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Gift className="w-5 h-5" style={{ color: "#eab308" }} />
-              <span className="font-black text-lg" style={{ color: "#fef08a" }}>Claim Your Free Aura</span>
+              <span className="font-black text-lg" style={{ color: "#fef08a" }}>Claim Your Free Voice</span>
             </div>
-            <p className="text-xs text-white/50">Welcome to Pro! Pick any pack — yours free.</p>
+            <p className="text-xs text-white/50">Welcome to Pro! Pick any AI voice — yours free.</p>
           </div>
           <button onClick={onClose} className="text-white/30 hover:text-white/60 transition-colors ml-3 mt-0.5">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Pack grid */}
-        <div className="px-6 pb-4 grid grid-cols-1 gap-2">
-          {PAID_PACKS.map((pack) => (
+        {/* Voice list */}
+        <div className="px-6 pb-4 grid grid-cols-1 gap-1.5 max-h-72 overflow-y-auto">
+          {CLAIMABLE_VOICES.map((voice) => (
             <button
-              key={pack.id}
-              onClick={() => setChosen(pack.id)}
+              key={voice.id}
+              onClick={() => setChosen(voice.id)}
               className={cn(
                 "flex items-center gap-3 p-3 rounded-xl border text-left transition-all",
-                chosen === pack.id
-                  ? "border-current"
-                  : "border-white/10 hover:border-white/20",
+                chosen === voice.id
+                  ? "border-yellow-500/50 bg-yellow-500/10"
+                  : "border-white/10 hover:border-white/20 bg-white/[0.02]",
               )}
-              style={
-                chosen === pack.id
-                  ? { borderColor: pack.accentColor, background: `${pack.accentColor}10` }
-                  : { background: "rgba(255,255,255,0.03)" }
-              }
             >
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-                style={{ background: `${pack.accentColor}18`, border: `1px solid ${pack.accentColor}30` }}
-              >
-                {pack.emoji}
-              </div>
+              <span className="text-2xl leading-none shrink-0">{voice.emoji}</span>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-white">{pack.name}</div>
-                <div className="text-[10px] text-white/50">{pack.tagline}</div>
+                <div className="text-sm font-bold text-white">{voice.label}</div>
+                <div className="text-[10px] text-white/50 leading-tight">{voice.description}</div>
               </div>
-              {chosen === pack.id && (
-                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                  style={{ background: pack.accentColor }}>
+              {chosen === voice.id && (
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-yellow-500">
                   <Check className="w-3 h-3 text-black" />
                 </div>
               )}
@@ -238,7 +230,7 @@ function ClaimModal({
               color: chosen ? "#000" : "#666",
             }}
           >
-            {isPending ? "Claiming…" : chosen ? `Claim ${PAID_PACKS.find(p => p.id === chosen)?.name}` : "Select a pack to continue"}
+            {isPending ? "Claiming…" : chosenVoice ? `Claim ${chosenVoice.label}` : "Select a voice to continue"}
           </button>
         </div>
       </motion.div>
@@ -294,6 +286,22 @@ export function ShopPage() {
         toast({
           title: `${pack.name} unlocked! 🎉`,
           description: "Your new Aura Pack is ready to activate.",
+        });
+      },
+      onError: (err) => toast({ title: "Purchase failed", description: err.message, variant: "destructive" }),
+    });
+  }
+
+  function handleBuyVoice(profileId: string, label: string) {
+    if (!isSignedIn) {
+      toast({ title: "Sign in to purchase", description: "Create an account to buy AI voices." });
+      return;
+    }
+    purchase.mutate(profileId, {
+      onSuccess: () => {
+        toast({
+          title: `${label} unlocked! 🎉`,
+          description: "Select it from the list to make it your active coach.",
         });
       },
       onError: (err) => toast({ title: "Purchase failed", description: err.message, variant: "destructive" }),
@@ -624,20 +632,24 @@ export function ShopPage() {
           </div>
         </div>
 
-        {/* Pro tier */}
+        {/* Paid tier — à la carte */}
         <div>
-          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2 px-0.5">Pro — ElevenLabs AI voices</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2 px-0.5">AI Voices — £4.99 each</div>
           <div className="space-y-2">
             {VOICE_PROFILE_LIST.filter((p) => !p.isFree).map((p) => {
               const active = activeVoiceProfileId === p.id;
-              const canUse = !!profile?.isPro;
+              const owned  = inventory.includes(p.id);
               const isFirstThree = ["sergeant", "sensei", "cyborg"].includes(p.id);
               return (
                 <div
                   key={p.id}
                   className={[
                     "rounded-2xl border p-3.5 flex items-center gap-3 transition-all",
-                    active ? "border-violet-500/50 ring-1 ring-violet-500/20" : "border-white/[0.08]",
+                    active
+                      ? "border-violet-500/50 ring-1 ring-violet-500/20"
+                      : owned
+                      ? "border-white/15"
+                      : "border-white/[0.08]",
                   ].join(" ")}
                   style={{
                     background: active
@@ -649,12 +661,12 @@ export function ShopPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
                       <span className="text-sm font-bold text-foreground">{p.label}</span>
-                      {!canUse && (
+                      {owned && (
                         <span
                           className="text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide"
-                          style={{ background: "rgba(139,92,246,0.2)", color: "#c084fc", border: "1px solid rgba(139,92,246,0.35)" }}
+                          style={{ background: "rgba(132,204,22,0.15)", color: "#84cc16" }}
                         >
-                          Pro
+                          Owned
                         </span>
                       )}
                     </div>
@@ -671,7 +683,7 @@ export function ShopPage() {
                         Test
                       </button>
                     )}
-                    {canUse ? (
+                    {owned ? (
                       <button
                         onClick={() => {
                           setVoiceProfile(p.id);
@@ -689,11 +701,16 @@ export function ShopPage() {
                       </button>
                     ) : (
                       <button
-                        onClick={() => toast({ title: "Pro required", description: "Upgrade to CaliCoach Pro to unlock AI voices." })}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold border border-violet-500/25 text-violet-400/70 hover:bg-violet-500/10 transition-all"
+                        onClick={() => handleBuyVoice(p.id, p.label)}
+                        disabled={purchase.isPending}
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-black transition-all disabled:opacity-50"
+                        style={{
+                          background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+                          color: "#fff",
+                          boxShadow: "0 2px 10px rgba(124,58,237,0.35)",
+                        }}
                       >
-                        <Lock className="w-3 h-3" />
-                        Pro
+                        {purchase.isPending ? "…" : "£4.99"}
                       </button>
                     )}
                   </div>

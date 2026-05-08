@@ -587,7 +587,9 @@ export function Settings() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-1.5">
-              {VOICE_PROFILE_LIST.map((p) => {
+              {VOICE_PROFILE_LIST.filter((p) =>
+                p.isFree || (profile?.inventory ?? []).includes(p.id),
+              ).map((p) => {
                 const active = voiceProfileId === p.id;
                 return (
                   <button
