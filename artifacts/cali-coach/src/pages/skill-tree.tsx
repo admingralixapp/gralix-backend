@@ -105,6 +105,9 @@ const NODE_POS: Record<string, { x: number; y: number }> = {
   // Advanced Moves (lower lane +SIDE, from pull-mu-1)
   "pull-am-1": { x: HUB_X + GAP * 5,  y: HUB_Y + SIDE },         // (2250, 1665)
   "pull-am-2": { x: HUB_X + GAP * 6,  y: HUB_Y + SIDE },         // (2400, 1665)
+  // One-Arm Path (second lower lane +SIDE*2, from pull-3)
+  "pull-oah-1":  { x: HUB_X + GAP * 4, y: HUB_Y + SIDE * 2 },   // (2100, 1830)
+  "pull-oapu-1": { x: HUB_X + GAP * 5, y: HUB_Y + SIDE * 2 },   // (2250, 1830)
 
   // ── CORE (south) ──────────────────────────────────────────────────
   "core-1":    { x: HUB_X,            y: HUB_Y + GAP },           // (1500, 1650)
@@ -171,6 +174,8 @@ const EDGES: [string, string][] = [
   ["pull-3", "pull-mu-1"], ["pull-mu-1", "pull-mu-2"], ["pull-mu-2", "pull-mu-3"],
   // PULL advanced moves (from pull-mu-1)
   ["pull-mu-1", "pull-am-1"], ["pull-am-1", "pull-am-2"],
+  // PULL one-arm path (from pull-3)
+  ["pull-3", "pull-oah-1"], ["pull-oah-1", "pull-oapu-1"],
   // CORE main
   ["core-1", "core-2"],
   // CORE hollow holds (from core-1)
@@ -208,6 +213,7 @@ const PATH_LABELS = [
   { x: HUB_X + GAP * 3,       y: HUB_Y - SIDE - 32,    text: "Front Lever",  color: BRANCH_COLOR.PULL },
   { x: HUB_X + GAP * 4,       y: HUB_Y - 32,           text: "Muscle-Up",    color: BRANCH_COLOR.PULL },
   { x: HUB_X + GAP * 5,       y: HUB_Y + SIDE + 22,    text: "Advanced",     color: BRANCH_COLOR.PULL },
+  { x: HUB_X + GAP * 4.5,    y: HUB_Y + SIDE * 2 + 22, text: "One-Arm",      color: BRANCH_COLOR.PULL },
   { x: HUB_X - SIDE - 14,     y: HUB_Y + GAP * 0.55,  text: "Hollow Holds", color: BRANCH_COLOR.CORE },
   { x: HUB_X + SIDE + 14,     y: HUB_Y + GAP * 0.55,  text: "Bar Based",    color: BRANCH_COLOR.CORE },
   { x: HUB_X + SIDE * 2 + 14, y: HUB_Y + GAP * 1.6,   text: "Human Flag",   color: BRANCH_COLOR.CORE },
@@ -221,29 +227,33 @@ const PATH_LABELS = [
 //   PUSH branch (↑ north): equipment paths fan WEST from push-3
 
 const EQUIPMENT_NODE_POS: Record<string, { x: number; y: number }> = {
-  // ── PULL — Bar Specialist (south of pull-branch, y + SIDE*2) ──
-  "pull-bar-1":      { x: HUB_X + GAP * 2, y: HUB_Y + SIDE * 2 },  // (1800, 1830)
-  "pull-bar-2":      { x: HUB_X + GAP * 3, y: HUB_Y + SIDE * 2 },  // (1950, 1830)
-  "pull-bar-3":      { x: HUB_X + GAP * 4, y: HUB_Y + SIDE * 2 },  // (2100, 1830)
-  // ── PULL — Rings Specialist (south of bar lane, y + SIDE*3) ──
+  // ── PULL — Rings Specialist (south of OAH lane, y + SIDE*3) ──────────────
   "pull-rings-1":    { x: HUB_X + GAP * 2, y: HUB_Y + SIDE * 3 },  // (1800, 1995)
   "pull-rings-2":    { x: HUB_X + GAP * 3, y: HUB_Y + SIDE * 3 },  // (1950, 1995)
   "pull-rings-3":    { x: HUB_X + GAP * 4, y: HUB_Y + SIDE * 3 },  // (2100, 1995)
-  // ── PULL — Weighted Specialist (south of rings lane, y + SIDE*4) ──
+  // ── PULL — Weighted Specialist (south of rings lane, y + SIDE*4) ─────────
   "pull-weighted-1": { x: HUB_X + GAP * 2, y: HUB_Y + SIDE * 4 },  // (1800, 2160)
   "pull-weighted-2": { x: HUB_X + GAP * 3, y: HUB_Y + SIDE * 4 },  // (1950, 2160)
   "pull-weighted-3": { x: HUB_X + GAP * 4, y: HUB_Y + SIDE * 4 },  // (2100, 2160)
-  // ── PUSH — Rings Specialist (west of push-branch, x - SIDE) ──
+  // ── PUSH — Rings Specialist (west of push-branch, x - SIDE) ──────────────
   "push-rings-1":    { x: HUB_X - SIDE,     y: HUB_Y - GAP * 3 },  // (1335, 1050)
   "push-rings-2":    { x: HUB_X - SIDE,     y: HUB_Y - GAP * 4 },  // (1335,  900)
-  // ── PUSH — Weighted Specialist (further west, x - SIDE*2) ──
+  // ── PUSH — Weighted Specialist (further west, x - SIDE*2) ────────────────
   "push-weighted-1": { x: HUB_X - SIDE * 2, y: HUB_Y - GAP * 3 },  // (1170, 1050)
+  // ── CORE — Weighted/Rings Specialist (east column at x + SIDE*3) ─────────
+  "core-weighted-1": { x: HUB_X + SIDE * 3, y: HUB_Y + GAP },      // (1995, 1650)
+  "core-rings-1":    { x: HUB_X + SIDE * 3, y: HUB_Y + GAP * 2 },  // (1995, 1800)
+  "core-weighted-2": { x: HUB_X + SIDE * 3, y: HUB_Y + GAP * 3 },  // (1995, 1950)
+  "core-weighted-3": { x: HUB_X + SIDE * 3, y: HUB_Y + GAP * 4 },  // (1995, 2100)
+  // ── LEGS — Weighted Specialist (south row at y + SIDE*2) ─────────────────
+  "legs-weighted-1": { x: HUB_X - GAP,      y: HUB_Y + SIDE * 2 }, // (1350, 1830)
+  "legs-weighted-2": { x: HUB_X - GAP * 2,  y: HUB_Y + SIDE * 2 }, // (1200, 1830)
+  "legs-weighted-3": { x: HUB_X - GAP * 3,  y: HUB_Y + SIDE * 2 }, // (1050, 1830)
+  "legs-weighted-4": { x: HUB_X - GAP * 4,  y: HUB_Y + SIDE * 2 }, //  (900, 1830)
 };
 
 // Equipment edges follow the prerequisite chain defined in skill-tree.ts
 const EQUIPMENT_EDGES: Array<[string, string]> = [
-  // PULL bar (from pull-2)
-  ["pull-2", "pull-bar-1"], ["pull-bar-1", "pull-bar-2"], ["pull-bar-2", "pull-bar-3"],
   // PULL rings (from pull-2)
   ["pull-2", "pull-rings-1"], ["pull-rings-1", "pull-rings-2"], ["pull-rings-2", "pull-rings-3"],
   // PULL weighted (from pull-2)
@@ -252,26 +262,35 @@ const EQUIPMENT_EDGES: Array<[string, string]> = [
   ["push-3", "push-rings-1"], ["push-rings-1", "push-rings-2"],
   // PUSH weighted (from push-3)
   ["push-3", "push-weighted-1"],
+  // CORE weighted/rings (from core-1)
+  ["core-1", "core-weighted-1"], ["core-weighted-1", "core-rings-1"],
+  ["core-rings-1", "core-weighted-2"], ["core-weighted-2", "core-weighted-3"],
+  // LEGS weighted (from legs-1)
+  ["legs-1", "legs-weighted-1"], ["legs-weighted-1", "legs-weighted-2"],
+  ["legs-weighted-2", "legs-weighted-3"], ["legs-weighted-3", "legs-weighted-4"],
 ];
 
 // Equipment tag → color (matches EQUIPMENT_SPECIALTIES exported from skill-tree.ts)
 const EQUIPMENT_COLORS: Record<string, string> = {
-  bar:      "#f59e0b",
   rings:    "#06b6d4",
   weighted: "#a855f7",
 };
 
 // Path labels that appear when lens is on
 const EQUIPMENT_PATH_LABELS = [
-  { x: HUB_X + GAP * 3,    y: HUB_Y + SIDE * 2 - 38, text: "Bar Specialist",  color: EQUIPMENT_COLORS.bar },
-  { x: HUB_X + GAP * 3,    y: HUB_Y + SIDE * 3 - 38, text: "Rings",           color: EQUIPMENT_COLORS.rings },
-  { x: HUB_X + GAP * 3,    y: HUB_Y + SIDE * 4 - 38, text: "Weighted",        color: EQUIPMENT_COLORS.weighted },
-  { x: HUB_X - SIDE - 40,  y: HUB_Y - GAP * 3.4,     text: "Rings",           color: EQUIPMENT_COLORS.rings },
-  { x: HUB_X - SIDE * 2 - 48, y: HUB_Y - GAP * 3.4,  text: "Weighted",        color: EQUIPMENT_COLORS.weighted },
+  // PULL — rings and weighted
+  { x: HUB_X + GAP * 3,       y: HUB_Y + SIDE * 3 - 38, text: "Rings",            color: EQUIPMENT_COLORS.rings },
+  { x: HUB_X + GAP * 3,       y: HUB_Y + SIDE * 4 - 38, text: "Weighted",          color: EQUIPMENT_COLORS.weighted },
+  // PUSH
+  { x: HUB_X - SIDE - 40,     y: HUB_Y - GAP * 3.4,     text: "Rings",             color: EQUIPMENT_COLORS.rings },
+  { x: HUB_X - SIDE * 2 - 48, y: HUB_Y - GAP * 3.4,     text: "Weighted",          color: EQUIPMENT_COLORS.weighted },
+  // CORE weighted / rings
+  { x: HUB_X + SIDE * 3 + 50, y: HUB_Y + GAP * 2.4,     text: "Weighted / Rings",  color: EQUIPMENT_COLORS.weighted },
+  // LEGS weighted
+  { x: HUB_X - GAP * 2.5,     y: HUB_Y + SIDE * 2 - 38, text: "Weighted",          color: EQUIPMENT_COLORS.weighted },
 ];
 
 function equipmentNodeColor(id: string): string {
-  if (id.includes("-bar-"))      return EQUIPMENT_COLORS.bar;
   if (id.includes("-rings-"))    return EQUIPMENT_COLORS.rings;
   if (id.includes("-weighted-")) return EQUIPMENT_COLORS.weighted;
   return MUTED;
@@ -736,6 +755,16 @@ function GlassNode({
             strokeWidth={isHovered ? 2 : 1} opacity={isHovered ? 0.3 : 0.12} />
           <circle cx={x} cy={y} r={NODE_R + 7}  fill="none" stroke={GOLD}
             strokeWidth={isHovered ? 2.5 : 1.5} opacity={isHovered ? 0.65 : 0.35} />
+        </>
+      )}
+
+      {/* Elite L5 soft gold glow (unlocked/locked Elite nodes) */}
+      {!isMastered && skill.level === 5 && skill.levelName === "Elite" && (
+        <>
+          <circle cx={x} cy={y} r={NODE_R + 14} fill="none" stroke="#d97706"
+            strokeWidth={isHovered ? 2 : 1} opacity={isHovered ? 0.28 : 0.10} />
+          <circle cx={x} cy={y} r={NODE_R + 7}  fill="none" stroke="#d97706"
+            strokeWidth={isHovered ? 2.5 : 1.5} opacity={isHovered ? 0.50 : 0.22} />
         </>
       )}
 
@@ -1612,12 +1641,19 @@ export function SkillTreePage() {
           <Lock className="w-3 h-3 text-zinc-600" />
           {t("skillTree.locked")}
         </span>
+        {/* L5 Elite gold glow legend */}
+        <span className="flex items-center gap-1.5">
+          <span className="relative w-4 h-4 flex items-center justify-center">
+            <span className="absolute w-4 h-4 rounded-full border-2"
+              style={{ borderColor: "#d97706", boxShadow: "0 0 6px #d97706aa" }} />
+          </span>
+          <span style={{ color: "#d97706" }}>L5 Elite</span>
+        </span>
         {/* Equipment legend items — shown only when lens is on */}
         {lensOn && (
           <>
             <span className="h-4 w-px bg-white/10" />
             {[
-              { color: EQUIPMENT_COLORS.bar,      label: `${t("skillTree.barOverlay")} ◆` },
               { color: EQUIPMENT_COLORS.rings,    label: `${t("skillTree.ringsOverlay")} ◆` },
               { color: EQUIPMENT_COLORS.weighted, label: `${t("skillTree.weightedOverlay")} ◆` },
             ].map(({ color, label }) => (

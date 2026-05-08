@@ -1108,64 +1108,48 @@ const LEGS_PS_NODES: SkillNode[] = [
 
 // ─── Equipment Specialty Nodes ────────────────────────────────────────────────
 
-// ── PULL — Bar Specialist (branches from pull-2) ──────────────────────────────
-const PULL_BAR_NODES: SkillNode[] = [
+// ── PULL — One-Arm Path (branches from pull-3, bodyweight) ───────────────────
+// pull-oah-1 (One-Arm Active Hang, L3) → pull-oapu-1 (One-Arm Pull-Up, L5 Elite)
+// pull-oapu-1 also requires: pull-weighted-2 (Weighted Pull-Up Volume) + pull-mu-2 (Muscle-Up)
+const PULL_OAH_NODES: SkillNode[] = [
   {
-    id: "pull-bar-1",
+    id: "pull-oah-1",
     branch: "PULL",
     level: 3,
     levelName: "Intermediate",
-    type: "standard",
-    title: "Bar Pull-Up Volume",
-    description: "Build exceptional volume on the straight bar. Consistent sets of 12+ reps with textbook form lay the foundation for all bar-specific explosive skills.",
-    exercises: ["Pull-Up"],
+    type: "static",
+    title: "One-Arm Active Hang",
+    description: "Hang from the bar with a single arm, shoulder actively packed and depressed. Builds unilateral shoulder stability, grip endurance, and lateral chain strength — the first real step toward the one-arm pull-up.",
+    exercises: ["One-Arm Active Hang"],
     masteryRequirement: {
-      description: "Complete 12 reps with ≥80% form score in 4 sessions",
-      minReps: 12, minFormScore: 80, minQualifyingSessions: 4,
+      description: "Hold 10 s per side with ≥70% form score in 4 sessions",
+      minReps: 10,
+      minFormScore: 70,
+      minQualifyingSessions: 4,
     },
-    prerequisiteId: "pull-2",
-    path: "bar-specialist",
-    pathLabel: "Bar Specialist",
-    equipmentTag: "bar",
-    equipmentSpecialty: true,
+    prerequisiteId: "pull-3",
+    path: "one-arm",
+    pathLabel: "One-Arm Path",
   },
   {
-    id: "pull-bar-2",
-    branch: "PULL",
-    level: 4,
-    levelName: "Advanced",
-    type: "explosive",
-    title: "Explosive Bar Pull-Up",
-    description: "Accelerate through every rep until your chest clears the bar. This bar-specific power training is the direct gateway to the strict bar muscle-up.",
-    exercises: ["Explosive Pull-Up"],
-    masteryRequirement: {
-      description: "Complete 6 reps with ≥82% form score in 5 sessions",
-      minReps: 6, minFormScore: 82, minQualifyingSessions: 5,
-    },
-    prerequisiteId: "pull-bar-1",
-    path: "bar-specialist",
-    pathLabel: "Bar Specialist",
-    equipmentTag: "bar",
-    equipmentSpecialty: true,
-  },
-  {
-    id: "pull-bar-3",
+    id: "pull-oapu-1",
     branch: "PULL",
     level: 5,
     levelName: "Elite",
-    type: "explosive",
-    title: "Strict Bar Muscle-Up",
-    description: "Zero swing, zero kip — pull through and press above the bar with pure upper-body strength. The gold standard of bar pulling excellence.",
-    exercises: ["Muscle-Up"],
+    type: "standard",
+    title: "One-Arm Pull-Up",
+    description: "The ultimate test of unilateral pulling strength — a full pull-up performed with a single arm, no assistance, no momentum. One of the rarest feats in all of calisthenics. Requires mastery of heavy weighted pulling and the muscle-up before it can be unlocked.",
+    exercises: ["One-Arm Pull-Up"],
     masteryRequirement: {
-      description: "Complete 3 reps with ≥88% form score in 5 sessions",
-      minReps: 3, minFormScore: 88, minQualifyingSessions: 5,
+      description: "Complete 2 reps per side with ≥85% form score in 5 sessions",
+      minReps: 2,
+      minFormScore: 85,
+      minQualifyingSessions: 5,
     },
-    prerequisiteId: "pull-bar-2",
-    path: "bar-specialist",
-    pathLabel: "Bar Specialist",
-    equipmentTag: "bar",
-    equipmentSpecialty: true,
+    prerequisiteId: "pull-oah-1",
+    path: "one-arm",
+    pathLabel: "One-Arm Path",
+    secondaryPrerequisiteIds: ["pull-weighted-2", "pull-mu-2"],
   },
 ];
 
@@ -1333,6 +1317,184 @@ const PUSH_RINGS_NODES: SkillNode[] = [
   },
 ];
 
+// ── CORE — Weighted / Rings Specialist (branches from core-1, east lane) ──────
+// core-weighted-1 → core-rings-1 → core-weighted-2 → core-weighted-3
+const CORE_WEIGHTED_NODES: SkillNode[] = [
+  {
+    id: "core-weighted-1",
+    branch: "CORE",
+    level: 1,
+    levelName: "Beginner",
+    type: "static",
+    title: "Weighted Plank",
+    description: "Hold a rigid plank with weight plates or a vest on your back. The added load magnifies the anti-extension demand, making this the most direct path to elite core stiffness under load.",
+    exercises: ["Weighted Plank"],
+    masteryRequirement: {
+      description: "Hold 30 s with ≥72% form score in 3 sessions",
+      minReps: 30,
+      minFormScore: 72,
+      minQualifyingSessions: 3,
+    },
+    prerequisiteId: "core-1",
+    path: "core-weighted",
+    pathLabel: "Weighted Core Specialist",
+    equipmentTag: "weighted",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "core-rings-1",
+    branch: "CORE",
+    level: 2,
+    levelName: "Novice",
+    type: "standard",
+    title: "Ring Knee Raises",
+    description: "Hang from gymnastic rings and drive your knees to your chest. The instability forces deep shoulder packing and superior core compression compared to a fixed bar.",
+    exercises: ["Ring Knee Raises"],
+    masteryRequirement: {
+      description: "Complete 10 reps with ≥72% form score in 3 sessions",
+      minReps: 10,
+      minFormScore: 72,
+      minQualifyingSessions: 3,
+    },
+    prerequisiteId: "core-weighted-1",
+    path: "core-weighted",
+    pathLabel: "Weighted Core Specialist",
+    equipmentTag: "rings",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "core-weighted-2",
+    branch: "CORE",
+    level: 3,
+    levelName: "Intermediate",
+    type: "standard",
+    title: "Weighted Leg Raises",
+    description: "Hang from the bar wearing ankle weights and raise straight legs to horizontal. The added load dramatically increases hip-flexor demand and grip endurance requirements.",
+    exercises: ["Weighted Leg Raises"],
+    masteryRequirement: {
+      description: "Complete 8 reps with ≥76% form score in 4 sessions",
+      minReps: 8,
+      minFormScore: 76,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "core-rings-1",
+    path: "core-weighted",
+    pathLabel: "Weighted Core Specialist",
+    equipmentTag: "weighted",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "core-weighted-3",
+    branch: "CORE",
+    level: 4,
+    levelName: "Advanced",
+    type: "standard",
+    title: "Weighted Dragon Flag",
+    description: "Perform the Dragon Flag with a weight vest — one of the most brutal loaded bodyweight core exercises in existence. Total anti-extension strength under external load.",
+    exercises: ["Weighted Dragon Flag"],
+    masteryRequirement: {
+      description: "Complete 4 reps with ≥80% form score in 4 sessions",
+      minReps: 4,
+      minFormScore: 80,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "core-weighted-2",
+    path: "core-weighted",
+    pathLabel: "Weighted Core Specialist",
+    equipmentTag: "weighted",
+    equipmentSpecialty: true,
+  },
+];
+
+// ── LEGS — Weighted Specialist (branches from legs-1, south lane) ─────────────
+// legs-weighted-1 → legs-weighted-2 → legs-weighted-3 → legs-weighted-4
+const LEGS_WEIGHTED_NODES: SkillNode[] = [
+  {
+    id: "legs-weighted-1",
+    branch: "LEGS",
+    level: 1,
+    levelName: "Beginner",
+    type: "standard",
+    title: "Weighted Goblet Squat",
+    description: "Hold a kettlebell or dumbbell at chest height and squat to depth. The goblet position promotes vertical torso and deep knee tracking, making it the ideal loaded entry point for leg strength.",
+    exercises: ["Weighted Goblet Squat"],
+    masteryRequirement: {
+      description: "Complete 12 reps with ≥72% form score in 3 sessions",
+      minReps: 12,
+      minFormScore: 72,
+      minQualifyingSessions: 3,
+    },
+    prerequisiteId: "legs-1",
+    path: "legs-weighted",
+    pathLabel: "Weighted Legs Specialist",
+    equipmentTag: "weighted",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "legs-weighted-2",
+    branch: "LEGS",
+    level: 2,
+    levelName: "Novice",
+    type: "standard",
+    title: "Weighted Bulgarian Split Squat",
+    description: "Hold dumbbells and perform a rear-foot elevated split squat. Unilateral loading under this degree of hip-flexor stretch is one of the most effective strength builders for the legs.",
+    exercises: ["Weighted Bulgarian Split Squat"],
+    masteryRequirement: {
+      description: "Complete 8 reps per side with ≥75% form score in 4 sessions",
+      minReps: 8,
+      minFormScore: 75,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "legs-weighted-1",
+    path: "legs-weighted",
+    pathLabel: "Weighted Legs Specialist",
+    equipmentTag: "weighted",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "legs-weighted-3",
+    branch: "LEGS",
+    level: 3,
+    levelName: "Intermediate",
+    type: "standard",
+    title: "Weighted Pistol Squat",
+    description: "Perform the full pistol squat holding a kettlebell or weight plate. Adding load to this already-demanding movement requires exceptional ankle mobility, single-leg strength, and balance.",
+    exercises: ["Weighted Pistol Squat"],
+    masteryRequirement: {
+      description: "Complete 4 reps per side with ≥80% form score in 4 sessions",
+      minReps: 4,
+      minFormScore: 80,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "legs-weighted-2",
+    path: "legs-weighted",
+    pathLabel: "Weighted Legs Specialist",
+    equipmentTag: "weighted",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "legs-weighted-4",
+    branch: "LEGS",
+    level: 4,
+    levelName: "Advanced",
+    type: "standard",
+    title: "Weighted Shrimp Squat",
+    description: "Perform the shrimp squat with a weight vest or dumbbells — one of the most advanced loaded unilateral movements. Demands elite hip flexor, quad, and balance under external resistance.",
+    exercises: ["Weighted Shrimp Squat"],
+    masteryRequirement: {
+      description: "Complete 4 reps per side with ≥82% form score in 5 sessions",
+      minReps: 4,
+      minFormScore: 82,
+      minQualifyingSessions: 5,
+    },
+    prerequisiteId: "legs-weighted-3",
+    path: "legs-weighted",
+    pathLabel: "Weighted Legs Specialist",
+    equipmentTag: "weighted",
+    equipmentSpecialty: true,
+  },
+];
+
 // ── PUSH — Weighted Specialist (branches from push-3 Dip Introduction) ────────
 const PUSH_WEIGHTED_NODES: SkillNode[] = [
   {
@@ -1357,11 +1519,12 @@ const PUSH_WEIGHTED_NODES: SkillNode[] = [
 ];
 
 export const EQUIPMENT_SPECIALTY_NODES: SkillNode[] = [
-  ...PULL_BAR_NODES,
   ...PULL_RINGS_NODES,
   ...PULL_WEIGHTED_NODES,
   ...PUSH_RINGS_NODES,
   ...PUSH_WEIGHTED_NODES,
+  ...CORE_WEIGHTED_NODES,
+  ...LEGS_WEIGHTED_NODES,
 ];
 
 // ─── Full registry ─────────────────────────────────────────────────────────────
@@ -1393,14 +1556,16 @@ export const ALL_SKILL_NODES: SkillNode[] = [
   ...LEGS_NODES,
   ...LEGS_LS_NODES,
   ...LEGS_PS_NODES,
-  // Equipment specialty
+  // Equipment specialty (must come before PULL_OAH_NODES so pull-weighted-2 is evaluated first)
   ...EQUIPMENT_SPECIALTY_NODES,
+  // One-Arm Path — has cross-branch prereqs from equipment nodes above
+  ...PULL_OAH_NODES,
 ];
 
 /** All non-specialty nodes by branch (includes all sub-paths) */
 export const SKILL_TREE_BRANCHES: Record<SkillBranch, SkillNode[]> = {
   PUSH: [...PUSH_NODES, ...PUSH_OVERHEAD_NODES, ...PUSH_PLANCHE_NODES],
-  PULL: [...PULL_NODES, ...PULL_FL_NODES, ...PULL_MU_NODES, ...PULL_AM_NODES],
+  PULL: [...PULL_NODES, ...PULL_FL_NODES, ...PULL_MU_NODES, ...PULL_AM_NODES, ...PULL_OAH_NODES],
   CORE: [...CORE_NODES, ...CORE_HH_NODES, ...CORE_BB_NODES, ...CORE_HF_NODES],
   LEGS: [...LEGS_NODES, ...LEGS_LS_NODES, ...LEGS_PS_NODES],
 };
@@ -1416,7 +1581,7 @@ export type SkillStatus = "locked" | "unlocked" | "mastered";
 
 // ─── Equipment Specialty ───────────────────────────────────────────────────────
 
-export type EquipmentTag = "bar" | "rings" | "weighted";
+export type EquipmentTag = "rings" | "weighted";
 
 export const EQUIPMENT_SPECIALTIES: Record<EquipmentTag, {
   label: string;
@@ -1424,7 +1589,6 @@ export const EQUIPMENT_SPECIALTIES: Record<EquipmentTag, {
   color: string;
   bgColor: string;
 }> = {
-  bar:      { label: "Bar Specialist",      shortLabel: "Bar",      color: "#f97316", bgColor: "rgba(249,115,22,0.12)" },
   rings:    { label: "Rings Specialist",    shortLabel: "Rings",    color: "#06b6d4", bgColor: "rgba(6,182,212,0.12)"  },
   weighted: { label: "Weighted Specialist", shortLabel: "Weighted", color: "#8b5cf6", bgColor: "rgba(139,92,246,0.12)" },
 };
