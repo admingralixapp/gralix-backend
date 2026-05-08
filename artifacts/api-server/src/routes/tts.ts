@@ -87,10 +87,12 @@ async function elevenLabsTTS(
     },
     body: JSON.stringify({
       text: text.slice(0, 500),
-      model_id: "eleven_turbo_v2_5",
+      model_id: "eleven_multilingual_v2",
       voice_settings: voiceSettings,
     }),
   });
+
+  console.log(`SENDING TO ELEVENLABS: { voiceId: "${voiceId}", textSnippet: "${text.slice(0, 60)}", model: "eleven_multilingual_v2" }`);
 
   if (!upstream.ok) {
     const body = await upstream.text().catch(() => "");

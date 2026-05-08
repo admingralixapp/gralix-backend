@@ -347,7 +347,10 @@ export function testCoachVoice(profileId: string, label?: string): Promise<void>
   console.log(`[CaliCoach Voice] 🎙️ Fetching ElevenLabs Audio for ${voiceName}... (profile="${profileId}" → /api/tts/stream)`);
 
   stopCurrentAudio();
-  return _speakWithAudioElement(sampleText, profileId, "Demo", `${profileId}:test_sample`);
+  // Use a timestamp suffix so the browser never serves a cached response for test clicks.
+  // Without this, Cache-Control: max-age=86400 causes the browser to replay stale audio
+  // from a previous session even when the server has new voice IDs or a new model.
+  return _speakWithAudioElement(sampleText, profileId, "Demo", `${profileId}:test_${Date.now()}`);
 }
 
 /**
