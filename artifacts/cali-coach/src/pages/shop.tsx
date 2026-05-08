@@ -284,16 +284,26 @@ export function ShopPage() {
               { icon: "🎥", label: "Real-time AI Camera Coaching" },
               { icon: "💜", label: "Glowing Purple Verified Badge" },
               { icon: "🎁", label: "1x Free Aura Pack Signing Bonus" },
-            ].map(({ icon, label }) => (
-              <div key={label} className="flex items-center gap-3">
+              {
+                icon: "📊",
+                label: "Advanced Progress Analytics",
+                description: "Deep-dive into your form trends, strength gains, and performance metrics.",
+              },
+            ].map(({ icon, label, description }) => (
+              <div key={label} className="flex items-start gap-3">
                 <div
-                  className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm mt-0.5"
                   style={{ background: "rgba(168,85,247,0.14)", border: "1px solid rgba(168,85,247,0.25)" }}
                 >
                   {icon}
                 </div>
-                <span className="text-sm text-white/80 flex-1">{label}</span>
-                <Check className="w-4 h-4 shrink-0" style={{ color: "#c084fc" }} />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm text-white/80">{label}</span>
+                  {description && (
+                    <p className="text-[10px] text-white/35 mt-0.5 leading-snug">{description}</p>
+                  )}
+                </div>
+                <Check className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#c084fc" }} />
               </div>
             ))}
           </div>
