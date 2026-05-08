@@ -61,6 +61,7 @@ let _activeProfileId: string = "classic";
  */
 export function setActiveVoiceProfile(profileId: string): void {
   _activeProfileId = profileId;
+  console.log(`[CaliCoach Voice] Active profile set → "${profileId}" (free: ${FREE_VOICE_PROFILES.has(profileId)})`);
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -235,6 +236,7 @@ export function setVoiceLanguage(bcp47: string): void {
 // ─── Web Speech API fallback ──────────────────────────────────────────────────
 
 function fallbackSpeak(text: string): void {
+  console.warn(`[CaliCoach Voice] ⚠️ Falling back to browser TTS for: "${text.slice(0, 60)}"`);
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
@@ -330,6 +332,7 @@ export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "
   // Free profiles use browser TTS immediately; paid profiles go through
   // the ElevenLabs pipeline via /api/tts/cue (same as speakCue).
   if (FREE_VOICE_PROFILES.has(_activeProfileId)) {
+    console.log(`[CaliCoach Voice] speak() → browser TTS (profile="${_activeProfileId}", free tier)`);
     browserSpeakForProfile(text, _activeProfileId);
     return;
   }
@@ -340,7 +343,9 @@ export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "
     s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40);
   const cacheKey = `general:${slug(text)}`;
 
-  _speakCueAsync("Coaching", text, _activeProfileId, cacheKey).catch(() => {
+  console.log(`[CaliCoach Voice] speak() → ElevenLabs (profile="${_activeProfileId}", cue="${text.slice(0, 40)}")`);
+  _speakCueAsync("Coaching", text, _activeProfileId, cacheKey).catch((err) => {
+    console.error(`[CaliCoach Voice] ElevenLabs speak failed, falling back to browser TTS:`, err);
     fallbackSpeak(text);
   });
 }
@@ -482,11 +487,13 @@ async function _speakCueAsync(
   // ── 1. Client-side cache hit — play immediately (no network) ────────────
   const cached = _cueCache.get(clientKey);
   if (cached) {
+    console.log(`[CaliCoach Voice] _speakCueAsync cache HIT → playing "${audioCue.slice(0, 40)}"`);
     await playAudioBuffer(cached);
     return;
   }
 
   // ── 2. Fetch from /api/tts/cue (server may return cached MP3) ───────────
+  console.log(`[CaliCoach Voice] _speakCueAsync → POST /api/tts/cue profile="${profileId}" cue="${audioCue.slice(0, 40)}"`);
   let res: Response;
   try {
     res = await fetch("/api/tts/cue", {
@@ -495,27 +502,49 @@ async function _speakCueAsync(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ exerciseName, audioCue, profile: profileId, cacheKey }),
     });
-  } catch {
+  } catch (err) {
+    console.error(`[CaliCoach Voice] fetch /api/tts/cue network error:`, err);
     fallbackSpeak(audioCue);
     return;
   }
 
-  if (res.status === 503) { fallbackSpeak(audioCue); return; }
-  if (!res.ok)             { fallbackSpeak(audioCue); return; }
+  if (res.status === 503) {
+    console.error(`[CaliCoach Voice] /api/tts/cue 503 — ElevenLabs API key not configured on server`);
+    fallbackSpeak(audioCue); return;
+  }
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error(`[CaliCoach Voice] /api/tts/cue ${res.status} error:`, body);
+    fallbackSpeak(audioCue); return;
+  }
 
   let arrayBuffer: ArrayBuffer;
   try {
     arrayBuffer = await res.arrayBuffer();
-  } catch {
+  } catch (err) {
+    console.error(`[CaliCoach Voice] arrayBuffer() read failed:`, err);
     fallbackSpeak(audioCue);
     return;
   }
 
-  if (arrayBuffer.byteLength === 0) { fallbackSpeak(audioCue); return; }
+  if (arrayBuffer.byteLength === 0) {
+    console.error(`[CaliCoach Voice] /api/tts/cue returned 0 bytes — empty response`);
+    fallbackSpeak(audioCue); return;
+  }
+
+  console.log(`[CaliCoach Voice] Received ${arrayBuffer.byteLength} bytes — decoding MP3…`);
 
   try {
     const { ac } = getGains();
-    if (ac.state === "suspended") await ac.resume();
+
+    // Resume suspended AudioContext. Wrap in try/catch so a resume() failure
+    // doesn't kill the whole pipeline — we attempt to play anyway.
+    if (ac.state === "suspended") {
+      try { await ac.resume(); } catch (e) {
+        console.warn(`[CaliCoach Voice] AudioContext.resume() failed (autoplay policy?):`, e);
+      }
+    }
+    console.log(`[CaliCoach Voice] AudioContext state: ${ac.state}`);
 
     const audioBuffer = await ac.decodeAudioData(arrayBuffer);
 
@@ -526,9 +555,12 @@ async function _speakCueAsync(
     }
     _cueCache.set(clientKey, audioBuffer);
 
+    console.log(`[CaliCoach Voice] ✅ Playing ElevenLabs audio (${audioBuffer.duration.toFixed(1)}s)`);
+
     // ── 4. Play ─────────────────────────────────────────────────────────
     await playAudioBuffer(audioBuffer);
-  } catch {
+  } catch (err) {
+    console.error(`[CaliCoach Voice] decodeAudioData / playback failed:`, err);
     fallbackSpeak(audioCue);
   }
 }

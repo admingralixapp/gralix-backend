@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
-import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile } from "@/lib/voice-service";
+import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile, getAudioContext } from "@/lib/voice-service";
 import { useTranslation } from "react-i18next";
 import { getRestDuration, type RestDuration, REST_DURATION_OPTIONS } from "@/lib/workout-settings";
 import { getVoiceCues, getCameraFacing, getMirrorVideo, getVoiceProfile } from "@/lib/workout-preferences";
@@ -1497,6 +1497,14 @@ export function Workout() {
     if (!selectedExerciseId) {
       toast({ title: "Select an exercise", description: "Pick an exercise before starting." });
       return;
+    }
+    // Eagerly unlock the AudioContext during this user-gesture click so ElevenLabs
+    // audio can play without hitting the browser autoplay restriction later.
+    try {
+      const ctx = getAudioContext();
+      if (ctx.state === "suspended") await ctx.resume();
+    } catch {
+      // Non-fatal — ElevenLabs will attempt resume() again when the first cue fires.
     }
     try {
       const session = await createSession.mutateAsync({
