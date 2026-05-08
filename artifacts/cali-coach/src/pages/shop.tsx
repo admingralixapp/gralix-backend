@@ -281,9 +281,9 @@ export function ShopPage() {
           {/* Why go Pro list */}
           <div className="space-y-2.5 relative">
             {[
-              { icon: "🎥", label: "Real-time AI Camera Coaching" },
-              { icon: "💜", label: "Glowing Purple Verified Badge" },
-              { icon: "🎁", label: "1x Free Aura Pack Signing Bonus" },
+              { icon: "🎥", label: "Real-time AI Camera Coaching", description: "Get live feedback on your form and posture on every workout." },
+              { icon: "💜", label: "Glowing Purple Verified Badge", description: "Stand out in the community and on the leaderboards with an exclusive Pro-only badge." },
+              { icon: "🎁", label: "1x Free Aura Pack Signing Bonus", description: "Kickstart your training with any Premium Aura of your choice, unlocked forever." },
               {
                 icon: "📊",
                 label: "Advanced Progress Analytics",
