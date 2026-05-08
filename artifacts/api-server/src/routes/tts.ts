@@ -303,6 +303,107 @@ router.post("/tts/cue", async (req: Request, res: Response) => {
 });
 
 // ---------------------------------------------------------------------------
+// GET /api/tts/stream — streaming audio for new Audio() element playback.
+//
+// Same pipeline as POST /api/tts/cue but as a GET so the browser can set it
+// as the src of a new Audio() element directly.
+//
+// Query params:
+//   text         : string   Raw cue text (will be rephrased by LLM in character)
+//   profile      : string   Voice profile ID, e.g. "sergeant"
+//   exerciseName : string   e.g. "Plank" (used for LLM context)
+//   cacheKey     : string   Stable key for server-side MP3 cache
+// ---------------------------------------------------------------------------
+router.get("/tts/stream", async (req: Request, res: Response) => {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) {
+    res.status(503).end();
+    return;
+  }
+
+  const { text, profile: profileId, exerciseName, cacheKey } = req.query as {
+    text?:         string;
+    profile?:      string;
+    exerciseName?: string;
+    cacheKey?:     string;
+  };
+
+  if (!text?.trim()) {
+    res.status(400).json({ error: "text is required" });
+    return;
+  }
+
+  const profile       = getVoiceProfile(profileId ?? DEFAULT_PROFILE_ID);
+  const serverCacheKey = `${profile.id}:${cacheKey ?? `${exerciseName ?? ""}:${text}`}`;
+
+  // ── 1. Cache hit — return stored audio immediately ──────────────────────
+  const cached = _audioCache.get(serverCacheKey);
+  if (cached) {
+    res.set({
+      "Content-Type":  "audio/mpeg",
+      "Cache-Control": "public, max-age=86400",
+      "X-Cache":       "HIT",
+    });
+    res.end(cached);
+    return;
+  }
+
+  // ── 2. LLM personality injection ────────────────────────────────────────
+  let cueText = text.trim();
+  const ai = getOpenAI();
+  if (ai && exerciseName?.trim()) {
+    try {
+      const completion = await ai.chat.completions.create({
+        model: "gpt-4o-mini",
+        max_completion_tokens: 60,
+        messages: [
+          { role: "system", content: profile.systemPrompt },
+          {
+            role: "user",
+            content:
+              `Exercise: ${exerciseName}. Form issue detected: "${cueText}". ` +
+              `Generate exactly one coaching sentence in character. ` +
+              `Do NOT use quotes. Max 15 words.`,
+          },
+        ],
+      });
+      const generated = completion.choices[0]?.message?.content?.trim();
+      if (generated) cueText = generated;
+    } catch (err) {
+      req.log.warn({ err }, "LLM cue generation failed — using raw text");
+    }
+  }
+
+  // ── 3. ElevenLabs TTS ───────────────────────────────────────────────────
+  console.log(`[ElevenLabs] /api/tts/stream — profile="${profile.id}" voiceId="${profile.voiceId}" text="${cueText.slice(0, 60)}"`);
+  let audioBuffer: Buffer;
+  try {
+    audioBuffer = await elevenLabsTTS(
+      cueText,
+      profile.voiceId,
+      profile.voiceSettings,
+      apiKey,
+    );
+    console.log(`[ElevenLabs] /api/tts/stream — success, ${audioBuffer.byteLength} bytes`);
+  } catch (err) {
+    req.log.error({ err, profileId: profile.id, voiceId: profile.voiceId }, "ElevenLabs TTS failed for stream");
+    console.error(`[ElevenLabs] /api/tts/stream FAILED — profile="${profile.id}" error:`, err);
+    res.status(502).end();
+    return;
+  }
+
+  // ── 4. Cache and return ──────────────────────────────────────────────────
+  setCached(serverCacheKey, audioBuffer);
+
+  res.set({
+    "Content-Type":  "audio/mpeg",
+    "Cache-Control": "public, max-age=86400",
+    "X-Cache":       "MISS",
+  });
+  res.end(audioBuffer);
+});
+
+// ---------------------------------------------------------------------------
 // GET /api/tts/profiles — list available voice personality profiles.
 // ---------------------------------------------------------------------------
 import { VOICE_PROFILES } from "../lib/voiceProfiles.js";

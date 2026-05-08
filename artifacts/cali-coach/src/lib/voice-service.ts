@@ -1,105 +1,62 @@
 /**
- * voiceService — ElevenLabs Eleven Flash v2.5 streaming TTS + Audio Ducking
+ * voiceService — ElevenLabs streaming TTS via new Audio() element
  *
- * Architecture:
- *  1. Frontend calls `speak(text)` for simple predefined cues.
- *  2. Frontend calls `speakCue(...)` for AI-personalised dynamic coaching cues.
- *     • Checks a client-side AudioBuffer cache first (zero network cost on repeat).
- *     • On miss: POSTs to /api/tts/cue → LLM generates cue text → ElevenLabs speaks it.
- *  3. Service POSTs to /api/tts, proxies to ElevenLabs, streams audio/mpeg back.
- *  4. AudioContext decodes the MP3 and starts playback immediately.
- *  5. Falls back to Web Speech API when ElevenLabs is unavailable.
+ * Architecture for paid profiles (Sergeant, Sensei, Cyborg, …):
+ *   1. speak() / speakCue() / testCoachVoice() are called by workout.tsx.
+ *   2. window.speechSynthesis is HARD-CANCELLED at every entry point.
+ *   3. A new Audio() element is created with src = /api/tts/stream?...
+ *      (GET endpoint that does LLM personality injection + ElevenLabs TTS).
+ *   4. audio.volume = 1.0, audio.play() — browser handles streaming.
+ *   5. NO fallback to browser TTS for paid profiles. Silence = bug, not fallback.
+ *
+ * Architecture for free profiles (classic, classic_female):
+ *   → browser Web Speech API only, no ElevenLabs, no network cost.
  *
  * Audio Ducking:
- *  • All non-speech audio (sound effects, app music) should connect through the
- *    exported `getDuckingGain()` node → AudioContext.destination.
- *  • When a coaching cue starts: duckingGain ramps to 30% in ~80 ms.
- *  • When the cue finishes: duckingGain ramps back to 100% over 500 ms.
- *  • Speech audio connects via a dedicated speechGain node (always at 100%).
- *  • MediaSession playbackState is set so the OS/browser can signal external
- *    apps (Spotify, etc.) to duck — supported on Android Chrome and some iOS
- *    WKWebView contexts; silently ignored elsewhere.
- *
- * Usage:
- *   import { speak, speakCue, cancelSpeech, getAudioContext, getDuckingGain } from "@/lib/voice-service";
- *   speak("Good rep! Keep your back straight.");
- *   speakCue("Plank", "Hips too high", "sergeant", "sergeant:plank:hips_too_high");
- *
- *   // Route a sound effect through the ducking gain:
- *   const src = getAudioContext().createBufferSource();
- *   src.buffer = sfxBuffer;
- *   src.connect(getDuckingGain());
- *   src.start();
+ *   Non-speech audio should connect through getDuckingGain() → destination.
+ *   The ducking gain is ramped when a cue starts/ends.
+ *   (Ducking is applied via the AudioContext for non-speech sources only;
+ *    the Audio element plays at full volume independently.)
  */
 
-// ─── Mute flag (controlled by Settings › Voice Cues toggle) ──────────────────
+// ─── Mute flag ────────────────────────────────────────────────────────────────
 
 let _muted = false;
 
-/**
- * Silence all coaching cues for the duration of the current workout.
- * Called by the Workout page on mount based on the user's Voice Cues preference.
- */
 export function setVoiceMuted(muted: boolean): void {
   _muted = muted;
 }
 
-// ─── Active voice profile (module-level so speak() can route correctly) ───────
-// Defaults to "classic" (browser TTS). Updated by setActiveVoiceProfile()
-// whenever the Workout mounts or the user changes their profile in Settings.
+// ─── Active voice profile ─────────────────────────────────────────────────────
 
 let _activeProfileId: string = "classic";
 
-/**
- * Tell the voice service which personality is currently selected.
- * Must be called whenever:
- *   - The Workout page mounts (reads from localStorage).
- *   - The user switches personality in Settings (update fires immediately).
- *
- * All subsequent `speak()` calls will route through the correct ElevenLabs
- * voice until this is called again with a different value.
- */
 export function setActiveVoiceProfile(profileId: string): void {
   _activeProfileId = profileId;
   console.log(`[CaliCoach Voice] Active profile set → "${profileId}" (free: ${FREE_VOICE_PROFILES.has(profileId)})`);
 }
 
+// ─── Free-tier profiles (browser Web Speech only) ────────────────────────────
+
+const FREE_VOICE_PROFILES = new Set(["classic", "classic_female"]);
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const DUCK_TARGET    = 0.3;   // 30 % during coaching cue
-const DUCK_RAMP_DOWN = 0.08;  // 80 ms fade-down when speech starts
-const DUCK_RAMP_UP   = 0.5;   // 500 ms fade-up after speech ends
+const DUCK_TARGET    = 0.3;
+const DUCK_RAMP_DOWN = 0.08;
+const DUCK_RAMP_UP   = 0.5;
 const FULL_GAIN      = 1.0;
 
-// ─── AudioContext + GainNode singletons ──────────────────────────────────────
+// ─── AudioContext + GainNode singletons (for non-speech ducking only) ─────────
 
 let _ctx: AudioContext | null = null;
-
-/**
- * GainNode that all non-speech audio should connect through.
- * Ramped down during coaching cues, back up when they finish.
- */
 let _duckingGain: GainNode | null = null;
-
-/**
- * GainNode for speech audio — always at FULL_GAIN, bypasses ducking.
- */
 let _speechGain: GainNode | null = null;
-
-let _currentSource: AudioBufferSourceNode | null = null;
-
-// ─── Client-side audio cache for dynamic cues ────────────────────────────────
-// Key: `${profileId}:${cacheKey}` — value: decoded AudioBuffer.
-// Keeps repeated cues (e.g. "Hips too high") near-instant on second fire.
-const _cueCache = new Map<string, AudioBuffer>();
-const MAX_CUE_CACHE = 200; // ~200 unique cues before LRU eviction
-
-// ─── Context / gain initialisation ───────────────────────────────────────────
 
 function getCtx(): AudioContext {
   if (!_ctx || _ctx.state === "closed") {
     _ctx = new AudioContext();
-    _duckingGain = null; // invalidate gains when context is recreated
+    _duckingGain = null;
     _speechGain  = null;
   }
   return _ctx;
@@ -107,41 +64,23 @@ function getCtx(): AudioContext {
 
 function getGains(): { ac: AudioContext; duckGain: GainNode; speechGain: GainNode } {
   const ac = getCtx();
-
   if (!_duckingGain) {
     _duckingGain = ac.createGain();
     _duckingGain.gain.value = FULL_GAIN;
     _duckingGain.connect(ac.destination);
   }
-
   if (!_speechGain) {
     _speechGain = ac.createGain();
     _speechGain.gain.value = FULL_GAIN;
     _speechGain.connect(ac.destination);
   }
-
   return { ac, duckGain: _duckingGain, speechGain: _speechGain };
 }
 
-// ─── Public accessors for app audio routing ───────────────────────────────────
-
-/**
- * Returns the shared AudioContext.
- * Use this to decode buffers or create nodes for sound effects / music.
- */
 export function getAudioContext(): AudioContext {
   return getCtx();
 }
 
-/**
- * Returns the ducking GainNode.
- * Connect all non-speech audio sources to this node so they are automatically
- * attenuated while the AI coach is speaking.
- *
- *   const src = getAudioContext().createBufferSource();
- *   src.connect(getDuckingGain());   // ← will be ducked during cues
- *   src.start();
- */
 export function getDuckingGain(): GainNode {
   return getGains().duckGain;
 }
@@ -162,216 +101,59 @@ function releaseDuck(ac: AudioContext, duckGain: GainNode): void {
   duckGain.gain.linearRampToValueAtTime(FULL_GAIN, now + DUCK_RAMP_UP);
 }
 
-// ─── MediaSession audio focus ─────────────────────────────────────────────────
+// ─── MediaSession ─────────────────────────────────────────────────────────────
 
 function requestAudioFocus(): void {
   try {
-    if ("mediaSession" in navigator) {
-      navigator.mediaSession.playbackState = "playing";
-    }
-  } catch {
-    // Not available on this platform — safe to ignore.
-  }
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
+  } catch { /* ignore */ }
 }
 
 function abandonAudioFocus(): void {
   try {
-    if ("mediaSession" in navigator) {
-      navigator.mediaSession.playbackState = "paused";
-    }
-  } catch {
-    // ignore
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+  } catch { /* ignore */ }
+}
+
+// ─── Current Audio element (paid profiles) ────────────────────────────────────
+
+let _currentAudioEl: HTMLAudioElement | null = null;
+
+function stopCurrentAudio(): void {
+  if (_currentAudioEl) {
+    try {
+      _currentAudioEl.pause();
+      _currentAudioEl.src = "";
+    } catch { /* ignore */ }
+    _currentAudioEl = null;
   }
 }
 
-// ─── Source management ────────────────────────────────────────────────────────
-
-function stopCurrentSource(): void {
-  try {
-    _currentSource?.stop();
-  } catch {
-    // already stopped — safe to ignore
-  }
-  _currentSource = null;
-}
-
-// ─── Play an already-decoded AudioBuffer ─────────────────────────────────────
-
-async function playAudioBuffer(audioBuffer: AudioBuffer): Promise<void> {
-  const { ac, duckGain, speechGain } = getGains();
-
-  if (ac.state === "suspended") {
-    await ac.resume();
-  }
-
-  stopCurrentSource();
-  applyDuck(ac, duckGain);
-  requestAudioFocus();
-
-  const source = ac.createBufferSource();
-  source.buffer = audioBuffer;
-  source.connect(speechGain);
-  source.start(0);
-  _currentSource = source;
-
-  source.onended = () => {
-    _currentSource = null;
-    releaseDuck(ac, duckGain);
-    abandonAudioFocus();
-  };
-}
-
-// ─── Locale for speech synthesis ──────────────────────────────────────────────
+// ─── Locale for browser TTS ───────────────────────────────────────────────────
 
 let _speechLang = "en-US";
 
-/**
- * Set the BCP-47 locale used by the Web Speech API fallback.
- * Call this whenever the user changes their language in Settings.
- */
 export function setVoiceLanguage(bcp47: string): void {
   _speechLang = bcp47;
 }
 
-// ─── Web Speech API fallback ──────────────────────────────────────────────────
+// ─── Browser TTS (free profiles only) ────────────────────────────────────────
 
-function fallbackSpeak(text: string): void {
-  console.warn(`[CaliCoach Voice] ⚠️ Falling back to browser TTS for: "${text.slice(0, 60)}"`);
-  try {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1.1;
-    u.pitch = 0.95;
-    u.volume = 1;
-    u.lang = _speechLang;
-
-    const { ac, duckGain } = getGains();
-    if (ac.state !== "closed") applyDuck(ac, duckGain);
-    requestAudioFocus();
-
-    u.onend = () => {
-      const { ac: ac2, duckGain: dg } = getGains();
-      if (ac2.state !== "closed") releaseDuck(ac2, dg);
-      abandonAudioFocus();
-    };
-    u.onerror = () => {
-      const { ac: ac2, duckGain: dg } = getGains();
-      if (ac2.state !== "closed") releaseDuck(ac2, dg);
-      abandonAudioFocus();
-    };
-
-    window.speechSynthesis.speak(u);
-  } catch {
-    // Speech synthesis not available — silent fail.
-  }
-}
-
-// ─── Core async speak ─────────────────────────────────────────────────────────
-
-async function _speakAsync(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral"): Promise<void> {
-  let res: Response;
-  try {
-    res = await fetch("/api/tts", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, tone }),
-    });
-  } catch {
-    fallbackSpeak(text);
-    return;
-  }
-
-  if (res.status === 503) { fallbackSpeak(text); return; }
-  if (!res.ok)             { fallbackSpeak(text); return; }
-
-  let arrayBuffer: ArrayBuffer;
-  try {
-    arrayBuffer = await res.arrayBuffer();
-  } catch {
-    fallbackSpeak(text);
-    return;
-  }
-
-  if (arrayBuffer.byteLength === 0) { fallbackSpeak(text); return; }
-
-  try {
-    const { ac } = getGains();
-    if (ac.state === "suspended") await ac.resume();
-    const audioBuffer = await ac.decodeAudioData(arrayBuffer);
-    await playAudioBuffer(audioBuffer);
-  } catch {
-    fallbackSpeak(text);
-  }
-}
-
-// ─── Free-tier profiles (browser Web Speech only, no ElevenLabs) ─────────────
-// Must be declared BEFORE speak() which references this set.
-const FREE_VOICE_PROFILES = new Set(["classic", "classic_female"]);
-
-// ─── Public API ───────────────────────────────────────────────────────────────
-
-/**
- * Speak the given text using the active voice personality.
- * Free profiles (classic / classic_female) → browser TTS immediately.
- * Paid profiles → ElevenLabs via /api/tts/cue with LLM character injection.
- * Automatically ducks all non-speech audio while the cue is playing and
- * smoothly restores it afterwards.
- * Falls back to Web Speech API if ElevenLabs is unavailable.
- *
- * Use `speakCue` for form-correction cues — it adds AI personality + caching.
- *
- * @param tone  Optional coaching tone: "encouraging" | "firm" | "neutral"
- */
-export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral"): void {
-  if (_muted) return;
-  stopCurrentSource();
-  window.speechSynthesis.cancel();
-
-  // ── Route through the active personality voice ────────────────────────────
-  // Free profiles use browser TTS immediately; paid profiles go through
-  // the ElevenLabs pipeline via /api/tts/cue (same as speakCue).
-  if (FREE_VOICE_PROFILES.has(_activeProfileId)) {
-    console.log(`[CaliCoach Voice] speak() → browser TTS (profile="${_activeProfileId}", free tier)`);
-    browserSpeakForProfile(text, _activeProfileId);
-    return;
-  }
-
-  // Paid profile — generate a stable cache key from the cue text so
-  // repeated cues like "Good rep" are served instantly from cache.
-  const slug = (s: string) =>
-    s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40);
-  const cacheKey = `general:${slug(text)}`;
-
-  console.log(`[CaliCoach Voice] speak() → ElevenLabs (profile="${_activeProfileId}", cue="${text.slice(0, 40)}")`);
-  _speakCueAsync("Coaching", text, _activeProfileId, cacheKey).catch((err) => {
-    console.error(`[CaliCoach Voice] ElevenLabs speak failed, falling back to browser TTS:`, err);
-    fallbackSpeak(text);
-  });
-}
-
-/**
- * Returns the appropriate Web Speech API voice settings for a profile.
- * classic_female uses a higher pitch to distinguish from the default.
- */
 function browserSpeakForProfile(text: string, profileId: string): void {
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.rate  = 1.1;
-    u.pitch = profileId === "classic_female" ? 1.5 : 0.95;
+    u.rate   = 1.1;
+    u.pitch  = profileId === "classic_female" ? 1.5 : 0.95;
     u.volume = 1;
-    u.lang = _speechLang;
+    u.lang   = _speechLang;
 
-    // Try to pick a female voice for classic_female
     if (profileId === "classic_female") {
       const voices = window.speechSynthesis.getVoices();
       const femaleVoice = voices.find(
         (v) =>
           v.lang.startsWith(_speechLang.split("-")[0] ?? "en") &&
-          /female|woman|girl|zira|samantha|karen|moira|tessa|fiona|victoria/i.test(
-            v.name,
-          ),
+          /female|woman|girl|zira|samantha|karen|moira|tessa|fiona|victoria/i.test(v.name),
       );
       if (femaleVoice) u.voice = femaleVoice;
     }
@@ -397,25 +179,112 @@ function browserSpeakForProfile(text: string, profileId: string): void {
   }
 }
 
+// ─── Paid-profile playback via new Audio() ────────────────────────────────────
 /**
- * Speak a form-correction coaching cue using the active voice personality.
+ * Creates a new Audio() element pointing at GET /api/tts/stream.
+ * The server does LLM personality injection + ElevenLabs TTS, returns audio/mpeg.
+ * Server-side caching means repeat cues are served in ~2 ms.
  *
- * Flow:
- *   Free profiles (classic / classic_female):
- *     → browser Web Speech API immediately — no network, no cost.
+ * NO fallback to browser TTS. If this fails, the result is silence.
+ * Check the browser Network tab or console for errors.
+ */
+function _speakWithAudioElement(
+  text: string,
+  profileId: string,
+  exerciseName: string,
+  cacheKey: string,
+): void {
+  // Hard-kill any speechSynthesis that may be running from any source.
+  window.speechSynthesis.cancel();
+
+  // Stop previous audio element.
+  stopCurrentAudio();
+
+  const params = new URLSearchParams({
+    text:         text.slice(0, 500),
+    profile:      profileId,
+    exerciseName: exerciseName,
+    cacheKey:     cacheKey,
+  });
+
+  const url = `/api/tts/stream?${params.toString()}`;
+  console.log(`[CaliCoach Voice] new Audio() → ${url.slice(0, 120)}`);
+
+  const audio = new Audio(url);
+  audio.volume = 1.0;
+  _currentAudioEl = audio;
+
+  const { ac, duckGain } = getGains();
+  if (ac.state !== "closed") applyDuck(ac, duckGain);
+  requestAudioFocus();
+
+  audio.play().then(() => {
+    console.log(`[CaliCoach Voice] ▶️  Audio element playing — profile="${profileId}"`);
+  }).catch((err: unknown) => {
+    console.error(`[CaliCoach Voice] ❌ Audio element play() failed:`, err);
+    // NO BROWSER TTS FALLBACK — silence so the bug is visible.
+    if (_currentAudioEl === audio) _currentAudioEl = null;
+    const { ac: ac2, duckGain: dg } = getGains();
+    if (ac2.state !== "closed") releaseDuck(ac2, dg);
+    abandonAudioFocus();
+  });
+
+  audio.onended = () => {
+    console.log(`[CaliCoach Voice] ✅ Audio element finished — profile="${profileId}"`);
+    if (_currentAudioEl === audio) _currentAudioEl = null;
+    const { ac: ac2, duckGain: dg } = getGains();
+    if (ac2.state !== "closed") releaseDuck(ac2, dg);
+    abandonAudioFocus();
+  };
+
+  audio.onerror = () => {
+    const code = (audio.error?.code ?? -1).toString();
+    const msg  = audio.error?.message ?? "unknown";
+    console.error(`[CaliCoach Voice] ❌ Audio element error code=${code}: ${msg}`);
+    if (_currentAudioEl === audio) _currentAudioEl = null;
+    const { ac: ac2, duckGain: dg } = getGains();
+    if (ac2.state !== "closed") releaseDuck(ac2, dg);
+    abandonAudioFocus();
+  };
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+/**
+ * Speak a general coaching cue using the active voice personality.
  *
- *   Pro profiles (sergeant, sensei, cyborg, …):
- *     1. Check client-side AudioBuffer cache (zero network cost on repeat).
- *     2. On miss → POST /api/tts/cue:
- *          • Server checks its own MP3 cache.
- *          • On miss: LLM rephrases cue in character → ElevenLabs Flash v2.5.
- *     3. Decode + cache AudioBuffer locally.
- *     4. Play with audio ducking.
+ * Paid profiles (sergeant, sensei, cyborg, …):
+ *   → new Audio() → GET /api/tts/stream (LLM personality + ElevenLabs).
+ *   → window.speechSynthesis is HARD-CANCELLED. No fallback.
  *
- * @param exerciseName  e.g. "Plank"
- * @param audioCue      The raw cue from the coaching engine, e.g. "Hips too high"
- * @param profileId     Voice personality ID, e.g. "sergeant"
- * @param cacheKey      Stable string key generated by the caller
+ * Free profiles (classic, classic_female):
+ *   → browser Web Speech API immediately.
+ */
+export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral"): void {
+  if (_muted) return;
+
+  // Hard-cancel any speechSynthesis regardless of profile — prevents bleed-over.
+  window.speechSynthesis.cancel();
+
+  if (FREE_VOICE_PROFILES.has(_activeProfileId)) {
+    browserSpeakForProfile(text, _activeProfileId);
+    return;
+  }
+
+  // Paid profile — stable cache key from the raw cue text.
+  const slug = (s: string) =>
+    s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40);
+  const cacheKey = `general:${slug(text)}`;
+
+  console.log(`[CaliCoach Voice] speak() → paid profile="${_activeProfileId}" cue="${text.slice(0, 40)}"`);
+  _speakWithAudioElement(text, _activeProfileId, "Coaching", cacheKey);
+}
+
+/**
+ * Speak a form-correction coaching cue with AI personality injection.
+ *
+ * Paid profiles: new Audio() → /api/tts/stream (LLM rephrase + ElevenLabs).
+ * Free profiles: browser Web Speech API.
  */
 export function speakCue(
   exerciseName: string,
@@ -424,39 +293,35 @@ export function speakCue(
   cacheKey: string,
 ): void {
   if (_muted) return;
-  stopCurrentSource();
+
+  // Hard-cancel any speechSynthesis regardless of profile.
   window.speechSynthesis.cancel();
 
-  // Free-tier profiles skip ElevenLabs entirely — instant browser TTS.
   if (FREE_VOICE_PROFILES.has(profileId)) {
     browserSpeakForProfile(audioCue, profileId);
     return;
   }
 
-  _speakCueAsync(exerciseName, audioCue, profileId, cacheKey).catch(() => {
-    fallbackSpeak(audioCue);
-  });
+  console.log(`[CaliCoach Voice] speakCue() → paid profile="${profileId}" cue="${audioCue.slice(0, 40)}"`);
+  _speakWithAudioElement(audioCue, profileId, exerciseName, cacheKey);
 }
 
 /**
- * Play a short sample cue for a given personality so the user can preview it
- * before a workout. Called by the Shop "Test Voice" buttons.
- *
- * Uses the full ElevenLabs pipeline for Pro profiles (results are cached so
- * repeat presses are instant). Free profiles use browser TTS immediately.
+ * Play a short sample cue for a personality so the user can preview it.
+ * Called by the Shop "Test Voice" buttons.
  */
 export function testCoachVoice(profileId: string): void {
   const SAMPLE_CUES: Record<string, string> = {
-    sergeant:      "Get those hips up, recruit! You're sagging like a wet noodle!",
-    sensei:        "The body follows the mind — align your core, find stillness.",
-    cyborg:        "Hip angle deviation detected: 12 degrees below optimal. Correct now.",
-    monk:          "Breathe in. Soften the belly. Let the form arise from stillness.",
+    sergeant:       "Get those hips up, recruit! You're sagging like a wet noodle!",
+    sensei:         "The body follows the mind — align your core, find stillness.",
+    cyborg:         "Hip angle deviation detected: 12 degrees below optimal. Correct now.",
+    monk:           "Breathe in. Soften the belly. Let the form arise from stillness.",
     noir_detective: "Your hips are lower than my expectations, and that's saying something.",
-    retro_gamer:   "Warning! Form integrity at 40%! Activate core module or game over!",
-    olympic_coach: "Posterior chain engagement insufficient — drive through the heels.",
-    ppowerlifter:  "Stop being soft. Lock in that core. Every rep counts.",
-    tokyo_tech:    "Core activation insufficient. Recalibrate spinal alignment immediately.",
-    aussie_legend: "Mate, lift those hips! You're better than that, trust me!",
+    retro_gamer:    "Warning! Form integrity at 40%! Activate core module or game over!",
+    olympic_coach:  "Posterior chain engagement insufficient — drive through the heels.",
+    ppowerlifter:   "Stop being soft. Lock in that core. Every rep counts.",
+    tokyo_tech:     "Core activation insufficient. Recalibrate spinal alignment immediately.",
+    aussie_legend:  "Mate, lift those hips! You're better than that, trust me!",
   };
 
   const sampleText =
@@ -464,139 +329,43 @@ export function testCoachVoice(profileId: string): void {
     "Great form — keep your core tight and breathe through the movement.";
 
   if (FREE_VOICE_PROFILES.has(profileId)) {
+    window.speechSynthesis.cancel();
     browserSpeakForProfile(sampleText, profileId);
     return;
   }
 
-  stopCurrentSource();
   window.speechSynthesis.cancel();
+  stopCurrentAudio();
 
-  _speakCueAsync("Demo", sampleText, profileId, `${profileId}:test_sample`).catch(() => {
-    fallbackSpeak(sampleText);
-  });
-}
-
-async function _speakCueAsync(
-  exerciseName: string,
-  audioCue: string,
-  profileId: string,
-  cacheKey: string,
-): Promise<void> {
-  const clientKey = `${profileId}:${cacheKey}`;
-
-  // ── 1. Client-side cache hit — play immediately (no network) ────────────
-  const cached = _cueCache.get(clientKey);
-  if (cached) {
-    console.log(`[CaliCoach Voice] _speakCueAsync cache HIT → playing "${audioCue.slice(0, 40)}"`);
-    await playAudioBuffer(cached);
-    return;
-  }
-
-  // ── 2. Fetch from /api/tts/cue (server may return cached MP3) ───────────
-  console.log(`[CaliCoach Voice] _speakCueAsync → POST /api/tts/cue profile="${profileId}" cue="${audioCue.slice(0, 40)}"`);
-  let res: Response;
-  try {
-    res = await fetch("/api/tts/cue", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ exerciseName, audioCue, profile: profileId, cacheKey }),
-    });
-  } catch (err) {
-    console.error(`[CaliCoach Voice] fetch /api/tts/cue network error:`, err);
-    fallbackSpeak(audioCue);
-    return;
-  }
-
-  if (res.status === 503) {
-    console.error(`[CaliCoach Voice] /api/tts/cue 503 — ElevenLabs API key not configured on server`);
-    fallbackSpeak(audioCue); return;
-  }
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    console.error(`[CaliCoach Voice] /api/tts/cue ${res.status} error:`, body);
-    fallbackSpeak(audioCue); return;
-  }
-
-  let arrayBuffer: ArrayBuffer;
-  try {
-    arrayBuffer = await res.arrayBuffer();
-  } catch (err) {
-    console.error(`[CaliCoach Voice] arrayBuffer() read failed:`, err);
-    fallbackSpeak(audioCue);
-    return;
-  }
-
-  if (arrayBuffer.byteLength === 0) {
-    console.error(`[CaliCoach Voice] /api/tts/cue returned 0 bytes — empty response`);
-    fallbackSpeak(audioCue); return;
-  }
-
-  console.log(`[CaliCoach Voice] Received ${arrayBuffer.byteLength} bytes — decoding MP3…`);
-
-  try {
-    const { ac } = getGains();
-
-    // Resume suspended AudioContext. Wrap in try/catch so a resume() failure
-    // doesn't kill the whole pipeline — we attempt to play anyway.
-    if (ac.state === "suspended") {
-      try { await ac.resume(); } catch (e) {
-        console.warn(`[CaliCoach Voice] AudioContext.resume() failed (autoplay policy?):`, e);
-      }
-    }
-    console.log(`[CaliCoach Voice] AudioContext state: ${ac.state}`);
-
-    const audioBuffer = await ac.decodeAudioData(arrayBuffer);
-
-    // ── 3. Store in client-side cache (LRU evict when full) ─────────────
-    if (_cueCache.size >= MAX_CUE_CACHE) {
-      const oldestKey = _cueCache.keys().next().value;
-      if (oldestKey) _cueCache.delete(oldestKey);
-    }
-    _cueCache.set(clientKey, audioBuffer);
-
-    console.log(`[CaliCoach Voice] ✅ Playing ElevenLabs audio (${audioBuffer.duration.toFixed(1)}s)`);
-
-    // ── 4. Play ─────────────────────────────────────────────────────────
-    await playAudioBuffer(audioBuffer);
-  } catch (err) {
-    console.error(`[CaliCoach Voice] decodeAudioData / playback failed:`, err);
-    fallbackSpeak(audioCue);
-  }
+  console.log(`[CaliCoach Voice] testCoachVoice() → profile="${profileId}"`);
+  _speakWithAudioElement(sampleText, profileId, "Demo", `${profileId}:test_sample`);
 }
 
 /**
- * Stop any in-progress ElevenLabs or Web Speech audio immediately and
- * restore the ducking gain to full volume.
- * Call this when the workout ends or the component unmounts.
+ * Stop all in-progress audio (ElevenLabs element + Web Speech) and restore ducking.
  */
 export function cancelSpeech(): void {
-  stopCurrentSource();
+  stopCurrentAudio();
 
   try {
     window.speechSynthesis.cancel();
-  } catch {
-    // ignore
-  }
+  } catch { /* ignore */ }
 
-  // Immediately restore ducking gain (no ramp — user explicitly cancelled).
   try {
     if (_duckingGain && _ctx && _ctx.state !== "closed") {
       const now = _ctx.currentTime;
       _duckingGain.gain.cancelScheduledValues(now);
       _duckingGain.gain.setValueAtTime(FULL_GAIN, now);
     }
-  } catch {
-    // ignore
-  }
+  } catch { /* ignore */ }
 
   abandonAudioFocus();
 }
 
 /**
- * Clear the client-side cue AudioBuffer cache.
- * Call when the user switches voice profiles so stale audio is evicted.
+ * Clear any client-side audio cache.
+ * (Kept for API compatibility — cache now lives on the server.)
  */
 export function clearCueCache(): void {
-  _cueCache.clear();
+  // No-op: caching is server-side. Browser HTTP cache handles repeat GET requests.
 }
