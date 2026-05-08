@@ -103,10 +103,10 @@ export const VOICE_PROFILE_LIST: VoiceProfileMeta[] = [
     isFree: false,
   },
   {
-    id: "tokyo_tech",
-    label: "Tokyo Tech",
-    description: "Neon-lit future AI — efficiency protocols, neural data",
-    emoji: "🗼",
+    id: "rio_flair",
+    label: "Rio Flair",
+    description: "Brazilian capoeira vibes — ginga, flow, axé",
+    emoji: "🕺",
     isFree: false,
   },
 ];
