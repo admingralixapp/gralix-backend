@@ -420,8 +420,8 @@ export function ShopPage() {
 
         {/* Free tier */}
         <div>
-          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2 px-0.5">
-            Free — always available
+          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-4 px-0.5">
+            Starter Voices
           </div>
           <div className="grid grid-cols-2 gap-2">
             {VOICE_PROFILE_LIST.filter((p) => p.isFree).map((p) => {
@@ -491,14 +491,14 @@ export function ShopPage() {
         {/* Divider between free and pro */}
         <div className="flex items-center gap-3 my-6">
           <div className="flex-1 h-px bg-white/[0.08]" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Pro Voices</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Custom Auras</span>
           <div className="flex-1 h-px bg-white/[0.08]" />
         </div>
 
         {/* Paid tier — à la carte */}
         <div>
-          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-3 px-0.5">
-            AI Voices — £4.99 each
+          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-4 px-0.5">
+            Premium Voice &amp; Ghost Skins
           </div>
           <div className="space-y-2">
             {VOICE_PROFILE_LIST.filter((p) => !p.isFree).map((p) => {
