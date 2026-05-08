@@ -14,6 +14,7 @@ import {
   Zap,
   LogIn,
   Play,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -258,6 +259,7 @@ export function ShopPage() {
   const [redeemInput, setRedeemInput] = useState("");
   const [activatingId, setActivatingId] = useState<string | null>(null);
   const [activeVoiceProfileId, setActiveVoiceProfileId] = useState<string>(() => getVoiceProfile());
+  const [testingVoiceId, setTestingVoiceId] = useState<string | null>(null);
 
   function handleActivateTrial() {
     activatePro.mutate(undefined, {
@@ -602,19 +604,23 @@ export function ShopPage() {
                   </div>
                   <div className="flex gap-1.5">
                     <button
-                      onClick={() => {
-                        if (p.isFree) {
-                          console.log(`[CaliCoach Voice] 🔊 Browser TTS for ${p.label} (free profile)`);
-                        } else {
-                          console.log(`[CaliCoach Voice] 🎙️ Fetching ElevenLabs Audio for ${p.label}...`);
-                          toast({ title: `🎙️ Fetching ElevenLabs Audio for ${p.label}…`, description: "Sending request to ElevenLabs — you should hear the voice in ~1 second." });
+                      disabled={testingVoiceId === p.id}
+                      onClick={async () => {
+                        setTestingVoiceId(p.id);
+                        try {
+                          await testCoachVoice(p.id, p.label);
+                        } catch {
+                          toast({ title: "ElevenLabs Connection Error", description: `Could not fetch audio for ${p.label}. Check connection.`, variant: "destructive" });
+                        } finally {
+                          setTestingVoiceId(null);
                         }
-                        testCoachVoice(p.id, p.label);
                       }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-all"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-all disabled:opacity-60"
                     >
-                      <Play className="w-3 h-3" />
-                      Test
+                      {testingVoiceId === p.id
+                        ? <Loader2 className="w-3 h-3 animate-spin" />
+                        : <Play className="w-3 h-3" />}
+                      {testingVoiceId === p.id ? "…" : "Test"}
                     </button>
                     <button
                       onClick={() => {
@@ -679,16 +685,25 @@ export function ShopPage() {
                   </div>
                   <div className="flex gap-1.5 shrink-0">
                     <button
-                      onClick={() => {
+                      disabled={testingVoiceId === p.id}
+                      onClick={async () => {
                         console.log(`[CaliCoach Voice] 🎙️ Fetching ElevenLabs Audio for ${p.label}...`);
-                        toast({ title: `🎙️ Fetching ElevenLabs Audio for ${p.label}…`, description: "Sending request to ElevenLabs — you should hear the voice in ~1 second." });
-                        testCoachVoice(p.id, p.label);
+                        setTestingVoiceId(p.id);
+                        try {
+                          await testCoachVoice(p.id, p.label);
+                        } catch {
+                          toast({ title: "ElevenLabs Connection Error", description: `Could not fetch audio for ${p.label}. Check connection.`, variant: "destructive" });
+                        } finally {
+                          setTestingVoiceId(null);
+                        }
                       }}
                       title="Preview this voice"
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-all"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-all disabled:opacity-60"
                     >
-                      <Play className="w-3 h-3" />
-                      Test
+                      {testingVoiceId === p.id
+                        ? <Loader2 className="w-3 h-3 animate-spin" />
+                        : <Play className="w-3 h-3" />}
+                      {testingVoiceId === p.id ? "…" : "Test"}
                     </button>
                     {owned ? (
                       <button

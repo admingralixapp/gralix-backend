@@ -186,15 +186,15 @@ function browserSpeakForProfile(text: string, profileId: string): void {
  * The server does LLM personality injection + ElevenLabs TTS, returns audio/mpeg.
  * Server-side caching means repeat cues are served in ~2 ms.
  *
- * NO fallback to browser TTS. If this fails, the result is silence.
- * window.speechSynthesis is NEVER called here.
+ * Returns a Promise that resolves when playback finishes and rejects on any error.
+ * NO fallback to browser TTS. window.speechSynthesis is NEVER called here.
  */
 function _speakWithAudioElement(
   text: string,
   profileId: string,
   exerciseName: string,
   cacheKey: string,
-): void {
+): Promise<void> {
   // Stop previous audio element — never browser TTS.
   stopCurrentAudio();
 
@@ -216,34 +216,38 @@ function _speakWithAudioElement(
   if (ac.state !== "closed") applyDuck(ac, duckGain);
   requestAudioFocus();
 
-  audio.play().then(() => {
-    console.log(`[CaliCoach Voice] ▶️  Audio element playing — profile="${profileId}"`);
-  }).catch((err: unknown) => {
-    console.error(`[CaliCoach Voice] ❌ Audio element play() failed:`, err);
-    // NO BROWSER TTS FALLBACK — silence so the bug is visible.
-    if (_currentAudioEl === audio) _currentAudioEl = null;
-    const { ac: ac2, duckGain: dg } = getGains();
-    if (ac2.state !== "closed") releaseDuck(ac2, dg);
-    abandonAudioFocus();
+  return new Promise<void>((resolve, reject) => {
+    audio.play().then(() => {
+      console.log(`[CaliCoach Voice] ▶️  Audio element playing — profile="${profileId}"`);
+    }).catch((err: unknown) => {
+      console.error(`[CaliCoach Voice] ❌ Audio element play() failed:`, err);
+      if (_currentAudioEl === audio) _currentAudioEl = null;
+      const { ac: ac2, duckGain: dg } = getGains();
+      if (ac2.state !== "closed") releaseDuck(ac2, dg);
+      abandonAudioFocus();
+      reject(err instanceof Error ? err : new Error(String(err)));
+    });
+
+    audio.onended = () => {
+      console.log(`[CaliCoach Voice] ✅ Audio element finished — profile="${profileId}"`);
+      if (_currentAudioEl === audio) _currentAudioEl = null;
+      const { ac: ac2, duckGain: dg } = getGains();
+      if (ac2.state !== "closed") releaseDuck(ac2, dg);
+      abandonAudioFocus();
+      resolve();
+    };
+
+    audio.onerror = () => {
+      const code = (audio.error?.code ?? -1).toString();
+      const msg  = audio.error?.message ?? "unknown";
+      console.error(`[CaliCoach Voice] ❌ Audio element error code=${code}: ${msg}`);
+      if (_currentAudioEl === audio) _currentAudioEl = null;
+      const { ac: ac2, duckGain: dg } = getGains();
+      if (ac2.state !== "closed") releaseDuck(ac2, dg);
+      abandonAudioFocus();
+      reject(new Error(`ElevenLabs audio error (code=${code}): ${msg}`));
+    };
   });
-
-  audio.onended = () => {
-    console.log(`[CaliCoach Voice] ✅ Audio element finished — profile="${profileId}"`);
-    if (_currentAudioEl === audio) _currentAudioEl = null;
-    const { ac: ac2, duckGain: dg } = getGains();
-    if (ac2.state !== "closed") releaseDuck(ac2, dg);
-    abandonAudioFocus();
-  };
-
-  audio.onerror = () => {
-    const code = (audio.error?.code ?? -1).toString();
-    const msg  = audio.error?.message ?? "unknown";
-    console.error(`[CaliCoach Voice] ❌ Audio element error code=${code}: ${msg}`);
-    if (_currentAudioEl === audio) _currentAudioEl = null;
-    const { ac: ac2, duckGain: dg } = getGains();
-    if (ac2.state !== "closed") releaseDuck(ac2, dg);
-    abandonAudioFocus();
-  };
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -273,7 +277,9 @@ export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "
   const cacheKey = `general:${slug(text)}`;
 
   console.log(`[CaliCoach Voice] speak() → PAID profile="${_activeProfileId}" → /api/tts/stream  cue="${text.slice(0, 40)}"`);
-  _speakWithAudioElement(text, _activeProfileId, "Coaching", cacheKey);
+  _speakWithAudioElement(text, _activeProfileId, "Coaching", cacheKey).catch(() => {
+    // Fire-and-forget for workout cues — errors already logged inside _speakWithAudioElement.
+  });
 }
 
 /**
@@ -297,17 +303,22 @@ export function speakCue(
 
   // Paid profile — ElevenLabs only. window.speechSynthesis is NOT called.
   console.log(`[CaliCoach Voice] speakCue() → paid profile="${profileId}" cue="${audioCue.slice(0, 40)}"`);
-  _speakWithAudioElement(audioCue, profileId, exerciseName, cacheKey);
+  _speakWithAudioElement(audioCue, profileId, exerciseName, cacheKey).catch(() => {
+    // Fire-and-forget for workout cues — errors already logged inside _speakWithAudioElement.
+  });
 }
 
 /**
  * Play a short sample cue for a personality so the user can preview it.
  * Called by the Shop "Test Voice" buttons.
  *
- * For paid profiles: sends request to /api/tts/stream and plays ElevenLabs audio.
+ * Returns a Promise:
+ *   - resolves when playback finishes (or immediately for free browser-TTS profiles).
+ *   - rejects with an Error when ElevenLabs returns an error or audio fails to load.
+ *
  * window.speechSynthesis is NEVER called for paid profiles.
  */
-export function testCoachVoice(profileId: string, label?: string): void {
+export function testCoachVoice(profileId: string, label?: string): Promise<void> {
   const SAMPLE_CUES: Record<string, string> = {
     sergeant:       "Get those hips up, recruit! You're sagging like a wet noodle!",
     sensei:         "The body follows the mind — align your core, find stillness.",
@@ -318,7 +329,7 @@ export function testCoachVoice(profileId: string, label?: string): void {
     olympic_coach:  "Eccentric control is lacking — engage your v-taper and drive bio-mechanically.",
     aussie_legend:  "Mate, you're doing ripper work — stoked to see that! Reckon you've got this!",
     retro_gamer:    "COMBO BREAKER! Power-up your core or it's game over — finish that rep!",
-    rio_flair:      "Ginga with it, amigo! Let the energy flow — Capoeira is life, keep moving!",
+    rio_flair:      "Vamos! Keep your chest up and drive through with power — Ginga is in your soul!",
   };
 
   const sampleText =
@@ -328,7 +339,7 @@ export function testCoachVoice(profileId: string, label?: string): void {
   if (FREE_VOICE_PROFILES.has(profileId)) {
     console.log(`[CaliCoach Voice] testCoachVoice() → FREE profile="${profileId}" — browser TTS`);
     browserSpeakForProfile(sampleText, profileId);
-    return;
+    return Promise.resolve();
   }
 
   // Paid profile — ElevenLabs ONLY. window.speechSynthesis is NOT called.
@@ -336,7 +347,7 @@ export function testCoachVoice(profileId: string, label?: string): void {
   console.log(`[CaliCoach Voice] 🎙️ Fetching ElevenLabs Audio for ${voiceName}... (profile="${profileId}" → /api/tts/stream)`);
 
   stopCurrentAudio();
-  _speakWithAudioElement(sampleText, profileId, "Demo", `${profileId}:test_sample`);
+  return _speakWithAudioElement(sampleText, profileId, "Demo", `${profileId}:test_sample`);
 }
 
 /**

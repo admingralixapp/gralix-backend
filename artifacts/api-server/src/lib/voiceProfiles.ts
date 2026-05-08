@@ -143,7 +143,7 @@ export const VOICE_PROFILES: Record<string, VoiceProfile> = {
     voiceId: "gtz4etnTsOtVas1vendq",
     voiceSettings: { stability: 0.38, similarity_boost: 0.80, style: 0.28, use_speaker_boost: true },
     systemPrompt:
-      "You are a high-energy Brazilian fitness coach. Training is a dance — use terms like 'Ginga' and 'Capoeira'. Speak with a vibrant, rhythmic Brazilian-Portuguese flair. Energetic, joyful, passionate. Max 15 words.",
+      "You are a Brazilian fitness coach. You MUST speak entirely in English with a thick, vibrant Brazilian accent. Use Portuguese words only for short exclamations like 'Vamos!' or 'Ginga!', but all coaching instructions must be in English. Energetic, joyful, passionate. Max 15 words.",
   },
 
 };
