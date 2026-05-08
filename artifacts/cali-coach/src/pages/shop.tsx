@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@clerk/react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -132,6 +133,7 @@ export function ShopPage() {
   const prices = useLocalizedPrices();
   void i18n; // language change triggers re-render, prices update reactively
 
+  const [, setLocation] = useLocation();
   const activatePro = useActivatePro();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -377,13 +379,13 @@ export function ShopPage() {
             <div className="flex items-center justify-center gap-2 py-1.5 text-sm relative" style={{ color: "#c084fc" }}>
               <Zap className="w-4 h-4" />
               <span>Pro active —</span>
-              <a
-                href="/settings"
+              <button
+                onClick={() => setLocation("/settings?section=membership")}
                 className="font-bold underline underline-offset-2 hover:opacity-80 transition-opacity"
                 style={{ color: "#c084fc" }}
               >
                 Manage Subscription
-              </a>
+              </button>
             </div>
           )}
         </div>

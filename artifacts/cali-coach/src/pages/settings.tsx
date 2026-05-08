@@ -95,8 +95,11 @@ export function Settings() {
   const [clipCount,    setClipCount]    = useState<number>(() => getClipCount());
   const [confirmClear, setConfirmClear] = useState(false);
 
-  // Membership cancel modal
-  const [showCancelModal, setShowCancelModal] = useState(false);
+  // Membership cancel flow: null → 'retention' → 'confirm' → null
+  const [cancelStep, setCancelStep] = useState<"retention" | "confirm" | null>(null);
+
+  // Ref for scroll-to-membership from Shop deep-link
+  const membershipRef = useRef<HTMLElement>(null);
 
   // Workout settings
   const [restDuration, setRestDurationState] = useState<RestDuration>(() => getRestDuration());
@@ -141,6 +144,15 @@ export function Settings() {
     setNotifTime(mobilityStatus.settings.notificationTime);
     setNotifGoal((mobilityStatus.settings.mobilityGoal as MobilityGoal) ?? "general");
   }, [mobilityStatus?.settings]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("section") === "membership" && membershipRef.current) {
+      setTimeout(() => {
+        membershipRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    }
+  }, [profile?.isPro]);
 
   useEffect(() => {
     if ("Notification" in window) {
@@ -893,7 +905,7 @@ export function Settings() {
 
       {/* ── Manage Membership (Pro only) ─────────────────────────────────────── */}
       {profile?.isPro && (
-        <section>
+        <section ref={membershipRef}>
           <SectionHeader icon={<Crown className="w-4 h-4" />} label="Membership" />
           <div
             className="rounded-2xl border p-5 space-y-4"
@@ -933,7 +945,7 @@ export function Settings() {
                 </div>
               </div>
               <button
-                onClick={() => setShowCancelModal(true)}
+                onClick={() => setCancelStep("retention")}
                 className="shrink-0 px-3.5 py-1.5 rounded-lg text-xs font-bold border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors"
               >
                 Cancel
@@ -941,64 +953,159 @@ export function Settings() {
             </div>
           </div>
 
-          {/* Cancel confirmation modal */}
-          {showCancelModal && (
+          {/* ── Step 1: Retention offer ── */}
+          {cancelStep === "retention" && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowCancelModal(false)} />
+              <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={() => setCancelStep(null)} />
+              <div
+                className="relative z-10 w-full max-w-sm rounded-3xl border overflow-hidden"
+                style={{
+                  background: "linear-gradient(145deg, #0f0720 0%, #0a0414 100%)",
+                  borderColor: "rgba(168,85,247,0.45)",
+                  boxShadow: "0 0 80px rgba(168,85,247,0.25)",
+                }}
+              >
+                {/* Glow orb */}
+                <div
+                  className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full blur-3xl opacity-30 pointer-events-none"
+                  style={{ background: "radial-gradient(circle, #a855f7 0%, transparent 70%)" }}
+                />
+
+                {/* Top accent bar */}
+                <div
+                  className="w-full py-1.5 text-center text-[10px] font-black uppercase tracking-widest"
+                  style={{ background: "linear-gradient(90deg, #7c3aed, #a855f7)", color: "#fff" }}
+                >
+                  Special offer just for you
+                </div>
+
+                <div className="p-6 space-y-4 relative">
+                  {/* Close */}
+                  <button onClick={() => setCancelStep(null)} className="absolute top-4 right-4 text-white/25 hover:text-white/50 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+
+                  {/* Headline */}
+                  <div className="text-center space-y-1 pt-1">
+                    <div className="text-3xl">🎁</div>
+                    <h3 className="text-xl font-black text-white mt-2">Wait! We'd love for you to stay.</h3>
+                    <p className="text-sm text-white/55 leading-relaxed">
+                      Stay Pro today and get{" "}
+                      <span className="font-black" style={{ color: "#c084fc" }}>40% OFF</span>{" "}
+                      your next month — automatically applied.
+                    </p>
+                  </div>
+
+                  {/* Offer pill */}
+                  <div
+                    className="flex items-center justify-between rounded-2xl border px-4 py-3"
+                    style={{
+                      background: "rgba(168,85,247,0.12)",
+                      borderColor: "rgba(168,85,247,0.35)",
+                    }}
+                  >
+                    <div>
+                      <div className="text-xs text-white/50 line-through">£14.99 / month</div>
+                      <div className="text-lg font-black" style={{ color: "#e9d5ff" }}>£8.99 / month</div>
+                    </div>
+                    <span
+                      className="text-sm font-black px-3 py-1 rounded-full"
+                      style={{ background: "linear-gradient(135deg, #7c3aed, #a855f7)", color: "#fff" }}
+                    >
+                      40% OFF
+                    </span>
+                  </div>
+
+                  {/* CTA */}
+                  <button
+                    onClick={() => setCancelStep(null)}
+                    className="w-full py-3 rounded-xl text-sm font-black transition-all"
+                    style={{
+                      background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+                      color: "#fff",
+                      boxShadow: "0 4px 20px rgba(168,85,247,0.45)",
+                    }}
+                  >
+                    Claim My Discount
+                  </button>
+
+                  {/* Secondary escape */}
+                  <button
+                    onClick={() => setCancelStep("confirm")}
+                    className="w-full text-center text-xs text-white/30 hover:text-white/50 transition-colors py-1"
+                  >
+                    No thanks, continue to cancel →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 2: Final confirmation ── */}
+          {cancelStep === "confirm" && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={() => setCancelStep(null)} />
               <div
                 className="relative z-10 w-full max-w-sm rounded-3xl border p-6 space-y-4"
                 style={{
                   background: "linear-gradient(135deg, #120a1a 0%, #0d080f 100%)",
-                  borderColor: "rgba(239,68,68,0.35)",
-                  boxShadow: "0 0 60px rgba(239,68,68,0.15)",
+                  borderColor: "rgba(239,68,68,0.30)",
+                  boxShadow: "0 0 60px rgba(239,68,68,0.12)",
                 }}
               >
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-red-500/12 border border-red-500/25 flex items-center justify-center shrink-0">
                       <AlertTriangle className="w-4 h-4 text-red-400" />
                     </div>
-                    <span className="font-black text-base text-white">Are you sure?</span>
+                    <span className="font-black text-base text-white">Sorry to see you leave!</span>
                   </div>
-                  <button onClick={() => setShowCancelModal(false)} className="text-white/30 hover:text-white/60 transition-colors mt-0.5">
+                  <button onClick={() => setCancelStep(null)} className="text-white/25 hover:text-white/50 transition-colors mt-0.5">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
                 {/* Body */}
-                <p className="text-sm text-white/60 leading-relaxed">
+                <p className="text-sm text-white/55 leading-relaxed">
                   You will lose access to{" "}
-                  <span className="text-white/90 font-semibold">Advanced Analytics</span> and{" "}
-                  <span className="text-white/90 font-semibold">Real-time AI Coaching</span>{" "}
-                  at the end of your billing cycle. Any Aura Packs you've earned stay in your account forever.
+                  <span className="text-white/85 font-semibold">Advanced Analytics</span>,{" "}
+                  <span className="text-white/85 font-semibold">Real-time AI Coaching</span>, and your{" "}
+                  <span className="text-white/85 font-semibold">Verified Badge</span>{" "}
+                  at the end of this billing cycle. Any Aura Packs you've earned stay forever.
                 </p>
 
                 {/* Actions */}
                 <div className="flex gap-2.5 pt-1">
                   <button
-                    onClick={() => setShowCancelModal(false)}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-bold border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-colors"
+                    onClick={() => setCancelStep(null)}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-black transition-all text-white"
+                    style={{
+                      background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+                      boxShadow: "0 2px 12px rgba(168,85,247,0.35)",
+                    }}
                   >
-                    Keep Pro
+                    Go Back
                   </button>
                   <button
                     onClick={() => {
+                      const accessUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                        .toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
                       cancelSubscription.mutate(undefined, {
                         onSuccess: () => {
-                          setShowCancelModal(false);
+                          setCancelStep(null);
                           toast({
-                            title: "Membership cancelled",
-                            description: "You'll keep Pro access until the end of your billing cycle.",
+                            title: "Subscription cancelled",
+                            description: `Your subscription has been cancelled. You will have access until ${accessUntil}.`,
                           });
                         },
                         onError: () => toast({ title: "Something went wrong", variant: "destructive" }),
                       });
                     }}
                     disabled={cancelSubscription.isPending}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-black transition-all disabled:opacity-50 bg-red-500/90 hover:bg-red-500 text-white"
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 border border-red-500/35 text-red-400 hover:bg-red-500/10"
                   >
-                    {cancelSubscription.isPending ? "Cancelling…" : "Yes, Cancel"}
+                    {cancelSubscription.isPending ? "Cancelling…" : "Cancel Membership"}
                   </button>
                 </div>
               </div>
