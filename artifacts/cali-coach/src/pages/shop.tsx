@@ -603,7 +603,13 @@ export function ShopPage() {
                   <div className="flex gap-1.5">
                     <button
                       onClick={() => {
-                        testCoachVoice(p.id);
+                        if (p.isFree) {
+                          console.log(`[CaliCoach Voice] 🔊 Browser TTS for ${p.label} (free profile)`);
+                        } else {
+                          console.log(`[CaliCoach Voice] 🎙️ Fetching ElevenLabs Audio for ${p.label}...`);
+                          toast({ title: `🎙️ Fetching ElevenLabs Audio for ${p.label}…`, description: "Sending request to ElevenLabs — you should hear the voice in ~1 second." });
+                        }
+                        testCoachVoice(p.id, p.label);
                       }}
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-all"
                     >
@@ -673,7 +679,11 @@ export function ShopPage() {
                   </div>
                   <div className="flex gap-1.5 shrink-0">
                     <button
-                      onClick={() => testCoachVoice(p.id)}
+                      onClick={() => {
+                        console.log(`[CaliCoach Voice] 🎙️ Fetching ElevenLabs Audio for ${p.label}...`);
+                        toast({ title: `🎙️ Fetching ElevenLabs Audio for ${p.label}…`, description: "Sending request to ElevenLabs — you should hear the voice in ~1 second." });
+                        testCoachVoice(p.id, p.label);
+                      }}
                       title="Preview this voice"
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-all"
                     >

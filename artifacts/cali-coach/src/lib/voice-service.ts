@@ -1,13 +1,13 @@
 /**
  * voiceService — ElevenLabs streaming TTS via new Audio() element
  *
- * Architecture for paid profiles (Sergeant, Sensei, Cyborg, …):
- *   1. speak() / speakCue() / testCoachVoice() are called by workout.tsx.
- *   2. window.speechSynthesis is HARD-CANCELLED at every entry point.
- *   3. A new Audio() element is created with src = /api/tts/stream?...
+ * Architecture for paid profiles (Monk, Noir Detective, Rio Flair, …):
+ *   1. speak() / speakCue() / testCoachVoice() are called by workout.tsx / shop.tsx.
+ *   2. A new Audio() element is created with src = /api/tts/stream?...
  *      (GET endpoint that does LLM personality injection + ElevenLabs TTS).
- *   4. audio.volume = 1.0, audio.play() — browser handles streaming.
- *   5. NO fallback to browser TTS for paid profiles. Silence = bug, not fallback.
+ *   3. audio.volume = 1.0, audio.play() — browser handles streaming.
+ *   4. NO fallback to browser TTS. window.speechSynthesis is NEVER touched for
+ *      paid profiles. Silence = bug, not fallback.
  *
  * Architecture for free profiles (classic, classic_female):
  *   → browser Web Speech API only, no ElevenLabs, no network cost.
@@ -15,8 +15,6 @@
  * Audio Ducking:
  *   Non-speech audio should connect through getDuckingGain() → destination.
  *   The ducking gain is ramped when a cue starts/ends.
- *   (Ducking is applied via the AudioContext for non-speech sources only;
- *    the Audio element plays at full volume independently.)
  */
 
 // ─── Mute flag ────────────────────────────────────────────────────────────────
@@ -122,8 +120,7 @@ let _currentAudioEl: HTMLAudioElement | null = null;
 function stopCurrentAudio(): void {
   if (_currentAudioEl) {
     try {
-      // Null handlers BEFORE clearing src — prevents spurious onerror("Empty src attribute")
-      // that fires when the previous element is stopped while a new one starts.
+      // Null handlers BEFORE clearing src — prevents spurious onerror("Empty src attribute").
       _currentAudioEl.onerror  = null;
       _currentAudioEl.onended  = null;
       _currentAudioEl.pause();
@@ -141,7 +138,7 @@ export function setVoiceLanguage(bcp47: string): void {
   _speechLang = bcp47;
 }
 
-// ─── Browser TTS (free profiles only) ────────────────────────────────────────
+// ─── Browser TTS (FREE profiles ONLY: classic, classic_female) ───────────────
 
 function browserSpeakForProfile(text: string, profileId: string): void {
   try {
@@ -190,7 +187,7 @@ function browserSpeakForProfile(text: string, profileId: string): void {
  * Server-side caching means repeat cues are served in ~2 ms.
  *
  * NO fallback to browser TTS. If this fails, the result is silence.
- * Check the browser Network tab or console for errors.
+ * window.speechSynthesis is NEVER called here.
  */
 function _speakWithAudioElement(
   text: string,
@@ -198,10 +195,7 @@ function _speakWithAudioElement(
   exerciseName: string,
   cacheKey: string,
 ): void {
-  // Hard-kill any speechSynthesis that may be running from any source.
-  window.speechSynthesis.cancel();
-
-  // Stop previous audio element.
+  // Stop previous audio element — never browser TTS.
   stopCurrentAudio();
 
   const params = new URLSearchParams({
@@ -257,18 +251,15 @@ function _speakWithAudioElement(
 /**
  * Speak a general coaching cue using the active voice personality.
  *
- * Paid profiles (sergeant, sensei, cyborg, …):
+ * Paid profiles (monk, noir_detective, rio_flair, …):
  *   → new Audio() → GET /api/tts/stream (LLM personality + ElevenLabs).
- *   → window.speechSynthesis is HARD-CANCELLED. No fallback.
+ *   → window.speechSynthesis is NEVER touched.
  *
  * Free profiles (classic, classic_female):
- *   → browser Web Speech API immediately.
+ *   → browser Web Speech API.
  */
 export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral"): void {
   if (_muted) return;
-
-  // Hard-cancel any speechSynthesis regardless of profile — prevents bleed-over.
-  window.speechSynthesis.cancel();
 
   if (FREE_VOICE_PROFILES.has(_activeProfileId)) {
     console.log(`[CaliCoach Voice] speak() → FREE profile="${_activeProfileId}" — using browser TTS`);
@@ -276,7 +267,7 @@ export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "
     return;
   }
 
-  // Paid profile — ElevenLabs only. NO browser TTS fallback.
+  // Paid profile — ElevenLabs only. window.speechSynthesis is NOT called.
   const slug = (s: string) =>
     s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40);
   const cacheKey = `general:${slug(text)}`;
@@ -299,14 +290,12 @@ export function speakCue(
 ): void {
   if (_muted) return;
 
-  // Hard-cancel any speechSynthesis regardless of profile.
-  window.speechSynthesis.cancel();
-
   if (FREE_VOICE_PROFILES.has(profileId)) {
     browserSpeakForProfile(audioCue, profileId);
     return;
   }
 
+  // Paid profile — ElevenLabs only. window.speechSynthesis is NOT called.
   console.log(`[CaliCoach Voice] speakCue() → paid profile="${profileId}" cue="${audioCue.slice(0, 40)}"`);
   _speakWithAudioElement(audioCue, profileId, exerciseName, cacheKey);
 }
@@ -314,8 +303,11 @@ export function speakCue(
 /**
  * Play a short sample cue for a personality so the user can preview it.
  * Called by the Shop "Test Voice" buttons.
+ *
+ * For paid profiles: sends request to /api/tts/stream and plays ElevenLabs audio.
+ * window.speechSynthesis is NEVER called for paid profiles.
  */
-export function testCoachVoice(profileId: string): void {
+export function testCoachVoice(profileId: string, label?: string): void {
   const SAMPLE_CUES: Record<string, string> = {
     sergeant:       "Get those hips up, recruit! You're sagging like a wet noodle!",
     sensei:         "The body follows the mind — align your core, find stillness.",
@@ -326,7 +318,7 @@ export function testCoachVoice(profileId: string): void {
     olympic_coach:  "Eccentric control is lacking — engage your v-taper and drive bio-mechanically.",
     aussie_legend:  "Mate, you're doing ripper work — stoked to see that! Reckon you've got this!",
     retro_gamer:    "COMBO BREAKER! Power-up your core or it's game over — finish that rep!",
-    rio_flair:      "Ginga with it, amigo! Let the energy flow — axé, keep moving!",
+    rio_flair:      "Ginga with it, amigo! Let the energy flow — Capoeira is life, keep moving!",
   };
 
   const sampleText =
@@ -334,15 +326,16 @@ export function testCoachVoice(profileId: string): void {
     "Great form — keep your core tight and breathe through the movement.";
 
   if (FREE_VOICE_PROFILES.has(profileId)) {
-    window.speechSynthesis.cancel();
+    console.log(`[CaliCoach Voice] testCoachVoice() → FREE profile="${profileId}" — browser TTS`);
     browserSpeakForProfile(sampleText, profileId);
     return;
   }
 
-  window.speechSynthesis.cancel();
-  stopCurrentAudio();
+  // Paid profile — ElevenLabs ONLY. window.speechSynthesis is NOT called.
+  const voiceName = label ?? profileId;
+  console.log(`[CaliCoach Voice] 🎙️ Fetching ElevenLabs Audio for ${voiceName}... (profile="${profileId}" → /api/tts/stream)`);
 
-  console.log(`[CaliCoach Voice] testCoachVoice() → profile="${profileId}"`);
+  stopCurrentAudio();
   _speakWithAudioElement(sampleText, profileId, "Demo", `${profileId}:test_sample`);
 }
 
