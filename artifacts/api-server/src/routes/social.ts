@@ -256,6 +256,28 @@ router.put(
 );
 
 // ---------------------------------------------------------------------------
+// DELETE /api/users/me/subscription — cancel Pro (sets isPro=false only)
+// hasClaimedSigningBonus is intentionally NOT reset — the one-time bonus is
+// permanent. Re-subscribers will not receive a second free Aura Pack.
+// ---------------------------------------------------------------------------
+router.delete(
+  "/users/me/subscription",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const me = await getMe(clerkId);
+    if (!me) { res.status(404).json({ error: "Profile not found" }); return; }
+    if (!me.isPro) { res.status(400).json({ error: "Not currently subscribed" }); return; }
+    const [updated] = await db
+      .update(usersTable)
+      .set({ isPro: false })
+      .where(eq(usersTable.id, me.id))
+      .returning();
+    res.json(updated);
+  },
+);
+
+// ---------------------------------------------------------------------------
 // PUT /api/users/me/active-aura — set active aura (packId + voiceId + skinId)
 // ---------------------------------------------------------------------------
 router.put(

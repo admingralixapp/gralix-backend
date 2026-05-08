@@ -190,6 +190,20 @@ export function useActivatePro() {
   });
 }
 
+export function useCancelSubscription() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async () => {
+      const token = await getToken();
+      return apiFetchAuth<UserProfile>("/api/users/me/subscription", token, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
+  });
+}
+
 export function useUpdateActiveAura() {
   const qc = useQueryClient();
   const { getToken } = useAuth();

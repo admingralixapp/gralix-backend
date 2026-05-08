@@ -4,7 +4,7 @@ import { useUser, useClerk } from "@clerk/react";
 import {
   Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video,
   AlertTriangle, Timer, Camera, Volume2, FlipHorizontal2, Ruler, ExternalLink,
-  Globe, Search, Check,
+  Globe, Search, Check, Crown, X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LANGUAGES, getLang } from "@/i18n/languages";
@@ -19,7 +19,7 @@ import {
 import { VOICE_PROFILE_LIST } from "@/lib/voice-profiles";
 import { clearCueCache } from "@/lib/voice-service";
 import {
-  useMyProfile, useUpdatePrivacy, useUpdateCommunityPostsPublic,
+  useMyProfile, useUpdatePrivacy, useUpdateCommunityPostsPublic, useCancelSubscription,
 } from "@/lib/social";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -54,6 +54,7 @@ export function Settings() {
   const { data: profile, isLoading: profileLoading } = useMyProfile();
   const updatePrivacy = useUpdatePrivacy();
   const updateCommunityPostsPublic = useUpdateCommunityPostsPublic();
+  const cancelSubscription = useCancelSubscription();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
 
@@ -93,6 +94,9 @@ export function Settings() {
   const [retention,    setRetention]    = useState<RetentionDays>(() => getRetentionDays());
   const [clipCount,    setClipCount]    = useState<number>(() => getClipCount());
   const [confirmClear, setConfirmClear] = useState(false);
+
+  // Membership cancel modal
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   // Workout settings
   const [restDuration, setRestDurationState] = useState<RestDuration>(() => getRestDuration());
@@ -886,6 +890,122 @@ export function Settings() {
           </button>
         </div>
       </section>
+
+      {/* ── Manage Membership (Pro only) ─────────────────────────────────────── */}
+      {profile?.isPro && (
+        <section>
+          <SectionHeader icon={<Crown className="w-4 h-4" />} label="Membership" />
+          <div
+            className="rounded-2xl border p-5 space-y-4"
+            style={{
+              background: "linear-gradient(135deg, rgba(168,85,247,0.10) 0%, rgba(109,40,217,0.05) 100%)",
+              borderColor: "rgba(168,85,247,0.30)",
+            }}
+          >
+            {/* Status row */}
+            <div className="flex items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "rgba(168,85,247,0.18)", border: "1px solid rgba(168,85,247,0.35)" }}
+              >
+                <Crown className="w-4 h-4" style={{ color: "#c084fc" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold" style={{ color: "#e9d5ff" }}>CaliCoach Pro</div>
+                <div className="text-[11px]" style={{ color: "#c084fc" }}>Active membership</div>
+              </div>
+              <span
+                className="text-[10px] font-black px-2.5 py-1 rounded-full shrink-0"
+                style={{ background: "rgba(168,85,247,0.22)", color: "#c084fc", border: "1px solid rgba(168,85,247,0.4)" }}
+              >
+                PRO
+              </span>
+            </div>
+
+            <div className="h-px" style={{ background: "rgba(168,85,247,0.15)" }} />
+
+            {/* Cancel button */}
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-sm font-semibold text-foreground">Cancel Membership</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">
+                  You keep access until the end of your billing cycle.
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCancelModal(true)}
+                className="shrink-0 px-3.5 py-1.5 rounded-lg text-xs font-bold border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          {/* Cancel confirmation modal */}
+          {showCancelModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowCancelModal(false)} />
+              <div
+                className="relative z-10 w-full max-w-sm rounded-3xl border p-6 space-y-4"
+                style={{
+                  background: "linear-gradient(135deg, #120a1a 0%, #0d080f 100%)",
+                  borderColor: "rgba(239,68,68,0.35)",
+                  boxShadow: "0 0 60px rgba(239,68,68,0.15)",
+                }}
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="w-4 h-4 text-red-400" />
+                    </div>
+                    <span className="font-black text-base text-white">Are you sure?</span>
+                  </div>
+                  <button onClick={() => setShowCancelModal(false)} className="text-white/30 hover:text-white/60 transition-colors mt-0.5">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Body */}
+                <p className="text-sm text-white/60 leading-relaxed">
+                  You will lose access to{" "}
+                  <span className="text-white/90 font-semibold">Advanced Analytics</span> and{" "}
+                  <span className="text-white/90 font-semibold">Real-time AI Coaching</span>{" "}
+                  at the end of your billing cycle. Any Aura Packs you've earned stay in your account forever.
+                </p>
+
+                {/* Actions */}
+                <div className="flex gap-2.5 pt-1">
+                  <button
+                    onClick={() => setShowCancelModal(false)}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-colors"
+                  >
+                    Keep Pro
+                  </button>
+                  <button
+                    onClick={() => {
+                      cancelSubscription.mutate(undefined, {
+                        onSuccess: () => {
+                          setShowCancelModal(false);
+                          toast({
+                            title: "Membership cancelled",
+                            description: "You'll keep Pro access until the end of your billing cycle.",
+                          });
+                        },
+                        onError: () => toast({ title: "Something went wrong", variant: "destructive" }),
+                      });
+                    }}
+                    disabled={cancelSubscription.isPending}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-black transition-all disabled:opacity-50 bg-red-500/90 hover:bg-red-500 text-white"
+                  >
+                    {cancelSubscription.isPending ? "Cancelling…" : "Yes, Cancel"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ── Sign out ──────────────────────────────────────────────────────────── */}
       <section>

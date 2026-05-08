@@ -376,7 +376,14 @@ export function ShopPage() {
           {profile?.isPro && (
             <div className="flex items-center justify-center gap-2 py-1.5 text-sm relative" style={{ color: "#c084fc" }}>
               <Zap className="w-4 h-4" />
-              Pro active — manage via your account portal
+              <span>Pro active —</span>
+              <a
+                href="/settings"
+                className="font-bold underline underline-offset-2 hover:opacity-80 transition-opacity"
+                style={{ color: "#c084fc" }}
+              >
+                Manage Subscription
+              </a>
             </div>
           )}
         </div>
