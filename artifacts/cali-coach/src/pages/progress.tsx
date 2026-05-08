@@ -292,8 +292,8 @@ export function Progress() {
           >
             {t("progress.startTrial")}
           </button>
-          <p className="text-[10px] text-white/30">
-            {t("progress.trialNote", { price: prices.monthly })}
+          <p className="text-[10px] text-white/30 text-center">
+            {t("progress.trialNote")}
           </p>
         </div>
       </div>

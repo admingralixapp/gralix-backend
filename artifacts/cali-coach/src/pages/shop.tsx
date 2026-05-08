@@ -367,6 +367,9 @@ export function ShopPage() {
               >
                 {activatePro.isPending ? t("common.loading") : t("shop.startTrial")}
               </button>
+              <p className="text-[10px] text-white/30 text-center">
+                {t("shop.trialNote")}
+              </p>
             </>
           )}
 
