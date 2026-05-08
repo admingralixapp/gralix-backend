@@ -22,135 +22,15 @@ import {
   useShopPurchase,
   useClaimFreeAura,
   useRedeemCode,
-  useUpdateActiveAura,
   useActivatePro,
 } from "@/lib/social";
-import { AURA_PACKS, type AuraPack } from "@/lib/aura-packs";
+import { AURA_PACKS } from "@/lib/aura-packs";
 import { useToast } from "@/hooks/use-toast";
 import { VOICE_PROFILE_LIST } from "@/lib/voice-profiles";
 import { testCoachVoice } from "@/lib/voice-service";
 import { getVoiceProfile, setVoiceProfile } from "@/lib/workout-preferences";
 
-// ─── Pack Card ──────────────────────────────────────────────────────────────
-
-function PackCard({
-  pack,
-  owned,
-  active,
-  onBuy,
-  onActivate,
-  isPending,
-}: {
-  pack: AuraPack;
-  owned: boolean;
-  active: boolean;
-  onBuy: () => void;
-  onActivate: () => void;
-  isPending: boolean;
-}) {
-  return (
-    <motion.div
-      layout
-      className={cn(
-        "relative rounded-2xl border p-4 flex flex-col gap-3 transition-all overflow-hidden",
-        active
-          ? "ring-2"
-          : owned
-          ? "border-white/15"
-          : "border-white/[0.08]",
-      )}
-      style={{
-        background: pack.gradient,
-        ...(active && { ringColor: pack.accentColor, borderColor: pack.accentColor }),
-      }}
-    >
-      {/* Active ribbon */}
-      {active && (
-        <div
-          className="absolute top-0 right-0 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-bl-xl"
-          style={{ background: pack.accentColor, color: "#000" }}
-        >
-          Active
-        </div>
-      )}
-
-      {/* Emoji */}
-      <div
-        className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
-        style={{
-          background: `${pack.accentColor}18`,
-          border: `1px solid ${pack.accentColor}30`,
-          boxShadow: active ? `0 0 16px ${pack.accentColor}40` : undefined,
-        }}
-      >
-        {pack.emoji}
-      </div>
-
-      {/* Info */}
-      <div className="flex-1">
-        <div className="font-bold text-sm text-white">{pack.name}</div>
-        <div className="text-[11px] text-white/50 mt-0.5 leading-tight">{pack.tagline}</div>
-
-        {/* Contents preview */}
-        <div className="flex flex-col gap-1 mt-2.5">
-          <div className="flex items-center gap-1.5 text-[10px] text-white/60">
-            <span className="text-base leading-none">🎙️</span>
-            <span>Voice: <span className="text-white/90 font-medium">{pack.voiceId.replace(/-/g, " ")}</span></span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[10px] text-white/60">
-            <span className="text-base leading-none">👁️</span>
-            <span>Ghost: <span className="text-white/90 font-medium">{pack.skinId.replace(/-/g, " ")}</span></span>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA */}
-      {pack.free ? (
-        <button
-          onClick={onActivate}
-          disabled={active}
-          className="w-full py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-40"
-          style={
-            active
-              ? { background: `${pack.accentColor}20`, color: pack.accentColor }
-              : { background: `${pack.accentColor}15`, color: pack.accentColor, border: `1px solid ${pack.accentColor}30` }
-          }
-        >
-          {active ? "✓ Active" : "Select"}
-        </button>
-      ) : owned ? (
-        <button
-          onClick={onActivate}
-          disabled={active || isPending}
-          className="w-full py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-40"
-          style={
-            active
-              ? { background: `${pack.accentColor}20`, color: pack.accentColor }
-              : { background: `${pack.accentColor}15`, color: pack.accentColor, border: `1px solid ${pack.accentColor}30` }
-          }
-        >
-          {active ? "✓ Active" : isPending ? "Activating…" : "Activate"}
-        </button>
-      ) : (
-        <button
-          onClick={onBuy}
-          disabled={isPending}
-          className="w-full py-2.5 rounded-xl text-xs font-black transition-all disabled:opacity-50"
-          style={{
-            background: `linear-gradient(135deg, ${pack.accentColor} 0%, ${pack.accentColor}bb 100%)`,
-            color: "#000",
-            boxShadow: `0 4px 16px ${pack.accentColor}35`,
-          }}
-        >
-          {isPending ? "Processing…" : `Buy for ${pack.price}`}
-        </button>
-      )}
-    </motion.div>
-  );
-}
-
 // ─── Claim Free Voice Modal (Pro signing bonus) ───────────────────────────────
-// Shows all paid voice profiles — Pro users pick one for free.
 
 const CLAIMABLE_VOICES = VOICE_PROFILE_LIST.filter((p) => !p.isFree);
 
@@ -247,7 +127,6 @@ export function ShopPage() {
   const purchase = useShopPurchase();
   const claimFree = useClaimFreeAura();
   const redeemCode = useRedeemCode();
-  const updateAura = useUpdateActiveAura();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
   const prices = useLocalizedPrices();
@@ -257,7 +136,6 @@ export function ShopPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [redeemInput, setRedeemInput] = useState("");
-  const [activatingId, setActivatingId] = useState<string | null>(null);
   const [activeVoiceProfileId, setActiveVoiceProfileId] = useState<string>(() => getVoiceProfile());
   const [testingVoiceId, setTestingVoiceId] = useState<string | null>(null);
 
@@ -274,25 +152,7 @@ export function ShopPage() {
   }
 
   const inventory: string[] = profile?.inventory ?? ["classic"];
-  const activeAura = profile?.activeAura ?? {};
-  const activePack = activeAura.packId ?? "classic";
   const canClaimBonus = !!profile?.isPro && !profile?.hasClaimedSigningBonus;
-
-  function handleBuy(pack: AuraPack) {
-    if (!isSignedIn) {
-      toast({ title: "Sign in to purchase", description: "Create an account to buy Aura Packs." });
-      return;
-    }
-    purchase.mutate(pack.id, {
-      onSuccess: () => {
-        toast({
-          title: `${pack.name} unlocked! 🎉`,
-          description: "Your new Aura Pack is ready to activate.",
-        });
-      },
-      onError: (err) => toast({ title: "Purchase failed", description: err.message, variant: "destructive" }),
-    });
-  }
 
   function handleBuyVoice(profileId: string, label: string) {
     if (!isSignedIn) {
@@ -308,24 +168,6 @@ export function ShopPage() {
       },
       onError: (err) => toast({ title: "Purchase failed", description: err.message, variant: "destructive" }),
     });
-  }
-
-  function handleActivate(pack: AuraPack) {
-    if (!isSignedIn) return;
-    setActivatingId(pack.id);
-    updateAura.mutate(
-      { packId: pack.id, voiceId: pack.voiceId, skinId: pack.skinId },
-      {
-        onSuccess: () => {
-          toast({
-            title: `${pack.name} activated!`,
-            description: `Voice: ${pack.voiceId} · Ghost: ${pack.skinId}`,
-          });
-          setActivatingId(null);
-        },
-        onError: () => setActivatingId(null),
-      },
-    );
   }
 
   function handleClaim(packId: string) {
@@ -572,13 +414,15 @@ export function ShopPage() {
           <Sparkles className="w-4 h-4 text-primary" />
           <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">AI Coach Voices</span>
         </div>
-        <p className="text-[11px] text-muted-foreground mb-3">
+        <p className="text-[11px] text-muted-foreground mb-4">
           Choose your coach's personality. Free voices use your device's speech engine. Pro voices use ElevenLabs AI + GPT-4o character injection.
         </p>
 
         {/* Free tier */}
-        <div className="mb-4">
-          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2 px-0.5">Free — always available</div>
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2 px-0.5">
+            Free — always available
+          </div>
           <div className="grid grid-cols-2 gap-2">
             {VOICE_PROFILE_LIST.filter((p) => p.isFree).map((p) => {
               const active = activeVoiceProfileId === p.id;
@@ -644,9 +488,18 @@ export function ShopPage() {
           </div>
         </div>
 
+        {/* Divider between free and pro */}
+        <div className="flex items-center gap-3 my-6">
+          <div className="flex-1 h-px bg-white/[0.08]" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Pro Voices</span>
+          <div className="flex-1 h-px bg-white/[0.08]" />
+        </div>
+
         {/* Paid tier — à la carte */}
         <div>
-          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2 px-0.5">AI Voices — £4.99 each</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-3 px-0.5">
+            AI Voices — £4.99 each
+          </div>
           <div className="space-y-2">
             {VOICE_PROFILE_LIST.filter((p) => !p.isFree).map((p) => {
               const active = activeVoiceProfileId === p.id;
@@ -719,20 +572,20 @@ export function ShopPage() {
                             : "bg-white/[0.06] text-foreground hover:bg-white/10 border border-white/10",
                         ].join(" ")}
                       >
-                        {active ? "✓ Active" : "Select"}
+                        {active ? "✓ Active" : "Equip"}
                       </button>
                     ) : (
                       <button
                         onClick={() => handleBuyVoice(p.id, p.label)}
                         disabled={purchase.isPending}
-                        className="px-3 py-1.5 rounded-lg text-[11px] font-black transition-all disabled:opacity-50"
+                        className="px-3 py-1.5 rounded-lg text-[11px] font-black transition-all disabled:opacity-50 whitespace-nowrap"
                         style={{
                           background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
                           color: "#fff",
                           boxShadow: "0 2px 10px rgba(124,58,237,0.35)",
                         }}
                       >
-                        {purchase.isPending ? "…" : "£4.99"}
+                        {purchase.isPending ? "…" : "Buy for £4.99"}
                       </button>
                     )}
                   </div>
@@ -740,30 +593,6 @@ export function ShopPage() {
               );
             })}
           </div>
-        </div>
-      </section>
-
-      {/* ── Aura Packs ── */}
-      <section>
-        <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Aura Packs</span>
-        </div>
-        <p className="text-[11px] text-muted-foreground mb-3">
-          Each pack unlocks a unique ghost skeleton skin and matching AI voice personality. Free packs always available.
-        </p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {AURA_PACKS.map((pack) => (
-            <PackCard
-              key={pack.id}
-              pack={pack}
-              owned={pack.free || inventory.includes(pack.id)}
-              active={activePack === pack.id}
-              onBuy={() => handleBuy(pack)}
-              onActivate={() => handleActivate(pack)}
-              isPending={activatingId === pack.id}
-            />
-          ))}
         </div>
       </section>
 
