@@ -4,9 +4,14 @@
  * Each profile defines:
  *   • isFree        — true = browser TTS only (no ElevenLabs call)
  *   • voiceId       — ElevenLabs voice to use (ignored when isFree)
- *   • voice_settings — ElevenLabs generation tuning (ignored when isFree)
+ *   • voiceSettings — ElevenLabs generation tuning (ignored when isFree)
  *   • systemPrompt  — LLM system prompt to generate cues in-character
+ *
+ * Safety fallback: any profile without a confirmed ElevenLabs voice ID uses
+ * the Turbo v2.5 base male voice (Adam: pNInz6obpgDQGcFmaJgB).
  */
+
+const TURBO_BASE_MALE = "pNInz6obpgDQGcFmaJgB"; // ElevenLabs "Adam" — safe fallback
 
 export interface VoiceProfile {
   id: string;
@@ -23,7 +28,7 @@ export interface VoiceProfile {
 }
 
 export const VOICE_PROFILES: Record<string, VoiceProfile> = {
-  // ── Free tier — browser TTS only ──────────────────────────────────────────
+  // ── Free tier — browser TTS only ─────────────────────────────────────────
   classic: {
     id: "classic",
     label: "Classic Male",
@@ -79,70 +84,70 @@ export const VOICE_PROFILES: Record<string, VoiceProfile> = {
     id: "monk",
     label: "The Monk",
     isFree: false,
-    voiceId: "zcAOhNBS3c14rBihAFp1",
-    voiceSettings: { stability: 0.75, similarity_boost: 0.78, style: 0.00, use_speaker_boost: true },
+    voiceId: "JJwDJYwS0XUkUEN9b52Q",
+    voiceSettings: { stability: 0.78, similarity_boost: 0.80, style: 0.00, use_speaker_boost: true },
     systemPrompt:
-      "You are a mindful monk who coaches movement through breath and stillness. Generate a serene, breathwork-centered cue. Calm and centering. Max 13 words.",
+      "You are a soft-spoken, meditative monk coaching movement through breath and spiritual awareness. Use terms like 'Zenith', 'Flow', and 'Ascension'. Cues are gentle invitations to focus. Serene and centering. Max 13 words.",
   },
 
   noir_detective: {
     id: "noir_detective",
     label: "Noir Detective",
     isFree: false,
-    voiceId: "2EiwWnXFnvU5JabPnv8n",
-    voiceSettings: { stability: 0.55, similarity_boost: 0.82, style: 0.18, use_speaker_boost: true },
+    voiceId: "pdxehqlj5YdJq6Tld1kY",
+    voiceSettings: { stability: 0.55, similarity_boost: 0.82, style: 0.20, use_speaker_boost: true },
     systemPrompt:
-      "You are a hard-boiled 1940s noir detective who coaches fitness on the side. Generate one gritty, metaphor-heavy cue in classic noir style. Max 16 words.",
+      "You are a gravelly 1940s noir detective narrating fitness in inner-monologue style. Call reps 'leads' and mistakes 'crimes'. Dark, metaphor-heavy, rainy-city atmosphere. Max 16 words.",
   },
 
-  retro_gamer: {
-    id: "retro_gamer",
-    label: "Retro Gamer",
+  ogre: {
+    id: "ogre",
+    label: "The Ogre",
     isFree: false,
-    voiceId: "IKne3meq5aSn9XLyUdCD",
-    voiceSettings: { stability: 0.35, similarity_boost: 0.78, style: 0.30, use_speaker_boost: true },
+    voiceId: "6QrwRdWe0IaKebyuIORs",
+    voiceSettings: { stability: 0.72, similarity_boost: 0.88, style: 0.12, use_speaker_boost: true },
     systemPrompt:
-      "You are an enthusiastic retro gamer who coaches fitness using video game references. Use XP, leveling up, boss battles. Energetic. Max 16 words.",
+      "You are a massive, primal ogre coaching with raw brute strength. Use very few words. Focus entirely on bracing and raw power. Guttural, intense. Max 8 words.",
   },
 
   olympic_coach: {
     id: "olympic_coach",
     label: "Olympic Coach",
     isFree: false,
-    voiceId: "bVMeCyTHy58xNoL34h3p",
-    voiceSettings: { stability: 0.55, similarity_boost: 0.85, style: 0.05, use_speaker_boost: true },
+    voiceId: "jazz2HFYvIvy5W940lLC",
+    voiceSettings: { stability: 0.58, similarity_boost: 0.87, style: 0.05, use_speaker_boost: true },
     systemPrompt:
-      "You are an elite Olympic coach training world-class athletes. Generate a precise, biomechanics-focused coaching correction. Professional and exacting. Max 14 words.",
-  },
-
-  ppowerlifter: {
-    id: "ppowerlifter",
-    label: "The Powerlifter",
-    isFree: false,
-    voiceId: "SOYHLrjzK2X1ezoPC9cr",
-    voiceSettings: { stability: 0.50, similarity_boost: 0.82, style: 0.15, use_speaker_boost: true },
-    systemPrompt:
-      "You are a world champion powerlifter coaching with raw, blue-collar toughness. Generate a blunt, no-excuses correction. Tough love. Max 12 words.",
-  },
-
-  tokyo_tech: {
-    id: "tokyo_tech",
-    label: "Tokyo Tech",
-    isFree: false,
-    voiceId: "TX3LPaxmHKxFdv7VOQHJ",
-    voiceSettings: { stability: 0.70, similarity_boost: 0.88, style: 0.05, use_speaker_boost: true },
-    systemPrompt:
-      "You are a high-tech Japanese fitness innovator. Generate a precise, technology-forward coaching correction. Formal, efficient. Max 14 words.",
+      "You are an elite Olympic coach training world-class athletes. Use technical terms like 'v-taper', 'eccentric control', and 'bio-mechanical efficiency'. Clinical, precise, exacting. Max 14 words.",
   },
 
   aussie_legend: {
     id: "aussie_legend",
     label: "Aussie Legend",
     isFree: false,
-    voiceId: "CYw3kZ02Goq8eFMOKy0V",
-    voiceSettings: { stability: 0.40, similarity_boost: 0.80, style: 0.22, use_speaker_boost: true },
+    voiceId: "DKMcABggOvufUy0dA3zY",
+    voiceSettings: { stability: 0.40, similarity_boost: 0.80, style: 0.25, use_speaker_boost: true },
     systemPrompt:
-      "You are a legendary Australian sports icon coaching a mate. Generate a friendly, enthusiastic cue with casual Aussie energy. Max 15 words.",
+      "You are a legendary Australian sports icon coaching a mate. Use 'mate', 'stoked', and 'reckon'. High-energy, casual, and incredibly friendly Aussie energy. Max 15 words.",
+  },
+
+  retro_gamer: {
+    id: "retro_gamer",
+    label: "Retro Gamer",
+    isFree: false,
+    voiceId: "eXCKEefU3JXqluy0PnN2",
+    voiceSettings: { stability: 0.32, similarity_boost: 0.78, style: 0.32, use_speaker_boost: true },
+    systemPrompt:
+      "You are an enthusiastic retro gamer coaching fitness like a video game. Use gaming terms like 'Level Up', 'HP', 'Buffs', and 'XP'. High-pitched digital enthusiasm. Max 16 words.",
+  },
+
+  tokyo_tech: {
+    id: "tokyo_tech",
+    label: "Tokyo Tech",
+    isFree: false,
+    voiceId: TURBO_BASE_MALE, // placeholder — update when confirmed voice ID arrives
+    voiceSettings: { stability: 0.70, similarity_boost: 0.88, style: 0.05, use_speaker_boost: true },
+    systemPrompt:
+      "You are a high-tech Japanese fitness innovator. Generate a precise, technology-forward coaching correction. Formal, efficient. Max 14 words.",
   },
 };
 

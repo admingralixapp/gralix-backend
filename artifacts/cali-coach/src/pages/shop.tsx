@@ -639,7 +639,6 @@ export function ShopPage() {
             {VOICE_PROFILE_LIST.filter((p) => !p.isFree).map((p) => {
               const active = activeVoiceProfileId === p.id;
               const owned  = inventory.includes(p.id);
-              const isFirstThree = ["sergeant", "sensei", "cyborg"].includes(p.id);
               return (
                 <div
                   key={p.id}
@@ -673,16 +672,14 @@ export function ShopPage() {
                     <div className="text-[10px] text-muted-foreground leading-tight">{p.description}</div>
                   </div>
                   <div className="flex gap-1.5 shrink-0">
-                    {isFirstThree && (
-                      <button
-                        onClick={() => testCoachVoice(p.id)}
-                        title="Preview this voice"
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-all"
-                      >
-                        <Play className="w-3 h-3" />
-                        Test
-                      </button>
-                    )}
+                    <button
+                      onClick={() => testCoachVoice(p.id)}
+                      title="Preview this voice"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-all"
+                    >
+                      <Play className="w-3 h-3" />
+                      Test
+                    </button>
                     {owned ? (
                       <button
                         onClick={() => {
@@ -718,6 +715,30 @@ export function ShopPage() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* ── Aura Packs ── */}
+      <section>
+        <div className="flex items-center gap-2 mb-1">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Aura Packs</span>
+        </div>
+        <p className="text-[11px] text-muted-foreground mb-3">
+          Each pack unlocks a unique ghost skeleton skin and matching AI voice personality. Free packs always available.
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {AURA_PACKS.map((pack) => (
+            <PackCard
+              key={pack.id}
+              pack={pack}
+              owned={pack.free || inventory.includes(pack.id)}
+              active={activePack === pack.id}
+              onBuy={() => handleBuy(pack)}
+              onActivate={() => handleActivate(pack)}
+              isPending={activatingId === pack.id}
+            />
+          ))}
         </div>
       </section>
 

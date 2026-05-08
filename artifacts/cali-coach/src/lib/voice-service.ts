@@ -315,13 +315,13 @@ export function testCoachVoice(profileId: string): void {
     sergeant:       "Get those hips up, recruit! You're sagging like a wet noodle!",
     sensei:         "The body follows the mind — align your core, find stillness.",
     cyborg:         "Hip angle deviation detected: 12 degrees below optimal. Correct now.",
-    monk:           "Breathe in. Soften the belly. Let the form arise from stillness.",
-    noir_detective: "Your hips are lower than my expectations, and that's saying something.",
-    retro_gamer:    "Warning! Form integrity at 40%! Activate core module or game over!",
-    olympic_coach:  "Posterior chain engagement insufficient — drive through the heels.",
-    ppowerlifter:   "Stop being soft. Lock in that core. Every rep counts.",
+    monk:           "Breathe in. Let the Ascension begin. Flow into perfect alignment.",
+    noir_detective: "Those hips, kid — dropping like a bad lead in a cold case.",
+    ogre:           "BRACE. PUSH. NOW. Every rep is survival.",
+    olympic_coach:  "Eccentric control is lacking — engage your v-taper and drive bio-mechanically.",
+    aussie_legend:  "Mate, you're doing ripper work — stoked to see that! Reckon you've got this!",
+    retro_gamer:    "Warning! HP critical! Activate your core Buff and Level Up — game over is not an option!",
     tokyo_tech:     "Core activation insufficient. Recalibrate spinal alignment immediately.",
-    aussie_legend:  "Mate, lift those hips! You're better than that, trust me!",
   };
 
   const sampleText =
