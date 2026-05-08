@@ -9,6 +9,7 @@
 const VOICE_CUES_KEY    = "calicoach_voice_cues_v1";
 const CAMERA_FACING_KEY = "calicoach_camera_facing_v1";
 const MIRROR_VIDEO_KEY  = "calicoach_mirror_video_v1";
+const VOICE_PROFILE_KEY = "calicoach_voice_profile_v1";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,4 +61,19 @@ export function getMirrorVideo(): boolean {
 
 export function setMirrorVideo(mirrored: boolean): void {
   try { localStorage.setItem(MIRROR_VIDEO_KEY, String(mirrored)); } catch {}
+}
+
+// ─── Voice Profile ────────────────────────────────────────────────────────────
+
+/** Which AI coaching personality to use. Default: "classic" */
+export function getVoiceProfile(): string {
+  try {
+    return localStorage.getItem(VOICE_PROFILE_KEY) ?? "classic";
+  } catch {
+    return "classic";
+  }
+}
+
+export function setVoiceProfile(profileId: string): void {
+  try { localStorage.setItem(VOICE_PROFILE_KEY, profileId); } catch {}
 }

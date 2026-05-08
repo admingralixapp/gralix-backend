@@ -2,10 +2,13 @@
  * voiceService — ElevenLabs Eleven Flash v2.5 streaming TTS + Audio Ducking
  *
  * Architecture:
- *  1. Frontend calls `speak(text)`.
- *  2. Service POSTs to /api/tts, proxies to ElevenLabs, streams audio/mpeg back.
- *  3. AudioContext decodes the MP3 and starts playback immediately.
- *  4. Falls back to Web Speech API when ElevenLabs is unavailable.
+ *  1. Frontend calls `speak(text)` for simple predefined cues.
+ *  2. Frontend calls `speakCue(...)` for AI-personalised dynamic coaching cues.
+ *     • Checks a client-side AudioBuffer cache first (zero network cost on repeat).
+ *     • On miss: POSTs to /api/tts/cue → LLM generates cue text → ElevenLabs speaks it.
+ *  3. Service POSTs to /api/tts, proxies to ElevenLabs, streams audio/mpeg back.
+ *  4. AudioContext decodes the MP3 and starts playback immediately.
+ *  5. Falls back to Web Speech API when ElevenLabs is unavailable.
  *
  * Audio Ducking:
  *  • All non-speech audio (sound effects, app music) should connect through the
@@ -18,8 +21,9 @@
  *    WKWebView contexts; silently ignored elsewhere.
  *
  * Usage:
- *   import { speak, cancelSpeech, getAudioContext, getDuckingGain } from "@/lib/voice-service";
+ *   import { speak, speakCue, cancelSpeech, getAudioContext, getDuckingGain } from "@/lib/voice-service";
  *   speak("Good rep! Keep your back straight.");
+ *   speakCue("Plank", "Hips too high", "sergeant", "sergeant:plank:hips_too_high");
  *
  *   // Route a sound effect through the ducking gain:
  *   const src = getAudioContext().createBufferSource();
@@ -63,6 +67,12 @@ let _duckingGain: GainNode | null = null;
 let _speechGain: GainNode | null = null;
 
 let _currentSource: AudioBufferSourceNode | null = null;
+
+// ─── Client-side audio cache for dynamic cues ────────────────────────────────
+// Key: `${profileId}:${cacheKey}` — value: decoded AudioBuffer.
+// Keeps repeated cues (e.g. "Hips too high") near-instant on second fire.
+const _cueCache = new Map<string, AudioBuffer>();
+const MAX_CUE_CACHE = 200; // ~200 unique cues before LRU eviction
 
 // ─── Context / gain initialisation ───────────────────────────────────────────
 
@@ -133,9 +143,6 @@ function releaseDuck(ac: AudioContext, duckGain: GainNode): void {
 }
 
 // ─── MediaSession audio focus ─────────────────────────────────────────────────
-// On supporting platforms (Android Chrome, some iOS WKWebView) setting
-// playbackState to 'playing' requests audio focus from the OS, which causes
-// external music apps (Spotify, Apple Music, etc.) to duck automatically.
 
 function requestAudioFocus(): void {
   try {
@@ -168,6 +175,32 @@ function stopCurrentSource(): void {
   _currentSource = null;
 }
 
+// ─── Play an already-decoded AudioBuffer ─────────────────────────────────────
+
+async function playAudioBuffer(audioBuffer: AudioBuffer): Promise<void> {
+  const { ac, duckGain, speechGain } = getGains();
+
+  if (ac.state === "suspended") {
+    await ac.resume();
+  }
+
+  stopCurrentSource();
+  applyDuck(ac, duckGain);
+  requestAudioFocus();
+
+  const source = ac.createBufferSource();
+  source.buffer = audioBuffer;
+  source.connect(speechGain);
+  source.start(0);
+  _currentSource = source;
+
+  source.onended = () => {
+    _currentSource = null;
+    releaseDuck(ac, duckGain);
+    abandonAudioFocus();
+  };
+}
+
 // ─── Locale for speech synthesis ──────────────────────────────────────────────
 
 let _speechLang = "en-US";
@@ -191,7 +224,6 @@ function fallbackSpeak(text: string): void {
     u.volume = 1;
     u.lang = _speechLang;
 
-    // Duck non-speech audio via gain node even for the fallback path.
     const { ac, duckGain } = getGains();
     if (ac.state !== "closed") applyDuck(ac, duckGain);
     requestAudioFocus();
@@ -213,28 +245,7 @@ function fallbackSpeak(text: string): void {
   }
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
-
-/**
- * Speak the given text using ElevenLabs Flash v2.5 with streaming audio.
- * Automatically ducks all non-speech audio while the cue is playing and
- * smoothly restores it afterwards.
- * Falls back to Web Speech API if ElevenLabs is unavailable.
- *
- * @param tone  Optional coaching tone forwarded to /api/tts.
- *              "encouraging" — warmer, more expressive (user is struggling)
- *              "firm"        — authoritative (form is breaking down)
- *              "neutral"     — default (good form, on track)
- */
-export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral"): void {
-  if (_muted) return;
-  stopCurrentSource();
-  window.speechSynthesis.cancel();
-
-  _speakAsync(text, tone).catch(() => {
-    fallbackSpeak(text);
-  });
-}
+// ─── Core async speak ─────────────────────────────────────────────────────────
 
 async function _speakAsync(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral"): Promise<void> {
   let res: Response;
@@ -250,16 +261,8 @@ async function _speakAsync(text: string, tone: "encouraging" | "firm" | "neutral
     return;
   }
 
-  // 503 = API key not configured → fall back silently.
-  if (res.status === 503) {
-    fallbackSpeak(text);
-    return;
-  }
-
-  if (!res.ok) {
-    fallbackSpeak(text);
-    return;
-  }
+  if (res.status === 503) { fallbackSpeak(text); return; }
+  if (!res.ok)             { fallbackSpeak(text); return; }
 
   let arrayBuffer: ArrayBuffer;
   try {
@@ -269,44 +272,131 @@ async function _speakAsync(text: string, tone: "encouraging" | "firm" | "neutral
     return;
   }
 
-  if (arrayBuffer.byteLength === 0) {
+  if (arrayBuffer.byteLength === 0) { fallbackSpeak(text); return; }
+
+  try {
+    const { ac } = getGains();
+    if (ac.state === "suspended") await ac.resume();
+    const audioBuffer = await ac.decodeAudioData(arrayBuffer);
+    await playAudioBuffer(audioBuffer);
+  } catch {
     fallbackSpeak(text);
+  }
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+/**
+ * Speak the given text using ElevenLabs Flash v2.5 with streaming audio.
+ * Automatically ducks all non-speech audio while the cue is playing and
+ * smoothly restores it afterwards.
+ * Falls back to Web Speech API if ElevenLabs is unavailable.
+ *
+ * Use `speakCue` for form-correction cues — it adds AI personality + caching.
+ *
+ * @param tone  Optional coaching tone: "encouraging" | "firm" | "neutral"
+ */
+export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral"): void {
+  if (_muted) return;
+  stopCurrentSource();
+  window.speechSynthesis.cancel();
+
+  _speakAsync(text, tone).catch(() => {
+    fallbackSpeak(text);
+  });
+}
+
+/**
+ * Speak a form-correction coaching cue using the active voice personality.
+ *
+ * Flow:
+ *   1. Check client-side AudioBuffer cache (zero network cost on repeat).
+ *   2. On miss → POST /api/tts/cue:
+ *        • Server checks its own MP3 cache.
+ *        • On miss: LLM rephrases cue in the character's voice → ElevenLabs.
+ *   3. Decode + cache AudioBuffer locally.
+ *   4. Play with audio ducking.
+ *
+ * @param exerciseName  e.g. "Plank"
+ * @param audioCue      The raw cue from the coaching engine, e.g. "Hips too high"
+ * @param profileId     Voice personality ID, e.g. "sergeant"
+ * @param cacheKey      Stable string key generated by the caller:
+ *                      e.g. `${profileId}:${slugify(exercise)}:${slugify(cue)}`
+ */
+export function speakCue(
+  exerciseName: string,
+  audioCue: string,
+  profileId: string,
+  cacheKey: string,
+): void {
+  if (_muted) return;
+  stopCurrentSource();
+  window.speechSynthesis.cancel();
+
+  _speakCueAsync(exerciseName, audioCue, profileId, cacheKey).catch(() => {
+    fallbackSpeak(audioCue);
+  });
+}
+
+async function _speakCueAsync(
+  exerciseName: string,
+  audioCue: string,
+  profileId: string,
+  cacheKey: string,
+): Promise<void> {
+  const clientKey = `${profileId}:${cacheKey}`;
+
+  // ── 1. Client-side cache hit — play immediately (no network) ────────────
+  const cached = _cueCache.get(clientKey);
+  if (cached) {
+    await playAudioBuffer(cached);
     return;
   }
 
+  // ── 2. Fetch from /api/tts/cue (server may return cached MP3) ───────────
+  let res: Response;
   try {
-    const { ac, duckGain, speechGain } = getGains();
+    res = await fetch("/api/tts/cue", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ exerciseName, audioCue, profile: profileId, cacheKey }),
+    });
+  } catch {
+    fallbackSpeak(audioCue);
+    return;
+  }
 
-    // Resume if the browser suspended the context (autoplay policy).
-    if (ac.state === "suspended") {
-      await ac.resume();
-    }
+  if (res.status === 503) { fallbackSpeak(audioCue); return; }
+  if (!res.ok)             { fallbackSpeak(audioCue); return; }
+
+  let arrayBuffer: ArrayBuffer;
+  try {
+    arrayBuffer = await res.arrayBuffer();
+  } catch {
+    fallbackSpeak(audioCue);
+    return;
+  }
+
+  if (arrayBuffer.byteLength === 0) { fallbackSpeak(audioCue); return; }
+
+  try {
+    const { ac } = getGains();
+    if (ac.state === "suspended") await ac.resume();
 
     const audioBuffer = await ac.decodeAudioData(arrayBuffer);
 
-    // Cancel anything that started while we were awaiting decode.
-    stopCurrentSource();
+    // ── 3. Store in client-side cache (LRU evict when full) ─────────────
+    if (_cueCache.size >= MAX_CUE_CACHE) {
+      const oldestKey = _cueCache.keys().next().value;
+      if (oldestKey) _cueCache.delete(oldestKey);
+    }
+    _cueCache.set(clientKey, audioBuffer);
 
-    // ── Apply ducking before playback begins ──────────────────────────────
-    applyDuck(ac, duckGain);
-    requestAudioFocus();
-
-    // ── Route speech through the dedicated speechGain (not ducked) ────────
-    const source = ac.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(speechGain);
-    source.start(0);
-
-    _currentSource = source;
-
-    source.onended = () => {
-      _currentSource = null;
-      // ── Restore non-speech audio after cue finishes ───────────────────
-      releaseDuck(ac, duckGain);
-      abandonAudioFocus();
-    };
+    // ── 4. Play ─────────────────────────────────────────────────────────
+    await playAudioBuffer(audioBuffer);
   } catch {
-    fallbackSpeak(text);
+    fallbackSpeak(audioCue);
   }
 }
 
@@ -336,4 +426,12 @@ export function cancelSpeech(): void {
   }
 
   abandonAudioFocus();
+}
+
+/**
+ * Clear the client-side cue AudioBuffer cache.
+ * Call when the user switches voice profiles so stale audio is evicted.
+ */
+export function clearCueCache(): void {
+  _cueCache.clear();
 }

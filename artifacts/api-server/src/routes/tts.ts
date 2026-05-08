@@ -1,14 +1,36 @@
 import { Router, type Request, type Response } from "express";
 import { Readable } from "stream";
+import OpenAI from "openai";
+import { getVoiceProfile, DEFAULT_PROFILE_ID } from "../lib/voiceProfiles.js";
 
 const router = Router();
 
-/**
- * Default voice: "Adam" — clear, energetic coaching voice.
- * Override with ELEVENLABS_VOICE_ID environment variable.
- * Full list: https://api.elevenlabs.io/v1/voices
- */
-const DEFAULT_VOICE_ID = "pNInz6obpgDQGcFmaJgB";
+// ── OpenAI client (for dynamic cue text generation) ────────────────────────
+// Initialised lazily so the server still boots if the key is absent.
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI | null {
+  if (_openai) return _openai;
+  const base = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+  const key  = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+  if (!base || !key) return null;
+  _openai = new OpenAI({ apiKey: key, baseURL: base });
+  return _openai;
+}
+
+// ── Server-side audio cache ─────────────────────────────────────────────────
+// Key: `${profileId}:${cacheKey}` — value: the raw MP3 bytes from ElevenLabs.
+// Lives in-process memory; refreshes on server restart. ~100KB per cached cue.
+const _audioCache = new Map<string, Buffer>();
+const MAX_CACHE_ENTRIES = 500;
+
+function setCached(key: string, buf: Buffer): void {
+  if (_audioCache.size >= MAX_CACHE_ENTRIES) {
+    // Evict oldest entry when cap reached.
+    const first = _audioCache.keys().next().value;
+    if (first) _audioCache.delete(first);
+  }
+  _audioCache.set(key, buf);
+}
 
 // ---------------------------------------------------------------------------
 // Voice-settings presets keyed by coaching tone.
@@ -30,13 +52,13 @@ const VOICE_SETTINGS: Record<string, {
     use_speaker_boost: true,
   },
   encouraging: {
-    stability:        0.30,   // more expressive — lets warmth/enthusiasm through
+    stability:        0.30,
     similarity_boost: 0.80,
-    style:            0.35,   // add stylistic emphasis
+    style:            0.35,
     use_speaker_boost: true,
   },
   firm: {
-    stability:        0.62,   // controlled, authoritative
+    stability:        0.62,
     similarity_boost: 0.85,
     style:            0.05,
     use_speaker_boost: true,
@@ -44,13 +66,54 @@ const VOICE_SETTINGS: Record<string, {
 };
 
 // ---------------------------------------------------------------------------
-// POST /tts — proxy to ElevenLabs Eleven Flash v2.5 with full streaming
+// Helper — send text to ElevenLabs and return the full MP3 as a Buffer.
+// ---------------------------------------------------------------------------
+async function elevenLabsTTS(
+  text: string,
+  voiceId: string,
+  voiceSettings: typeof VOICE_SETTINGS[string],
+  apiKey: string,
+): Promise<Buffer> {
+  const url =
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream` +
+    `?optimize_streaming_latency=4&output_format=mp3_44100_128`;
+
+  const upstream = await fetch(url, {
+    method: "POST",
+    headers: {
+      "xi-api-key":   apiKey,
+      "Content-Type": "application/json",
+      Accept:         "audio/mpeg",
+    },
+    body: JSON.stringify({
+      text: text.slice(0, 500),
+      model_id: "eleven_flash_v2_5",
+      voice_settings: voiceSettings,
+    }),
+  });
+
+  if (!upstream.ok) {
+    const body = await upstream.text().catch(() => "");
+    throw new Error(`ElevenLabs error ${upstream.status}: ${body}`);
+  }
+
+  if (!upstream.body) throw new Error("Empty ElevenLabs response");
+
+  const chunks: Uint8Array[] = [];
+  const reader = upstream.body.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) chunks.push(value);
+  }
+  return Buffer.concat(chunks);
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/tts — simple text → ElevenLabs proxy (existing, unchanged).
 // ---------------------------------------------------------------------------
 router.post("/tts", async (req: Request, res: Response) => {
   const apiKey = process.env.ELEVENLABS_API_KEY;
-
-  // Signal to the client that ElevenLabs is not yet configured so it can
-  // fall back gracefully to Web Speech API.
   if (!apiKey) {
     res.status(503).json({ error: "ElevenLabs API key not configured" });
     return;
@@ -62,25 +125,23 @@ router.post("/tts", async (req: Request, res: Response) => {
     return;
   }
 
-  const voiceId = process.env.ELEVENLABS_VOICE_ID ?? DEFAULT_VOICE_ID;
+  const profile    = getVoiceProfile(DEFAULT_PROFILE_ID);
+  const voiceId    = process.env.ELEVENLABS_VOICE_ID ?? profile.voiceId;
+  const voiceSettings =
+    VOICE_SETTINGS[tone ?? "neutral"] ?? VOICE_SETTINGS["neutral"]!;
 
-  // optimize_streaming_latency=4 = maximum latency optimization (Eleven Flash
-  // v2.5 is already ultra-low latency, this squeezes out a few more ms).
-  const url =
+  const elUrl =
     `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream` +
     `?optimize_streaming_latency=4&output_format=mp3_44100_128`;
 
-  const voiceSettings =
-    VOICE_SETTINGS[tone ?? "neutral"] ?? VOICE_SETTINGS["neutral"];
-
   let upstream: globalThis.Response;
   try {
-    upstream = await fetch(url, {
+    upstream = await fetch(elUrl, {
       method: "POST",
       headers: {
-        "xi-api-key": apiKey,
+        "xi-api-key":   apiKey,
         "Content-Type": "application/json",
-        Accept: "audio/mpeg",
+        Accept:         "audio/mpeg",
       },
       body: JSON.stringify({
         text: text.slice(0, 500),
@@ -107,14 +168,12 @@ router.post("/tts", async (req: Request, res: Response) => {
   }
 
   res.set({
-    "Content-Type": "audio/mpeg",
+    "Content-Type":      "audio/mpeg",
     "Transfer-Encoding": "chunked",
-    "Cache-Control": "no-cache, no-store",
+    "Cache-Control":     "no-cache, no-store",
     "X-Accel-Buffering": "no",
   });
 
-  // Pipe the ElevenLabs stream directly to the response — first bytes reach
-  // the client as soon as ElevenLabs starts sending them (~75 ms with Flash).
   try {
     const nodeStream = Readable.fromWeb(
       upstream.body as import("stream/web").ReadableStream<Uint8Array>,
@@ -126,6 +185,113 @@ router.post("/tts", async (req: Request, res: Response) => {
     if (!res.headersSent) res.status(500).json({ error: "Streaming failed" });
     else res.end();
   }
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/tts/cue — AI-personalised coaching cue.
+//
+// 1. Check server-side audio cache (profile + cacheKey).
+// 2. If miss → ask LLM to rephrase the raw cue in the character's voice.
+// 3. Send generated text to ElevenLabs using the profile's voice + settings.
+// 4. Cache MP3 bytes, return audio/mpeg.
+//
+// Body: {
+//   exerciseName : string   e.g. "Plank"
+//   audioCue     : string   e.g. "Lower your hips"
+//   profile      : string   e.g. "sergeant"
+//   cacheKey     : string   stable key generated by the client
+// }
+// ---------------------------------------------------------------------------
+router.post("/tts/cue", async (req: Request, res: Response) => {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) {
+    res.status(503).json({ error: "ElevenLabs API key not configured" });
+    return;
+  }
+
+  const { exerciseName, audioCue, profile: profileId, cacheKey } =
+    req.body as {
+      exerciseName?: string;
+      audioCue?:     string;
+      profile?:      string;
+      cacheKey?:     string;
+    };
+
+  if (!exerciseName?.trim() || !audioCue?.trim()) {
+    res.status(400).json({ error: "exerciseName and audioCue are required" });
+    return;
+  }
+
+  const profile = getVoiceProfile(profileId ?? DEFAULT_PROFILE_ID);
+  const serverCacheKey = `${profile.id}:${cacheKey ?? `${exerciseName}:${audioCue}`}`;
+
+  // ── 1. Cache hit — return stored audio immediately ──────────────────────
+  const cached = _audioCache.get(serverCacheKey);
+  if (cached) {
+    res.set({
+      "Content-Type":  "audio/mpeg",
+      "Cache-Control": "public, max-age=86400",
+      "X-Cache":       "HIT",
+    });
+    res.end(cached);
+    return;
+  }
+
+  // ── 2. Generate cue text via LLM ────────────────────────────────────────
+  let cueText = audioCue; // fallback: speak the raw cue if LLM unavailable
+  const ai = getOpenAI();
+  if (ai) {
+    try {
+      const completion = await ai.chat.completions.create({
+        model: "gpt-5-mini",
+        max_completion_tokens: 60,
+        messages: [
+          { role: "system", content: profile.systemPrompt },
+          {
+            role: "user",
+            content:
+              `Exercise: ${exerciseName}. Form issue detected: "${audioCue}". ` +
+              `Generate exactly one coaching sentence in character. ` +
+              `Do NOT use quotes. Max 15 words.`,
+          },
+        ],
+      });
+      const generated = completion.choices[0]?.message?.content?.trim();
+      if (generated) cueText = generated;
+    } catch (err) {
+      req.log.warn({ err }, "LLM cue generation failed — falling back to raw audioCue");
+    }
+  }
+
+  // ── 3. Convert text → ElevenLabs audio ──────────────────────────────────
+  let audioBuffer: Buffer;
+  try {
+    audioBuffer = await elevenLabsTTS(cueText, profile.voiceId, profile.voiceSettings, apiKey);
+  } catch (err) {
+    req.log.error({ err }, "ElevenLabs TTS failed for dynamic cue");
+    res.status(502).json({ error: "ElevenLabs error" });
+    return;
+  }
+
+  // ── 4. Cache and return ──────────────────────────────────────────────────
+  setCached(serverCacheKey, audioBuffer);
+
+  res.set({
+    "Content-Type":  "audio/mpeg",
+    "Cache-Control": "public, max-age=86400",
+    "X-Cache":       "MISS",
+  });
+  res.end(audioBuffer);
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/tts/profiles — list available voice personality profiles.
+// ---------------------------------------------------------------------------
+import { VOICE_PROFILES } from "../lib/voiceProfiles.js";
+
+router.get("/tts/profiles", (_req: Request, res: Response) => {
+  const list = Object.values(VOICE_PROFILES).map(({ id, label }) => ({ id, label }));
+  res.json(list);
 });
 
 export default router;

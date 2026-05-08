@@ -9,10 +9,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
-import { speak as voiceSpeak, cancelSpeech, setVoiceMuted, setVoiceLanguage } from "@/lib/voice-service";
+import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage } from "@/lib/voice-service";
 import { useTranslation } from "react-i18next";
 import { getRestDuration, type RestDuration, REST_DURATION_OPTIONS } from "@/lib/workout-settings";
-import { getVoiceCues, getCameraFacing, getMirrorVideo } from "@/lib/workout-preferences";
+import { getVoiceCues, getCameraFacing, getMirrorVideo, getVoiceProfile } from "@/lib/workout-preferences";
 import {
   getPhaseTransitionCue,
   getMilestoneCue,
@@ -544,6 +544,18 @@ export function Workout() {
     if (match) setSelectedExerciseId(match.id.toString());
   }, [exercises, search, selectedExerciseId]);
 
+  // Keep activeExerciseNameRef current so speakFormCue can read it in closures.
+  useEffect(() => {
+    const ex = exercises?.find(e => e.id.toString() === selectedExerciseId);
+    activeExerciseNameRef.current = ex?.name ?? "";
+  }, [exercises, selectedExerciseId]);
+
+  // Sync voiceProfileIdRef with localStorage so it reflects profile changes
+  // made in Settings without requiring a page reload.
+  useEffect(() => {
+    voiceProfileIdRef.current = getVoiceProfile();
+  });
+
   // ── Workout state ──────────────────────────────────────────────────────────
   const [isWorkoutActive, setIsWorkoutActive] = useState(false);
   const [reps, setReps] = useState(0);
@@ -588,6 +600,14 @@ export function Workout() {
   const handleStartRef        = useRef<() => Promise<void>>(async () => {});
   /** Guards against double-firing End Workout (button + voice command race). */
   const isEndingRef           = useRef(false);
+
+  // ── Voice personality ─────────────────────────────────────────────────────
+  /** Active voice profile ID — read from preferences on mount, kept in a ref
+   *  so the speakFormCue flush closure always sees the current value. */
+  const voiceProfileIdRef = useRef<string>(getVoiceProfile());
+  /** Current exercise name — kept in a ref so speakFormCue can access it
+   *  without adding it to the useCallback dependency array. */
+  const activeExerciseNameRef = useRef<string>("");
 
   // ── Equipment selection ────────────────────────────────────────────────────
   const [equipment, setEquipment] = useState<EquipmentSelection>(DEFAULT_EQUIPMENT);
@@ -773,6 +793,13 @@ export function Workout() {
    *   2 = moderate   (blendedScore < 80)
    *   1 = general
    */
+  /** Generate a stable, URL-safe cache key from exercise name + cue text. */
+  const makeCueCacheKey = useCallback((exercise: string, cue: string): string => {
+    const slug = (s: string) =>
+      s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 30);
+    return `${slug(exercise)}:${slug(cue)}`;
+  }, []);
+
   const speakFormCue = useCallback((
     text:     string,
     tone:     "encouraging" | "firm" | "neutral",
@@ -789,10 +816,23 @@ export function Workout() {
         cueFlushTimerRef.current = null;
         const cue = pendingFormCueRef.current;
         pendingFormCueRef.current = null;
-        if (cue) speak(cue.text, cue.tone);
+        if (!cue) return;
+        // Check the global 4 s cooldown before speaking
+        const now = Date.now();
+        if (now - stateRef.current.lastSpokenTime < 4000) return;
+        stateRef.current.lastSpokenTime = now;
+        // Use AI-personalised cue if a profile + exercise are known
+        const exerciseName = activeExerciseNameRef.current;
+        const profileId    = voiceProfileIdRef.current;
+        if (exerciseName && profileId) {
+          const cacheKey = makeCueCacheKey(exerciseName, cue.text);
+          voiceSpeakCue(exerciseName, cue.text, profileId, cacheKey);
+        } else {
+          voiceSpeak(cue.text, cue.tone);
+        }
       }, 150);
     }
-  }, [speak]);
+  }, [makeCueCacheKey]);
 
   // ── Load MediaPipe model ───────────────────────────────────────────────────
   useEffect(() => {
