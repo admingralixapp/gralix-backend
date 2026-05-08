@@ -13,6 +13,8 @@ import {
   X,
   Zap,
   LogIn,
+  Play,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -25,6 +27,9 @@ import {
 } from "@/lib/social";
 import { AURA_PACKS, PAID_PACKS, type AuraPack } from "@/lib/aura-packs";
 import { useToast } from "@/hooks/use-toast";
+import { VOICE_PROFILE_LIST } from "@/lib/voice-profiles";
+import { testCoachVoice } from "@/lib/voice-service";
+import { getVoiceProfile, setVoiceProfile } from "@/lib/workout-preferences";
 
 // ─── Pack Card ──────────────────────────────────────────────────────────────
 
@@ -260,6 +265,7 @@ export function ShopPage() {
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [redeemInput, setRedeemInput] = useState("");
   const [activatingId, setActivatingId] = useState<string | null>(null);
+  const [activeVoiceProfileId, setActiveVoiceProfileId] = useState<string>(() => getVoiceProfile());
 
   function handleActivateTrial() {
     activatePro.mutate(undefined, {
@@ -550,53 +556,153 @@ export function ShopPage() {
         )}
       </AnimatePresence>
 
-      {/* ── Aura Packs Grid ── */}
+      {/* ── AI Coach Voices ── */}
       <section>
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Aura Packs</span>
+          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">AI Coach Voices</span>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {AURA_PACKS.map((pack) => (
-            <PackCard
-              key={pack.id}
-              pack={pack}
-              owned={pack.free || inventory.includes(pack.id)}
-              active={activePack === pack.id}
-              onBuy={() => handleBuy(pack)}
-              onActivate={() => handleActivate(pack)}
-              isPending={activatingId === pack.id || purchase.isPending}
-            />
-          ))}
+        <p className="text-[11px] text-muted-foreground mb-3">
+          Choose your coach's personality. Free voices use your device's speech engine. Pro voices use ElevenLabs AI + GPT-4o character injection.
+        </p>
+
+        {/* Free tier */}
+        <div className="mb-4">
+          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2 px-0.5">Free — always available</div>
+          <div className="grid grid-cols-2 gap-2">
+            {VOICE_PROFILE_LIST.filter((p) => p.isFree).map((p) => {
+              const active = activeVoiceProfileId === p.id;
+              return (
+                <div
+                  key={p.id}
+                  className={[
+                    "rounded-2xl border p-3.5 flex flex-col gap-2.5 transition-all",
+                    active ? "border-primary/50 ring-1 ring-primary/20" : "border-white/10",
+                  ].join(" ")}
+                  style={{
+                    background: active
+                      ? "linear-gradient(135deg, rgba(132,204,22,0.10) 0%, rgba(132,204,22,0.04) 100%)"
+                      : "rgba(255,255,255,0.03)",
+                  }}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-2xl leading-none">{p.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-bold text-foreground truncate">{p.label}</div>
+                      <div className="text-[10px] text-muted-foreground leading-tight">{p.description}</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => {
+                        testCoachVoice(p.id);
+                      }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-all"
+                    >
+                      <Play className="w-3 h-3" />
+                      Test
+                    </button>
+                    <button
+                      onClick={() => {
+                        setVoiceProfile(p.id);
+                        setActiveVoiceProfileId(p.id);
+                      }}
+                      disabled={active}
+                      className={[
+                        "flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all disabled:opacity-40",
+                        active
+                          ? "bg-primary/15 text-primary border border-primary/30"
+                          : "bg-white/[0.06] text-foreground hover:bg-white/10 border border-white/10",
+                      ].join(" ")}
+                    >
+                      {active ? "✓ Active" : "Select"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Pro tier */}
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2 px-0.5">Pro — ElevenLabs AI voices</div>
+          <div className="space-y-2">
+            {VOICE_PROFILE_LIST.filter((p) => !p.isFree).map((p) => {
+              const active = activeVoiceProfileId === p.id;
+              const canUse = !!profile?.isPro;
+              const isFirstThree = ["sergeant", "sensei", "cyborg"].includes(p.id);
+              return (
+                <div
+                  key={p.id}
+                  className={[
+                    "rounded-2xl border p-3.5 flex items-center gap-3 transition-all",
+                    active ? "border-violet-500/50 ring-1 ring-violet-500/20" : "border-white/[0.08]",
+                  ].join(" ")}
+                  style={{
+                    background: active
+                      ? "linear-gradient(135deg, rgba(139,92,246,0.10) 0%, rgba(139,92,246,0.04) 100%)"
+                      : "rgba(255,255,255,0.02)",
+                  }}
+                >
+                  <span className="text-2xl leading-none shrink-0">{p.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-sm font-bold text-foreground">{p.label}</span>
+                      {!canUse && (
+                        <span
+                          className="text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide"
+                          style={{ background: "rgba(139,92,246,0.2)", color: "#c084fc", border: "1px solid rgba(139,92,246,0.35)" }}
+                        >
+                          Pro
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground leading-tight">{p.description}</div>
+                  </div>
+                  <div className="flex gap-1.5 shrink-0">
+                    {isFirstThree && (
+                      <button
+                        onClick={() => testCoachVoice(p.id)}
+                        title="Preview this voice"
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-all"
+                      >
+                        <Play className="w-3 h-3" />
+                        Test
+                      </button>
+                    )}
+                    {canUse ? (
+                      <button
+                        onClick={() => {
+                          setVoiceProfile(p.id);
+                          setActiveVoiceProfileId(p.id);
+                        }}
+                        disabled={active}
+                        className={[
+                          "px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all disabled:opacity-40",
+                          active
+                            ? "bg-violet-500/15 text-violet-400 border border-violet-500/30"
+                            : "bg-white/[0.06] text-foreground hover:bg-white/10 border border-white/10",
+                        ].join(" ")}
+                      >
+                        {active ? "✓ Active" : "Select"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => toast({ title: "Pro required", description: "Upgrade to CaliCoach Pro to unlock AI voices." })}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold border border-violet-500/25 text-violet-400/70 hover:bg-violet-500/10 transition-all"
+                      >
+                        <Lock className="w-3 h-3" />
+                        Pro
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
-
-      {/* ── Active Aura Summary ── */}
-      {activePack !== "classic" && (() => {
-        const pack = AURA_PACKS.find((p) => p.id === activePack);
-        if (!pack) return null;
-        return (
-          <section
-            className="rounded-2xl border p-4 flex items-center gap-3"
-            style={{
-              background: `${pack.accentColor}0a`,
-              borderColor: `${pack.accentColor}35`,
-            }}
-          >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-              style={{ background: `${pack.accentColor}18`, border: `1px solid ${pack.accentColor}30` }}
-            >
-              {pack.emoji}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-xs text-muted-foreground">Active Aura</div>
-              <div className="font-bold text-sm" style={{ color: pack.accentColor }}>{pack.name}</div>
-            </div>
-            <Zap className="w-4 h-4 shrink-0" style={{ color: pack.accentColor }} />
-          </section>
-        );
-      })()}
 
       {/* ── Promo Code ── */}
       <section>

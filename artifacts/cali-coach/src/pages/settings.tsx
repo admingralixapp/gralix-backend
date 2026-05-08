@@ -601,9 +601,21 @@ export function Settings() {
                     ].join(" ")}
                   >
                     <span className="text-base shrink-0 leading-none">{p.emoji}</span>
-                    <div className="min-w-0">
-                      <div className={["text-xs font-semibold truncate", active ? "text-primary" : ""].join(" ")}>
-                        {p.label}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1 min-w-0">
+                        <span className={["text-xs font-semibold truncate", active ? "text-primary" : ""].join(" ")}>
+                          {p.label}
+                        </span>
+                        <span
+                          className="shrink-0 text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wide leading-none"
+                          style={
+                            p.isFree
+                              ? { background: "rgba(132,204,22,0.15)", color: "#84cc16" }
+                              : { background: "rgba(139,92,246,0.18)", color: "#c084fc" }
+                          }
+                        >
+                          {p.isFree ? "Free" : "Pro"}
+                        </span>
                       </div>
                       <div className="text-[10px] text-muted-foreground/70 truncate leading-tight mt-0.5">
                         {p.description}
