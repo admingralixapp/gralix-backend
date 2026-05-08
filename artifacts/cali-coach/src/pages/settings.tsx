@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
 import {
@@ -976,13 +977,12 @@ export function Settings() {
         </div>
       </section>
 
-      {/* ── Retention modal (Step 1) — rendered at root so fixed positioning works ── */}
-      {cancelStep === "retention" && (
+      {/* ── Retention modal (Step 1) — portalled to document.body to escape all parent constraints ── */}
+      {cancelStep === "retention" && createPortal(
         <>
-          {/* Backdrop — full-screen, separate from the card so flex can't break centering */}
+          {/* Backdrop */}
           <div
-            className="fixed inset-0 z-[9998]"
-            style={{ background: "rgba(0,0,0,0.82)", backdropFilter: "blur(8px)" }}
+            style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.82)", backdropFilter: "blur(8px)" }}
             onClick={() => setCancelStep(null)}
           />
           <div
@@ -1080,16 +1080,16 @@ export function Settings() {
               </button>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
 
-      {/* ── Final exit modal (Step 2) — rendered at root so fixed positioning works ── */}
-      {cancelStep === "confirm" && (
+      {/* ── Final exit modal (Step 2) — portalled to document.body ── */}
+      {cancelStep === "confirm" && createPortal(
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-[9998]"
-            style={{ background: "rgba(0,0,0,0.82)", backdropFilter: "blur(8px)" }}
+            style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.82)", backdropFilter: "blur(8px)" }}
             onClick={() => setCancelStep(null)}
           />
           <div
@@ -1179,7 +1179,8 @@ export function Settings() {
               </button>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );
