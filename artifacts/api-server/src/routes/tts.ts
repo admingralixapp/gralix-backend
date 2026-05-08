@@ -243,7 +243,7 @@ router.post("/tts/cue", async (req: Request, res: Response) => {
   if (ai) {
     try {
       const completion = await ai.chat.completions.create({
-        model: "gpt-5-mini",
+        model: "gpt-4o-mini",
         max_completion_tokens: 60,
         messages: [
           { role: "system", content: profile.systemPrompt },
