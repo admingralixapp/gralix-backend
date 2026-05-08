@@ -6,6 +6,11 @@
  *
  * isFree = true  → browser Web Speech API (no ElevenLabs call, no cost)
  * isFree = false → ElevenLabs + LLM personality injection (Pro feature)
+ *
+ * IMPORTANT: every id here must exactly match a key in the backend
+ * VOICE_PROFILES record in artifacts/api-server/src/lib/voiceProfiles.ts.
+ * A mismatch causes the backend to fall back to the "classic" profile
+ * (isFree=true, empty voiceId) which results in silence or browser TTS.
  */
 
 export interface VoiceProfileMeta {
@@ -72,7 +77,7 @@ export const VOICE_PROFILE_LIST: VoiceProfileMeta[] = [
   {
     id: "ogre",
     label: "The Ogre",
-    description: "Primal power, maximum brace — very few words",
+    description: "Smash strong, tiny-human — cave monster hype",
     emoji: "👹",
     isFree: false,
   },
@@ -93,15 +98,15 @@ export const VOICE_PROFILE_LIST: VoiceProfileMeta[] = [
   {
     id: "retro_gamer",
     label: "Retro Gamer",
-    description: "Level Up your HP — activate those Buffs!",
+    description: "90s game announcer — combos, power-ups, game-overs",
     emoji: "🎮",
     isFree: false,
   },
   {
-    id: "tokyo_tech",
-    label: "Tokyo Tech",
-    description: "High-tech precision coaching, formally efficient",
-    emoji: "🗼",
+    id: "rio_flair",
+    label: "Rio Flair",
+    description: "Brazilian capoeira vibes — ginga, flow, axé",
+    emoji: "🕺",
     isFree: false,
   },
 ];

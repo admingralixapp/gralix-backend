@@ -1,14 +1,11 @@
 /**
  * voiceProfiles — AI coaching personality definitions.
  *
- * Each profile defines:
- *   • isFree        — true = browser TTS only (no ElevenLabs call)
- *   • voiceId       — ElevenLabs voice to use (ignored when isFree)
- *   • voiceSettings — ElevenLabs generation tuning (ignored when isFree)
- *   • systemPrompt  — LLM system prompt to generate cues in-character
- *
  * Safety fallback: any profile without a confirmed ElevenLabs voice ID uses
  * the Turbo v2.5 base male voice (Adam: pNInz6obpgDQGcFmaJgB).
+ *
+ * DO NOT use window.speechSynthesis anywhere in this file.
+ * If a voiceId exists, always attempt ElevenLabs. Log errors — never silently fallback.
  */
 
 const TURBO_BASE_MALE = "pNInz6obpgDQGcFmaJgB"; // ElevenLabs "Adam" — safe fallback
@@ -28,6 +25,7 @@ export interface VoiceProfile {
 }
 
 export const VOICE_PROFILES: Record<string, VoiceProfile> = {
+
   // ── Free tier — browser TTS only ─────────────────────────────────────────
   classic: {
     id: "classic",
@@ -105,9 +103,9 @@ export const VOICE_PROFILES: Record<string, VoiceProfile> = {
     label: "The Ogre",
     isFree: false,
     voiceId: "6QrwRdWe0IaKebyuIORs",
-    voiceSettings: { stability: 0.72, similarity_boost: 0.88, style: 0.12, use_speaker_boost: true },
+    voiceSettings: { stability: 0.72, similarity_boost: 0.88, style: 0.15, use_speaker_boost: true },
     systemPrompt:
-      "You are a massive, primal ogre coaching with raw brute strength. Use very few words. Focus entirely on bracing and raw power. Guttural, intense. Max 8 words.",
+      "You are a massive, dim-witted, but encouraging cave monster coaching fitness. Use words like 'smash', 'strong', and 'tiny-human'. Very few words, high enthusiasm. Max 10 words.",
   },
 
   olympic_coach: {
@@ -137,22 +135,28 @@ export const VOICE_PROFILES: Record<string, VoiceProfile> = {
     voiceId: "eXCKEefU3JXqluy0PnN2",
     voiceSettings: { stability: 0.32, similarity_boost: 0.78, style: 0.32, use_speaker_boost: true },
     systemPrompt:
-      "You are an enthusiastic retro gamer coaching fitness like a video game. Use gaming terms like 'Level Up', 'HP', 'Buffs', and 'XP'. High-pitched digital enthusiasm. Max 16 words.",
+      "You are an enthusiastic 90s video game announcer coaching fitness. Mention combos, power-ups, and game-overs. High energy, arcade excitement. Max 16 words.",
   },
 
-  tokyo_tech: {
-    id: "tokyo_tech",
-    label: "Tokyo Tech",
+  rio_flair: {
+    id: "rio_flair",
+    label: "Rio Flair",
     isFree: false,
-    voiceId: TURBO_BASE_MALE, // placeholder — update when confirmed voice ID arrives
-    voiceSettings: { stability: 0.70, similarity_boost: 0.88, style: 0.05, use_speaker_boost: true },
+    voiceId: TURBO_BASE_MALE, // TODO: replace with confirmed Rio Flair voice ID
+    voiceSettings: { stability: 0.38, similarity_boost: 0.80, style: 0.28, use_speaker_boost: true },
     systemPrompt:
-      "You are a high-tech Japanese fitness innovator. Generate a precise, technology-forward coaching correction. Formal, efficient. Max 14 words.",
+      "You are a vibrant, energetic Brazilian capoeira coach. Training is a dance — call it a 'ginga'. Use 'flow', 'energy', and 'axé'. Vibrant, rhythmic, joyful. Max 15 words.",
   },
+
 };
 
 export const DEFAULT_PROFILE_ID = "classic";
 
 export function getVoiceProfile(profileId: string): VoiceProfile {
-  return VOICE_PROFILES[profileId] ?? VOICE_PROFILES[DEFAULT_PROFILE_ID]!;
+  const profile = VOICE_PROFILES[profileId];
+  if (!profile) {
+    console.error(`[VoiceProfiles] Unknown profile id "${profileId}" — returning default "classic". Check that the client-side id matches a key in VOICE_PROFILES.`);
+    return VOICE_PROFILES[DEFAULT_PROFILE_ID]!;
+  }
+  return profile;
 }

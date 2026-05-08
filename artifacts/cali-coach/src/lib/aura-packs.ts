@@ -3,7 +3,7 @@ export interface AuraPack {
   name: string;
   tagline: string;
   emoji: string;
-  /** Voice profile ID — routes to ElevenLabs personality */
+  /** Voice profile ID — must exactly match a key in backend VOICE_PROFILES */
   voiceId: string;
   /** Ghost skeleton colour theme name */
   skinId: string;
@@ -121,7 +121,7 @@ export const AURA_PACKS: AuraPack[] = [
   {
     id: "ogre",
     name: "The Ogre",
-    tagline: "Primal. Brutal. Maximum brace.",
+    tagline: "Smash strong, tiny-human — cave monster hype",
     emoji: "👹",
     voiceId: "ogre",
     skinId: "iron-ore",
@@ -163,7 +163,7 @@ export const AURA_PACKS: AuraPack[] = [
   {
     id: "retro_gamer",
     name: "Retro Gamer",
-    tagline: "Level Up! Activate HP Buffs and earn XP!",
+    tagline: "90s game announcer — combos, power-ups, game-overs",
     emoji: "🎮",
     voiceId: "retro_gamer",
     skinId: "neon-surge",
@@ -175,18 +175,18 @@ export const AURA_PACKS: AuraPack[] = [
     accentColor: "#e879f9",
   },
   {
-    id: "tokyo_tech",
-    name: "Tokyo Tech",
-    tagline: "High-tech precision. Formally efficient.",
-    emoji: "🗼",
-    voiceId: "tokyo_tech",
-    skinId: "matrix-blue",
-    skinColor: "#22d3ee",
+    id: "rio_flair",
+    name: "Rio Flair",
+    tagline: "Brazilian capoeira vibes — ginga, flow, axé",
+    emoji: "🕺",
+    voiceId: "rio_flair",
+    skinId: "tropical-green",
+    skinColor: "#22c55e",
     price: "£4.99",
     priceAmount: 4.99,
     free: false,
-    gradient: "linear-gradient(135deg, rgba(34,211,238,0.18) 0%, rgba(34,211,238,0.05) 100%)",
-    accentColor: "#22d3ee",
+    gradient: "linear-gradient(135deg, rgba(34,197,94,0.18) 0%, rgba(250,204,21,0.08) 100%)",
+    accentColor: "#22c55e",
   },
 ];
 

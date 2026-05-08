@@ -317,11 +317,11 @@ export function testCoachVoice(profileId: string): void {
     cyborg:         "Hip angle deviation detected: 12 degrees below optimal. Correct now.",
     monk:           "Breathe in. Let the Ascension begin. Flow into perfect alignment.",
     noir_detective: "Those hips, kid — dropping like a bad lead in a cold case.",
-    ogre:           "BRACE. PUSH. NOW. Every rep is survival.",
+    ogre:           "Smash down! Strong tiny-human! OGRE IS PROUD.",
     olympic_coach:  "Eccentric control is lacking — engage your v-taper and drive bio-mechanically.",
     aussie_legend:  "Mate, you're doing ripper work — stoked to see that! Reckon you've got this!",
-    retro_gamer:    "Warning! HP critical! Activate your core Buff and Level Up — game over is not an option!",
-    tokyo_tech:     "Core activation insufficient. Recalibrate spinal alignment immediately.",
+    retro_gamer:    "COMBO BREAKER! Power-up your core or it's game over — finish that rep!",
+    rio_flair:      "Ginga with it, amigo! Let the energy flow — axé, keep moving!",
   };
 
   const sampleText =
