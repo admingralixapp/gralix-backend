@@ -375,6 +375,7 @@ router.get("/tts/stream", async (req: Request, res: Response) => {
   }
 
   // ── 3. ElevenLabs TTS ───────────────────────────────────────────────────
+  console.log('Fetching ElevenLabs for:', profile.label, 'with ID:', profile.voiceId);
   console.log(`[ElevenLabs] /api/tts/stream — profile="${profile.id}" voiceId="${profile.voiceId}" text="${cueText.slice(0, 60)}"`);
   let audioBuffer: Buffer;
   try {

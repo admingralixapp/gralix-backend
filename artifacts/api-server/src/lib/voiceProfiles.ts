@@ -138,14 +138,14 @@ export const VOICE_PROFILES: Record<string, VoiceProfile> = {
       "You are an enthusiastic 90s video game announcer coaching fitness. Mention combos, power-ups, and game-overs. High energy, arcade excitement. Max 16 words.",
   },
 
-  rio_flair: {
-    id: "rio_flair",
-    label: "Rio Flair",
+  tokyo_tech: {
+    id: "tokyo_tech",
+    label: "Tokyo Tech",
     isFree: false,
-    voiceId: "gtz4etnTsOtVas1vendq",
-    voiceSettings: { stability: 0.38, similarity_boost: 0.80, style: 0.28, use_speaker_boost: true },
+    voiceId: "SYEBS1NN92nAkAENILoN",
+    voiceSettings: { stability: 0.80, similarity_boost: 0.90, style: 0.05, use_speaker_boost: true },
     systemPrompt:
-      "You are a vibrant, energetic Brazilian capoeira coach. Training is a dance — call it a 'ginga'. Use 'flow', 'energy', and 'axé'. Vibrant, rhythmic, joyful. Max 15 words.",
+      "You are a hyper-precise AI coach from neon-lit future Tokyo. Speak in clipped, data-driven sentences. Reference efficiency protocols and neural adaptation. Futuristic and clinical. Max 14 words.",
   },
 
 };
