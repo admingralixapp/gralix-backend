@@ -978,14 +978,27 @@ export function Settings() {
 
       {/* ── Retention modal (Step 1) — rendered at root so fixed positioning works ── */}
       {cancelStep === "retention" && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setCancelStep(null)} />
+        <>
+          {/* Backdrop — full-screen, separate from the card so flex can't break centering */}
           <div
-            className="relative z-10 w-full max-w-sm rounded-3xl border overflow-hidden"
+            className="fixed inset-0 z-[9998]"
+            style={{ background: "rgba(0,0,0,0.82)", backdropFilter: "blur(8px)" }}
+            onClick={() => setCancelStep(null)}
+          />
+          <div
             style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 9999,
+              width: "calc(100vw - 2rem)",
+              maxWidth: "24rem",
               background: "linear-gradient(145deg, #0f0720 0%, #0a0414 100%)",
-              borderColor: "rgba(168,85,247,0.50)",
+              borderRadius: "1.5rem",
+              border: "1px solid rgba(168,85,247,0.50)",
               boxShadow: "0 0 90px rgba(168,85,247,0.30)",
+              overflow: "hidden",
             }}
           >
             {/* Glow orb */}
@@ -1067,19 +1080,32 @@ export function Settings() {
               </button>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* ── Final exit modal (Step 2) — rendered at root so fixed positioning works ── */}
       {cancelStep === "confirm" && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setCancelStep(null)} />
+        <>
+          {/* Backdrop */}
           <div
-            className="relative z-10 w-full max-w-sm rounded-3xl border p-6 space-y-4"
+            className="fixed inset-0 z-[9998]"
+            style={{ background: "rgba(0,0,0,0.82)", backdropFilter: "blur(8px)" }}
+            onClick={() => setCancelStep(null)}
+          />
+          <div
             style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 9999,
+              width: "calc(100vw - 2rem)",
+              maxWidth: "24rem",
               background: "linear-gradient(135deg, #130a0a 0%, #0d0808 100%)",
-              borderColor: "rgba(239,68,68,0.35)",
+              borderRadius: "1.5rem",
+              border: "1px solid rgba(239,68,68,0.35)",
               boxShadow: "0 0 60px rgba(239,68,68,0.15)",
+              padding: "1.5rem",
             }}
           >
             {/* Header */}
@@ -1153,7 +1179,7 @@ export function Settings() {
               </button>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
