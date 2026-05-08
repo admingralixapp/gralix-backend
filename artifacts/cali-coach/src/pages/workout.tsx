@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
-import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage } from "@/lib/voice-service";
+import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile } from "@/lib/voice-service";
 import { useTranslation } from "react-i18next";
 import { getRestDuration, type RestDuration, REST_DURATION_OPTIONS } from "@/lib/workout-settings";
 import { getVoiceCues, getCameraFacing, getMirrorVideo, getVoiceProfile } from "@/lib/workout-preferences";
@@ -552,8 +552,12 @@ export function Workout() {
 
   // Sync voiceProfileIdRef with localStorage so it reflects profile changes
   // made in Settings without requiring a page reload.
+  // Also push the active profile into the voice-service module so that
+  // all speak() calls (not just speakCue) route through the right ElevenLabs voice.
   useEffect(() => {
-    voiceProfileIdRef.current = getVoiceProfile();
+    const profileId = getVoiceProfile();
+    voiceProfileIdRef.current = profileId;
+    setActiveVoiceProfile(profileId);
   });
 
   // ── Workout state ──────────────────────────────────────────────────────────

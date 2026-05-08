@@ -44,6 +44,25 @@ export function setVoiceMuted(muted: boolean): void {
   _muted = muted;
 }
 
+// ─── Active voice profile (module-level so speak() can route correctly) ───────
+// Defaults to "classic" (browser TTS). Updated by setActiveVoiceProfile()
+// whenever the Workout mounts or the user changes their profile in Settings.
+
+let _activeProfileId: string = "classic";
+
+/**
+ * Tell the voice service which personality is currently selected.
+ * Must be called whenever:
+ *   - The Workout page mounts (reads from localStorage).
+ *   - The user switches personality in Settings (update fires immediately).
+ *
+ * All subsequent `speak()` calls will route through the correct ElevenLabs
+ * voice until this is called again with a different value.
+ */
+export function setActiveVoiceProfile(profileId: string): void {
+  _activeProfileId = profileId;
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const DUCK_TARGET    = 0.3;   // 30 % during coaching cue
@@ -284,10 +303,16 @@ async function _speakAsync(text: string, tone: "encouraging" | "firm" | "neutral
   }
 }
 
+// ─── Free-tier profiles (browser Web Speech only, no ElevenLabs) ─────────────
+// Must be declared BEFORE speak() which references this set.
+const FREE_VOICE_PROFILES = new Set(["classic", "classic_female"]);
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
- * Speak the given text using ElevenLabs Flash v2.5 with streaming audio.
+ * Speak the given text using the active voice personality.
+ * Free profiles (classic / classic_female) → browser TTS immediately.
+ * Paid profiles → ElevenLabs via /api/tts/cue with LLM character injection.
  * Automatically ducks all non-speech audio while the cue is playing and
  * smoothly restores it afterwards.
  * Falls back to Web Speech API if ElevenLabs is unavailable.
@@ -301,14 +326,24 @@ export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "
   stopCurrentSource();
   window.speechSynthesis.cancel();
 
-  _speakAsync(text, tone).catch(() => {
+  // ── Route through the active personality voice ────────────────────────────
+  // Free profiles use browser TTS immediately; paid profiles go through
+  // the ElevenLabs pipeline via /api/tts/cue (same as speakCue).
+  if (FREE_VOICE_PROFILES.has(_activeProfileId)) {
+    browserSpeakForProfile(text, _activeProfileId);
+    return;
+  }
+
+  // Paid profile — generate a stable cache key from the cue text so
+  // repeated cues like "Good rep" are served instantly from cache.
+  const slug = (s: string) =>
+    s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40);
+  const cacheKey = `general:${slug(text)}`;
+
+  _speakCueAsync("Coaching", text, _activeProfileId, cacheKey).catch(() => {
     fallbackSpeak(text);
   });
 }
-
-// ─── Free-tier profiles (browser Web Speech only, no ElevenLabs) ─────────────
-// Must match the IDs in voice-profiles.ts FREE_PROFILES set.
-const FREE_VOICE_PROFILES = new Set(["classic", "classic_female"]);
 
 /**
  * Returns the appropriate Web Speech API voice settings for a profile.

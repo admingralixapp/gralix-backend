@@ -87,14 +87,21 @@ async function elevenLabsTTS(
     },
     body: JSON.stringify({
       text: text.slice(0, 500),
-      model_id: "eleven_flash_v2_5",
+      model_id: "eleven_turbo_v2_5",
       voice_settings: voiceSettings,
     }),
   });
 
   if (!upstream.ok) {
     const body = await upstream.text().catch(() => "");
-    throw new Error(`ElevenLabs error ${upstream.status}: ${body}`);
+    const detail = (() => {
+      if (upstream.status === 401) return "Invalid ElevenLabs API Key";
+      if (upstream.status === 422) return `Voice ID not found or invalid: "${voiceId}"`;
+      if (upstream.status === 429) return "ElevenLabs rate limit exceeded";
+      return body || `HTTP ${upstream.status}`;
+    })();
+    console.error(`[ElevenLabs] TTS failed — ${detail} (voiceId="${voiceId}")`);
+    throw new Error(`ElevenLabs error ${upstream.status}: ${detail}`);
   }
 
   if (!upstream.body) throw new Error("Empty ElevenLabs response");
@@ -145,20 +152,28 @@ router.post("/tts", async (req: Request, res: Response) => {
       },
       body: JSON.stringify({
         text: text.slice(0, 500),
-        model_id: "eleven_flash_v2_5",
+        model_id: "eleven_turbo_v2_5",
         voice_settings: voiceSettings,
       }),
     });
   } catch (err) {
-    req.log.error({ err }, "ElevenLabs fetch failed");
+    req.log.error({ err }, "ElevenLabs fetch failed — network error");
+    console.error("[ElevenLabs] Network error reaching ElevenLabs API:", err);
     res.status(502).json({ error: "Could not reach ElevenLabs" });
     return;
   }
 
   if (!upstream.ok) {
     const body = await upstream.text().catch(() => "");
-    req.log.warn({ status: upstream.status, body }, "ElevenLabs error response");
-    res.status(upstream.status).json({ error: body || "ElevenLabs error" });
+    const detail = (() => {
+      if (upstream.status === 401) return "Invalid ElevenLabs API Key";
+      if (upstream.status === 422) return `Voice ID not found: "${voiceId}"`;
+      if (upstream.status === 429) return "Rate limit exceeded";
+      return body || `HTTP ${upstream.status}`;
+    })();
+    req.log.warn({ status: upstream.status, voiceId, detail }, "ElevenLabs error response");
+    console.error(`[ElevenLabs] /api/tts failed — ${detail} (voiceId="${voiceId}")`);
+    res.status(upstream.status).json({ error: detail });
     return;
   }
 
@@ -264,12 +279,15 @@ router.post("/tts/cue", async (req: Request, res: Response) => {
   }
 
   // ── 3. Convert text → ElevenLabs audio ──────────────────────────────────
+  console.log(`[ElevenLabs] /api/tts/cue — profile="${profile.id}" voiceId="${profile.voiceId}" text="${cueText.slice(0, 60)}"`);
   let audioBuffer: Buffer;
   try {
     audioBuffer = await elevenLabsTTS(cueText, profile.voiceId, profile.voiceSettings, apiKey);
+    console.log(`[ElevenLabs] /api/tts/cue — success, ${audioBuffer.byteLength} bytes`);
   } catch (err) {
-    req.log.error({ err }, "ElevenLabs TTS failed for dynamic cue");
-    res.status(502).json({ error: "ElevenLabs error" });
+    req.log.error({ err, profileId: profile.id, voiceId: profile.voiceId }, "ElevenLabs TTS failed for dynamic cue");
+    console.error(`[ElevenLabs] /api/tts/cue FAILED — profile="${profile.id}" voiceId="${profile.voiceId}" error:`, err);
+    res.status(502).json({ error: String(err) });
     return;
   }
 
