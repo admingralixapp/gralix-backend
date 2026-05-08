@@ -122,6 +122,10 @@ let _currentAudioEl: HTMLAudioElement | null = null;
 function stopCurrentAudio(): void {
   if (_currentAudioEl) {
     try {
+      // Null handlers BEFORE clearing src — prevents spurious onerror("Empty src attribute")
+      // that fires when the previous element is stopped while a new one starts.
+      _currentAudioEl.onerror  = null;
+      _currentAudioEl.onended  = null;
       _currentAudioEl.pause();
       _currentAudioEl.src = "";
     } catch { /* ignore */ }
@@ -267,16 +271,17 @@ export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "
   window.speechSynthesis.cancel();
 
   if (FREE_VOICE_PROFILES.has(_activeProfileId)) {
+    console.log(`[CaliCoach Voice] speak() → FREE profile="${_activeProfileId}" — using browser TTS`);
     browserSpeakForProfile(text, _activeProfileId);
     return;
   }
 
-  // Paid profile — stable cache key from the raw cue text.
+  // Paid profile — ElevenLabs only. NO browser TTS fallback.
   const slug = (s: string) =>
     s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40);
   const cacheKey = `general:${slug(text)}`;
 
-  console.log(`[CaliCoach Voice] speak() → paid profile="${_activeProfileId}" cue="${text.slice(0, 40)}"`);
+  console.log(`[CaliCoach Voice] speak() → PAID profile="${_activeProfileId}" → /api/tts/stream  cue="${text.slice(0, 40)}"`);
   _speakWithAudioElement(text, _activeProfileId, "Coaching", cacheKey);
 }
 

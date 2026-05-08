@@ -142,7 +142,7 @@ export const VOICE_PROFILES: Record<string, VoiceProfile> = {
     id: "rio_flair",
     label: "Rio Flair",
     isFree: false,
-    voiceId: TURBO_BASE_MALE, // TODO: replace with confirmed Rio Flair voice ID
+    voiceId: "gtz4etnTsOtVas1vendq",
     voiceSettings: { stability: 0.38, similarity_boost: 0.80, style: 0.28, use_speaker_boost: true },
     systemPrompt:
       "You are a vibrant, energetic Brazilian capoeira coach. Training is a dance — call it a 'ginga'. Use 'flow', 'energy', and 'axé'. Vibrant, rhythmic, joyful. Max 15 words.",
