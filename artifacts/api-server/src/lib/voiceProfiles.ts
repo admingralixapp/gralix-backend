@@ -1,14 +1,12 @@
 /**
  * voiceProfiles — AI coaching personality definitions.
  *
- * Safety fallback: any profile without a confirmed ElevenLabs voice ID uses
- * the Turbo v2.5 base male voice (Adam: pNInz6obpgDQGcFmaJgB).
+ * Every paid profile has a confirmed ElevenLabs voice ID.
+ * Free profiles (classic, classic_female) use browser Web Speech API — voiceId is empty.
  *
- * DO NOT use window.speechSynthesis anywhere in this file.
- * If a voiceId exists, always attempt ElevenLabs. Log errors — never silently fallback.
+ * DO NOT use window.speechSynthesis for paid profiles.
+ * If ElevenLabs fails, log the error and return silence — never fall back to browser TTS.
  */
-
-const TURBO_BASE_MALE = "pNInz6obpgDQGcFmaJgB"; // ElevenLabs "Adam" — safe fallback
 
 export interface VoiceProfile {
   id: string;
@@ -145,18 +143,32 @@ export const VOICE_PROFILES: Record<string, VoiceProfile> = {
     voiceId: "gtz4etnTsOtVas1vendq",
     voiceSettings: { stability: 0.38, similarity_boost: 0.80, style: 0.28, use_speaker_boost: true },
     systemPrompt:
-      "You are a vibrant, energetic Brazilian capoeira coach. Training is a dance — call it a 'ginga'. Use 'flow', 'energy', and 'axé'. Vibrant, rhythmic, joyful. Max 15 words.",
+      "You are a high-energy Brazilian fitness coach. Training is a dance — use terms like 'Ginga' and 'Capoeira'. Speak with a vibrant, rhythmic Brazilian-Portuguese flair. Energetic, joyful, passionate. Max 15 words.",
   },
 
 };
 
 export const DEFAULT_PROFILE_ID = "classic";
 
+/**
+ * Aliases for renamed/retired profile IDs — maps old keys to current ones.
+ * Add entries here whenever a profile is renamed so stale DB/localStorage data
+ * routes to the correct voice instead of silently falling back to classic.
+ */
+const PROFILE_ALIASES: Record<string, string> = {
+  tokyo_tech: "rio_flair",
+  powerlifter: "ogre",
+};
+
 export function getVoiceProfile(profileId: string): VoiceProfile {
-  const profile = VOICE_PROFILES[profileId];
+  const resolved = PROFILE_ALIASES[profileId] ?? profileId;
+  const profile  = VOICE_PROFILES[resolved];
   if (!profile) {
-    console.error(`[VoiceProfiles] Unknown profile id "${profileId}" — returning default "classic". Check that the client-side id matches a key in VOICE_PROFILES.`);
+    console.error(`[VoiceProfiles] Unknown profile id "${profileId}" (resolved: "${resolved}") — returning default "classic".`);
     return VOICE_PROFILES[DEFAULT_PROFILE_ID]!;
+  }
+  if (resolved !== profileId) {
+    console.warn(`[VoiceProfiles] Profile "${profileId}" is deprecated — aliased to "${resolved}".`);
   }
   return profile;
 }

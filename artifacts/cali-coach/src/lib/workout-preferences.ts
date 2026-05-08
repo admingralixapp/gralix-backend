@@ -65,10 +65,26 @@ export function setMirrorVideo(mirrored: boolean): void {
 
 // ─── Voice Profile ────────────────────────────────────────────────────────────
 
+/**
+ * Renamed/retired profile IDs — auto-migrate stale localStorage values so
+ * workouts never silently fall through to the browser TTS fallback.
+ */
+const PROFILE_MIGRATIONS: Record<string, string> = {
+  tokyo_tech: "rio_flair",
+  powerlifter: "ogre",
+};
+
 /** Which AI coaching personality to use. Default: "classic" */
 export function getVoiceProfile(): string {
   try {
-    return localStorage.getItem(VOICE_PROFILE_KEY) ?? "classic";
+    const raw = localStorage.getItem(VOICE_PROFILE_KEY) ?? "classic";
+    const migrated = PROFILE_MIGRATIONS[raw];
+    if (migrated) {
+      // Rewrite the stale key so future reads are already correct.
+      localStorage.setItem(VOICE_PROFILE_KEY, migrated);
+      return migrated;
+    }
+    return raw;
   } catch {
     return "classic";
   }
