@@ -3,11 +3,11 @@ import { Link, useLocation } from "wouter";
 import { ArrowLeft, CheckCircle2, Flame, Play, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
 import {
   getTasksForPreferences,
   routineDurationMinutes,
   GOAL_LABELS,
-  type GhostPose,
   type MobilityGoal,
   type Stretch,
   type StiffnessArea,
@@ -20,130 +20,6 @@ import {
 
 // ─── Ghost Pose SVG ──────────────────────────────────────────────────────────
 
-function GhostFigure({ pose }: { pose: GhostPose }) {
-  const stroke = "#22c55e";
-  const sw = "4";
-  const sw2 = "5";
-  const cap = "round";
-
-  const poses: Record<GhostPose, React.ReactNode> = {
-    "standing-arms-wide": (
-      <>
-        <circle cx="50" cy="10" r="8" fill="none" strokeWidth={sw2} />
-        <line x1="50" y1="18" x2="50" y2="62" strokeWidth={sw} />
-        <line x1="8" y1="38" x2="92" y2="38" strokeWidth={sw} />
-        <line x1="50" y1="62" x2="32" y2="105" strokeWidth={sw} />
-        <line x1="50" y1="62" x2="68" y2="105" strokeWidth={sw} />
-      </>
-    ),
-    "standing-arm-up": (
-      <>
-        <circle cx="50" cy="10" r="8" fill="none" strokeWidth={sw2} />
-        <line x1="50" y1="18" x2="50" y2="62" strokeWidth={sw} />
-        <line x1="50" y1="36" x2="18" y2="52" strokeWidth={sw} />
-        <line x1="50" y1="36" x2="74" y2="8" strokeWidth={sw} />
-        <line x1="50" y1="62" x2="32" y2="105" strokeWidth={sw} />
-        <line x1="50" y1="62" x2="68" y2="105" strokeWidth={sw} />
-      </>
-    ),
-    "kneeling-forward": (
-      <>
-        <circle cx="50" cy="10" r="8" fill="none" strokeWidth={sw2} />
-        <line x1="50" y1="18" x2="50" y2="55" strokeWidth={sw} />
-        <line x1="50" y1="42" x2="25" y2="68" strokeWidth={sw} />
-        <line x1="50" y1="42" x2="75" y2="68" strokeWidth={sw} />
-        <line x1="50" y1="55" x2="35" y2="80" strokeWidth={sw} />
-        <line x1="50" y1="55" x2="65" y2="80" strokeWidth={sw} />
-        <line x1="35" y1="80" x2="28" y2="100" strokeWidth={sw} />
-        <line x1="65" y1="80" x2="72" y2="100" strokeWidth={sw} />
-      </>
-    ),
-    "seated-twist": (
-      <>
-        <circle cx="50" cy="10" r="8" fill="none" strokeWidth={sw2} />
-        <line x1="50" y1="18" x2="50" y2="55" strokeWidth={sw} />
-        <line x1="50" y1="34" x2="78" y2="22" strokeWidth={sw} />
-        <line x1="50" y1="34" x2="22" y2="46" strokeWidth={sw} />
-        <line x1="50" y1="55" x2="18" y2="72" strokeWidth={sw} />
-        <line x1="50" y1="55" x2="82" y2="72" strokeWidth={sw} />
-        <line x1="18" y1="72" x2="38" y2="90" strokeWidth={sw} />
-        <line x1="82" y1="72" x2="62" y2="90" strokeWidth={sw} />
-      </>
-    ),
-    lunge: (
-      <>
-        <circle cx="45" cy="10" r="8" fill="none" strokeWidth={sw2} />
-        <line x1="45" y1="18" x2="45" y2="55" strokeWidth={sw} />
-        <line x1="45" y1="34" x2="18" y2="28" strokeWidth={sw} />
-        <line x1="45" y1="34" x2="72" y2="28" strokeWidth={sw} />
-        <line x1="45" y1="55" x2="28" y2="78" strokeWidth={sw} />
-        <line x1="28" y1="78" x2="26" y2="100" strokeWidth={sw} />
-        <line x1="45" y1="55" x2="72" y2="75" strokeWidth={sw} />
-        <line x1="72" y1="75" x2="85" y2="88" strokeWidth={sw} />
-      </>
-    ),
-    "forward-fold": (
-      <>
-        <circle cx="50" cy="68" r="8" fill="none" strokeWidth={sw2} />
-        <line x1="50" y1="62" x2="50" y2="60" strokeWidth={sw} />
-        <line x1="50" y1="24" x2="50" y2="60" strokeWidth={sw} />
-        <line x1="50" y1="24" x2="33" y2="110" strokeWidth={sw} />
-        <line x1="50" y1="24" x2="67" y2="110" strokeWidth={sw} />
-        <line x1="50" y1="60" x2="28" y2="88" strokeWidth={sw} />
-        <line x1="50" y1="60" x2="72" y2="88" strokeWidth={sw} />
-      </>
-    ),
-    hanging: (
-      <>
-        <line x1="12" y1="12" x2="88" y2="12" strokeWidth="6" />
-        <line x1="38" y1="12" x2="32" y2="28" strokeWidth={sw} />
-        <line x1="62" y1="12" x2="68" y2="28" strokeWidth={sw} />
-        <circle cx="50" cy="36" r="8" fill="none" strokeWidth={sw2} />
-        <line x1="50" y1="44" x2="50" y2="85" strokeWidth={sw} />
-        <line x1="50" y1="85" x2="34" y2="115" strokeWidth={sw} />
-        <line x1="50" y1="85" x2="66" y2="115" strokeWidth={sw} />
-      </>
-    ),
-    "kneeling-backward": (
-      <>
-        <circle cx="50" cy="10" r="8" fill="none" strokeWidth={sw2} />
-        <line x1="50" y1="18" x2="50" y2="55" strokeWidth={sw} />
-        <line x1="50" y1="42" x2="28" y2="68" strokeWidth={sw} />
-        <line x1="50" y1="42" x2="72" y2="68" strokeWidth={sw} />
-        <line x1="15" y1="68" x2="85" y2="68" strokeWidth="3" />
-        <line x1="50" y1="55" x2="35" y2="80" strokeWidth={sw} />
-        <line x1="50" y1="55" x2="65" y2="80" strokeWidth={sw} />
-        <line x1="35" y1="80" x2="28" y2="100" strokeWidth={sw} />
-        <line x1="65" y1="80" x2="72" y2="100" strokeWidth={sw} />
-      </>
-    ),
-    "wide-seated": (
-      <>
-        <circle cx="50" cy="10" r="8" fill="none" strokeWidth={sw2} />
-        <line x1="50" y1="18" x2="50" y2="55" strokeWidth={sw} />
-        <line x1="50" y1="34" x2="28" y2="48" strokeWidth={sw} />
-        <line x1="50" y1="34" x2="72" y2="48" strokeWidth={sw} />
-        <line x1="50" y1="55" x2="8"  y2="70" strokeWidth={sw} />
-        <line x1="50" y1="55" x2="92" y2="70" strokeWidth={sw} />
-        <line x1="8"  y1="70" x2="4"  y2="88" strokeWidth={sw} />
-        <line x1="92" y1="70" x2="96" y2="88" strokeWidth={sw} />
-      </>
-    ),
-  };
-
-  return (
-    <svg
-      viewBox="0 0 100 120"
-      className="w-full h-full"
-      stroke={stroke}
-      strokeLinecap={cap as "round"}
-      strokeLinejoin={cap as "round"}
-      fill="none"
-    >
-      {poses[pose]}
-    </svg>
-  );
-}
 
 // ─── Circular Countdown Timer ────────────────────────────────────────────────
 
@@ -448,36 +324,40 @@ export function MobilityPage() {
         </button>
       </div>
 
-      {/* Ghost Pose */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-4 gap-6">
-        {/* Ghost figure */}
-        <div
-          className={cn(
-            "w-44 h-52 transition-all duration-500",
-            secondsLeft === 0
-              ? "opacity-100"
-              : "opacity-100 [animation:ghostPulse_2.5s_ease-in-out_infinite]",
-          )}
-          style={{
-            filter:
-              "drop-shadow(0 0 16px rgba(34,197,94,0.5)) drop-shadow(0 0 4px rgba(34,197,94,0.8))",
-          }}
-        >
-          <GhostFigure pose={currentStretch.pose} />
-        </div>
+      {/* Active exercise area */}
+      <div className="flex-1 flex flex-col items-center justify-center px-5 py-4 gap-5 max-w-lg mx-auto w-full">
 
-        {/* Stretch label */}
-        <div className="text-center space-y-1">
-          <div className="text-xs text-primary font-semibold tracking-widest uppercase">
+        {/* Exercise label */}
+        <div className="text-center space-y-0.5">
+          <div className="text-xs text-primary font-bold tracking-widest uppercase">
             Stretch {stretchIndex + 1} of {routine.length}
           </div>
-          <h2 className="text-2xl font-bold">{currentStretch.name}</h2>
-          <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
-            {currentStretch.coachingCue}
-          </p>
+          <h2 className="text-xl font-bold leading-tight">{currentStretch.name}</h2>
         </div>
 
-        {/* Countdown */}
+        {/* 3-panel motion snapshot — brand green + neon glow */}
+        <div
+          className={cn(
+            "w-full transition-opacity duration-500",
+            secondsLeft === 0
+              ? "opacity-100"
+              : "[animation:ghostPulse_2.5s_ease-in-out_infinite]",
+          )}
+        >
+          <ExerciseMotionSnapshot
+            exerciseName={currentStretch.name}
+            color="#22c55e"
+            glow
+            className="w-full"
+          />
+        </div>
+
+        {/* Coaching cue */}
+        <p className="text-sm text-muted-foreground text-center max-w-xs leading-relaxed">
+          {currentStretch.coachingCue}
+        </p>
+
+        {/* Countdown timer */}
         <CircularTimer secondsLeft={secondsLeft} total={currentStretch.durationSeconds} />
 
         {/* Muscle targets */}
@@ -492,7 +372,7 @@ export function MobilityPage() {
           ))}
         </div>
 
-        {/* Next up */}
+        {/* Next up / last stretch indicator */}
         {!isLast && nextStretch && (
           <div className="text-xs text-muted-foreground/70 text-center">
             Next: <span className="text-muted-foreground font-medium">{nextStretch.name}</span>
@@ -514,7 +394,7 @@ export function MobilityPage() {
 
       <style>{`
         @keyframes ghostPulse {
-          0%, 100% { opacity: 0.65; }
+          0%, 100% { opacity: 0.7; }
           50% { opacity: 1; }
         }
       `}</style>
