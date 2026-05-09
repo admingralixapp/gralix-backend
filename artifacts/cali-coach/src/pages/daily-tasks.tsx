@@ -632,30 +632,16 @@ export function DailyTasksPage() {
     const body = document.body;
     if (showSession) {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      // Add class to BOTH html and body — CSS handles the heavy lifting
       html.classList.add("workout-active");
-      html.style.overflow = "hidden";
-      html.style.height = "100%";
-      html.style.scrollbarWidth = "none";
-      body.style.overflow = "hidden";
-      body.style.height = "100%";
-      body.style.scrollbarWidth = "none";
+      body.classList.add("workout-active");
     } else {
       html.classList.remove("workout-active");
-      html.style.overflow = "";
-      html.style.height = "";
-      html.style.scrollbarWidth = "";
-      body.style.overflow = "";
-      body.style.height = "";
-      body.style.scrollbarWidth = "";
+      body.classList.remove("workout-active");
     }
     return () => {
       html.classList.remove("workout-active");
-      html.style.overflow = "";
-      html.style.height = "";
-      html.style.scrollbarWidth = "";
-      body.style.overflow = "";
-      body.style.height = "";
-      body.style.scrollbarWidth = "";
+      body.classList.remove("workout-active");
     };
   }, [showSession]);
 

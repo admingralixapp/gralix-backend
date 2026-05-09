@@ -190,7 +190,9 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
 
   function exitSession() {
     setPaused(false);
-    // Exit = leave this section entirely — no intermediate "ready" screen
+    // Always strip the scroll-lock class in case this is standalone route usage
+    document.documentElement.classList.remove("workout-active");
+    document.body.classList.remove("workout-active");
     if (onDismiss) {
       onDismiss();
     } else {
@@ -321,10 +323,15 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
       id="workout-shell"
       style={{
         position: "fixed",
-        inset: 0,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         width: "100vw",
         height: "100dvh",
         maxWidth: "100vw",
+        margin: 0,
+        padding: 0,
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
