@@ -632,21 +632,30 @@ export function DailyTasksPage() {
     const body = document.body;
     if (showSession) {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      html.classList.add("workout-active");
       html.style.overflow = "hidden";
       html.style.height = "100%";
+      html.style.scrollbarWidth = "none";
       body.style.overflow = "hidden";
       body.style.height = "100%";
+      body.style.scrollbarWidth = "none";
     } else {
+      html.classList.remove("workout-active");
       html.style.overflow = "";
       html.style.height = "";
+      html.style.scrollbarWidth = "";
       body.style.overflow = "";
       body.style.height = "";
+      body.style.scrollbarWidth = "";
     }
     return () => {
+      html.classList.remove("workout-active");
       html.style.overflow = "";
       html.style.height = "";
+      html.style.scrollbarWidth = "";
       body.style.overflow = "";
       body.style.height = "";
+      body.style.scrollbarWidth = "";
     };
   }, [showSession]);
 

@@ -318,13 +318,17 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
   return (
     // position:fixed + inset:0 = physically impossible to be offset by parent scroll
     <div
+      id="workout-shell"
       style={{
         position: "fixed",
         inset: 0,
-        height: "100vh",
+        width: "100vw",
+        height: "100dvh",
+        maxWidth: "100vw",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
+        boxSizing: "border-box",
       }}
       className="bg-background"
     >
@@ -467,6 +471,37 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
         @keyframes ghostPulse {
           0%, 100% { opacity: 0.72; }
           50%       { opacity: 1;    }
+        }
+
+        /* ── Total scrollbar elimination while workout is active ── */
+        html.workout-active,
+        html.workout-active body {
+          overflow: hidden !important;
+          height: 100% !important;
+          max-width: 100vw !important;
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+        }
+        html.workout-active::-webkit-scrollbar,
+        html.workout-active body::-webkit-scrollbar {
+          display: none !important;
+          width: 0 !important;
+          height: 0 !important;
+        }
+
+        /* ── Workout shell + all its descendants ── */
+        #workout-shell,
+        #workout-shell * {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          max-width: 100vw;
+          box-sizing: border-box;
+        }
+        #workout-shell::-webkit-scrollbar,
+        #workout-shell *::-webkit-scrollbar {
+          display: none;
+          width: 0;
+          height: 0;
         }
       `}</style>
     </div>
