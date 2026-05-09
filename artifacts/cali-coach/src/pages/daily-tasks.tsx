@@ -626,15 +626,28 @@ export function DailyTasksPage() {
   const [showSession,       setShowSession]       = useState(false);
   const [autoStart,         setAutoStart]         = useState(false);
 
-  // ── Body scroll lock while session overlay is open ────────────────────────
+  // ── Total scroll lockdown while session overlay is open ──────────────────
   useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
     if (showSession) {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-      document.body.style.overflow = "hidden";
+      html.style.overflow = "hidden";
+      html.style.height = "100%";
+      body.style.overflow = "hidden";
+      body.style.height = "100%";
     } else {
-      document.body.style.overflow = "";
+      html.style.overflow = "";
+      html.style.height = "";
+      body.style.overflow = "";
+      body.style.height = "";
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      html.style.overflow = "";
+      html.style.height = "";
+      body.style.overflow = "";
+      body.style.height = "";
+    };
   }, [showSession]);
 
   // ── Optimistic local preferences ──────────────────────────────────────────
