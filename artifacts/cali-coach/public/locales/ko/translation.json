@@ -468,6 +468,8 @@
     "masterPrereq": "이 노드의 잠금을 해제하려면 선행 기술을 숙련하세요.",
     "practiceAgain": "다시 연습 →",
     "trainNowArrow": "지금 훈련 →",
+    "trainArrow": "훈련 시작 →",
+    "viewFullTree": "전체 기량 트리 보기",
     "level": "레벨",
     "staticHold": "정적 홀드",
     "explosive": "폭발력 훈련",

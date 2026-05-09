@@ -468,6 +468,8 @@
     "masterPrereq": "Maîtrise la compétence préalable pour débloquer cette node.",
     "practiceAgain": "Pratique encore →",
     "trainNowArrow": "Entraîne-toi Maintenant →",
+    "trainArrow": "Entraîne-toi →",
+    "viewFullTree": "Voir l'Arbre de Compétences Complet",
     "level": "Niveau",
     "staticHold": "Position statique",
     "explosive": "Explosif",

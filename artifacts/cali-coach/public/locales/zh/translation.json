@@ -468,6 +468,8 @@
     "masterPrereq": "先精通先决技能以解锁此节点。",
     "practiceAgain": "再练一次 →",
     "trainNowArrow": "现在训练 →",
+    "trainArrow": "开始训练 →",
+    "viewFullTree": "查看完整技能树",
     "level": "等级",
     "staticHold": "静态悬停",
     "explosive": "爆发力",

@@ -468,6 +468,8 @@
     "masterPrereq": "このノードを解除するには、前提スキルを習得してください。",
     "practiceAgain": "もう一度練習 →",
     "trainNowArrow": "今すぐトレーニング →",
+    "trainArrow": "トレーニング開始 →",
+    "viewFullTree": "スキルツリー全体を見る",
     "level": "レベル",
     "staticHold": "静止ホールド",
     "explosive": "爆発的動き",

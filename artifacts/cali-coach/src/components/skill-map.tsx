@@ -13,6 +13,7 @@
 import { useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { Star, Lock, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useListSessions } from "@workspace/api-client-react";
 import {
   evaluateSkillTree,
@@ -26,11 +27,11 @@ import { cn } from "@/lib/utils";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const BRANCH_META: Record<SkillBranch, { label: string; emoji: string; color: string }> = {
-  PUSH: { label: "Push",  emoji: "💪", color: "#f97316" },
-  PULL: { label: "Pull",  emoji: "⬆",  color: "#3b82f6" },
-  CORE: { label: "Core",  emoji: "⚡", color: "#a855f7" },
-  LEGS: { label: "Legs",  emoji: "🟢", color: "#10b981" },
+const BRANCH_META: Record<SkillBranch, { emoji: string; color: string }> = {
+  PUSH: { emoji: "💪", color: "#f97316" },
+  PULL: { emoji: "⬆",  color: "#3b82f6" },
+  CORE: { emoji: "⚡", color: "#a855f7" },
+  LEGS: { emoji: "🟢", color: "#10b981" },
 };
 
 const BRANCHES: SkillBranch[] = ["PUSH", "PULL", "CORE", "LEGS"];
@@ -90,6 +91,7 @@ function WindowNode({
   skill: EvaluatedSkill;
   color: string;
 }) {
+  const { t } = useTranslation();
   const isMastered = skill.status === "mastered";
   const isLocked   = skill.status === "locked";
   const isUnlocked = skill.status === "unlocked";
@@ -127,7 +129,7 @@ function WindowNode({
             isLocked   && "text-muted-foreground/50",
           )}
         >
-          {skill.title}
+          {t(`skillTree.nodeTitle.${skill.id}`, { defaultValue: skill.title })}
         </span>
       </div>
 
@@ -148,7 +150,7 @@ function WindowNode({
                 className="text-[9px] font-semibold px-2 py-0.5 rounded-md transition-opacity hover:opacity-80"
                 style={{ backgroundColor: color + "22", color }}
               >
-                Train →
+                {t("skillTree.trainArrow")}
               </button>
             </Link>
           </div>
@@ -156,10 +158,10 @@ function WindowNode({
       )}
 
       {isMastered && (
-        <p className="text-[9px] text-amber-400/70 mt-0.5">✓ Mastered</p>
+        <p className="text-[9px] text-amber-400/70 mt-0.5">✓ {t("skillTree.mastered")}</p>
       )}
       {isLocked && (
-        <p className="text-[9px] text-muted-foreground/40 mt-0.5">Locked</p>
+        <p className="text-[9px] text-muted-foreground/40 mt-0.5">{t("skillTree.locked")}</p>
       )}
     </div>
   );
@@ -187,6 +189,7 @@ function BranchWindow({
   branch: SkillBranch;
   allSkills: EvaluatedSkill[];
 }) {
+  const { t } = useTranslation();
   const meta   = BRANCH_META[branch];
   const skills = allSkills.filter((s) => s.branch === branch);
   const [slot0, slot1, slot2] = getBranchWindow(skills);
@@ -209,7 +212,7 @@ function BranchWindow({
         <div className="flex items-center gap-1.5">
           <span className="text-sm">{meta.emoji}</span>
           <span className="font-bold text-sm" style={{ color: meta.color }}>
-            {meta.label}
+            {t(`skillTree.${branch.toLowerCase()}`)}
           </span>
         </div>
         <span className="text-[10px] text-muted-foreground font-medium tabular-nums">
@@ -268,6 +271,7 @@ export function SkillMapSkeleton() {
 
 export function SkillMap() {
   const [, navigate] = useLocation();
+  const { t } = useTranslation();
 
   const { data: sessions, isLoading } = useListSessions(
     { limit: 500, offset: 0 },
@@ -297,7 +301,9 @@ export function SkillMap() {
             return (
               <span key={branch} className="flex items-center gap-1">
                 <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: meta.color }} />
-                <span style={{ color: meta.color }} className="font-semibold">{branch}</span>
+                <span style={{ color: meta.color }} className="font-semibold">
+                  {t(`skillTree.${branch.toLowerCase()}`).toUpperCase()}
+                </span>
                 <span className="tabular-nums">{m}/{branchSkills.length}</span>
               </span>
             );
@@ -321,7 +327,7 @@ export function SkillMap() {
           className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
           onClick={() => navigate("/skill-tree")}
         >
-          View Full Skill Tree
+          {t("skillTree.viewFullTree")}
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>

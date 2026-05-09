@@ -468,6 +468,8 @@
     "masterPrereq": "Behärska föregående färdighet för att låsa upp denna nod.",
     "practiceAgain": "Öva igen →",
     "trainNowArrow": "Träna nu →",
+    "trainArrow": "Träna →",
+    "viewFullTree": "Visa Hela Färdighetsstrukturen",
     "level": "Nivå",
     "staticHold": "Statisk Hållning",
     "explosive": "Explosiv",

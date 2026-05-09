@@ -468,6 +468,8 @@
     "masterPrereq": "Hallitse edeltävä taito avatakseksesi tämän solmun.",
     "practiceAgain": "Harjoittele uudelleen →",
     "trainNowArrow": "Treenaa Nyt →",
+    "trainArrow": "Harjoittele →",
+    "viewFullTree": "Näytä koko taitopuu",
     "level": "Taso",
     "staticHold": "Staattinen pito",
     "explosive": " Räjähtävävoima",

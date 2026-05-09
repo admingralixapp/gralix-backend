@@ -468,6 +468,8 @@
     "masterPrereq": "Master the prerequisite skill to unlock this node.",
     "practiceAgain": "Practice Again →",
     "trainNowArrow": "Train Now →",
+    "trainArrow": "Train →",
+    "viewFullTree": "View Full Skill Tree",
     "level": "Level",
     "staticHold": "Static Hold",
     "explosive": "Explosive",
