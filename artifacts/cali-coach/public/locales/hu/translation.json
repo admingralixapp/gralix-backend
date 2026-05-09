@@ -358,6 +358,17 @@
     "push": "Nyomás",
     "pull": "Húzás",
     "addOn": "Kiegészítő",
+    "gear": {
+      "floor": "Padló",
+      "low-parallettes": "Alacsony P-karikák",
+      "high-parallettes": "Magas P-karikák / Húzódzkodások",
+      "pull-up-bar": "Húzódzkodó-sáv",
+      "gymnastic-rings": "Gimnasztikai karikák",
+      "low-bar": "Alacsony húzódzkodórud",
+      "none": "Nincs felszerelés",
+      "resistance-band": "Feszítőszalag",
+      "weighted-vest": "Súlyozott mellény"
+    },
     "proTip": "Professzionális tipp",
     "saving": "Mentés…",
     "logIt": "Naplózd",

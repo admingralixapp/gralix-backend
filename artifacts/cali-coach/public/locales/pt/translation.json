@@ -358,6 +358,17 @@
     "push": "Empurrar",
     "pull": "Puxar",
     "addOn": "Complemento",
+    "gear": {
+      "floor": "Chão",
+      "low-parallettes": "Paralelas Baixas",
+      "high-parallettes": "Paralelas Altas / Mergulhos",
+      "pull-up-bar": "Barra de Alderes",
+      "gymnastic-rings": "Anéis de Ginástica",
+      "low-bar": "Barra Baixa (Remadas)",
+      "none": "Nenhum",
+      "resistance-band": "Faixa de Resistência",
+      "weighted-vest": "Colete de Pesos"
+    },
     "proTip": "Dica profissional",
     "saving": "Salvando…",
     "logIt": "Registrar",

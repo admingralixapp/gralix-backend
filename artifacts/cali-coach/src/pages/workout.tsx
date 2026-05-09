@@ -3144,7 +3144,7 @@ export function Workout() {
                                 : "bg-white/5 border-white/15 text-white/55 hover:border-white/35"
                             }`}
                           >
-                            {opt.label}
+                            {t(`workout.gear.${opt.value}`)}
                           </button>
                         ))}
                       </div>

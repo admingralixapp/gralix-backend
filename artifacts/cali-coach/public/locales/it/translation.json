@@ -358,6 +358,17 @@
     "push": "Spingi",
     "pull": "Tira",
     "addOn": "Componenti aggiuntivi",
+    "gear": {
+      "floor": "Pavimento",
+      "low-parallettes": "Parallettes Bassi",
+      "high-parallettes": "Parallettes Alti / Dips",
+      "pull-up-bar": " Barre per trazioni",
+      "gymnastic-rings": "Anelli ginnici",
+      "low-bar": "Barra bassa (rematori)",
+      "none": "Nessuno",
+      "resistance-band": "Elastico di resistenza",
+      "weighted-vest": "GIACCA con peso"
+    },
     "proTip": "Consiglio professionale",
     "saving": "Salvataggio…",
     "logIt": "Registra",

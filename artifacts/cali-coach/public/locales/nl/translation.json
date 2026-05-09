@@ -358,6 +358,17 @@
     "push": "Duwen",
     "pull": "Trekken",
     "addOn": "Extra",
+    "gear": {
+      "floor": "Vloer",
+      "low-parallettes": "Lage Parallel Bars",
+      "high-parallettes": "Hoge Parallel Bars / Dips",
+      "pull-up-bar": "Pull-up Bar",
+      "gymnastic-rings": "Turnringen",
+      "low-bar": "Lage Stang (Rows)",
+      "none": "Geen uitrusting",
+      "resistance-band": "Weerstandband",
+      "weighted-vest": "Verzwaarde Vesten"
+    },
     "proTip": "Pro Tip",
     "saving": "Bezig met opslaan…",
     "logIt": "Log het",

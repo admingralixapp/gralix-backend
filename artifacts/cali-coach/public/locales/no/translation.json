@@ -358,6 +358,17 @@
     "push": "Skyv",
     "pull": "Dra",
     "addOn": "Tillegg",
+    "gear": {
+      "floor": "Gulvet",
+      "low-parallettes": "Lav P-bøyle",
+      "high-parallettes": "Høy P-bøyle / Dips",
+      "pull-up-bar": "Pull-up-stang",
+      "gymnastic-rings": "Treningsringer",
+      "low-bar": "Lav stang (rows)",
+      "none": "Ingen utstyr",
+      "resistance-band": "Motstandsbånd",
+      "weighted-vest": "Vektvest"
+    },
     "proTip": "Proff-tips",
     "saving": "Lagrer…",
     "logIt": "Logg Det",

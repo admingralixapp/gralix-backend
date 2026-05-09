@@ -358,6 +358,17 @@
     "push": "プッシュ",
     "pull": "プル",
     "addOn": "追加",
+    "gear": {
+      "floor": "床面",
+      "low-parallettes": "ロー・パラレルバー",
+      "high-parallettes": "ハイ・パラレルバー / Dips",
+      "pull-up-bar": "懸垂バー",
+      "gymnastic-rings": "体操リング",
+      "low-bar": "ロー・バー（懸垂・ロウイング）",
+      "none": "なし",
+      "resistance-band": "レジスタンスバンド",
+      "weighted-vest": "ウェイトベスト"
+    },
     "proTip": "プロのヒント",
     "saving": "保存中…",
     "logIt": "記録する",

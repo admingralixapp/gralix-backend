@@ -358,6 +358,17 @@
     "push": "İt",
     "pull": "Çek",
     "addOn": "Eklenti",
+    "gear": {
+      "floor": "Ağırlık Mareleri",
+      "low-parallettes": "Alçak Paraleller",
+      "high-parallettes": "Yüksek Paraleller / Dipsler",
+      "pull-up-bar": "Barfiks Barı",
+      "gymnastic-rings": "Jimnastik Halkaları",
+      "low-bar": "Alçak Bar (Çekişler)",
+      "none": "Yok",
+      "resistance-band": "Direnç Bandı",
+      "weighted-vest": "Ağırlıklı Yelek"
+    },
     "proTip": "Profesyonel İpucu",
     "saving": "Kaydediliyor…",
     "logIt": "Kaydet",

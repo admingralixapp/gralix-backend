@@ -358,6 +358,17 @@
     "push": "Push",
     "pull": "Pull",
     "addOn": "Tillägg",
+    "gear": {
+      "floor": "Golvyta",
+      "low-parallettes": "Låga Parallettes",
+      "high-parallettes": "Höga Parallettes / Dips",
+      "pull-up-bar": "Pull-upstång",
+      "gymnastic-rings": "Gymnastikringe",
+      "low-bar": "Lågbana (Roddar)",
+      "none": "Inget",
+      "resistance-band": "Motståndsband",
+      "weighted-vest": "Viktvest"
+    },
     "proTip": "Proffstips",
     "saving": "Sparar…",
     "logIt": "Logga det",

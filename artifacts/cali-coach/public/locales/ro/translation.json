@@ -358,6 +358,17 @@
     "push": "Împinge",
     "pull": "Trage",
     "addOn": "Accesoriu",
+    "gear": {
+      "floor": "Podea",
+      "low-parallettes": "Paraletele joase",
+      "high-parallettes": "Paraletele înalte / Dips",
+      "pull-up-bar": "Bară pentru tracțiuni",
+      "gymnastic-rings": "Inele gimnastice",
+      "low-bar": "Bară joasă (rânduri)",
+      "none": "Niciun echipament",
+      "resistance-band": "Bandă de rezistență",
+      "weighted-vest": "Vestă cu greutate"
+    },
     "proTip": "Sfat de expert",
     "saving": "Se salvează…",
     "logIt": " Înregistrează-l",

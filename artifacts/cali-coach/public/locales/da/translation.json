@@ -358,6 +358,17 @@
     "push": "Skub",
     "pull": "Træk",
     "addOn": "Tilføjelse",
+    "gear": {
+      "floor": "Gulv",
+      "low-parallettes": "Lave Paralletter",
+      "high-parallettes": "Høje Paralletter / Dips",
+      "pull-up-bar": "Pull-up Stang",
+      "gymnastic-rings": "Gymnastikringe",
+      "low-bar": "Lav Stang (Roninger)",
+      "none": "Ingen",
+      "resistance-band": "Modstandsbånd",
+      "weighted-vest": "Vægtvest"
+    },
     "proTip": "Pro Tip",
     "saving": "Gemmer…",
     "logIt": " registrer det",

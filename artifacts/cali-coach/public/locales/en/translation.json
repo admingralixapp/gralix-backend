@@ -358,6 +358,17 @@
     "push": "Push",
     "pull": "Pull",
     "addOn": "Add-on",
+    "gear": {
+      "floor": "Floor",
+      "low-parallettes": "Low P-Bars",
+      "high-parallettes": "High P-Bars / Dips",
+      "pull-up-bar": "Pull-up Bar",
+      "gymnastic-rings": "Gymnastic Rings",
+      "low-bar": "Low Bar (Rows)",
+      "none": "None",
+      "resistance-band": "Band",
+      "weighted-vest": "Weighted Vest"
+    },
     "proTip": "Pro Tip",
     "saving": "Saving…",
     "logIt": "Log It",

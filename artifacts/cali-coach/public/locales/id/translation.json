@@ -358,6 +358,17 @@
     "push": "Dorong",
     "pull": "Tarik",
     "addOn": "Tambahan",
+    "gear": {
+      "floor": "Lantai",
+      "low-parallettes": "Paralel P-Standar Rendah",
+      "high-parallettes": "Paralel P-Standar Tinggi / Dips",
+      "pull-up-bar": "Stang Pull-up",
+      "gymnastic-rings": "Ring Senam",
+      "low-bar": "Bar Rendah (Rows)",
+      "none": "Tidak Pakai Peralatan",
+      "resistance-band": "Resistansi Band",
+      "weighted-vest": "Rompi Beban"
+    },
     "proTip": "Tip Profesional",
     "saving": "Menyimpan…",
     "logIt": "Catat",

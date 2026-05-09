@@ -358,6 +358,17 @@
     "push": "Tlačiť",
     "pull": "ťahať",
     "addOn": "Doplnok",
+    "gear": {
+      "floor": "Podlaha",
+      "low-parallettes": "Nízke bradlá",
+      "high-parallettes": "Vysoké bradlá / Dipy",
+      "pull-up-bar": "Záves na hangedlá",
+      "gymnastic-rings": "Gymnastické kruhy",
+      "low-bar": "Nízka tyč (veslovanie)",
+      "none": "Žiadne",
+      "resistance-band": "Odporová guma",
+      "weighted-vest": "Vesta s závažím"
+    },
     "proTip": "Profesionálny Tip",
     "saving": "Uloženie…",
     "logIt": "Zaznamenať",

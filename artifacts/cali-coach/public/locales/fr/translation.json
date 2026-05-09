@@ -358,6 +358,17 @@
     "push": "Pousser",
     "pull": "Tirer",
     "addOn": "Accessoire",
+    "gear": {
+      "floor": "Sol",
+      "low-parallettes": "Parallettes basses",
+      "high-parallettes": "Parallettes hautes / Dips",
+      "pull-up-bar": "Barre de traction",
+      "gymnastic-rings": "Anneaux de gymnastique",
+      "low-bar": "Barre basse (Rowing)",
+      "none": "Aucun",
+      "resistance-band": "Bande de résistance",
+      "weighted-vest": "Gilet lesté"
+    },
     "proTip": "Conseil Pro",
     "saving": "Sauvegarde en cours…",
     "logIt": "Enregistrer",

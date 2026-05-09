@@ -358,6 +358,17 @@
     "push": "Tlačit",
     "pull": "Táhnout",
     "addOn": "Příplatek",
+    "gear": {
+      "floor": "Podlaha",
+      "low-parallettes": "Nízké Paralety",
+      "high-parallettes": "Vysoké Paralety / Dipy",
+      "pull-up-bar": "Hrazda na shyby",
+      "gymnastic-rings": "Gymnastické kruhy",
+      "low-bar": "Nízká hrazda (přítahy)",
+      "none": "Žádné",
+      "resistance-band": "Odporový pás",
+      "weighted-vest": "Těžká vesta"
+    },
     "proTip": "Profesionální tip",
     "saving": "Ukládám…",
     "logIt": "Zaznamenej",

@@ -358,6 +358,17 @@
     "push": "Potisni",
     "pull": "Povuci",
     "addOn": "Dodatak",
+    "gear": {
+      "floor": "Tlo",
+      "low-parallettes": "Niske parallete",
+      "high-parallettes": "Visoke parallete / Dipse",
+      "pull-up-bar": "Interruptedna prečka za zgibove",
+      "gymnastic-rings": "Gimnastičke prstenje",
+      "low-bar": "Niska prečka (veslanje na prečki)",
+      "none": "Nema opreme",
+      "resistance-band": "Otpornostna elastična traka",
+      "weighted-vest": "Teretni prsluk"
+    },
     "proTip": "Savjet stručnjaka",
     "saving": "Spremanje…",
     "logIt": "Zabilježi",

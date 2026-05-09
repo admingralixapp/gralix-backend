@@ -358,6 +358,17 @@
     "push": "Drücken",
     "pull": "Ziehen",
     "addOn": "Zubehör",
+    "gear": {
+      "floor": "Bodenkreis",
+      "low-parallettes": "Niedrige Paralletts",
+      "high-parallettes": "Hohe Paralletts / Dips",
+      "pull-up-bar": "Klimmzugstange",
+      "gymnastic-rings": "Turnringen",
+      "low-bar": "Niedrige Stange (Klimmzüge)",
+      "none": "Keine",
+      "resistance-band": "Widerstandsbänder",
+      "weighted-vest": "Gewichtsweste"
+    },
     "proTip": "Profi-Tipp",
     "saving": " Speichern…",
     "logIt": "Aufzeichnen",

@@ -358,6 +358,17 @@
     "push": "推类",
     "pull": "拉类",
     "addOn": "附加项",
+    "gear": {
+      "floor": "地面",
+      "low-parallettes": "低平衡撑杆",
+      "high-parallettes": "高平衡撑杆 / 双杠",
+      "pull-up-bar": "引体向上杆",
+      "gymnastic-rings": "体操吊环",
+      "low-bar": "低杆（引体向上划行）",
+      "none": "无装备",
+      "resistance-band": "阻力带",
+      "weighted-vest": "负重背心"
+    },
     "proTip": "专家提示",
     "saving": "保存中…",
     "logIt": "记录",

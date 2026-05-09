@@ -358,6 +358,17 @@
     "push": "Dorong",
     "pull": "Tarik",
     "addOn": "Tambah atas",
+    "gear": {
+      "floor": "Lantai",
+      "low-parallettes": "Paralel Kecil",
+      "high-parallettes": "Paralel Tinggi / Dips",
+      "pull-up-bar": "Palang Tarikan",
+      "gymnastic-rings": "Cincin Gimnastik",
+      "low-bar": "Palang Rendah (Pendekatan Row)",
+      "none": "Tiada",
+      "resistance-band": "Band Rintangan",
+      "weighted-vest": "Vest Berat"
+    },
     "proTip": "Tip Pakar",
     "saving": "menyimpan...",
     "logIt": "Log Kan",

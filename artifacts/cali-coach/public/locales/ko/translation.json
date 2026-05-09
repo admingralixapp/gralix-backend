@@ -358,6 +358,17 @@
     "push": "밀기",
     "pull": "당기기",
     "addOn": "추가 기능",
+    "gear": {
+      "floor": "바닥",
+      "low-parallettes": "저경파레트",
+      "high-parallettes": "고경파레트 / 딥스",
+      "pull-up-bar": "풀업 바",
+      "gymnastic-rings": "체조링",
+      "low-bar": "저바 (로우)",
+      "none": "없음",
+      "resistance-band": "저항 밴드",
+      "weighted-vest": "무게 조끼"
+    },
     "proTip": "전문가 팁",
     "saving": "저장 중…",
     "logIt": "기록하기",

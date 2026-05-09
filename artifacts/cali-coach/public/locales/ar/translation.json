@@ -358,6 +358,17 @@
     "push": "ادفع",
     "pull": "اسحب",
     "addOn": "ملحق",
+    "gear": {
+      "floor": "الأرضية",
+      "low-parallettes": "موازين منخفضة",
+      "high-parallettes": "موازين عالية / غطس",
+      "pull-up-bar": "بار العقلة",
+      "gymnastic-rings": "حلقات الجمباز",
+      "low-bar": "بار منخفض (سحب علوي)",
+      "none": "بدون معدات",
+      "resistance-band": "حزام المقاومة",
+      "weighted-vest": "سترة وزن"
+    },
     "proTip": "نصيحة محترف",
     "saving": "جارِ الحفظ…",
     "logIt": "قم بالتسجيل",

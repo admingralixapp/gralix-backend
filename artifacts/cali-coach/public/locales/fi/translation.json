@@ -358,6 +358,17 @@
     "push": "Työnnä",
     "pull": "Vedä",
     "addOn": "Lisävaruste",
+    "gear": {
+      "floor": "Lattia",
+      "low-parallettes": "Matalat P-narut / Matala P-narut",
+      "high-parallettes": "Korkeat P-narut / Dippit",
+      "pull-up-bar": "Leuanvetotanko",
+      "gymnastic-rings": "Voimistelurenkaat",
+      "low-bar": "Matala tanko (Siksakit)",
+      "none": "Ei mitään",
+      "resistance-band": "Venytysnaru",
+      "weighted-vest": "Painoremmi"
+    },
     "proTip": "Ammattivinkki",
     "saving": "Tallennetaan…",
     "logIt": "Kirjaa se",
