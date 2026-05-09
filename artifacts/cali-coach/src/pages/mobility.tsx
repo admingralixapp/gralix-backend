@@ -91,16 +91,17 @@ function ProgressDots({
 }
 
 // ─── Active Workout Player ────────────────────────────────────────────────────
-// Clean-room rebuild. Single fixed portal, flex column, no scroll possible.
+// Extracted into its own component so that useEffect(fn,[]) fires exactly on
+// mount (scroll lock) and unmount (scroll unlock) — not on pageState changes.
 
 interface ActiveWorkoutPlayerProps {
   routine: Stretch[];
   stretchIndex: number;
   secondsLeft: number;
   paused: boolean;
+  onExit: () => void;
   onSkip: () => void;
   onPauseToggle: () => void;
-  onDismiss?: () => void;
 }
 
 function ActiveWorkoutPlayer({
@@ -108,175 +109,176 @@ function ActiveWorkoutPlayer({
   stretchIndex,
   secondsLeft,
   paused,
+  onExit,
   onSkip,
   onPauseToggle,
-  onDismiss,
 }: ActiveWorkoutPlayerProps) {
   const currentStretch = routine[stretchIndex];
+  const nextStretch = routine[stretchIndex + 1];
+  const isLast = stretchIndex + 1 >= routine.length;
 
-  // Nuclear scroll lock — fires on mount, unsets on unmount
+  // ── SCROLL LOCK — fires exactly on mount, unlocks exactly on unmount ─────
   useEffect(() => {
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "unset";
-      document.documentElement.style.overflow = "unset";
-    };
-  }, []);
+    window.scrollTo(0, 0);
 
-  function handleExit() {
-    // Hard navigation — flushes all state, no scrollbar residue
-    window.location.href = "/";
-  }
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = "0";
+    document.body.style.left = "0";
+    document.body.style.width = "100vw";
+    document.body.style.height = "100vh";
+
+    return () => {
+      document.documentElement.style.overflow = "auto";
+      document.body.style.overflow = "auto";
+      document.body.style.position = "static";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.width = "auto";
+      document.body.style.height = "auto";
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!currentStretch) return null;
 
-  const pulseStyle = paused
-    ? { opacity: 0.45 }
-    : secondsLeft === 0
-      ? { opacity: 1 }
-      : { animation: "awpPulse 2.5s ease-in-out infinite" };
-
   return (
     <div
+      id="workout-shell"
       style={{
         position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        background: "#09090b",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        maxWidth: "100vw",
+        margin: 0,
+        padding: 0,
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        height: "100dvh",
-        width: "100vw",
-        maxWidth: "100vw",
         boxSizing: "border-box",
       }}
+      className="bg-background"
     >
-      <style>{`
-        @keyframes awpPulse { 0%,100%{opacity:.65} 50%{opacity:1} }
-      `}</style>
-
-      {/* ── ROW 1: Header ─────────────────────────────────────────────────── */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "14px 20px",
-          flexShrink: 0,
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
+      {/* ── TOP: Exit · ProgressDots · Pause · Skip ───────────────────────── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
         <button
-          onClick={onDismiss ?? handleExit}
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            fontSize: 14, fontWeight: 500,
-            color: "#94a3b8", background: "none", border: "none", cursor: "pointer",
-            padding: 0,
-          }}
+          onClick={onExit}
+          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer" }}
         >
           <ArrowLeft size={16} />
           Exit
         </button>
 
-        <ProgressDots total={routine.length} current={stretchIndex} done={secondsLeft === 0} />
+        <ProgressDots
+          total={routine.length}
+          current={stretchIndex}
+          done={secondsLeft === 0}
+        />
 
-        <button
-          onClick={onSkip}
-          style={{
-            display: "flex", alignItems: "center", gap: 4,
-            fontSize: 13, fontWeight: 500,
-            color: "#94a3b8", background: "none", border: "none", cursor: "pointer",
-            padding: 0,
-          }}
-        >
-          Skip <SkipForward size={14} />
-        </button>
-      </div>
-
-      {/* ── ROW 2: Exercise name ───────────────────────────────────────────── */}
-      <div style={{ textAlign: "center", padding: "16px 20px 0", flexShrink: 0 }}>
-        <div style={{ fontSize: 10, color: "#22c55e", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>
-          Stretch {stretchIndex + 1} of {routine.length}
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <button
+            onClick={onPauseToggle}
+            aria-label={paused ? "Resume" : "Pause"}
+            style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer" }}
+          >
+            {paused ? <Play size={14} /> : <Pause size={14} />}
+          </button>
+          <button
+            onClick={onSkip}
+            style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer" }}
+          >
+            Skip <SkipForward size={14} />
+          </button>
         </div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#f8fafc", margin: 0, lineHeight: 1.25 }}>
-          {currentStretch.name}
-        </h2>
-        {currentStretch.coachingCue && (
-          <p style={{ fontSize: 12, color: "#64748b", margin: "6px 0 0", lineHeight: 1.5 }}>
-            {currentStretch.coachingCue}
-          </p>
-        )}
       </div>
 
-      {/* ── ROW 3: Hero figures (flex-grow) ───────────────────────────────── */}
+      {/* ── BODY: 3 zones, space-between ──────────────────────────────────── */}
       <div
         style={{
           flex: 1,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          padding: "12px 16px",
-          maxWidth: "100vw",
-          boxSizing: "border-box",
-          ...pulseStyle,
-        }}
-      >
-        <ExerciseMotionSnapshot
-          exerciseName={currentStretch.name}
-          color="#22c55e"
-          glow={!paused}
-          className="w-full h-full"
-        />
-      </div>
-
-      {/* ── ROW 4: Timer + pause + muscle tags ────────────────────────────── */}
-      <div
-        style={{
-          flexShrink: 0,
-          display: "flex",
           flexDirection: "column",
+          justifyContent: "space-between",
           alignItems: "center",
-          gap: 10,
-          padding: "0 20px 20px",
+          overflow: "hidden",
+          padding: "12px 16px 16px",
+          maxWidth: 448,
+          width: "100%",
+          margin: "0 auto",
+          boxSizing: "border-box",
         }}
       >
-        <div style={{ position: "relative" }}>
-          <CircularTimer secondsLeft={secondsLeft} total={currentStretch.durationSeconds} paused={paused} />
-          <button
-            onClick={onPauseToggle}
-            aria-label={paused ? "Resume" : "Pause"}
-            style={{
-              position: "absolute", bottom: -2, right: -2,
-              width: 28, height: 28, borderRadius: "50%",
-              background: "#1e293b", border: "1px solid rgba(255,255,255,0.1)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: "#94a3b8",
-            }}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={stretchIndex}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", flex: 1, width: "100%", minHeight: 0 }}
           >
-            {paused ? <Play size={12} /> : <Pause size={12} />}
-          </button>
-        </div>
+            {/* ZONE 1 — label */}
+            <div style={{ textAlign: "center", width: "100%", flexShrink: 0 }}>
+              <div style={{ fontSize: 10, color: "var(--primary)", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 2 }}>
+                Stretch {stretchIndex + 1} of {routine.length}
+              </div>
+              <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, margin: 0 }}>{currentStretch.name}</h2>
+            </div>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", maxWidth: "100vw" }}>
-          {currentStretch.targetMuscles.map((m) => (
-            <span
-              key={m}
-              style={{
-                padding: "3px 10px", borderRadius: 999,
-                background: "rgba(255,255,255,0.06)",
-                fontSize: 11, color: "#94a3b8",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}
+            {/* ZONE 2 — 3-panel snapshot */}
+            <div
+              className={cn(
+                "w-full",
+                paused ? "opacity-50" : secondsLeft === 0 ? "opacity-100" : "[animation:ghostPulse_2.5s_ease-in-out_infinite]",
+              )}
+              style={{ flex: "1 1 0", minHeight: 0, maxHeight: 240, display: "flex", alignItems: "center", width: "100%", overflow: "hidden" }}
             >
-              {m}
-            </span>
-          ))}
-        </div>
+              <ExerciseMotionSnapshot
+                exerciseName={currentStretch.name}
+                color="#22c55e"
+                glow={!paused}
+                className="w-full h-full"
+              />
+            </div>
+
+            {/* ZONE 3 — timer + info */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%", flexShrink: 0 }}>
+              <p style={{ fontSize: 12, color: "var(--muted-foreground)", textAlign: "center", maxWidth: 280, lineHeight: 1.5, margin: 0, padding: "0 8px" }}>
+                {currentStretch.coachingCue}
+              </p>
+
+              <CircularTimer secondsLeft={secondsLeft} total={currentStretch.durationSeconds} paused={paused} />
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
+                {currentStretch.targetMuscles.map((m) => (
+                  <span key={m} className="px-2.5 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">{m}</span>
+                ))}
+              </div>
+
+              <div style={{ fontSize: 12, textAlign: "center" }}>
+                {!isLast && nextStretch
+                  ? <span style={{ color: "var(--muted-foreground)" }}>Next: <strong>{nextStretch.name}</strong></span>
+                  : <span style={{ color: "var(--primary)", fontWeight: 600 }}>Last stretch — finish strong!</span>}
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
+
+      <style>{`
+        @keyframes ghostPulse { 0%,100%{opacity:.72} 50%{opacity:1} }
+        #workout-shell, #workout-shell * {
+          scrollbar-width: none; -ms-overflow-style: none;
+          max-width: 100vw; box-sizing: border-box;
+        }
+        #workout-shell::-webkit-scrollbar, #workout-shell *::-webkit-scrollbar {
+          display: none; width: 0; height: 0;
+        }
+      `}</style>
     </div>
   );
 }
@@ -510,9 +512,9 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
         stretchIndex={stretchIndex}
         secondsLeft={secondsLeft}
         paused={paused}
+        onExit={exitSession}
         onSkip={advanceStretch}
         onPauseToggle={() => setPaused((p) => !p)}
-        onDismiss={onDismiss}
       />
     );
   }
