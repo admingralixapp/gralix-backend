@@ -877,7 +877,6 @@ function SkillOverlay({
   onClose:    () => void;
   skillMap:   Map<string, EvaluatedSkill>;
 }) {
-  const { t } = useTranslation();
   const OVERLAY_H_EST = 340;
   let left = screenX + 48;
   if (left + OVERLAY_W > containerW - 8) left = screenX - OVERLAY_W - 28;
@@ -943,22 +942,22 @@ function SkillOverlay({
       <div className="flex flex-wrap items-center gap-1 mb-2">
         {(skill.type as SkillType) === "static" && (
           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-900/50 text-cyan-300 border border-cyan-700/40">
-            🧲 {t("skillTree.staticHold")}
+            🧲 Static Hold
           </span>
         )}
         {(skill.type as SkillType) === "explosive" && (
           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-orange-900/50 text-orange-300 border border-orange-700/40">
-            ⚡ {t("skillTree.explosive")}
+            ⚡ Explosive
           </span>
         )}
         {isLocked && (
           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-500 border border-zinc-700/50">
-            🔒 {t("skillTree.locked")}
+            🔒 Locked
           </span>
         )}
         {isMastered && (
           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-900/40 text-amber-300 border border-amber-700/40">
-            ★ {t("skillTree.mastered")}
+            ★ Mastered
           </span>
         )}
       </div>
@@ -977,12 +976,12 @@ function SkillOverlay({
         }}>
         <p className="text-[9px] font-bold uppercase tracking-widest mb-1"
           style={{ color: isLocked ? "#6b7280" : color }}>
-          {isLocked ? `🔒 ${t("skillTree.locked")}` : t("skillTree.whyTrainThis")}
+          {isLocked ? "🔒 Locked" : "Why train this?"}
         </p>
         <p className="text-[11px] text-zinc-300 leading-relaxed">
           {isLocked
-            ? t("skillTree.lockedDesc")
-            : t(`skillTree.nodes.${skill.id.replace(/-/g, "_")}.description`, { defaultValue: skill.description })}
+            ? "Master the prerequisite skill to unlock this node."
+            : skill.description}
         </p>
       </div>
 
@@ -990,7 +989,7 @@ function SkillOverlay({
       {skill.secondaryPrerequisiteIds && skill.secondaryPrerequisiteIds.length > 0 && (
         <div className="mb-3">
           <p className="text-[9px] font-bold uppercase tracking-widest mb-1.5 text-zinc-500">
-            {t("skillTree.alsoRequires")}
+            Also Requires
           </p>
           <div className="space-y-1">
             {skill.secondaryPrerequisiteIds.map((reqId) => {
@@ -1024,10 +1023,10 @@ function SkillOverlay({
       {!isLocked && (
         <div className="mb-3">
           <div className="flex justify-between items-center mb-1.5">
-            <span className="text-[9px] text-zinc-500 uppercase tracking-wide">{t("skillTree.mastery")}</span>
+            <span className="text-[9px] text-zinc-500 uppercase tracking-wide">Mastery</span>
             <span className="text-[11px] font-bold tabular-nums"
               style={{ color: isMastered ? GOLD : color }}>
-              {isMastered ? `✓ ${t("skillTree.complete")}` : `${masteryPct}%`}
+              {isMastered ? "✓ Complete" : `${masteryPct}%`}
             </span>
           </div>
           <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
@@ -1036,7 +1035,7 @@ function SkillOverlay({
           </div>
           <p className="text-[9px] text-zinc-600 mt-1">{req.description}</p>
           <p className="text-[9px] text-zinc-600 mt-0.5">
-            {Math.min(prog.qualifyingSessions, req.minQualifyingSessions)}/{req.minQualifyingSessions} {t("skillTree.qualifyingSessions")}
+            {Math.min(prog.qualifyingSessions, req.minQualifyingSessions)}/{req.minQualifyingSessions} qualifying sessions
           </p>
         </div>
       )}
@@ -1046,19 +1045,19 @@ function SkillOverlay({
         <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 px-3 py-2 mb-3 space-y-1">
           {isStatic && prog.bestReps > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-[9px] text-cyan-400/80 font-medium">⏱ {t("skillTree.bestHold")}</span>
+              <span className="text-[9px] text-cyan-400/80 font-medium">⏱ Best Hold</span>
               <span className="text-[10px] font-bold text-cyan-300 tabular-nums">{prog.bestReps}s</span>
             </div>
           )}
           {!isStatic && prog.bestReps > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-[9px] text-zinc-400">🏆 {t("skillTree.bestReps")}</span>
+              <span className="text-[9px] text-zinc-400">🏆 Best Reps</span>
               <span className="text-[10px] font-bold text-zinc-200 tabular-nums">{prog.bestReps}</span>
             </div>
           )}
           {prog.bestFormScore > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-[9px] text-zinc-400">🎯 {t("skillTree.formScore")}</span>
+              <span className="text-[9px] text-zinc-400">🎯 Form Score</span>
               <span className="text-[10px] font-bold text-zinc-200 tabular-nums">
                 {Math.round(prog.bestFormScore)}%
               </span>
@@ -1070,7 +1069,7 @@ function SkillOverlay({
       {/* Locked prerequisite */}
       {isLocked && prereqNode && (
         <div className="rounded-xl bg-zinc-800/50 border border-zinc-700/40 px-3 py-2 mb-3">
-          <p className="text-[9px] text-zinc-500 uppercase tracking-wide mb-0.5">{t("skillTree.requires")}</p>
+          <p className="text-[9px] text-zinc-500 uppercase tracking-wide mb-0.5">Requires</p>
           <p className="text-[11px] font-semibold text-zinc-300">{prereqNode.title}</p>
           <p className="text-[9px] text-zinc-500 mt-0.5">{prereqNode.masteryRequirement.description}</p>
         </div>
@@ -1084,7 +1083,7 @@ function SkillOverlay({
             className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition-opacity hover:opacity-90 active:opacity-75"
             style={{ backgroundColor: isMastered ? "#d97706" : color }}
           >
-            {isMastered ? t("skillTree.practiceAgain") : t("skillTree.trainNow")}
+            {isMastered ? "Practice Again →" : "Train Now →"}
           </button>
         </Link>
       )}

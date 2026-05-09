@@ -32,9 +32,10 @@ import {
   useNotificationScheduler,
   requestNotificationPermission,
 } from "@/lib/use-mobility";
-import { useTranslation } from "react-i18next";
 
 // ─── Local-storage helpers ────────────────────────────────────────────────────
+// Used as an optimistic cache so the task list updates the instant the user
+// taps Save — no API round-trip needed for the re-render.
 
 const LS_KEY = "calicoach:dailyPrefs";
 
@@ -81,10 +82,13 @@ function writeNotifPrefs(p: NotifPrefs) {
 }
 
 // ─── Goal search database ─────────────────────────────────────────────────────
+// Maps every skill-tree exercise / title to the closest MobilityGoal so users
+// can search "Archer Pull-Up" and land on the Pull-Up Mastery routine.
 
 interface GoalSearchItem { label: string; value: MobilityGoal }
 
 const GOAL_SEARCH_DB: GoalSearchItem[] = [
+  // Primary goal names
   { label: "Pull-Up Mastery",          value: "pull"         },
   { label: "First Pull-Up",            value: "pull"         },
   { label: "Front Lever",              value: "front-lever"  },
@@ -108,6 +112,7 @@ const GOAL_SEARCH_DB: GoalSearchItem[] = [
   { label: "Pistol Squat",             value: "legs"         },
   { label: "General Mobility",         value: "general"      },
   { label: "All-Round Mobility",       value: "general"      },
+  // Skill tree exercises
   { label: "Push-Up",                  value: "push"         },
   { label: "Wall Push-Up",             value: "push"         },
   { label: "Incline Push-Up",          value: "push"         },
@@ -179,8 +184,7 @@ function Questionnaire({
   onSave,
   onClose,
 }: QuestionnaireProps) {
-  const { t }         = useTranslation();
-  const initGoalItem  = GOAL_SEARCH_DB.find(g => g.value === (initialGoal || "general"));
+  const initGoalItem = GOAL_SEARCH_DB.find(g => g.value === (initialGoal || "general"));
   const [goal,       setGoal]       = useState(initialGoal || "general");
   const [goalQuery,  setGoalQuery]  = useState(initGoalItem?.label ?? "");
   const [goalOpen,   setGoalOpen]   = useState(false);
@@ -191,12 +195,14 @@ function Questionnaire({
 
   const [time,       setTime]       = useState<number>(initialTime || 10);
 
+  // Goal suggestions: show all when query is empty, else filter
   const goalSuggestions = GOAL_SEARCH_DB.filter(g =>
     !goalQuery
       ? true
       : g.label.toLowerCase().includes(goalQuery.toLowerCase()),
   ).slice(0, 7);
 
+  // Area suggestions: filter extended list, exclude already selected
   const areaSuggestions = EXTENDED_BODY_PARTS.filter(p =>
     areaQuery
       ? p.toLowerCase().includes(areaQuery.toLowerCase()) && !areas.includes(p)
@@ -243,9 +249,9 @@ function Questionnaire({
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/[0.08]">
           <div>
-            <h2 className="text-lg font-extrabold">{t("dailyTasks.updateMyGoals")}</h2>
+            <h2 className="text-lg font-extrabold">Update My Goals</h2>
             <p className="text-sm text-muted-foreground font-light opacity-80">
-              {t("dailyTasks.personaliseDesc")}
+              Personalise your daily mobility tasks
             </p>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-full hover:bg-secondary transition-colors">
@@ -258,7 +264,7 @@ function Questionnaire({
           {/* Q1 — Primary goal (search) */}
           <div className="space-y-3">
             <p className="text-sm font-semibold text-foreground">
-              {t("dailyTasks.primaryGoalQuestion")}
+              What is your primary calisthenics goal?
             </p>
 
             {/* Selected badge */}
@@ -266,7 +272,7 @@ function Questionnaire({
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-bold">
                 {selectedGoalLabel}
               </span>
-              <span className="text-xs text-muted-foreground">{t("dailyTasks.tapToChange")}</span>
+              <span className="text-xs text-muted-foreground">Tap below to change</span>
             </div>
 
             {/* Search input */}
@@ -278,7 +284,7 @@ function Questionnaire({
                   onChange={e => { setGoalQuery(e.target.value); setGoalOpen(true); }}
                   onFocus={() => setGoalOpen(true)}
                   onBlur={() => setTimeout(() => setGoalOpen(false), 160)}
-                  placeholder={t("dailyTasks.searchMovementPlaceholder")}
+                  placeholder="Search a movement or skill…"
                   className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-background/60 border border-border text-sm focus:outline-none focus:border-primary/50 transition-colors placeholder:text-muted-foreground/50"
                 />
               </div>
@@ -314,8 +320,8 @@ function Questionnaire({
           {/* Q2 — Stiffness areas (search + quick tags) */}
           <div className="space-y-3">
             <p className="text-sm font-semibold text-foreground">
-              {t("dailyTasks.stiffnessQuestion")}{" "}
-              <span className="font-normal text-muted-foreground">{t("dailyTasks.pickAllThatApply")}</span>
+              What muscles and joints are holding you back?{" "}
+              <span className="font-normal text-muted-foreground">(pick all that apply)</span>
             </p>
 
             {/* Selected chips */}
@@ -347,7 +353,7 @@ function Questionnaire({
                   onChange={e => { setAreaQuery(e.target.value); setAreaOpen(true); }}
                   onFocus={() => { setAreaOpen(true); }}
                   onBlur={() => setTimeout(() => setAreaOpen(false), 160)}
-                  placeholder={t("dailyTasks.searchBodyPartPlaceholder")}
+                  placeholder="Search a body part…"
                   className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-background/60 border border-border text-sm focus:outline-none focus:border-primary/50 transition-colors placeholder:text-muted-foreground/50"
                 />
               </div>
@@ -374,7 +380,7 @@ function Questionnaire({
             {/* Quick-select suggested tags */}
             <div>
               <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-2">
-                {t("dailyTasks.suggested")}
+                Suggested
               </p>
               <div className="flex flex-wrap gap-2">
                 {QUICK_TAGS.map(tag => (
@@ -398,21 +404,21 @@ function Questionnaire({
           {/* Q3 — Daily time */}
           <div className="space-y-3">
             <p className="text-sm font-semibold text-foreground">
-              {t("dailyTasks.dailyTimeQuestion")}
+              How much time can you commit to daily mobility?
             </p>
             <div className="flex gap-3">
-              {TIME_OPTIONS.map(opt => (
+              {TIME_OPTIONS.map(t => (
                 <button
-                  key={opt}
-                  onClick={() => setTime(opt)}
+                  key={t}
+                  onClick={() => setTime(t)}
                   className={cn(
                     "flex-1 py-3 rounded-xl border text-sm font-bold transition-all",
-                    time === opt
+                    time === t
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border bg-background/50 text-muted-foreground hover:border-muted-foreground",
                   )}
                 >
-                  {t("dailyTasks.minutesLabel", { n: opt })}
+                  {t} min
                 </button>
               ))}
             </div>
@@ -425,7 +431,7 @@ function Questionnaire({
             size="lg"
             onClick={() => onSave(goal, areas, time)}
           >
-            {t("dailyTasks.savePreferences")}
+            Save My Preferences
           </Button>
         </div>
       </motion.div>
@@ -436,7 +442,6 @@ function Questionnaire({
 // ─── Saved checkmark flash ────────────────────────────────────────────────────
 
 function SavedBadge() {
-  const { t } = useTranslation();
   return (
     <motion.div
       className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold shadow-lg pointer-events-none"
@@ -446,7 +451,7 @@ function SavedBadge() {
       transition={{ type: "spring", stiffness: 360, damping: 28 }}
     >
       <CheckCircle2 className="w-4 h-4" />
-      {t("dailyTasks.goalsUpdated")}
+      Goals Updated! Your routine has been personalized.
     </motion.div>
   );
 }
@@ -542,8 +547,6 @@ function NotificationCard({
   onToggle: () => void;
   onTimeChange: (t: string) => void;
 }) {
-  const { t } = useTranslation();
-
   const areas = stiffnessAreas
     ? stiffnessAreas.split(",").filter(Boolean).slice(0, 2).join(" & ")
     : "";
@@ -560,7 +563,7 @@ function NotificationCard({
             <BellOff className="w-4 h-4 text-muted-foreground" />
           )}
           <span className="text-sm font-semibold">
-            {enabled ? t("dailyTasks.dailyReminderOn") : t("dailyTasks.dailyReminderOff")}
+            {enabled ? "Daily Reminder On" : "Daily Reminder Off"}
           </span>
         </div>
         <button
@@ -580,201 +583,378 @@ function NotificationCard({
         </button>
       </div>
 
-      {blocked && (
-        <p className="text-xs text-destructive">
-          {t("settings.notificationsBlocked")}
-        </p>
+      {/* Blocked warning — shown when browser has denied permission */}
+      {blocked && !enabled && (
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+          <BellOff className="w-3.5 h-3.5 text-destructive shrink-0 mt-px" />
+          <p className="text-xs text-destructive leading-relaxed">
+            Notifications are blocked. Please enable them in your browser settings to receive reminders.
+          </p>
+        </div>
       )}
 
-      {enabled && !blocked && (
-        <div className="space-y-2">
-          <label className="text-xs text-muted-foreground font-medium">
-            {t("settings.reminderTime")}
-          </label>
-          <input
-            type="time"
-            value={notificationTime}
-            onChange={e => onTimeChange(e.target.value)}
-            className="w-full bg-background/60 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
-          />
-          <p className="text-[11px] text-muted-foreground/60 leading-relaxed">{preview}</p>
-        </div>
+      {enabled && (
+        <>
+          <div className="flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Remind me at</span>
+            <input
+              type="time"
+              value={notificationTime}
+              onChange={e => onTimeChange(e.target.value)}
+              className="ml-auto text-xs font-mono rounded-md bg-background border border-border px-2 py-1"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground/70 italic leading-relaxed border-l-2 border-primary/30 pl-3">
+            "{preview}"
+          </p>
+        </>
       )}
     </div>
   );
 }
 
-// ─── Main DailyTasks page ─────────────────────────────────────────────────────
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function DailyTasksPage() {
-  const { t }       = useTranslation();
-  const { toast }   = useToast();
-  const { data: mobilityStatus, isLoading } = useMobilityStatus();
-  const updateSettings = useUpdateMobilitySettings();
+  const { data: status }   = useMobilityStatus();
+  const updateSettings     = useUpdateMobilitySettings();
+  const { toast }          = useToast();
 
-  // Local optimistic state (mirrors server)
-  const [goal,  setGoal]  = useState<string>(() => readLocalPrefs()?.mobilityGoal  ?? "general");
-  const [areas, setAreas] = useState<string>(() => readLocalPrefs()?.stiffnessAreas ?? "");
-  const [time,  setTime]  = useState<number>(() => readLocalPrefs()?.dailyTimeMinutes ?? 10);
-
-  // Notification state
-  const [notifEnabled, setNotifEnabled]   = useState(() => readNotifPrefs()?.enabled ?? false);
-  const [notifTime,    setNotifTime]      = useState(() => readNotifPrefs()?.time ?? "08:00");
-  const [notifBlocked, setNotifBlocked]   = useState(false);
-  const [activeTab,    setActiveTab]      = useState<"tasks" | "routine">("tasks");
-
-  // Questionnaire modal
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
-  const [showSaved,         setShowSaved]         = useState(false);
+  const [showSavedBadge,    setShowSavedBadge]    = useState(false);
+  const [showSession,       setShowSession]       = useState(false);
+  const [autoStart,         setAutoStart]         = useState(false);
 
-  // Sync from server once loaded
+  // ── Total scroll lockdown while session overlay is open ──────────────────
   useEffect(() => {
-    if (!mobilityStatus) return;
-    const local = readLocalPrefs();
-    if (!local) {
-      setGoal(mobilityStatus.settings.mobilityGoal ?? "general");
-      setAreas(mobilityStatus.settings.stiffnessAreas ?? "");
-      setTime(mobilityStatus.settings.dailyTimeMinutes ?? 10);
+    const html = document.documentElement;
+    const body = document.body;
+    if (showSession) {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      // Add class to BOTH html and body — CSS handles the heavy lifting
+      html.classList.add("workout-active");
+      body.classList.add("workout-active");
+    } else {
+      html.classList.remove("workout-active");
+      body.classList.remove("workout-active");
     }
-    const localNotif = readNotifPrefs();
-    if (!localNotif) {
-      setNotifEnabled(mobilityStatus.settings.enabled ?? false);
-      setNotifTime(mobilityStatus.settings.notificationTime ?? "08:00");
-    }
-  }, [mobilityStatus]);
+    return () => {
+      html.classList.remove("workout-active");
+      body.classList.remove("workout-active");
+    };
+  }, [showSession]);
 
-  useNotificationScheduler(mobilityStatus);
+  // ── Optimistic local preferences ──────────────────────────────────────────
+  // Initialised from localStorage (instant) then overwritten by server data.
+  // Drives the task list so the re-render is immediate on Save.
+  const serverSettings = status?.settings;
 
-  async function handleNotifToggle() {
-    const next = !notifEnabled;
-    if (next) {
-      const granted = await requestNotificationPermission();
-      if (!granted) { setNotifBlocked(true); return; }
-      setNotifBlocked(false);
-    }
-    setNotifEnabled(next);
-    writeNotifPrefs({ enabled: next, time: notifTime });
-    updateSettings.mutate({ enabled: next, notificationTime: notifTime, mobilityGoal: goal as MobilityGoal });
-  }
+  const [localPrefs, setLocalPrefs] = useState<LocalPrefs>(() => {
+    const cached = readLocalPrefs();
+    return cached ?? {
+      mobilityGoal:     "general",
+      stiffnessAreas:   "",
+      dailyTimeMinutes: 10,
+    };
+  });
 
-  function handleTimeChange(newTime: string) {
-    setNotifTime(newTime);
-    writeNotifPrefs({ enabled: notifEnabled, time: newTime });
-    if (notifEnabled) {
-      updateSettings.mutate({ enabled: notifEnabled, notificationTime: newTime, mobilityGoal: goal as MobilityGoal });
-    }
-  }
+  // Sync server data into local prefs once loaded (server is source of truth)
+  useEffect(() => {
+    if (!serverSettings) return;
+    const synced: LocalPrefs = {
+      mobilityGoal:     serverSettings.mobilityGoal     ?? "general",
+      stiffnessAreas:   serverSettings.stiffnessAreas   ?? "",
+      dailyTimeMinutes: serverSettings.dailyTimeMinutes  ?? 10,
+    };
+    setLocalPrefs(synced);
+    writeLocalPrefs(synced);
+  }, [
+    serverSettings?.mobilityGoal,
+    serverSettings?.stiffnessAreas,
+    serverSettings?.dailyTimeMinutes,
+  ]);
 
-  function handleSave(newGoal: string, newAreas: string[], newTime: number) {
-    const areasStr = newAreas.join(",");
-    setGoal(newGoal);
-    setAreas(areasStr);
-    setTime(newTime);
-    writeLocalPrefs({ mobilityGoal: newGoal, stiffnessAreas: areasStr, dailyTimeMinutes: newTime });
-    setShowQuestionnaire(false);
-    setShowSaved(true);
-    setTimeout(() => setShowSaved(false), 2200);
-    updateSettings.mutate({
-      enabled: notifEnabled,
-      notificationTime: notifTime,
-      mobilityGoal: newGoal as MobilityGoal,
-      stiffnessAreas: areasStr,
+  // ── Notification local state ───────────────────────────────────────────────
+  // Persisted to localStorage so the toggle state survives page refresh without
+  // waiting for the server query to resolve.
+  const [localNotif, setLocalNotif] = useState<NotifPrefs>(() => {
+    const cached = readNotifPrefs();
+    if (cached) return cached;
+    return {
+      enabled: serverSettings?.enabled          ?? false,
+      time:    serverSettings?.notificationTime ?? "08:00",
+    };
+  });
+
+  // Track whether the browser has actively denied permission so we can show
+  // the "blocked" warning without hiding the toggle.
+  const [notifBlocked, setNotifBlocked] = useState(
+    () => "Notification" in window && Notification.permission === "denied",
+  );
+
+  // Sync server notification settings into local state once loaded
+  useEffect(() => {
+    if (!serverSettings) return;
+    const synced: NotifPrefs = {
+      enabled: serverSettings.enabled          ?? false,
+      time:    serverSettings.notificationTime ?? "08:00",
+    };
+    setLocalNotif(synced);
+    writeNotifPrefs(synced);
+  }, [serverSettings?.enabled, serverSettings?.notificationTime]);
+
+  useNotificationScheduler(status);
+
+  const goal             = localPrefs.mobilityGoal as MobilityGoal;
+  const goalLabel        = GOAL_LABELS[goal] ?? goal;
+  const stiffnessAreas   = localPrefs.stiffnessAreas;
+  const dailyTimeMinutes = localPrefs.dailyTimeMinutes;
+  const enabled          = localNotif.enabled;
+  const notificationTime = localNotif.time;
+
+  const areasArray = stiffnessAreas
+    ? (stiffnessAreas.split(",").filter(Boolean) as StiffnessArea[])
+    : [];
+
+  // Task list derived from local (optimistic) prefs — updates instantly
+  const tasks    = getTasksForPreferences(goal, areasArray, dailyTimeMinutes);
+  const totalMin = routineDurationMinutes(tasks);
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  function handleSavePreferences(
+    newGoal: string,
+    newAreas: StiffnessArea[],
+    newTime: number,
+  ) {
+    const newPrefs: LocalPrefs = {
+      mobilityGoal:     newGoal,
+      stiffnessAreas:   newAreas.join(","),
       dailyTimeMinutes: newTime,
+    };
+
+    // 1. Update local state immediately — task list re-renders right now
+    setLocalPrefs(newPrefs);
+    // 2. Persist to localStorage so the next mount also picks it up instantly
+    writeLocalPrefs(newPrefs);
+    // 3. Close the modal without waiting for the network
+    setShowQuestionnaire(false);
+    // 4. Show the in-page animated badge
+    setShowSavedBadge(true);
+    setTimeout(() => setShowSavedBadge(false), 2800);
+    // 5. Toast for accessibility / desktop users
+    toast({
+      title: "Goals Updated!",
+      description: "Your routine has been personalized.",
     });
+    // 6. Sync to the server in the background
+    updateSettings.mutate(newPrefs);
   }
 
-  const tasks = getTasksForPreferences(goal as MobilityGoal, areas ? areas.split(",").filter(Boolean) as StiffnessArea[] : [], time);
-  const goalLabel = GOAL_LABELS[goal as MobilityGoal] ?? goal;
-  const totalMins = routineDurationMinutes(tasks);
+  async function handleToggleNotification() {
+    if (enabled) {
+      // Turning off — no permission needed
+      const updated: NotifPrefs = { enabled: false, time: notificationTime };
+      setLocalNotif(updated);
+      writeNotifPrefs(updated);
+      updateSettings.mutate({ enabled: false });
+      return;
+    }
 
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-4">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="h-16 rounded-xl bg-secondary/40 animate-pulse" />
-        ))}
-      </div>
-    );
+    // Turning on — check / request browser permission first
+    if (!("Notification" in window)) {
+      toast({
+        title: "Not Supported",
+        description: "Your browser does not support notifications.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Already hard-denied — show the blocked warning immediately
+    if (Notification.permission === "denied") {
+      setNotifBlocked(true);
+      toast({
+        title: "Notifications Blocked",
+        description:
+          "Notifications are blocked. Please enable them in your browser settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Request permission (shows the browser prompt if still "default")
+    const granted = await requestNotificationPermission();
+    // Re-read after the async call so TypeScript doesn't narrow away "denied"
+    const permissionAfter = (window as typeof window & { Notification: { permission: string } })
+      .Notification.permission;
+
+    if (granted) {
+      setNotifBlocked(false);
+      const updated: NotifPrefs = { enabled: true, time: notificationTime };
+      setLocalNotif(updated);
+      writeNotifPrefs(updated);
+      updateSettings.mutate({ enabled: true });
+    } else {
+      const isDenied = permissionAfter === "denied";
+      setNotifBlocked(isDenied);
+      if (isDenied) {
+        toast({
+          title: "Notifications Blocked",
+          description:
+            "Notifications are blocked. Please enable them in your browser settings.",
+          variant: "destructive",
+        });
+      }
+    }
   }
+
+  function handleTimeChange(time: string) {
+    const updated: NotifPrefs = { enabled, time };
+    setLocalNotif(updated);
+    writeNotifPrefs(updated);
+    updateSettings.mutate({ notificationTime: time });
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-4 md:p-6 max-w-2xl space-y-5">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+    <div className="p-5 max-w-lg mx-auto space-y-5 pb-8">
+
+      {/* Page header */}
+      <div className="flex items-start justify-between pt-1">
         <div>
-          <h1 className="text-2xl font-bold">{t("nav.dailyMobility")}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {goalLabel} · {totalMins} {t("dailyTasks.min")}
+          <h1 className="text-2xl font-extrabold tracking-tight">Daily Tasks</h1>
+          <p className="text-sm text-muted-foreground font-light opacity-80 mt-0.5">
+            Your personalised mobility plan
           </p>
         </div>
-        <button
-          onClick={() => setShowQuestionnaire(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-sm font-medium hover:bg-secondary/50 transition-colors shrink-0"
-        >
-          <Pencil className="w-3.5 h-3.5" />
-          {t("dailyTasks.editGoals")}
-        </button>
+        {(status?.currentStreak ?? 0) > 0 && (
+          <div className="flex items-center gap-1.5 bg-orange-500/10 text-orange-400 rounded-full px-3 py-1 text-sm font-semibold shrink-0">
+            <Flame className="w-4 h-4" />
+            {status?.currentStreak}d streak
+          </div>
+        )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 p-1 rounded-xl bg-secondary/40 border border-border/50">
-        {(["tasks", "routine"] as const).map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={cn(
-              "flex-1 py-2 rounded-lg text-sm font-semibold transition-all",
-              activeTab === tab
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
+      {/* Goal + preferences summary */}
+      <div className="glass-card p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <div className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">
+              Current Goal
+            </div>
+            <div className="font-extrabold text-lg leading-tight">{goalLabel}</div>
+            {areasArray.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {areasArray.map(a => (
+                  <span
+                    key={a}
+                    className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
+                  >
+                    {a}
+                  </span>
+                ))}
+              </div>
             )}
+          </div>
+          <button
+            onClick={() => setShowQuestionnaire(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-colors shrink-0"
           >
-            {tab === "tasks" ? t("dailyTasks.tabTasks") : t("dailyTasks.tabRoutine")}
+            <Pencil className="w-3.5 h-3.5" />
+            Update Goals
           </button>
-        ))}
+        </div>
+
+        <div className="flex items-center gap-3 text-xs text-muted-foreground border-t border-border/50 pt-3">
+          <span className="flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5" />
+            {dailyTimeMinutes} min / day
+          </span>
+          <span>·</span>
+          <span>{tasks.length} exercises (~{totalMin} min)</span>
+        </div>
       </div>
 
-      {activeTab === "tasks" && (
-        <div className="space-y-3">
-          {/* Notification card */}
-          <NotificationCard
-            enabled={notifEnabled}
-            blocked={notifBlocked}
-            notificationTime={notifTime}
-            goalLabel={goalLabel}
-            stiffnessAreas={areas}
-            dailyTimeMinutes={time}
-            onToggle={() => void handleNotifToggle()}
-            onTimeChange={handleTimeChange}
-          />
-
-          {/* Task list */}
-          {tasks.map((task, i) => (
-            <TaskCard
-              key={task.id}
-              index={i}
-              name={task.name}
-              muscles={task.targetMuscles}
-              durationSeconds={task.durationSeconds}
-              cue={task.coachingCue}
-              why={task.why}
-            />
-          ))}
+      {/* Completed today banner */}
+      {status?.completedToday && (
+        <div className="flex items-center gap-2 p-4 rounded-xl bg-primary/10 border border-primary/30 text-primary">
+          <CheckCircle2 className="w-5 h-5 shrink-0" />
+          <span className="text-sm font-medium">
+            You've completed today's session — great work!
+          </span>
         </div>
       )}
 
-      {activeTab === "routine" && (
-        <MobilityPage />
+      {/* Task list */}
+      <div className="space-y-2.5">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
+          Today's Tasks
+        </h2>
+
+        <AnimatePresence mode="popLayout">
+          {tasks.map((stretch, i) => (
+            <motion.div
+              key={stretch.id}
+              layout
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18, delay: i * 0.04 }}
+            >
+              <TaskCard
+                index={i}
+                name={stretch.name}
+                muscles={stretch.targetMuscles}
+                durationSeconds={stretch.durationSeconds}
+                cue={stretch.coachingCue}
+                why={stretch.why}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {/* Start Session CTA — hidden while session overlay is open */}
+      {!showSession && (
+        <Button
+          size="lg"
+          className="w-full font-bold"
+          onClick={() => {
+            const repeat = !!status?.completedToday;
+            setAutoStart(repeat);
+            setShowSession(true);
+          }}
+        >
+          <Play className="w-5 h-5 mr-2" />
+          {status?.completedToday ? "Repeat Session" : "Start Today's Session"}
+        </Button>
       )}
 
-      {/* Questionnaire modal */}
+      {/* Notification card — hidden while session overlay is open */}
+      {!showSession && (
+        <NotificationCard
+          enabled={enabled}
+          blocked={notifBlocked}
+          notificationTime={notificationTime}
+          goalLabel={goalLabel}
+          stiffnessAreas={stiffnessAreas}
+          dailyTimeMinutes={dailyTimeMinutes}
+          onToggle={handleToggleNotification}
+          onTimeChange={handleTimeChange}
+        />
+      )}
+
+      {/* Questionnaire modal — rendered with AnimatePresence for slide-up enter/exit */}
       <AnimatePresence>
         {showQuestionnaire && (
           <Questionnaire
             initialGoal={goal}
-            initialAreas={areas ? areas.split(",").filter(Boolean) : []}
-            initialTime={time}
-            onSave={handleSave}
+            initialAreas={areasArray}
+            initialTime={dailyTimeMinutes}
+            onSave={handleSavePreferences}
             onClose={() => setShowQuestionnaire(false)}
           />
         )}
@@ -782,7 +962,31 @@ export function DailyTasksPage() {
 
       {/* Saved badge */}
       <AnimatePresence>
-        {showSaved && <SavedBadge />}
+        {showSavedBadge && <SavedBadge />}
+      </AnimatePresence>
+
+      {/* Inline session overlay — position:fixed anchored to top:0 so browser
+          scroll position of the parent page is completely irrelevant */}
+      <AnimatePresence>
+        {showSession && (
+          <motion.div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100dvh",
+              zIndex: 50,
+              overflow: "hidden",
+            }}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 32, stiffness: 320 }}
+          >
+            <MobilityPage onDismiss={() => setShowSession(false)} autoStart={autoStart} />
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

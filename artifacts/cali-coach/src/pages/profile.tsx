@@ -2,7 +2,6 @@ import { useParams, Link } from "wouter";
 import { Show } from "@clerk/react";
 import React, { useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   Lock,
