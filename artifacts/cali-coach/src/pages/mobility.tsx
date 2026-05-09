@@ -282,8 +282,8 @@ export function MobilityPage() {
         </div>
 
         <div className="flex gap-3 pt-2">
-          <Button variant="outline" onClick={() => { setPageState("ready"); setStretchIndex(0); }}>
-            Do Again
+          <Button variant="outline" onClick={() => { setStretchIndex(0); setPageState("active"); }}>
+            Repeat Session
           </Button>
           <Button asChild>
             <Link href="/">Back to Dashboard</Link>
