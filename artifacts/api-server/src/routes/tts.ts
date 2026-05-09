@@ -73,6 +73,7 @@ async function elevenLabsTTS(
   voiceId: string,
   voiceSettings: typeof VOICE_SETTINGS[string],
   apiKey: string,
+  langCode?: string,
 ): Promise<Buffer> {
   const url =
     `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream` +
@@ -89,6 +90,9 @@ async function elevenLabsTTS(
       text: text.slice(0, 500),
       model_id: "eleven_multilingual_v2",
       voice_settings: voiceSettings,
+      // language_code tells ElevenLabs which language detection to prioritise.
+      // The caller must ensure `text` is already in this language.
+      ...(langCode ? { language_code: langCode } : {}),
     }),
   });
 
@@ -390,6 +394,7 @@ router.get("/tts/stream", async (req: Request, res: Response) => {
       profile.voiceId,
       profile.voiceSettings,
       apiKey,
+      language && language !== "en" ? language : undefined,
     );
     console.log(`[ElevenLabs] /api/tts/stream — success, ${audioBuffer.byteLength} bytes`);
   } catch (err) {

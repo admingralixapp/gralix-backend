@@ -5,8 +5,10 @@ import { ArrowLeft, CheckCircle2, Flame, Pause, Play, SkipForward, X } from "luc
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
+import { useTranslation } from "react-i18next";
 import { speak } from "@/lib/voice-service";
 import { getVoiceCues } from "@/lib/workout-preferences";
+import { getWorkoutCue } from "@/lib/cue-translations";
 import {
   getTasksForPreferences,
   routineDurationMinutes,
@@ -119,13 +121,15 @@ function ActiveWorkoutPlayer({
   const nextStretch = routine[stretchIndex + 1];
   const isLast = stretchIndex + 1 >= routine.length;
 
+  const { i18n } = useTranslation();
+
   // ── Speak the exercise coaching cue at the START of each stretch ─────────
-  // The text is the English coachingCue; the backend LLM translates it into
-  // the active coach language before sending it to ElevenLabs.
+  // The English coachingCue text is sent to the backend where the LLM
+  // rephrases it in character AND in the target language. If the LLM is
+  // unavailable the raw text goes to ElevenLabs as-is (degraded: English audio).
   useEffect(() => {
     if (!getVoiceCues()) return;
     if (!currentStretch) return;
-    // Small delay so the exercise title animation settles first
     const t = setTimeout(() => {
       speak(currentStretch.coachingCue, "encouraging");
     }, 600);
@@ -133,6 +137,8 @@ function ActiveWorkoutPlayer({
   }, [stretchIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Voice cues at 30 s remaining and at 0 s (stretch complete) ───────────
+  // These use pre-translated text from cue-translations.ts so ElevenLabs
+  // receives the correct language directly — no LLM dependency.
   const spokenRef = useRef<Record<string, boolean>>({});
   useEffect(() => {
     if (!getVoiceCues()) return;
@@ -140,13 +146,13 @@ function ActiveWorkoutPlayer({
     const key0  = `${stretchIndex}:0`;
     if (secondsLeft === 30 && !spokenRef.current[key30]) {
       spokenRef.current[key30] = true;
-      speak("30 seconds remaining — keep going, you've got this!", "encouraging");
+      speak(getWorkoutCue("30s", i18n.language), "encouraging");
     }
     if (secondsLeft === 0 && !spokenRef.current[key0]) {
       spokenRef.current[key0] = true;
-      speak("Great work — stretch complete!", "encouraging");
+      speak(getWorkoutCue("complete", i18n.language), "encouraging");
     }
-  }, [secondsLeft, stretchIndex]);
+  }, [secondsLeft, stretchIndex, i18n.language]);
 
   // ── SCROLL LOCK — fires exactly on mount, unlocks exactly on unmount ─────
   useEffect(() => {

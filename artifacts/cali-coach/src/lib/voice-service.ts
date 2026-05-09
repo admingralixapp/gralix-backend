@@ -133,6 +133,7 @@ function stopCurrentAudio(): void {
 // ─── Locale helpers ───────────────────────────────────────────────────────────
 
 import { resolveElevenLabsLang } from "./coach-language.js";
+import { getTestPhrase } from "./cue-translations.js";
 
 let _speechLang = "en-US";
 
@@ -352,9 +353,14 @@ export function testCoachVoice(profileId: string, label?: string): Promise<void>
     rio_flair:      "Vamos! Keep your chest up and drive through with power — Ginga is in your soul!",
   };
 
+  // When the app is set to a non-English language, use a pre-translated test
+  // phrase so ElevenLabs receives the correct language in the text payload.
+  // For English, keep the personality-specific English cue for character flavour.
   const sampleText =
-    SAMPLE_CUES[profileId] ??
-    "Great form — keep your core tight and breathe through the movement.";
+    _coachLang !== "en"
+      ? getTestPhrase(_coachLang)
+      : (SAMPLE_CUES[profileId] ??
+         "Great form — keep your core tight and breathe through the movement.");
 
   if (FREE_VOICE_PROFILES.has(profileId)) {
     console.log(`[CaliCoach Voice] testCoachVoice() → FREE profile="${profileId}" — browser TTS`);
