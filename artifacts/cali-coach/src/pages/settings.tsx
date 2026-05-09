@@ -602,9 +602,9 @@ export function Settings() {
                 <span className="text-base leading-none">🎙️</span>
               </div>
               <div>
-                <div className="text-sm font-semibold text-foreground">Coach Personality</div>
+                <div className="text-sm font-semibold text-foreground">{t("settings.coachPersonality")}</div>
                 <div className="text-[11px] text-muted-foreground">
-                  AI voice style for form-correction cues
+                  {t("settings.coachPersonalityDesc")}
                 </div>
               </div>
             </div>
@@ -628,7 +628,7 @@ export function Settings() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1 min-w-0">
                         <span className={["text-xs font-semibold truncate", active ? "text-primary" : ""].join(" ")}>
-                          {p.label}
+                          {t(`settings.voice_${p.id}_label`)}
                         </span>
                         <span
                           className="shrink-0 text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wide leading-none"
@@ -638,11 +638,11 @@ export function Settings() {
                               : { background: "rgba(139,92,246,0.18)", color: "#c084fc" }
                           }
                         >
-                          {p.isFree ? "Free" : "Pro"}
+                          {p.isFree ? t("common.free") : t("common.pro")}
                         </span>
                       </div>
                       <div className="text-[10px] text-muted-foreground/70 truncate leading-tight mt-0.5">
-                        {p.description}
+                        {t(`settings.voice_${p.id}_desc`)}
                       </div>
                     </div>
                     {active && (
