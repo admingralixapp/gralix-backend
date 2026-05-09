@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Aprofunde-se nas tendências da sua forma, ganhos de força e métricas de desempenho.",
     "packClaimed": "{{name}} reivindicado! 🎁",
     "packClaimedDesc": "Seu bônus de assinatura Pro foi aplicado.",
-    "somethingWentWrong": "Algo deu errado"
+    "somethingWentWrong": "Algo deu errado",
+    "voiceDesc": {
+      "classic": "Claro, motivador — voz do treinador na sua resolução",
+      "classic_female": "Acolhedora, encorajadora — voz feminina do treinador",
+      "sergeant": "Instrutor militar — intensidade máxima, sem desculpas",
+      "sensei": "Sabedoria antiga aplicada ao movimento moderno",
+      "cyborg": "Inteligência artificial fria e precisa — biomecânica e métricas",
+      "monk": "Zenith, fluxo, ascensão — respire sua forma, progrida constantemente",
+      "noir_detective": "Cada repetição é uma pista. Cada erro, um crime a corrigir.",
+      "ogre": "Treino forte, revolucionário — hype de monstro das cavernas",
+      "olympic_coach": "V-taper, controle excêntrico, eficiência biomecânica de alto nível",
+      "aussie_legend": "Parceiro, você está animado — confie, você consegue!",
+      "retro_gamer": "Anunciador dos anos 90 — combinações, power-ups, game over",
+      "rio_flair": "Vibrações de capoeira brasileira — ginga, flow, axé"
+    }
   },
   "progress": {
     "title": "Progresso",

@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Analizează tendințele formei tale, câștigurile de forță și metricile de performanță.",
     "packClaimed": "{{name}} revendicat! 🎁",
     "packClaimedDesc": "Bonusul tău de semnare Pro a fost aplicat.",
-    "somethingWentWrong": "Ceva nu a mers bine"
+    "somethingWentWrong": "Ceva nu a mers bine",
+    "voiceDesc": {
+      "classic": " Clar, încurajator — voce de navigare",
+      "classic_female": " Cald, suportiv — voce de navigare feminină",
+      "sergeant": " Serjant de antrenament militar — intens, fără scuze",
+      "sensei": " Înțelepciune veche aplicată mișcării moderne",
+      "cyborg": " Inteligență artificială rece, clinică — biomecanică și metrici",
+      "monk": " Zenit, Flow, Ascensiune — respiră-ți forma",
+      "noir_detective": " Fiecare repetare e o scenă. Fiecare greșeală, o crimă.",
+      "ogre": " Sparge tot, micuțule — hype de monstru de peșteră",
+      "olympic_coach": " Taper V, control excentric, eficiență bio-mecanică",
+      "aussie_legend": " Frate, ești entuziasmat — crezi că poți reuși!",
+      "retro_gamer": " Părtaș la joc din anii '90 — combo-uri, power-up-uri, game-over",
+      "rio_flair": " Vibe de capoeira brașileană — ginga, flow, axé"
+    }
   },
   "progress": {
     "title": "Progres",

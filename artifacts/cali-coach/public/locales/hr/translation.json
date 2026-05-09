@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Detaljno analizirajte trendove oblika, dobitke snage i metrike performansi.",
     "packClaimed": "{{name}} preuzet! 🎁",
     "packClaimedDesc": "Vaš bonus za potpisivanje Pro je primijenjen.",
-    "somethingWentWrong": "Nešto je pošlo po zlu"
+    "somethingWentWrong": "Nešto je pošlo po zlu",
+    "voiceDesc": {
+      "classic": "Jasno, ohrabrujuće — glas u pregledniku",
+      "classic_female": "Toplo, podržavajuće — glas u pregledniku",
+      "sergeant": "Vojni instruktor — intenzivno, bez izgovora",
+      "sensei": "Starodavna mudrost primijenjena na suvremeni pokret",
+      "cyborg": "Hladni, klinički AI — biomehanika i metrike",
+      "monk": "Zenit, tok, uzvišenje — diši svoju formu",
+      "noir_detective": "Svaki ponavljanje je trag. Svaka pogreška — zločin.",
+      "ogre": "Razbijaj snažno, mali čovječe — ohrabrenje pećinskog čudovišta",
+      "olympic_coach": "V-taper, ekscentrična kontrola, bio-mehanička učinkovitost",
+      "aussie_legend": "Prijatelju, uzbuđen si — siguran sam da ćeš to ostvariti!",
+      "retro_gamer": "Dječjak iz 90-ih — kombinacije, moći, kraj igre",
+      "rio_flair": "Brazilski capoeira ugođaj — ginga, tok, axé"
+    }
   },
   "progress": {
     "title": "Napredak",

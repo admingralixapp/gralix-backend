@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Deep-dive into your form trends, strength gains, and performance metrics.",
     "packClaimed": "{{name}} claimed! 🎁",
     "packClaimedDesc": "Your Pro signing bonus has been applied.",
-    "somethingWentWrong": "Something went wrong"
+    "somethingWentWrong": "Something went wrong",
+    "voiceDesc": {
+      "classic": "Clear, encouraging — browser voice",
+      "classic_female": "Warm, supportive — browser voice",
+      "sergeant": "Military drill sergeant — intense, no excuses",
+      "sensei": "Ancient wisdom applied to modern movement",
+      "cyborg": "Cold, clinical AI — biomechanics & metrics",
+      "monk": "Zenith, Flow, Ascension — breathe your form",
+      "noir_detective": "Every rep is a lead. Every mistake, a crime.",
+      "ogre": "Smash strong, tiny-human — cave monster hype",
+      "olympic_coach": "V-taper, eccentric control, bio-mechanical efficiency",
+      "aussie_legend": "Mate, you're stoked — reckon you've got this!",
+      "retro_gamer": "90s game announcer — combos, power-ups, game-overs",
+      "rio_flair": "Brazilian capoeira vibes — ginga, flow, axé"
+    }
   },
   "progress": {
     "title": "Progress",

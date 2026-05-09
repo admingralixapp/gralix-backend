@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Duik dieper in je vormtrends, krachtverbeteringen en prestatiegegevens.",
     "packClaimed": "{{name}} geclaimd! 🎁",
     "packClaimedDesc": "Je Pro ondertekenbonus is toegepast.",
-    "somethingWentWrong": "Er is iets misgegaan"
+    "somethingWentWrong": "Er is iets misgegaan",
+    "voiceDesc": {
+      "classic": "Helder, motiverend — stem uit de browser",
+      "classic_female": "Warm, ondersteunend — stem uit de browser",
+      "sergeant": "Militaire instructeursstem — intens, geen excuses",
+      "sensei": "Oude wijsheid toegepast op moderne bewegingen",
+      "cyborg": "Koel, klinisch AI — biomechanica en metrics",
+      "monk": "Zenith, flow, ascensie — adem in je vorm",
+      "noir_detective": "Elke herhaling is een case. Elke fout, een misdaad.",
+      "ogre": "Krachtig uit je kracht zetten, klein kaliber — grotmonster-hype",
+      "olympic_coach": "V-taper, excentrieke controle, bio-mechanische efficiëntie",
+      "aussie_legend": "Vriend, je bent enthousiast — je hebt dit in de vingers!",
+      "retro_gamer": "Jaren 90 game-omroeper — combos, power-ups, game-over",
+      "rio_flair": "Braziliaanse capoeira vibes — ginga, flow, axé"
+    }
   },
   "progress": {
     "title": "Vooruitgang",

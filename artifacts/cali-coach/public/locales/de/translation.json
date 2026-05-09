@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Tauche tief in Deine Form-, Kraft- und Leistungsentwicklung ein.",
     "packClaimed": "{{name}} beansprucht! 🎁",
     "packClaimedDesc": "Dein Pro-Anmeldebonus wurde angewendet.",
-    "somethingWentWrong": "Etwas ist schiefgelaufen"
+    "somethingWentWrong": "Etwas ist schiefgelaufen",
+    "voiceDesc": {
+      "classic": "Klar, motivierend — Browser-Stimmenführung",
+      "classic_female": "Warm, unterstützend — Browser-Stimmenführung",
+      "sergeant": "Militärischer Drill-Instruktor — intensiv, nichts ist eine Ausrede",
+      "sensei": "Alte Weisheit trifft moderne Bewegung — Meistern durch Erfahrung",
+      "cyborg": "Kalte, klinische KI — Biomechanik & Leistungsdaten",
+      "monk": "Zenith, Flow, Erhebung — Atme deine Form, meistere deinen Bewegungsfluss",
+      "noir_detective": "Jeder Wiederholung ist eine Spur. Jeder Fehler, ein Verbrechen.",
+      "ogre": "Hau kraftvoll, kleiner Mensch — Höhlenmonster-Feeling",
+      "olympic_coach": "V-förmiger Rücken, exzentrische Kontrolle, biomechanische Effizienz",
+      "aussie_legend": "Kumpel, du bist voller Energie — Ich glaub, du schaffst das!",
+      "retro_gamer": "90er Jahre Spielansager — Combos, Power-Ups, Game Over",
+      "rio_flair": "Brasilianisches Capoeira-Feeling — Ginga, Flow, Axé"
+    }
   },
   "progress": {
     "title": "Fortschritt",

@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Dyk ned i dine formtendenser, styrkegevinst og præstationsmålinger.",
     "packClaimed": "{{name}} gjort krav på! 🎁",
     "packClaimedDesc": "Din Pro-underskriftsbonus er anvendt.",
-    "somethingWentWrong": "Noget gik galt"
+    "somethingWentWrong": "Noget gik galt",
+    "voiceDesc": {
+      "classic": "Klar, opmuntrende — browser-voice",
+      "classic_female": "Varm, støttende — browser-voice",
+      "sergeant": "Militær drillsergent — intens, ingen undskyldninger",
+      "sensei": "Ældgammel visdom anvendt på moderne bevægelse",
+      "cyborg": "Kold, klinisk AI — biomekanik & målinger",
+      "monk": "Zenith, Flow, Opstigning — åndedrætsbaseret formkontrol",
+      "noir_detective": "Hver rep er et lead. Hver fejl, en forbrydelse.",
+      "ogre": "Bank stærkt, lille-menneske — hule-monster hype",
+      "olympic_coach": "V-taper, eccentric kontrol, bio-mekanisk effektivitet",
+      "aussie_legend": "Ven, du er i godt humør — tror du kan klare det!",
+      "retro_gamer": "90'er spil-anker — combos, power-ups, game-over",
+      "rio_flair": "Brasiliansk capoeira-ånd — ginga, flow, axé"
+    }
   },
   "progress": {
     "title": "Fremskridt",

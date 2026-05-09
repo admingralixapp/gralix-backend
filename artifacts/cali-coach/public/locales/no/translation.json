@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Dypdykk i formtrend, styrkegevinster og ytelsesmålinger.",
     "packClaimed": "{{name}} er hentet! 🎁",
     "packClaimedDesc": "Din Pro-signeringsbonus er brukt opp.",
-    "somethingWentWrong": "Noe gikk galt"
+    "somethingWentWrong": "Noe gikk galt",
+    "voiceDesc": {
+      "classic": "Klart, oppmuntrende — nettleserstemme",
+      "classic_female": "Varm, støttende — nettleserstemme",
+      "sergeant": "Militært drillsergant — intens, uten unnskyldninger",
+      "sensei": "Gammel visdom anvendt på moderne bevegelse",
+      "cyborg": "Kald, klinisk AI — biomekanikk & målinger",
+      "monk": "Zenit, Flyt, Oppstigning — pust ut din form",
+      "noir_detective": "Hver repetisjon er et ledetråd. Hver feil, en forbrytelse.",
+      "ogre": "Knus sterkt, liten-person — hulemonsterhype",
+      "olympic_coach": "V-form, eier kontroll, bio-mekanisk effektivitet",
+      "aussie_legend": "Kompis, du er gira — tror du har dette!",
+      "retro_gamer": "Nintetalsk spillskurk — combos, power-ups, game-overs",
+      "rio_flair": "Brasiliansk capoeira-stemning — ginga, flyt, axé"
+    }
   },
   "progress": {
     "title": "Progressjon",

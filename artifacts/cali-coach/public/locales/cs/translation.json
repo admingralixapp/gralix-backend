@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Hloubková analýza trendů techniky, nárůstu síly a výkonových metrik.",
     "packClaimed": "{{name}} uplatněno! 🎁",
     "packClaimedDesc": "Váš bonus za přihlášení byl aplikován.",
-    "somethingWentWrong": "Něco se pokazilo"
+    "somethingWentWrong": "Něco se pokazilo",
+    "voiceDesc": {
+      "classic": "Jasná, povzbuzující — hlas prohlížeče",
+      "classic_female": "Teplý, podpůrný — hlas prohlížeče",
+      "sergeant": "Vojenský náčelník — intenzivní, bez výmluv",
+      "sensei": "Starodávná moudrost aplikovaná na moderní pohyb",
+      "cyborg": "Chladný, vědecký AI — biomechanika a metriky",
+      "monk": "Zenith, plynulost, vzestup — dýchej svou formu",
+      "noir_detective": "Každý opak je vodítko. Každá chyba, skutek.",
+      "ogre": "Silný nápor, malý člověku — kmenový hype trolla",
+      "olympic_coach": "Tvar V, excentrická kontrola, biomechanická efektivita",
+      "aussie_legend": "Kámo, jsi nadšený — věříš si na to!",
+      "retro_gamer": "Hlas z her 90. let — komba, power-upy, game over",
+      "rio_flair": "Brazilské capoeira vibes — ginga, flow, axé"
+    }
   },
   "progress": {
     "title": "Pokrok",

@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Granska dina formtrender, styrkeökningar och prestanda i detalj.",
     "packClaimed": "{{name}} hämtat! 🎁",
     "packClaimedDesc": "Din Pro-signeringsbonus har tillämpats.",
-    "somethingWentWrong": "Något gick fel"
+    "somethingWentWrong": "Något gick fel",
+    "voiceDesc": {
+      "classic": "Klar, uppmuntrande — webbläsarens röst",
+      "classic_female": "Varm, stödjande — webbläsarens röst",
+      "sergeant": "Militära drillsergeant — intensiv, inga ursäkter",
+      "sensei": "Gammal visdom tillämpad på modern rörelse",
+      "cyborg": "Kall, klinisk AI — biomekanik & mätvärden",
+      "monk": "Zenit, Flow, Uppgång — andas din form",
+      "noir_detective": "Varje repetition är ett ledtråd. Varje misstag, ett brott.",
+      "ogre": "Krossa kraftfullt, liten-humanoid — grottmonster-hype",
+      "olympic_coach": "V-form, excentrisk kontroll, biomekanisk effektivitet",
+      "aussie_legend": "Kompis, du är taggad — du ser att du fixar detta!",
+      "retro_gamer": "Nittiotals-spelannonsör — kombos, power-ups, game-over",
+      "rio_flair": "Brasilianska capoeira-vibes — ginga, flow, axé"
+    }
   },
   "progress": {
     "title": "Framsteg",

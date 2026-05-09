@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Syväluota tekniikkanäkyviisi, voimannostojen kehittymiseen ja suoritustilastoihin.",
     "packClaimed": "{{name}} lunastettu! 🎁",
     "packClaimedDesc": "Pro-allekirjoitusbondisi on nyt käytössä.",
-    "somethingWentWrong": "Jokin meni pieleen"
+    "somethingWentWrong": "Jokin meni pieleen",
+    "voiceDesc": {
+      "classic": "Selkeä ja innostava — selaimen ääni",
+      "classic_female": "Lämmin ja tukevainen — selaimen ääni",
+      "sergeant": "Kunnan käännytysjärjestyksen harjoitusupseeri — intensiivinen, ei kepinälkiä",
+      "sensei": "Kuurin viisaus sovellettuna moderniin liikkeeseen",
+      "cyborg": "Kylmä, kliininen AI — biomekaniikka ja mittarit",
+      "monk": "Zenith, virtapiiri, kohoaminen — hengitä muotosi mukaan",
+      "noir_detective": "Jokainen toisto on johtolanka. Jokainen virhe on rikos.",
+      "ogre": "Räjähdä vahvasti, pieni-ihminen — luolaston hirviöinnätys",
+      "olympic_coach": "V-taperi, eccentrinen hallinta, biomekaaninen tehokkuus",
+      "aussie_legend": "Kaveri, olet innoissasi — uskot, että pystyt tähän!",
+      "retro_gamer": "90-luvun peliaiheinen kuuluttaja — combo, tehoste, game-over",
+      "rio_flair": "Brasilian capoeira-fiilis — ginga, flow, axé"
+    }
   },
   "progress": {
     "title": "Edistyminen",

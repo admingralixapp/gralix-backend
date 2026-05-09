@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Menganalisis tren bentuk, kenaikan kekuatan, dan metrik prestasi secara mendalam.",
     "packClaimed": "{{name}} telah diklaim! 🎁",
     "packClaimedDesc": "Bonus tandatangan Pro anda telah digunakan.",
-    "somethingWentWrong": "Ada sesuatu yang tidak kena"
+    "somethingWentWrong": "Ada sesuatu yang tidak kena",
+    "voiceDesc": {
+      "classic": "Jelas, memberi semangat — suara pelayar",
+      "classic_female": "Hangat, menyokong — suara pelayar",
+      "sergeant": "Jurutera latihan ketenteraan — intensif, tiada alasan",
+      "sensei": "Hikmah kuno digunakan untuk pergerakan moden",
+      "cyborg": "AI dingin dan klinikal — biomekanik & metrik",
+      "monk": "Ketinggian, Aliran, Ascension — nafas mengikut form anda",
+      "noir_detective": "Setiap rep adalah petunjuk. Setiap kesilapan, satu kesalahan.",
+      "ogre": "Hancurkan dengan kuat, manusia kecil — semangat makhluk gua",
+      "olympic_coach": "V-taper, kawalan eksentrik, keberkesanan biomekanikal",
+      "aussie_legend": "Bro, semangat kau membara — yakin kau mampu!",
+      "retro_gamer": "Pengumuman permainan era 90-an — kombos, kuasa, tamat permainan",
+      "rio_flair": "Vibe capoeira Brazil — ginga, aliran, axé"
+    }
   },
   "progress": {
     "title": "Kemajuan",

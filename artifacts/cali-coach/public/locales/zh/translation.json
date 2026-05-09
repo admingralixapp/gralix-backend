@@ -229,7 +229,21 @@
     "whyProItem4Desc": "深入了解你的动作趋势、力量增长与表现指标。",
     "packClaimed": "{{name}} 已领取！🎁",
     "packClaimedDesc": "你的Pro签约奖励已生效。",
-    "somethingWentWrong": "发生了点问题"
+    "somethingWentWrong": "发生了点问题",
+    "voiceDesc": {
+      "classic": "清晰而鼓舞人心——浏览器语音",
+      "classic_female": "温暖而支持——浏览器语音",
+      "sergeant": "军训教官——高强度，无借口的指导",
+      "sensei": "古老智慧融入现代动作",
+      "cyborg": "冷静、精准的AI——生物力学与指标分析",
+      "monk": "禅意、流动、升华——用呼吸塑造你的动作",
+      "noir_detective": "每一次重复都是线索，每个失误都是犯罪",
+      "ogre": "力量爆发，小人类——洞穴怪兽般的热情激励",
+      "olympic_coach": "V型倒角，偏心控制，生物力学效率，极致表现",
+      "aussie_legend": "队友，你充满激情——你绝对行！",
+      "retro_gamer": "90年代游戏解说——连击、能量、失败",
+      "rio_flair": "巴西卡波耶拉风情——摇摆、流动、阿谢"
+    }
   },
   "progress": {
     "title": "进度",

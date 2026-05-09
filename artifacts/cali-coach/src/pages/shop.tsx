@@ -91,7 +91,7 @@ function ClaimModal({
               <span className="text-2xl leading-none shrink-0">{voice.emoji}</span>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-white">{voice.label}</div>
-                <div className="text-[10px] text-white/50 leading-tight">{voice.description}</div>
+                <div className="text-[10px] text-white/50 leading-tight">{t(`shop.voiceDesc.${voice.id}`)}</div>
               </div>
               {chosen === voice.id && (
                 <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-yellow-500">
@@ -462,7 +462,7 @@ export function ShopPage() {
                     <span className="text-2xl leading-none">{p.emoji}</span>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-bold text-foreground truncate">{p.label}</div>
-                      <div className="text-[10px] text-muted-foreground leading-tight">{p.description}</div>
+                      <div className="text-[10px] text-muted-foreground leading-tight">{t(`shop.voiceDesc.${p.id}`)}</div>
                     </div>
                   </div>
                   <div className="flex gap-1.5">
@@ -553,7 +553,7 @@ export function ShopPage() {
                         </span>
                       )}
                     </div>
-                    <div className="text-[10px] text-muted-foreground leading-tight">{p.description}</div>
+                    <div className="text-[10px] text-muted-foreground leading-tight">{t(`shop.voiceDesc.${p.id}`)}</div>
                   </div>
                   <div className="flex gap-1.5 shrink-0">
                     <button
@@ -604,7 +604,7 @@ export function ShopPage() {
                           boxShadow: "0 2px 10px rgba(124,58,237,0.35)",
                         }}
                       >
-                        {purchase.isPending ? "…" : t("shop.buyFor", { price: "£4.99" })}
+                        {purchase.isPending ? "…" : t("shop.buyFor", { price: prices.pack })}
                       </button>
                     )}
                   </div>

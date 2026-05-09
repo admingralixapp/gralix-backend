@@ -229,7 +229,21 @@
     "whyProItem4Desc": "폼, 힘 향상, 성과 지표를 세밀하게 분석하세요.",
     "packClaimed": "{{name}} 클레임 완료! 🎁",
     "packClaimedDesc": "프로 가입 보너스가 적용되었습니다.",
-    "somethingWentWrong": "문제가 발생했습니다"
+    "somethingWentWrong": "문제가 발생했습니다",
+    "voiceDesc": {
+      "classic": "명확하고 격려하는 — 브라우저 음성",
+      "classic_female": "따뜻하고 지지하는 — 브라우저 여성 음성",
+      "sergeant": "군사 훈련 사령관 — 강렬하고 변명 없는 훈련 지시",
+      "sensei": "고대의 지혜를 현대 동작에 접목시키는",
+      "cyborg": "차갑고 과학적인 AI — 생체역학과 데이터 측정",
+      "monk": "선도, 흐름, 상승 — 폼을 호흡하라",
+      "noir_detective": "각 반복은 하나의 수사. 실수는 범죄다.",
+      "ogre": "강하게 때려 부수는, 작은 인간 — 동굴의 괴물 열기",
+      "olympic_coach": "V-라인, 이차적 컨트롤, 생체역학적 효율성 강화",
+      "aussie_legend": "친구야, 넌 열광 중 — 이걸 해낼 수 있다고 생각한다!",
+      "retro_gamer": "90년대 게임 해설자 — 콤보, 파워업, 게임 오버",
+      "rio_flair": "브라질 카포에이라 감성 — 긴가, 흐름, 아셰"
+    }
   },
   "progress": {
     "title": "진행 상황",

@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Form trendlerinizi, güç kazanımlarınızı ve performans metriklerinizi derinlemesine inceleyin.",
     "packClaimed": "{{name}} talep edildi! 🎁",
     "packClaimedDesc": "Pro imza bonusunuz uygulandı.",
-    "somethingWentWrong": "Bir sorun oluştu"
+    "somethingWentWrong": "Bir sorun oluştu",
+    "voiceDesc": {
+      "classic": "Net, teşvik edici — tarayıcı sesi",
+      "classic_female": "Sıcak, destekleyici — tarayıcı sesi",
+      "sergeant": "Askeri tatbikat çavuşu — yoğun, mazeretsiz",
+      "sensei": "Eski bilgelik, modern hareketlerle buluşuyor",
+      "cyborg": "Soğuk, klinik yapay zekâ — biyomekanik ve ölçümler",
+      "monk": "Zihin, akış, yükseliş — formunu nefesle yakala",
+      "noir_detective": "Her tekrarlı hareket bir ipucudur. Her hata, suçtur.",
+      "ogre": "Küçük insana güçle çarp — mağara canavarı motivasyonu",
+      "olympic_coach": "V-şekli, eccentric kontrol, biyomekanik verimlilik",
+      "aussie_legend": "Kanka, motive oldun — başarabilirsin bu işi!",
+      "retro_gamer": "90'lar oyunu anonsu — kombolar, güçlendirmeler, oyun sona erdi",
+      "rio_flair": "Brezilya capoeira enerjisi — ginga, akış, axé"
+    }
   },
   "progress": {
     "title": "İlerleme",

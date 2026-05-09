@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Telusuri tren form, peningkatan kekuatan, dan metrik performa Anda secara mendalam.",
     "packClaimed": "{{name}} diklaim! 🎁",
     "packClaimedDesc": "Bonus penandatanganan Pro Anda telah diterapkan.",
-    "somethingWentWrong": "Terjadi kesalahan"
+    "somethingWentWrong": "Terjadi kesalahan",
+    "voiceDesc": {
+      "classic": "Jelas, penuh semangat — suara dari browser",
+      "classic_female": "Hangat, mendukung — suara wanita dari browser",
+      "sergeant": "Sergeant latihan militer — intens, tanpa alasan",
+      "sensei": "Kebijaksanaan kuno diterapkan pada gerakan modern",
+      "cyborg": "AI dingin, klinis — biomekanika & metrik",
+      "monk": "Puncak, Aliran, Keagungan — hirup bentukmu",
+      "noir_detective": "Setiap repetisi adalah petunjuk. Setiap kesalahan, sebuah kejahatan.",
+      "ogre": "Hantam kuat, manusia kecil — semangat monster gua",
+      "olympic_coach": "V-taper, kontrol eksentrik, efisiensi biomekanik",
+      "aussie_legend": "Bro, semangatmu membara — yakin punya ini!",
+      "retro_gamer": "Pengumuman game tahun 90-an — kombinasi, power-up, game over",
+      "rio_flair": "Nuansa capoeira Brasil — ginga, aliran, axé"
+    }
   },
   "progress": {
     "title": "Kemajuan",

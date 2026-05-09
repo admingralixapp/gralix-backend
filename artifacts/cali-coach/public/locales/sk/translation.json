@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Hlboká analýza trendov vašej techniky, nárastu sily a výkonových metrík.",
     "packClaimed": "{{name}} uplatnené! 🎁",
     "packClaimedDesc": "Váš bonus za registráciu ako Pro bol použitý.",
-    "somethingWentWrong": "Niečo sa pokazilo"
+    "somethingWentWrong": "Niečo sa pokazilo",
+    "voiceDesc": {
+      "classic": "Jasné, povzbudivé — hlas prehliadača",
+      "classic_female": "Teplé, podporné — hlas prehliadača",
+      "sergeant": "Dôstojník vojenskej výzvy — intenzívny, bez výhovoriek",
+      "sensei": "Starodávna múdrosť aplikovaná na moderný pohyb",
+      "cyborg": "Chladný, klinický AI hlas — biomechanika a metriky",
+      "monk": "Zenit, plyn, duchovný rast — dýchaj svoju techniku",
+      "noir_detective": "Každý opak je stopa. Každá chyba, zločin.",
+      "ogre": "Zálohuj silno, malý človek — sprievod na jaskynný monštrum",
+      "olympic_coach": "Taper V, excentrická kontrola, biomechanická efektivita",
+      "aussie_legend": "Kamo, si nadšený — verím, že to dáš!",
+      "retro_gamer": "Hlas z 90. rokov — kombá, power-upy, koniec hry",
+      "rio_flair": "Brazilské flamenco vibes — ginga, flow, axé"
+    }
   },
   "progress": {
     "title": "Pokrok",

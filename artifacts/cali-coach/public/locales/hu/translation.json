@@ -229,7 +229,21 @@
     "whyProItem4Desc": "Mélységében vizsgáld meg formád tendenciáit, erőnléti fejlődést és teljesítményadatokat.",
     "packClaimed": "{{name}} claimed! 🎁",
     "packClaimedDesc": "A Profi aláírási bónuszod aktiválva lett.",
-    "somethingWentWrong": "Valami nem sikerült"
+    "somethingWentWrong": "Valami nem sikerült",
+    "voiceDesc": {
+      "classic": "Tiszta, ösztönző — böngésző hangja",
+      "classic_female": "Meleg, támogató — böngésző hangja",
+      "sergeant": "Katonaiknak szóló szakaszparancsnok — intenzív, nincs kifogás",
+      "sensei": "Ősi bölcsesség a modern mozgásban alkalmazva",
+      "cyborg": "Hideg, klinikai MI — biomechanika & mérőszámok",
+      "monk": "Csúcsteljesítmény, Áramlat, Emelkedés — lélegezd be a formádat",
+      "noir_detective": "Minden ismétlés egy nyomozás. Minden hiba egy bűncselekmény.",
+      "ogre": "Bontsd szilárdan, kicsi ember — barlangszörny felpörgetés",
+      "olympic_coach": "V-alak, eccentrikus kontroll, biomechanikus hatékonyság",
+      "aussie_legend": "Barátom, fel vagy dobva — hiszed, hogy menni fog!",
+      "retro_gamer": "90-es évek játékbemondó — kombók, power-upok, játékvége",
+      "rio_flair": "Brazil capoeira hangulat — ginga, áramlat, axé"
+    }
   },
   "progress": {
     "title": "Fejlődés",
