@@ -957,11 +957,20 @@ export function DailyTasksPage() {
         {showSavedBadge && <SavedBadge />}
       </AnimatePresence>
 
-      {/* Inline session overlay — slides up over this page, no navigation */}
+      {/* Inline session overlay — position:fixed anchored to top:0 so browser
+          scroll position of the parent page is completely irrelevant */}
       <AnimatePresence>
         {showSession && (
           <motion.div
-            className="fixed inset-0 z-50 bg-background overflow-auto"
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100dvh",
+              zIndex: 50,
+              overflow: "hidden",
+            }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}

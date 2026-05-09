@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Flame, Pause, Play, SkipForward, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -102,6 +102,7 @@ function readCachedPrefs(): CachedPrefs | null {
 }
 
 export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () => void; autoStart?: boolean } = {}) {
+  const [, setLocation] = useLocation();
   const { data: status } = useMobilityStatus();
   const completeMobility = useCompleteMobility();
 
@@ -189,8 +190,12 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
 
   function exitSession() {
     setPaused(false);
-    setPageState("ready");
-    setStretchIndex(0);
+    // Exit = leave this section entirely — no intermediate "ready" screen
+    if (onDismiss) {
+      onDismiss();
+    } else {
+      setLocation("/");
+    }
   }
 
   // ── READY STATE ──────────────────────────────────────────────────────────
