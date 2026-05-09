@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useGetSession } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +57,7 @@ function ClipPlayer({ objectPath }: { objectPath: string }) {
 // ─── SessionDetail ────────────────────────────────────────────────────────────
 
 export function SessionDetail() {
+  const { t } = useTranslation();
   const params = useParams();
   const id = parseInt(params.id || "0");
   const { data: session, isLoading } = useGetSession(id, {
@@ -84,7 +86,7 @@ export function SessionDetail() {
     <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
       <Button variant="ghost" asChild className="pl-0 hover:bg-transparent hover:text-primary">
         <Link href="/history">
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back to History
+          <ArrowLeft className="w-4 h-4 mr-2" /> {t("session.backToHistory")}
         </Link>
       </Button>
 
@@ -100,7 +102,7 @@ export function SessionDetail() {
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
             style={{ boxShadow: "0 0 8px rgba(16,185,129,0.2)" }}>
             <ShieldCheck className="w-3.5 h-3.5" />
-            AI Verified
+            {t("session.aiVerified")}
           </span>
         )}
       </div>
@@ -113,7 +115,7 @@ export function SessionDetail() {
               <Activity className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <div className="text-sm font-medium text-muted-foreground">Total Reps</div>
+              <div className="text-sm font-medium text-muted-foreground">{t("session.totalReps")}</div>
               <div className="text-3xl font-bold">{session.totalReps}</div>
             </div>
           </CardContent>
@@ -125,7 +127,7 @@ export function SessionDetail() {
               <Target className="w-6 h-6 text-blue-500" />
             </div>
             <div>
-              <div className="text-sm font-medium text-muted-foreground">Avg Form Score</div>
+              <div className="text-sm font-medium text-muted-foreground">{t("session.avgFormScore")}</div>
               <div className="text-3xl font-bold">
                 {session.avgFormScore ? Math.round(session.avgFormScore) : "--"}
               </div>
@@ -139,7 +141,7 @@ export function SessionDetail() {
               <Clock className="w-6 h-6 text-orange-500" />
             </div>
             <div>
-              <div className="text-sm font-medium text-muted-foreground">Duration</div>
+              <div className="text-sm font-medium text-muted-foreground">{t("session.duration")}</div>
               <div className="text-3xl font-bold">{durationStr}</div>
             </div>
           </CardContent>
@@ -153,13 +155,13 @@ export function SessionDetail() {
             <div className="flex items-center justify-between flex-wrap gap-3">
               <CardTitle className="flex items-center gap-2">
                 <Video className="w-5 h-5 text-blue-400" />
-                Saved Clip
+                {t("session.savedClip")}
               </CardTitle>
               <div className="flex items-center gap-3">
                 {expires !== null && (
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock3 className="w-3 h-3" />
-                    Expires in {expires} day{expires !== 1 ? "s" : ""}
+                    {t("session.expiresInDays", { count: expires })}
                   </span>
                 )}
                 {session.isVerified && (
@@ -170,7 +172,7 @@ export function SessionDetail() {
                     onClick={() => setShowShare(true)}
                   >
                     <Share2 className="w-3.5 h-3.5" />
-                    Share to Community
+                    {t("session.shareToCommunity")}
                   </Button>
                 )}
               </div>
@@ -179,7 +181,7 @@ export function SessionDetail() {
           <CardContent>
             <ClipPlayer objectPath={clip.objectPath} />
             <p className="text-[11px] text-muted-foreground mt-2">
-              Loops automatically · tap to play / pause · expires in {expires ?? 0} day{expires !== 1 ? "s" : ""}
+              {t("session.loopsNote", { count: expires ?? 0 })}
             </p>
           </CardContent>
         </Card>
@@ -188,9 +190,7 @@ export function SessionDetail() {
           <CardContent className="p-6 text-center">
             <Video className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
-              No clip saved for this session. Use{" "}
-              <span className="text-foreground font-medium">"Save to History"</span>{" "}
-              on the POV Review screen after your next set.
+              {t("session.noClipSaved")}
             </p>
           </CardContent>
         </Card>
@@ -200,7 +200,7 @@ export function SessionDetail() {
       {session.reps.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Form Score by Rep</CardTitle>
+            <CardTitle>{t("session.formScoreByRep")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
@@ -247,7 +247,7 @@ export function SessionDetail() {
       {session.notes && (
         <Card>
           <CardHeader>
-            <CardTitle>Notes</CardTitle>
+            <CardTitle>{t("session.notes")}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm whitespace-pre-wrap">{session.notes}</p>

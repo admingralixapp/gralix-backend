@@ -4,6 +4,7 @@
  */
 
 import { useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Flame,
@@ -154,6 +155,7 @@ function Avatar({ url, name, size = 8 }: { url: string | null; name: string; siz
 // ─── Video card ───────────────────────────────────────────────────────────────
 
 function VideoCard({ post }: { post: FeedPost }) {
+  const { t } = useTranslation();
   const videoRef                      = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying]         = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -199,12 +201,12 @@ function VideoCard({ post }: { post: FeedPost }) {
             {post.isAiVerified ? (
               <span className="flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded-full border border-emerald-400/20 shrink-0">
                 <CheckCircle2 className="w-2.5 h-2.5" />
-                AI Verified
+                {t("community.aiVerified")}
               </span>
             ) : (
               <span className="flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 bg-slate-400/10 px-1.5 py-0.5 rounded-full border border-slate-400/20 shrink-0">
                 <Shield className="w-2.5 h-2.5" />
-                Self-Reported
+                {t("community.selfReported")}
               </span>
             )}
           </div>
@@ -280,7 +282,7 @@ function VideoCard({ post }: { post: FeedPost }) {
         >
           <div className="flex flex-col items-center gap-2">
             <Video className="w-8 h-8 opacity-30" />
-            <span className="text-xs opacity-40">No clip attached</span>
+            <span className="text-xs opacity-40">{t("community.noClipAttached")}</span>
           </div>
         </div>
       )}
@@ -314,7 +316,7 @@ function VideoCard({ post }: { post: FeedPost }) {
           )}
         >
           <MessageCircle className={cn("w-5 h-5", showComments && "fill-cyan-400/20")} />
-          <span>Comment</span>
+          <span>{t("community.comment")}</span>
           <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showComments && "rotate-180")} />
         </button>
       </div>
@@ -340,6 +342,7 @@ function VideoCard({ post }: { post: FeedPost }) {
 // ─── Comments panel ───────────────────────────────────────────────────────────
 
 function CommentsPanel({ postId }: { postId: number }) {
+  const { t } = useTranslation();
   const { user } = useUser();
   const { data: comments, isLoading } = usePostComments(postId);
   const addComment = useAddComment(postId);
@@ -360,7 +363,7 @@ function CommentsPanel({ postId }: { postId: number }) {
           </div>
         )}
         {!isLoading && (!comments || comments.length === 0) && (
-          <p className="text-xs text-white/25 text-center py-2">No comments yet. Be first!</p>
+          <p className="text-xs text-white/25 text-center py-2">{t("community.noCommentsYet")}</p>
         )}
         {comments?.map((c: FeedComment) => (
           <div key={c.id} className="flex gap-2.5 items-start">
@@ -378,7 +381,7 @@ function CommentsPanel({ postId }: { postId: number }) {
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Add a comment…"
+            placeholder={t("community.addCommentPlaceholder")}
             className="flex-1 bg-white/[0.06] border border-white/10 rounded-full px-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-400/40 transition-colors"
             maxLength={280}
           />
@@ -393,7 +396,7 @@ function CommentsPanel({ postId }: { postId: number }) {
           </button>
         </form>
       ) : (
-        <p className="text-xs text-white/30 text-center">Sign in to comment</p>
+        <p className="text-xs text-white/30 text-center">{t("community.signInToComment")}</p>
       )}
     </div>
   );
@@ -402,6 +405,7 @@ function CommentsPanel({ postId }: { postId: number }) {
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
 function EmptyFeed({ category }: { category: CategoryFilter }) {
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
 
   return (
@@ -441,7 +445,7 @@ function EmptyFeed({ category }: { category: CategoryFilter }) {
         }}
       >
         <Dumbbell className="w-4 h-4" />
-        Start Workout
+        {t("community.startWorkout")}
       </button>
     </motion.div>
   );
@@ -500,6 +504,7 @@ function CategoryFilterBar({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function CommunityFeedPage() {
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
   const [searchQuery,    setSearchQuery]    = useState("");
 
@@ -530,8 +535,8 @@ export function CommunityFeedPage() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 pt-2">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white">Community</h1>
-          <p className="text-sm text-white/40 mt-0.5">Workouts from athletes around the world</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-white">{t("community.title")}</h1>
+          <p className="text-sm text-white/40 mt-0.5">{t("community.worldwideSubtitle")}</p>
         </div>
         <div
           className="w-2 h-2 rounded-full mt-3 shrink-0"
@@ -556,7 +561,7 @@ export function CommunityFeedPage() {
         <input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by athlete, exercise or #hashtag…"
+          placeholder={t("community.searchPlaceholder")}
           className="w-full bg-transparent pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-white/28 focus:outline-none rounded-[13px]"
         />
         {searchQuery && (
@@ -594,7 +599,7 @@ export function CommunityFeedPage() {
 
       {error && (
         <div className="text-center py-12 text-red-400/70 text-sm">
-          Failed to load feed. Please try again.
+          {t("community.failedToLoad")}
         </div>
       )}
 

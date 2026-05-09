@@ -6,6 +6,7 @@
   "scripts": {
     "hello": "tsx ./src/hello.ts",
     "translate": "tsx ./src/translate-all.ts",
+    "translate:gaps": "tsx ./src/translate-elevenlabs-gaps.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
