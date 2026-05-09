@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { MobilityPage } from "@/pages/mobility";
 import {
@@ -157,6 +158,14 @@ const EXTENDED_BODY_PARTS = [
 
 const QUICK_TAGS = ["Wrists", "Shoulders", "Hips", "Ankles", "Lower Back"] as const;
 
+// ─── i18n key helpers ─────────────────────────────────────────────────────────
+
+/** "Lower Back" → "lower_back", "IT Band" → "it_band" */
+const toKey = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/_+$/, "");
+
+/** "front-lever" → "frontLever", "muscle-up" → "muscleUp" */
+const goalToKey = (g: string) => g.replace(/-([a-z])/g, (_: string, c: string) => c.toUpperCase());
+
 // ─── Glassmorphism dropdown shared style ──────────────────────────────────────
 
 const GLASS_DROPDOWN: CSSProperties = {
@@ -184,6 +193,7 @@ function Questionnaire({
   onSave,
   onClose,
 }: QuestionnaireProps) {
+  const { t } = useTranslation();
   const initGoalItem = GOAL_SEARCH_DB.find(g => g.value === (initialGoal || "general"));
   const [goal,       setGoal]       = useState(initialGoal || "general");
   const [goalQuery,  setGoalQuery]  = useState(initGoalItem?.label ?? "");
@@ -225,7 +235,7 @@ function Questionnaire({
     setAreaOpen(false);
   }
 
-  const selectedGoalLabel = GOAL_LABELS[goal as MobilityGoal] ?? goal;
+  const selectedGoalLabel = t(`mobility.goals.${goalToKey(goal)}`, { defaultValue: GOAL_LABELS[goal as MobilityGoal] ?? goal });
 
   return (
     <motion.div
@@ -249,9 +259,9 @@ function Questionnaire({
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/[0.08]">
           <div>
-            <h2 className="text-lg font-extrabold">Update My Goals</h2>
+            <h2 className="text-lg font-extrabold">{t("mobility.updateMyGoals")}</h2>
             <p className="text-sm text-muted-foreground font-light opacity-80">
-              Personalise your daily mobility tasks
+              {t("mobility.personaliseSubtitle")}
             </p>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-full hover:bg-secondary transition-colors">
@@ -264,7 +274,7 @@ function Questionnaire({
           {/* Q1 — Primary goal (search) */}
           <div className="space-y-3">
             <p className="text-sm font-semibold text-foreground">
-              What is your primary calisthenics goal?
+              {t("mobility.questionGoal")}
             </p>
 
             {/* Selected badge */}
@@ -272,7 +282,7 @@ function Questionnaire({
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-bold">
                 {selectedGoalLabel}
               </span>
-              <span className="text-xs text-muted-foreground">Tap below to change</span>
+              <span className="text-xs text-muted-foreground">{t("mobility.tapToChange")}</span>
             </div>
 
             {/* Search input */}
@@ -284,7 +294,7 @@ function Questionnaire({
                   onChange={e => { setGoalQuery(e.target.value); setGoalOpen(true); }}
                   onFocus={() => setGoalOpen(true)}
                   onBlur={() => setTimeout(() => setGoalOpen(false), 160)}
-                  placeholder="Search a movement or skill…"
+                  placeholder={t("mobility.searchMovement")}
                   className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-background/60 border border-border text-sm focus:outline-none focus:border-primary/50 transition-colors placeholder:text-muted-foreground/50"
                 />
               </div>
@@ -308,7 +318,7 @@ function Questionnaire({
                     >
                       <span className="font-medium">{item.label}</span>
                       <span className="text-[10px] text-muted-foreground shrink-0">
-                        {GOAL_LABELS[item.value]}
+                        {t(`mobility.goals.${goalToKey(item.value)}`, { defaultValue: GOAL_LABELS[item.value] })}
                       </span>
                     </button>
                   ))}
@@ -320,8 +330,8 @@ function Questionnaire({
           {/* Q2 — Stiffness areas (search + quick tags) */}
           <div className="space-y-3">
             <p className="text-sm font-semibold text-foreground">
-              What muscles and joints are holding you back?{" "}
-              <span className="font-normal text-muted-foreground">(pick all that apply)</span>
+              {t("mobility.questionMuscles")}{" "}
+              <span className="font-normal text-muted-foreground">{t("mobility.pickAll")}</span>
             </p>
 
             {/* Selected chips */}
@@ -332,7 +342,7 @@ function Questionnaire({
                     key={a}
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-medium"
                   >
-                    {a}
+                    {t(`mobility.areas.${toKey(a)}`, { defaultValue: a })}
                     <button
                       onClick={() => toggleArea(a)}
                       className="ml-0.5 opacity-60 hover:opacity-100 transition-opacity"
@@ -353,7 +363,7 @@ function Questionnaire({
                   onChange={e => { setAreaQuery(e.target.value); setAreaOpen(true); }}
                   onFocus={() => { setAreaOpen(true); }}
                   onBlur={() => setTimeout(() => setAreaOpen(false), 160)}
-                  placeholder="Search a body part…"
+                  placeholder={t("mobility.searchBodyPart")}
                   className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-background/60 border border-border text-sm focus:outline-none focus:border-primary/50 transition-colors placeholder:text-muted-foreground/50"
                 />
               </div>
@@ -370,7 +380,7 @@ function Questionnaire({
                       onMouseDown={() => addArea(part)}
                       className="w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-white/[0.05] transition-colors font-medium"
                     >
-                      {part}
+                      {t(`mobility.areas.${toKey(part)}`, { defaultValue: part })}
                     </button>
                   ))}
                 </div>
@@ -380,7 +390,7 @@ function Questionnaire({
             {/* Quick-select suggested tags */}
             <div>
               <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mb-2">
-                Suggested
+                {t("mobility.suggested")}
               </p>
               <div className="flex flex-wrap gap-2">
                 {QUICK_TAGS.map(tag => (
@@ -394,7 +404,7 @@ function Questionnaire({
                         : "border-border bg-background/40 text-muted-foreground hover:border-muted-foreground hover:text-foreground",
                     )}
                   >
-                    {tag}
+                    {t(`mobility.areas.${toKey(tag)}`, { defaultValue: tag })}
                   </button>
                 ))}
               </div>
@@ -404,21 +414,21 @@ function Questionnaire({
           {/* Q3 — Daily time */}
           <div className="space-y-3">
             <p className="text-sm font-semibold text-foreground">
-              How much time can you commit to daily mobility?
+              {t("mobility.questionTime")}
             </p>
             <div className="flex gap-3">
-              {TIME_OPTIONS.map(t => (
+              {TIME_OPTIONS.map(mins => (
                 <button
-                  key={t}
-                  onClick={() => setTime(t)}
+                  key={mins}
+                  onClick={() => setTime(mins)}
                   className={cn(
                     "flex-1 py-3 rounded-xl border text-sm font-bold transition-all",
-                    time === t
+                    time === mins
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border bg-background/50 text-muted-foreground hover:border-muted-foreground",
                   )}
                 >
-                  {t} min
+                  {t("mobility.minSuffix", { n: mins })}
                 </button>
               ))}
             </div>
@@ -431,7 +441,7 @@ function Questionnaire({
             size="lg"
             onClick={() => onSave(goal, areas, time)}
           >
-            Save My Preferences
+            {t("mobility.savePreferences")}
           </Button>
         </div>
       </motion.div>
@@ -442,6 +452,7 @@ function Questionnaire({
 // ─── Saved checkmark flash ────────────────────────────────────────────────────
 
 function SavedBadge() {
+  const { t } = useTranslation();
   return (
     <motion.div
       className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold shadow-lg pointer-events-none"
@@ -451,7 +462,7 @@ function SavedBadge() {
       transition={{ type: "spring", stiffness: 360, damping: 28 }}
     >
       <CheckCircle2 className="w-4 h-4" />
-      Goals Updated! Your routine has been personalized.
+      {t("mobility.goalsUpdatedBadge")}
     </motion.div>
   );
 }
@@ -460,6 +471,7 @@ function SavedBadge() {
 
 function TaskCard({
   index,
+  stretchId,
   name,
   muscles,
   durationSeconds,
@@ -467,13 +479,18 @@ function TaskCard({
   why,
 }: {
   index: number;
+  stretchId: string;
   name: string;
   muscles: string[];
   durationSeconds: number;
   cue: string;
   why: string;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
+
+  const displayName = t(`mobility.stretches.${stretchId}`, { defaultValue: name });
+  const displayMuscles = muscles.map(m => t(`mobility.muscles.${toKey(m)}`, { defaultValue: m }));
 
   return (
     <div
@@ -491,9 +508,9 @@ function TaskCard({
           {index + 1}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-bold text-sm truncate">{name}</div>
+          <div className="font-bold text-sm truncate">{displayName}</div>
           <div className="text-xs text-muted-foreground font-light opacity-80">
-            {muscles.slice(0, 2).join(" · ")}
+            {displayMuscles.slice(0, 2).join(" · ")}
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -547,6 +564,7 @@ function NotificationCard({
   onToggle: () => void;
   onTimeChange: (t: string) => void;
 }) {
+  const { t } = useTranslation();
   const areas = stiffnessAreas
     ? stiffnessAreas.split(",").filter(Boolean).slice(0, 2).join(" & ")
     : "";
@@ -563,7 +581,7 @@ function NotificationCard({
             <BellOff className="w-4 h-4 text-muted-foreground" />
           )}
           <span className="text-sm font-semibold">
-            {enabled ? "Daily Reminder On" : "Daily Reminder Off"}
+            {enabled ? t("mobility.reminderOn") : t("mobility.reminderOff")}
           </span>
         </div>
         <button
@@ -588,7 +606,7 @@ function NotificationCard({
         <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
           <BellOff className="w-3.5 h-3.5 text-destructive shrink-0 mt-px" />
           <p className="text-xs text-destructive leading-relaxed">
-            Notifications are blocked. Please enable them in your browser settings to receive reminders.
+            {t("mobility.notificationsBlocked")}
           </p>
         </div>
       )}
@@ -597,7 +615,7 @@ function NotificationCard({
         <>
           <div className="flex items-center gap-2">
             <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Remind me at</span>
+            <span className="text-xs text-muted-foreground">{t("mobility.remindMeAt")}</span>
             <input
               type="time"
               value={notificationTime}
@@ -617,6 +635,7 @@ function NotificationCard({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function DailyTasksPage() {
+  const { t }              = useTranslation();
   const { data: status }   = useMobilityStatus();
   const updateSettings     = useUpdateMobilitySettings();
   const { toast }          = useToast();
@@ -707,7 +726,7 @@ export function DailyTasksPage() {
   useNotificationScheduler(status);
 
   const goal             = localPrefs.mobilityGoal as MobilityGoal;
-  const goalLabel        = GOAL_LABELS[goal] ?? goal;
+  const goalLabel        = t(`mobility.goals.${goalToKey(goal)}`, { defaultValue: GOAL_LABELS[goal] ?? goal });
   const stiffnessAreas   = localPrefs.stiffnessAreas;
   const dailyTimeMinutes = localPrefs.dailyTimeMinutes;
   const enabled          = localNotif.enabled;
@@ -825,15 +844,15 @@ export function DailyTasksPage() {
       {/* Page header */}
       <div className="flex items-start justify-between pt-1">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Daily Tasks</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">{t("mobility.title")}</h1>
           <p className="text-sm text-muted-foreground font-light opacity-80 mt-0.5">
-            Your personalised mobility plan
+            {t("mobility.subtitle")}
           </p>
         </div>
         {(status?.currentStreak ?? 0) > 0 && (
           <div className="flex items-center gap-1.5 bg-orange-500/10 text-orange-400 rounded-full px-3 py-1 text-sm font-semibold shrink-0">
             <Flame className="w-4 h-4" />
-            {status?.currentStreak}d streak
+            {t("mobility.streak", { count: status?.currentStreak })}
           </div>
         )}
       </div>
@@ -843,7 +862,7 @@ export function DailyTasksPage() {
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <div className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">
-              Current Goal
+              {t("mobility.currentGoal")}
             </div>
             <div className="font-extrabold text-lg leading-tight">{goalLabel}</div>
             {areasArray.length > 0 && (
@@ -853,7 +872,7 @@ export function DailyTasksPage() {
                     key={a}
                     className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
                   >
-                    {a}
+                    {t(`mobility.areas.${toKey(a)}`, { defaultValue: a })}
                   </span>
                 ))}
               </div>
@@ -864,17 +883,17 @@ export function DailyTasksPage() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-colors shrink-0"
           >
             <Pencil className="w-3.5 h-3.5" />
-            Update Goals
+            {t("mobility.updateGoals")}
           </button>
         </div>
 
         <div className="flex items-center gap-3 text-xs text-muted-foreground border-t border-border/50 pt-3">
           <span className="flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />
-            {dailyTimeMinutes} min / day
+            {t("mobility.minPerDay", { count: dailyTimeMinutes })}
           </span>
           <span>·</span>
-          <span>{tasks.length} exercises (~{totalMin} min)</span>
+          <span>{t("mobility.exerciseCount", { count: tasks.length, min: totalMin })}</span>
         </div>
       </div>
 
@@ -883,7 +902,7 @@ export function DailyTasksPage() {
         <div className="flex items-center gap-2 p-4 rounded-xl bg-primary/10 border border-primary/30 text-primary">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span className="text-sm font-medium">
-            You've completed today's session — great work!
+            {t("mobility.completedToday")}
           </span>
         </div>
       )}
@@ -891,7 +910,7 @@ export function DailyTasksPage() {
       {/* Task list */}
       <div className="space-y-2.5">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
-          Today's Tasks
+          {t("mobility.todaysTasks")}
         </h2>
 
         <AnimatePresence mode="popLayout">
@@ -906,6 +925,7 @@ export function DailyTasksPage() {
             >
               <TaskCard
                 index={i}
+                stretchId={stretch.id}
                 name={stretch.name}
                 muscles={stretch.targetMuscles}
                 durationSeconds={stretch.durationSeconds}
@@ -929,7 +949,7 @@ export function DailyTasksPage() {
           }}
         >
           <Play className="w-5 h-5 mr-2" />
-          {status?.completedToday ? "Repeat Session" : "Start Today's Session"}
+          {status?.completedToday ? t("mobility.repeatSession") : t("mobility.startSession")}
         </Button>
       )}
 
