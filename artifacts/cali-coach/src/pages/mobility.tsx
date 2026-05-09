@@ -100,7 +100,7 @@ function readCachedPrefs(): CachedPrefs | null {
   catch { return null; }
 }
 
-export function MobilityPage({ onDismiss }: { onDismiss?: () => void } = {}) {
+export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () => void; autoStart?: boolean } = {}) {
   const { data: status } = useMobilityStatus();
   const completeMobility = useCompleteMobility();
 
@@ -116,7 +116,7 @@ export function MobilityPage({ onDismiss }: { onDismiss?: () => void } = {}) {
 
   const routine = getTasksForPreferences(goal, areasArray, dailyTimeMinutes);
 
-  const [pageState, setPageState] = useState<PageState>("ready");
+  const [pageState, setPageState] = useState<PageState>(autoStart ? "active" : "ready");
   const [stretchIndex, setStretchIndex] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [finalStreak, setFinalStreak] = useState<number | null>(null);

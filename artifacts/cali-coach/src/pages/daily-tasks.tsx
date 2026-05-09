@@ -624,6 +624,7 @@ export function DailyTasksPage() {
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [showSavedBadge,    setShowSavedBadge]    = useState(false);
   const [showSession,       setShowSession]       = useState(false);
+  const [autoStart,         setAutoStart]         = useState(false);
 
   // ── Optimistic local preferences ──────────────────────────────────────────
   // Initialised from localStorage (instant) then overwritten by server data.
@@ -901,7 +902,11 @@ export function DailyTasksPage() {
       <Button
         size="lg"
         className="w-full font-bold"
-        onClick={() => setShowSession(true)}
+        onClick={() => {
+          const repeat = !!status?.completedToday;
+          setAutoStart(repeat);
+          setShowSession(true);
+        }}
       >
         <Play className="w-5 h-5 mr-2" />
         {status?.completedToday ? "Repeat Session" : "Start Today's Session"}
@@ -947,7 +952,7 @@ export function DailyTasksPage() {
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 32, stiffness: 320 }}
           >
-            <MobilityPage onDismiss={() => setShowSession(false)} />
+            <MobilityPage onDismiss={() => setShowSession(false)} autoStart={autoStart} />
           </motion.div>
         )}
       </AnimatePresence>
