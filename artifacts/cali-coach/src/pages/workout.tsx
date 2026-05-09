@@ -802,8 +802,9 @@ export function Workout() {
   const makeCueCacheKey = useCallback((exercise: string, cue: string): string => {
     const slug = (s: string) =>
       s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 30);
-    return `${slug(exercise)}:${slug(cue)}`;
-  }, []);
+    const lang = i18n.language !== "en" ? i18n.language : "general";
+    return `${lang}:${slug(exercise)}:${slug(cue)}`;
+  }, [i18n.language]);
 
   const speakFormCue = useCallback((
     text:     string,
@@ -850,7 +851,7 @@ export function Workout() {
         );
       } catch {
         setIsModelLoading(false);
-        toast({ title: "Pose tracking unavailable", description: "Could not load the vision library. Check your connection.", variant: "destructive" });
+        toast({ title: t("workout.poseTrackingUnavailable"), description: t("workout.poseTrackingDesc"), variant: "destructive" });
         return;
       }
 
@@ -1497,7 +1498,7 @@ export function Workout() {
   // ── Start — enters Calibration Phase ──────────────────────────────────────
   const handleStart = async () => {
     if (!selectedExerciseId) {
-      toast({ title: "Select an exercise", description: "Pick an exercise before starting." });
+      toast({ title: t("workout.selectExerciseFirst"), description: t("workout.pickExerciseFirst") });
       return;
     }
     // Eagerly unlock the AudioContext during this user-gesture click so ElevenLabs
@@ -1663,8 +1664,8 @@ export function Workout() {
       for (const badge of milestones) {
         setTimeout(() => {
           toast({
-            title: `🏅 Milestone Unlocked: ${badge.name}`,
-            description: `${badge.icon} You've earned the ${badge.tier} badge for ${badge.category} volume!`,
+            title: t("workout.milestoneUnlocked", { name: badge.name }),
+            description: t("workout.milestoneDesc", { icon: badge.icon, tier: badge.tier, category: badge.category }),
           });
         }, 800);
       }
@@ -1674,8 +1675,8 @@ export function Workout() {
       for (const et of exerciseTiers) {
         setTimeout(() => {
           toast({
-            title: `${et.icon} New Title: "${et.title}"`,
-            description: `${et.exerciseName} · ${et.tier} mastery unlocked!`,
+            title: t("workout.newTitle", { icon: et.icon, title: et.title }),
+            description: t("workout.newTitleDesc", { exercise: et.exerciseName, tier: et.tier }),
           });
         }, 1200);
       }
@@ -2260,19 +2261,15 @@ export function Workout() {
                     >
                       <div className="flex items-center gap-2">
                         <Lock className="w-4 h-4 text-red-400 shrink-0" />
-                        <span className="text-sm font-bold text-red-400">Exercise Locked</span>
+                        <span className="text-sm font-bold text-red-400">{t("workout.exerciseLocked")}</span>
                       </div>
                       {prereqNode ? (
                         <p className="text-xs text-white/60 leading-relaxed">
-                          Complete{" "}
-                          <span className="font-semibold text-white/80">
-                            Lv.{prereqNode.level} {prereqNode.title}
-                          </span>{" "}
-                          in the Skill Tree to unlock this exercise.
+                          {t("workout.exerciseLockedPrereq", { level: prereqNode.level, title: prereqNode.title })}
                         </p>
                       ) : (
                         <p className="text-xs text-white/60 leading-relaxed">
-                          Complete the prerequisite skill in the Skill Tree to unlock this exercise.
+                          {t("workout.exerciseLockedGeneric")}
                         </p>
                       )}
                       <button
@@ -2286,7 +2283,7 @@ export function Workout() {
                         }}
                       >
                         <Activity className="w-3.5 h-3.5 text-primary" />
-                        View in Skill Tree
+                        {t("workout.viewSkillTree")}
                       </button>
                     </div>
                   )}
@@ -2295,7 +2292,7 @@ export function Workout() {
                   {infoEx && infoEx.muscleGroups.length > 0 && (
                     <div>
                       <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
-                        <Info className="w-3 h-3" /> Target Muscles
+                        <Info className="w-3 h-3" /> {t("workout.targetMuscles")}
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {infoEx.muscleGroups.map(m => (
@@ -2314,7 +2311,7 @@ export function Workout() {
                   {infoConfig && infoConfig.criticalJoints.length > 0 && (
                     <div>
                       <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
-                        <Crosshair className="w-3 h-3 text-primary" /> Critical Joints
+                        <Crosshair className="w-3 h-3 text-primary" /> {t("workout.criticalJoints")}
                       </div>
                       <ul className="space-y-2.5">
                         {infoConfig.criticalJoints.map((joint, i) => (
@@ -2338,7 +2335,7 @@ export function Workout() {
                       style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
                     >
                       <Lock className="w-4 h-4" />
-                      Locked — complete prerequisite first
+                      {t("workout.lockedCompleteFirst")}
                     </div>
                   ) : (
                     <Button
@@ -2348,7 +2345,7 @@ export function Workout() {
                         setInfoExercise(null);
                       }}
                     >
-                      Train {infoExercise.name}
+                      {t("workout.trainExercise", { name: infoExercise.name })}
                     </Button>
                   )}
                 </div>
@@ -2387,7 +2384,7 @@ export function Workout() {
                 style={{ background: "rgba(0,0,0,0.72)", border: "1px solid rgba(255,255,255,0.12)" }}
               >
                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                <p className="text-sm font-semibold text-white/90">Camera Initializing…</p>
+                <p className="text-sm font-semibold text-white/90">{t("workout.cameraInitializing")}</p>
               </div>
             </div>
           )}
@@ -2434,7 +2431,7 @@ export function Workout() {
                 }}
               >
                 {minimalistMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                {minimalistMode ? "Minimalist" : "Full Skeleton"}
+                {minimalistMode ? t("workout.minimalist") : t("workout.fullSkeleton")}
               </button>
               <button
                 onClick={() => setVoicePacing(!voicePacing)}
@@ -2446,7 +2443,7 @@ export function Workout() {
                 }}
               >
                 {voicePacing ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
-                Voice Pacing
+                {t("workout.voicePacing")}
               </button>
               {/* Listening wave indicator */}
               {voiceCommandsEnabled && isListening && (
@@ -2459,7 +2456,7 @@ export function Workout() {
                   }}
                 >
                   <Mic className="w-3.5 h-3.5" />
-                  Listening
+                  {t("workout.listeningLabel")}
                 </div>
               )}
             </div>
@@ -2470,7 +2467,7 @@ export function Workout() {
             <div className="absolute top-4 right-4 flex flex-col items-end gap-1.5 select-none">
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 border border-cyan-500/40 text-xs font-semibold text-cyan-300">
                 <Ghost className="w-3.5 h-3.5" />
-                Ghost Mode
+                {t("workout.ghostMode")}
               </div>
               {(() => {
                 const ex = exercises?.find(e => e.id.toString() === selectedExerciseId);
@@ -2493,7 +2490,7 @@ export function Workout() {
 
               {isStaticExercise ? (
                 <div className="flex flex-col items-start gap-2">
-                  <span className="text-sm font-mono text-white/70 uppercase tracking-widest">Hold Time</span>
+                  <span className="text-sm font-mono text-white/70 uppercase tracking-widest">{t("workout.holdTime")}</span>
                   <span
                     className="text-8xl font-black leading-none tracking-tighter drop-shadow-lg"
                     style={{ color: isInActiveZone ? "#22c55e" : "#ef4444" }}
@@ -2508,12 +2505,12 @@ export function Workout() {
                       border: `1px solid ${isInActiveZone ? "rgba(34,197,94,0.5)" : "rgba(239,68,68,0.5)"}`,
                     }}
                   >
-                    {isInActiveZone ? "● Synced — hold it" : "○ Match ghost position"}
+                    {isInActiveZone ? t("workout.syncedHoldIt") : t("workout.matchGhost")}
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center">
-                  <span className="text-sm font-mono text-white/70 uppercase tracking-widest">Reps</span>
+                  <span className="text-sm font-mono text-white/70 uppercase tracking-widest">{t("workout.repsLabel")}</span>
                   <span className="text-8xl font-black text-primary leading-none tracking-tighter drop-shadow-lg">
                     {reps - setStartRepCountRef.current}
                   </span>
@@ -2522,7 +2519,7 @@ export function Workout() {
 
               {hasGhostConfig && (
                 <div className="flex flex-col items-center gap-1 mb-1">
-                  <span className="text-[10px] font-mono text-white/50 uppercase tracking-widest">Ghost Sync</span>
+                  <span className="text-[10px] font-mono text-white/50 uppercase tracking-widest">{t("workout.ghostSync")}</span>
                   <div className="text-4xl font-black tabular-nums leading-none" style={{ color: syncColor.text }}>
                     {syncPct}%
                   </div>
@@ -2530,13 +2527,13 @@ export function Workout() {
                     className="mt-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
                     style={{ backgroundColor: syncColor.bg, border: `1px solid ${syncColor.border}`, color: syncColor.text }}
                   >
-                    {syncPct >= SYNC_GATE ? "● Locked In" : "○ Adjust"}
+                    {syncPct >= SYNC_GATE ? t("workout.lockedIn") : t("workout.adjust")}
                   </div>
                 </div>
               )}
 
               <div className="flex flex-col items-center w-28">
-                <span className="text-sm font-mono text-white/70 uppercase tracking-widest mb-2">Form</span>
+                <span className="text-sm font-mono text-white/70 uppercase tracking-widest mb-2">{t("workout.formLabel")}</span>
                 <div className="w-full h-28 bg-black/40 rounded-full border border-white/10 relative overflow-hidden flex flex-col justify-end p-1">
                   <div
                     className="w-full rounded-full transition-all duration-200"
@@ -2566,7 +2563,7 @@ export function Workout() {
               >
                 <div className="flex items-center gap-2 text-white/45 text-xs font-bold uppercase tracking-widest">
                   <Timer className="w-4 h-4" />
-                  Rest
+                  {t("workout.restLabel")}
                 </div>
                 <div
                   className="text-9xl font-black tabular-nums leading-none tracking-tighter"
@@ -2575,21 +2572,21 @@ export function Workout() {
                   {restSeconds}
                 </div>
                 <div className="text-white/35 text-sm font-medium">
-                  Next: Set {currentSet + 1} of {totalSets}
+                  {t("workout.nextSetOf", { next: currentSet + 1, total: totalSets })}
                 </div>
                 <button
                   onClick={handleStartNextSet}
                   className="flex items-center gap-2 px-6 py-3 rounded-full border border-primary/40 bg-primary/10 text-primary text-sm font-bold hover:bg-primary/20 transition-colors"
                 >
                   <SkipForward className="w-4 h-4" />
-                  Start Now
+                  {t("workout.startNow")}
                 </button>
                 <button
                   onClick={handleStop}
                   disabled={isEnding}
                   className="text-xs text-white/25 hover:text-white/50 transition-colors disabled:opacity-40 disabled:pointer-events-none"
                 >
-                  {isEnding ? "Saving…" : "End Workout"}
+                  {isEnding ? t("workout.saving") : t("workout.endWorkout")}
                 </button>
               </div>
             </div>
@@ -2608,7 +2605,7 @@ export function Workout() {
                 onClick={handleEndSet}
               >
                 <Square className="w-6 h-6 mr-2 fill-current" />
-                END SET {currentSet}
+                {t("workout.endSetN", { set: currentSet })}
               </Button>
               {totalSets > 1 && (
                 <button
@@ -2616,7 +2613,7 @@ export function Workout() {
                   onClick={handleStop}
                   disabled={isEnding}
                 >
-                  {isEnding ? "Saving…" : "End Workout Early"}
+                  {isEnding ? t("workout.saving") : t("workout.endWorkoutEarly")}
                 </button>
               )}
             </div>
@@ -2636,8 +2633,8 @@ export function Workout() {
               <Activity className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-extrabold tracking-tight leading-none">Workout</h1>
-              <p className="text-xs text-white/40 mt-0.5">AI form coaching with Ghost Mode</p>
+              <h1 className="text-xl font-extrabold tracking-tight leading-none">{t("workout.workoutTitle")}</h1>
+              <p className="text-xs text-white/40 mt-0.5">{t("workout.workoutSubtitle")}</p>
             </div>
           </div>
 
@@ -2710,7 +2707,7 @@ export function Workout() {
                 >
                   <div className="flex items-center gap-1.5">
                     <Activity className="w-3 h-3 text-primary/70 shrink-0" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.12em] text-primary/80">Bodyweight</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.12em] text-primary/80">{t("workout.bodyweight")}</span>
                   </div>
 
                   {/* BW Combobox */}
@@ -2821,7 +2818,7 @@ export function Workout() {
                 >
                   <div className="flex items-center gap-1.5">
                     <Dumbbell className="w-3 h-3 shrink-0" style={{ color: "#f59e0b99" }} />
-                    <span className="text-[10px] font-black uppercase tracking-[0.12em]" style={{ color: "#f59e0bcc" }}>Equipment</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.12em]" style={{ color: "#f59e0bcc" }}>{t("workout.equipmentLabel")}</span>
                   </div>
 
                   {/* EQ Combobox */}
@@ -2873,9 +2870,9 @@ export function Workout() {
                         {(() => {
                           const q = eqInputVal.toLowerCase().trim();
                           const branchMeta: Record<EquipmentBranchKey, { label: string; color: string }> = {
-                            BAR:      { label: "Bar Specialist", color: "#f59e0b" },
-                            RINGS:    { label: "Rings",          color: "#06b6d4" },
-                            WEIGHTED: { label: "Weighted",       color: "#a855f7" },
+                            BAR:      { label: t("workout.barSpecialist"), color: "#f59e0b" },
+                            RINGS:    { label: t("workout.rings"),    color: "#06b6d4" },
+                            WEIGHTED: { label: t("workout.weighted"), color: "#a855f7" },
                           };
                           let anyResults = false;
                           const sections = (["BAR", "RINGS", "WEIGHTED"] as EquipmentBranchKey[]).map(branch => {
@@ -2970,7 +2967,7 @@ export function Workout() {
             <div>
               <div className="text-[10px] font-bold uppercase tracking-widest text-white/35 mb-2.5 flex items-center gap-1.5">
                 <Layers className="w-3 h-3" />
-                Sets
+                {t("workout.setsLabel")}
               </div>
               <div className="flex gap-1.5">
                 {[1, 2, 3, 4, 5].map(n => (
@@ -2995,7 +2992,7 @@ export function Workout() {
               <div>
                 <div className="text-sm font-semibold text-white/80 flex items-center gap-1.5">
                   <Mic className="w-3.5 h-3.5 text-primary/70" />
-                  Voice Commands
+                  {t("workout.voiceCommands")}
                 </div>
                 <div className="text-[11px] text-white/30 mt-0.5">
                   "start" · "end set" · "end workout"
@@ -3039,7 +3036,7 @@ export function Workout() {
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <div>
-                  <h2 className="text-lg font-bold leading-tight">Manual Log</h2>
+                  <h2 className="text-lg font-bold leading-tight">{t("workout.manualLogTitle")}</h2>
                   <p className="text-xs text-white/40">
                     {exercises?.find(e => e.id.toString() === selectedExerciseId)?.name ?? "Select exercise above"}
                   </p>
@@ -3047,7 +3044,7 @@ export function Workout() {
               </div>
 
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-3">Reps Completed</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-3">{t("workout.repsCompleted")}</div>
                 <div className="flex items-center justify-center gap-6">
                   <button
                     onClick={() => setManualReps(r => Math.max(0, r - 1))}
@@ -3069,7 +3066,7 @@ export function Workout() {
 
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2 flex justify-between">
-                  <span>RPE — How Hard Was It?</span>
+                  <span>{t("workout.rpeLabel")}</span>
                   {manualRpe && <span className="text-primary">{manualRpe}/10</span>}
                 </div>
                 <div className="flex gap-1.5 justify-center flex-wrap">
@@ -3088,7 +3085,7 @@ export function Workout() {
                   ))}
                 </div>
                 <p className="text-[10px] text-white/25 mt-2 text-center">
-                  1 = very easy · 10 = all-out effort · optional
+                  {t("workout.rpeHint")}
                 </p>
               </div>
 

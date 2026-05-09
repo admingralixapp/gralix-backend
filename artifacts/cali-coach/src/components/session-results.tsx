@@ -11,6 +11,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Trophy, Star, ChevronRight, Zap, Ghost } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type EvaluatedSkill } from "@/lib/skill-tree";
@@ -109,6 +110,7 @@ function ConfettiCanvas() {
 // ─── Animated form ring ───────────────────────────────────────────────────────
 
 function FormRing({ score }: { score: number | null }) {
+  const { t } = useTranslation();
   const [animPct, setAnimPct] = useState(0);
 
   const R    = 52;
@@ -165,7 +167,7 @@ function FormRing({ score }: { score: number | null }) {
         fontSize={9} fill="#64748b" letterSpacing="0.08em"
         fontFamily="ui-sans-serif, system-ui, sans-serif"
       >
-        {score === null ? "MANUAL LOG" : "FORM MASTERY"}
+        {score === null ? t("session.manualLog") : t("session.formMastery")}
       </text>
     </svg>
   );
@@ -184,6 +186,7 @@ function SkillProgressBar({
   nextQualifying: number;
   newlyMastered: boolean;
 }) {
+  const { t } = useTranslation();
   const total   = node.masteryRequirement.minQualifyingSessions;
   const prevPct = Math.min(1, prevQualifying / total);
   const nextPct = Math.min(1, nextQualifying  / total);
@@ -202,7 +205,7 @@ function SkillProgressBar({
       <div className="flex items-center justify-between text-sm">
         <span className="font-semibold">{node.title}</span>
         <span className="text-muted-foreground text-xs tabular-nums">
-          {Math.min(nextQualifying, total)} / {total} sessions
+          {Math.min(nextQualifying, total)} / {total} {t("session.sessions")}
         </span>
       </div>
 
@@ -226,8 +229,8 @@ function SkillProgressBar({
       {gained > 0 && (
         <p className="text-xs text-muted-foreground">
           {newlyMastered
-            ? "Skill complete — next level unlocked!"
-            : `+${Math.round((gained / total) * 100)}% progress this set`}
+            ? t("session.skillComplete")
+            : t("session.progressThisSet", { pct: Math.round((gained / total) * 100) })}
         </p>
       )}
     </div>
@@ -261,6 +264,7 @@ export function SessionResults({
   onClose,
 }: SessionResultsProps) {
   const [, navigate] = useLocation();
+  const { t } = useTranslation();
 
   const exerciseConfig = getExerciseConfig(exerciseName);
   const isStatic = exerciseConfig?.isStatic === true;
@@ -352,10 +356,10 @@ export function SessionResults({
               className={`w-8 h-8 mx-auto mb-2 ${skillUnlocked ? "text-yellow-400" : "text-muted-foreground"}`}
             />
             <h2 className="text-xl font-bold">
-              {skillUnlocked ? "Skill Unlocked!" : "Set Complete"}
+              {skillUnlocked ? t("session.skillUnlocked") : t("session.setComplete")}
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
-              {exerciseName} · {isStatic ? formatHold(totalReps) : `${totalReps} rep${totalReps !== 1 ? "s" : ""}`}
+              {exerciseName} · {isStatic ? formatHold(totalReps) : `${totalReps} ${totalReps !== 1 ? t("workout.reps") : t("session.rep", { defaultValue: "rep" })}`}
             </p>
           </div>
 
@@ -371,7 +375,7 @@ export function SessionResults({
               <div className="flex items-center justify-between bg-cyan-500/10 border border-cyan-500/30 rounded-xl px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Ghost className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span className="text-sm font-semibold text-cyan-300">Best Ghost Sync</span>
+                  <span className="text-sm font-semibold text-cyan-300">{t("session.bestGhostSync")}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span
@@ -385,7 +389,7 @@ export function SessionResults({
                     {bestSyncPct}%
                   </span>
                   {bestSyncPct >= 90 && (
-                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Elite</span>
+                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide">{t("session.elite")}</span>
                   )}
                 </div>
               </div>
@@ -396,9 +400,12 @@ export function SessionResults({
               <div className="flex items-start gap-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-3">
                 <Zap className="w-5 h-5 text-yellow-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-bold text-yellow-300">Perfect Set!</p>
+                  <p className="text-sm font-bold text-yellow-300">{t("session.perfectSet")}</p>
                   <p className="text-xs text-yellow-400/70 mt-0.5">
-                    {totalReps} reps · {avgFormScore !== null ? Math.round(avgFormScore) : 0}% form — elite execution
+                    {t("session.perfectSetDesc", {
+                      reps: totalReps,
+                      form: avgFormScore !== null ? Math.round(avgFormScore) : 0,
+                    })}
                   </p>
                 </div>
               </div>
@@ -411,13 +418,13 @@ export function SessionResults({
                 <div className="flex items-center gap-2">
                   <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 shrink-0" />
                   <span className="font-bold text-yellow-200 text-sm leading-tight">
-                    {newlyMasteredNode.title} — Mastered
+                    {newlyMasteredNode.title} {t("session.mastered")}
                   </span>
                 </div>
                 {newlyUnlockedNode && (
                   <div className="flex items-center gap-1 text-xs text-emerald-400 font-medium pl-7">
                     <ChevronRight className="w-3 h-3" />
-                    Next: {newlyUnlockedNode.title}
+                    {t("session.next")} {newlyUnlockedNode.title}
                   </div>
                 )}
               </div>
@@ -427,7 +434,7 @@ export function SessionResults({
             {activeNode && (
               <div className="bg-secondary/60 rounded-xl p-4">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-3">
-                  Skill Progress
+                  {t("session.skillProgress")}
                 </p>
                 <SkillProgressBar
                   node={activeNode}
@@ -445,10 +452,10 @@ export function SessionResults({
                 className="flex-1"
                 onClick={handleViewSession}
               >
-                View Session
+                {t("session.viewSession")}
               </Button>
               <Button className="flex-1 font-bold" onClick={handleContinue}>
-                {newlyUnlockedNode ? "Train Next →" : "Continue"}
+                {newlyUnlockedNode ? t("session.trainNext") : t("session.continue")}
               </Button>
             </div>
 

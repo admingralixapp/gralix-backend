@@ -240,7 +240,31 @@ async function translateLanguage(
   const outPath = resolve(OUT_DIR, code, "translation.json");
 
   if (existsSync(outPath)) {
-    console.log(`  ✓ ${name} (${code}) — already exists, skipping`);
+    // Incremental update: find keys missing from the existing file
+    const existing = JSON.parse(readFileSync(outPath, "utf8")) as unknown;
+    const flatExisting = flattenKeys(existing);
+    const missingEntries = Object.entries(flatEn).filter(([k]) => !(k in flatExisting));
+
+    if (missingEntries.length === 0) {
+      console.log(`  ✓ ${name} (${code}) — up to date`);
+      return;
+    }
+
+    console.log(`  ⟳ ${name} (${code}) — translating ${missingEntries.length} missing keys...`);
+    const newTranslated: Record<string, string> = {};
+    for (let i = 0; i < missingEntries.length; i += CHUNK_SIZE) {
+      const chunkEntries = missingEntries.slice(i, i + CHUNK_SIZE);
+      const chunkObj = Object.fromEntries(chunkEntries);
+      const chunkResult = await translateChunk(chunkObj, name);
+      Object.assign(newTranslated, chunkResult);
+      await sleep(200);
+    }
+
+    // Merge: rebuild the full tree with existing + newly translated
+    const merged = { ...flatExisting, ...newTranslated };
+    const finalTree = rebuildTree(originalTree as Record<string, unknown>, merged);
+    writeFileSync(outPath, JSON.stringify(finalTree, null, 2) + "\n", "utf8");
+    console.log(`  ✅ ${name} (${code}) — updated (+${missingEntries.length} keys)`);
     return;
   }
 

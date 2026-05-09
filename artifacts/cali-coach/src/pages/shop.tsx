@@ -44,6 +44,7 @@ function ClaimModal({
   onClose: () => void;
   isPending: boolean;
 }) {
+  const { t } = useTranslation();
   const [chosen, setChosen] = useState<string | null>(null);
   const chosenVoice = CLAIMABLE_VOICES.find((v) => v.id === chosen);
 
@@ -65,9 +66,9 @@ function ClaimModal({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Gift className="w-5 h-5" style={{ color: "#eab308" }} />
-              <span className="font-black text-lg" style={{ color: "#fef08a" }}>Claim Your Free Voice</span>
+              <span className="font-black text-lg" style={{ color: "#fef08a" }}>{t("shop.claimVoiceTitle")}</span>
             </div>
-            <p className="text-xs text-white/50">Welcome to Pro! Pick any AI voice — yours free.</p>
+            <p className="text-xs text-white/50">{t("shop.claimVoiceSubtitle")}</p>
           </div>
           <button onClick={onClose} className="text-white/30 hover:text-white/60 transition-colors ml-3 mt-0.5">
             <X className="w-5 h-5" />
@@ -112,7 +113,7 @@ function ClaimModal({
               color: chosen ? "#000" : "#666",
             }}
           >
-            {isPending ? "Claiming…" : chosenVoice ? `Claim ${chosenVoice.label}` : "Select a voice to continue"}
+            {isPending ? t("shop.claiming") : chosenVoice ? t("shop.claimVoice", { name: chosenVoice.label }) : t("shop.selectVoice")}
           </button>
         </div>
       </motion.div>
@@ -145,11 +146,11 @@ export function ShopPage() {
     activatePro.mutate(undefined, {
       onSuccess: () =>
         toast({
-          title: "3-Day Free Trial started! 🎉",
-          description: "You now have full access to CaliCoach Pro.",
+          title: t("shop.trialStarted"),
+          description: t("shop.trialStartedDesc"),
         }),
       onError: () =>
-        toast({ title: "Something went wrong", variant: "destructive" }),
+        toast({ title: t("shop.somethingWentWrong"), variant: "destructive" }),
     });
   }
 
@@ -158,17 +159,17 @@ export function ShopPage() {
 
   function handleBuyVoice(profileId: string, label: string) {
     if (!isSignedIn) {
-      toast({ title: "Sign in to purchase", description: "Create an account to buy AI voices." });
+      toast({ title: t("shop.signInToPurchase"), description: t("shop.signInToPurchaseDesc") });
       return;
     }
     purchase.mutate(profileId, {
       onSuccess: () => {
         toast({
-          title: `${label} unlocked! 🎉`,
-          description: "Select it from the list to make it your active coach.",
+          title: t("shop.unlocked", { name: label }),
+          description: t("shop.unlockedDesc"),
         });
       },
-      onError: (err) => toast({ title: "Purchase failed", description: err.message, variant: "destructive" }),
+      onError: (err) => toast({ title: t("shop.purchaseFailed"), description: err.message, variant: "destructive" }),
     });
   }
 
@@ -178,11 +179,11 @@ export function ShopPage() {
         setShowClaimModal(false);
         const pack = AURA_PACKS.find((p) => p.id === packId);
         toast({
-          title: `${pack?.name ?? "Aura Pack"} claimed! 🎁`,
-          description: "Your Pro signing bonus has been applied.",
+          title: t("shop.packClaimed", { name: pack?.name ?? t("shop.auraPacks") }),
+          description: t("shop.packClaimedDesc"),
         });
       },
-      onError: (err) => toast({ title: "Claim failed", description: err.message, variant: "destructive" }),
+      onError: (err) => toast({ title: t("shop.claimFailed"), description: err.message, variant: "destructive" }),
     });
   }
 
@@ -190,15 +191,15 @@ export function ShopPage() {
     const code = redeemInput.trim();
     if (!code) return;
     if (!isSignedIn) {
-      toast({ title: "Sign in to redeem codes" });
+      toast({ title: t("shop.signInToClaim") });
       return;
     }
     redeemCode.mutate(code, {
       onSuccess: (data) => {
-        toast({ title: "Code redeemed! 🎉", description: data.message });
+        toast({ title: t("shop.codeRedeemed"), description: data.message });
         setRedeemInput("");
       },
-      onError: (err) => toast({ title: "Invalid code", description: err.message, variant: "destructive" }),
+      onError: (err) => toast({ title: t("shop.invalidCode"), description: err.message, variant: "destructive" }),
     });
   }
 
@@ -283,14 +284,10 @@ export function ShopPage() {
           {/* Why go Pro list */}
           <div className="space-y-2.5 relative">
             {[
-              { icon: "🎥", label: "Real-time AI Camera Coaching", description: "Get live feedback on your form and posture on every workout." },
-              { icon: "💜", label: "Glowing Purple Verified Badge", description: "Stand out in the community and on the leaderboards with an exclusive Pro-only badge." },
-              { icon: "🎁", label: "1x Free Aura Pack Signing Bonus", description: "Kickstart your training with any Premium Aura of your choice, unlocked forever." },
-              {
-                icon: "📊",
-                label: "Advanced Progress Analytics",
-                description: "Deep-dive into your form trends, strength gains, and performance metrics.",
-              },
+              { icon: "🎥", label: t("shop.whyProItem1Label"), description: t("shop.whyProItem1Desc") },
+              { icon: "💜", label: t("shop.whyProItem2Label"), description: t("shop.whyProItem2Desc") },
+              { icon: "🎁", label: t("shop.whyProItem3Label"), description: t("shop.whyProItem3Desc") },
+              { icon: "📊", label: t("shop.whyProItem4Label"), description: t("shop.whyProItem4Desc") },
             ].map(({ icon, label, description }) => (
               <div key={label} className="flex items-start gap-3">
                 <div
@@ -329,7 +326,7 @@ export function ShopPage() {
                     ].join(" ")}
                     style={billingCycle === cycle ? { background: "#7c3aed" } : {}}
                   >
-                    {cycle === "monthly" ? "Monthly" : "Yearly"}
+                    {cycle === "monthly" ? t("shop.monthly") : t("shop.yearly")}
                     {cycle === "yearly" && (
                       <span
                         className={[
@@ -339,7 +336,7 @@ export function ShopPage() {
                             : "bg-green-500/20 text-green-400",
                         ].join(" ")}
                       >
-                        Save 20%
+                        {t("shop.save20")}
                       </span>
                     )}
                   </button>
@@ -352,7 +349,7 @@ export function ShopPage() {
                   {billingCycle === "monthly" ? prices.monthly : prices.yearly}
                 </span>
                 <span className="text-sm text-white/40 ml-1">
-                  {billingCycle === "monthly" ? "/ month" : "/ year"}
+                  {billingCycle === "monthly" ? t("shop.perMonthFull") : t("shop.perYearFull")}
                 </span>
               </div>
 
@@ -378,13 +375,13 @@ export function ShopPage() {
           {profile?.isPro && (
             <div className="flex items-center justify-center gap-2 py-1.5 text-sm relative" style={{ color: "#c084fc" }}>
               <Zap className="w-4 h-4" />
-              <span>Pro active —</span>
+              <span>{t("shop.proActiveManage")}</span>
               <button
                 onClick={() => setLocation("/settings?section=membership")}
                 className="font-bold underline underline-offset-2 hover:opacity-80 transition-opacity"
                 style={{ color: "#c084fc" }}
               >
-                Manage Subscription
+                {t("shop.manageSubscription")}
               </button>
             </div>
           )}
@@ -414,17 +411,17 @@ export function ShopPage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-black text-sm" style={{ color: "#fef08a" }}>
-                Claim Your Free Aura Pack
+                {t("shop.claimBonusTitle")}
               </div>
               <div className="text-[11px] text-white/50 mt-0.5">
-                Welcome to Pro! Choose any paid pack for free.
+                {t("shop.claimBonusDesc")}
               </div>
             </div>
             <div
               className="px-3 py-1.5 rounded-lg text-xs font-black shrink-0"
               style={{ background: "#eab308", color: "#000" }}
             >
-              Claim
+              {t("shop.claim")}
             </div>
           </motion.div>
         )}
@@ -434,16 +431,16 @@ export function ShopPage() {
       <section>
         <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">AI Coach Voices</span>
+          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("shop.voicesTitle")}</span>
         </div>
         <p className="text-[11px] text-muted-foreground mb-4">
-          Choose your coach's personality. Free voices use your device's speech engine. Pro voices use ElevenLabs AI + GPT-4o character injection.
+          {t("shop.voicesDesc")}
         </p>
 
         {/* Free tier */}
         <div>
           <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-4 px-0.5">
-            Starter Voices
+            {t("shop.starterVoices")}
           </div>
           <div className="grid grid-cols-2 gap-2">
             {VOICE_PROFILE_LIST.filter((p) => p.isFree).map((p) => {
@@ -476,7 +473,7 @@ export function ShopPage() {
                         try {
                           await testCoachVoice(p.id, p.label);
                         } catch {
-                          toast({ title: "ElevenLabs Connection Error", description: `Could not fetch audio for ${p.label}. Check connection.`, variant: "destructive" });
+                          toast({ title: t("shop.elevenLabsError"), description: t("shop.elevenLabsErrorDesc", { name: p.label }), variant: "destructive" });
                         } finally {
                           setTestingVoiceId(null);
                         }
@@ -486,7 +483,7 @@ export function ShopPage() {
                       {testingVoiceId === p.id
                         ? <Loader2 className="w-3 h-3 animate-spin" />
                         : <Play className="w-3 h-3" />}
-                      {testingVoiceId === p.id ? "…" : "Test"}
+                      {testingVoiceId === p.id ? "…" : t("shop.test")}
                     </button>
                     <button
                       onClick={() => {
@@ -501,7 +498,7 @@ export function ShopPage() {
                           : "bg-white/[0.06] text-foreground hover:bg-white/10 border border-white/10",
                       ].join(" ")}
                     >
-                      {active ? "✓ Active" : "Select"}
+                      {active ? t("shop.activeLabel") : t("shop.select")}
                     </button>
                   </div>
                 </div>
@@ -513,14 +510,14 @@ export function ShopPage() {
         {/* Divider between free and pro */}
         <div className="flex items-center gap-3 my-6">
           <div className="flex-1 h-px bg-white/[0.08]" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Custom Auras</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-white/20">{t("shop.customAuras")}</span>
           <div className="flex-1 h-px bg-white/[0.08]" />
         </div>
 
         {/* Paid tier — à la carte */}
         <div>
           <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-4 px-0.5">
-            Premium Voice &amp; Ghost Skins
+            {t("shop.premiumVoices")}
           </div>
           <div className="space-y-2">
             {VOICE_PROFILE_LIST.filter((p) => !p.isFree).map((p) => {
@@ -552,7 +549,7 @@ export function ShopPage() {
                           className="text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide"
                           style={{ background: "rgba(132,204,22,0.15)", color: "#84cc16" }}
                         >
-                          Owned
+                          {t("shop.owned")}
                         </span>
                       )}
                     </div>
@@ -578,7 +575,7 @@ export function ShopPage() {
                       {testingVoiceId === p.id
                         ? <Loader2 className="w-3 h-3 animate-spin" />
                         : <Play className="w-3 h-3" />}
-                      {testingVoiceId === p.id ? "…" : "Test"}
+                      {testingVoiceId === p.id ? "…" : t("shop.test")}
                     </button>
                     {owned ? (
                       <button
@@ -594,7 +591,7 @@ export function ShopPage() {
                             : "bg-white/[0.06] text-foreground hover:bg-white/10 border border-white/10",
                         ].join(" ")}
                       >
-                        {active ? "✓ Active" : "Equip"}
+                        {active ? t("shop.activeLabel") : t("shop.equip")}
                       </button>
                     ) : (
                       <button
@@ -607,7 +604,7 @@ export function ShopPage() {
                           boxShadow: "0 2px 10px rgba(124,58,237,0.35)",
                         }}
                       >
-                        {purchase.isPending ? "…" : "Buy for £4.99"}
+                        {purchase.isPending ? "…" : t("shop.buyFor", { price: "£4.99" })}
                       </button>
                     )}
                   </div>
@@ -622,7 +619,7 @@ export function ShopPage() {
       <section>
         <div className="flex items-center gap-2 mb-3">
           <Tag className="w-4 h-4 text-primary" />
-          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Redeem Code</span>
+          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("shop.redeemCodeSection")}</span>
         </div>
         <div
           className="rounded-2xl border border-white/10 p-4"
@@ -634,7 +631,7 @@ export function ShopPage() {
               value={redeemInput}
               onChange={(e) => setRedeemInput(e.target.value.toUpperCase())}
               onKeyDown={(e) => e.key === "Enter" && handleRedeem()}
-              placeholder="ENTER CODE"
+              placeholder={t("shop.promoPlaceholder").toUpperCase()}
               maxLength={24}
               className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2.5 text-sm font-mono font-bold text-white placeholder:text-white/20 focus:outline-none focus:border-primary/40 transition-colors uppercase tracking-widest"
             />
@@ -643,11 +640,11 @@ export function ShopPage() {
               disabled={!redeemInput.trim() || redeemCode.isPending}
               className="px-4 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-40 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
             >
-              {redeemCode.isPending ? "…" : "Redeem"}
+              {redeemCode.isPending ? "…" : t("shop.redeem")}
             </button>
           </div>
           <p className="text-[10px] text-muted-foreground mt-2">
-            Codes unlock packs, Pro access, or limited-time bonuses.
+            {t("shop.redeemCodeDesc")}
           </p>
         </div>
       </section>

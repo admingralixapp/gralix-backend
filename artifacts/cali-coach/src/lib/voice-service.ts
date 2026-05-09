@@ -313,7 +313,8 @@ export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "
   // Paid profile — ElevenLabs only. window.speechSynthesis is NOT called.
   const slug = (s: string) =>
     s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40);
-  const cacheKey = `general:${slug(text)}`;
+  const lang = getLiveCoachLang();
+  const cacheKey = lang !== "en" ? `${lang}:${slug(text)}` : `general:${slug(text)}`;
 
   console.log(`[CaliCoach Voice] speak() → PAID profile="${_activeProfileId}" → /api/tts/stream  cue="${text.slice(0, 40)}"`);
   _speakWithAudioElement(text, _activeProfileId, "Coaching", cacheKey).catch(() => {
