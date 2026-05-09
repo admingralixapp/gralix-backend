@@ -626,6 +626,17 @@ export function DailyTasksPage() {
   const [showSession,       setShowSession]       = useState(false);
   const [autoStart,         setAutoStart]         = useState(false);
 
+  // ── Body scroll lock while session overlay is open ────────────────────────
+  useEffect(() => {
+    if (showSession) {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [showSession]);
+
   // ── Optimistic local preferences ──────────────────────────────────────────
   // Initialised from localStorage (instant) then overwritten by server data.
   // Drives the task list so the re-render is immediate on Save.

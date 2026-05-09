@@ -125,6 +125,11 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
 
   const currentStretch: Stretch | undefined = routine[stretchIndex];
 
+  // ── Hard-scroll to origin on mount so the overlay always starts at the top ──
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // ── Reset timer + pause state when exercise changes ─────────────────────────
   useEffect(() => {
     if (pageState !== "active") return;
@@ -306,7 +311,7 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
   const isLast = stretchIndex + 1 >= routine.length;
 
   return (
-    <div className="flex flex-col bg-background" style={{ height: "100vh", overflow: "hidden" }}>
+    <div className="flex flex-col bg-background" style={{ height: "100dvh", overflow: "hidden" }}>
 
       {/* ── Header: always pinned at top ──────────────────────────────────── */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border shrink-0 gap-2">
