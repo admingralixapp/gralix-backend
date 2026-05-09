@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Trophy } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useFeed, useMyProfile } from "@/lib/social";
 
 const BRANCH_EMOJI: Record<string, string> = {
@@ -16,18 +17,23 @@ const BRANCH_PILL: Record<string, string> = {
   LEGS: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20",
 };
 
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
+function useTimeAgo() {
+  const { t } = useTranslation();
+  return (iso: string): string => {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60_000);
+    if (mins < 1) return t("dashboard.justNow");
+    if (mins < 60) return t("dashboard.minutesAgo", { count: mins });
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return t("dashboard.hoursAgo", { count: hrs });
+    const days = Math.floor(hrs / 24);
+    return t("dashboard.daysAgo", { count: days });
+  };
 }
 
 export function SocialFeed() {
+  const { t } = useTranslation();
+  const timeAgo = useTimeAgo();
   const { data: profile } = useMyProfile();
   const { data, isLoading } = useFeed();
 
@@ -47,9 +53,9 @@ export function SocialFeed() {
     return (
       <div className="text-center py-8 border border-dashed border-border rounded-xl bg-card/50">
         <Trophy className="w-8 h-8 text-yellow-500/30 mx-auto mb-2" />
-        <p className="text-sm text-muted-foreground font-medium">No Elite achievements yet.</p>
+        <p className="text-sm text-muted-foreground font-medium">{t("dashboard.noEliteAchievements")}</p>
         <p className="text-xs text-muted-foreground mt-1">
-          Master an Elite skill to appear here!
+          {t("dashboard.masterEliteSkill")}
         </p>
       </div>
     );
@@ -86,9 +92,9 @@ export function SocialFeed() {
                 href={`/profile/${entry.username}`}
                 className="font-semibold hover:text-primary transition-colors"
               >
-                {isMe ? "You" : entry.displayName}
+                {isMe ? t("dashboard.youLabel") : entry.displayName}
               </Link>{" "}
-              just mastered{" "}
+              {t("dashboard.justMastered")}{" "}
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${pill}`}>
                 {emoji} {entry.skillTitle}
               </span>{" "}
