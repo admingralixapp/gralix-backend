@@ -1406,6 +1406,74 @@ const CORE_WEIGHTED_NODES: SkillNode[] = [
   },
 ];
 
+// ── CORE — Power / Instability Specialist (branches from core-1, east-2 lane) ──
+// core-roller-1 → core-band-1 → core-rings-2
+const CORE_INSTABILITY_NODES: SkillNode[] = [
+  {
+    id: "core-roller-1",
+    branch: "CORE",
+    level: 2,
+    levelName: "Novice",
+    type: "standard",
+    title: "Ab Roller Rollout",
+    description: "Grip the ab roller and roll from kneeling to full extension, keeping hips locked. The explosive anti-extension demand and full range of motion makes this one of the most effective loaded core movements available.",
+    exercises: ["Ab Roller Rollout"],
+    masteryRequirement: {
+      description: "Complete 8 reps with ≥74% form score in 3 sessions",
+      minReps: 8,
+      minFormScore: 74,
+      minQualifyingSessions: 3,
+    },
+    prerequisiteId: "core-1",
+    path: "core-instability",
+    pathLabel: "Power & Instability Specialist",
+    equipmentTag: "roller",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "core-band-1",
+    branch: "CORE",
+    level: 3,
+    levelName: "Intermediate",
+    type: "static",
+    title: "Banded Pallof Press",
+    description: "Anchor a resistance band at chest height and press the handle directly away from your body while resisting rotation. The anti-rotation demand targets deep spinal stabilisers that no crunching movement can access.",
+    exercises: ["Banded Pallof Press"],
+    masteryRequirement: {
+      description: "Hold 20 s per side with ≥74% form score in 3 sessions",
+      minReps: 20,
+      minFormScore: 74,
+      minQualifyingSessions: 3,
+    },
+    prerequisiteId: "core-roller-1",
+    path: "core-instability",
+    pathLabel: "Power & Instability Specialist",
+    equipmentTag: "band",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "core-rings-2",
+    branch: "CORE",
+    level: 4,
+    levelName: "Advanced",
+    type: "standard",
+    title: "Ring Rollouts",
+    description: "From kneeling, grip gymnastic rings and roll out to full extension. The constant instability forces the deep stabilisers to work overtime — harder than any barbell or roller equivalent, and the ultimate instability core move.",
+    exercises: ["Ring Rollouts"],
+    masteryRequirement: {
+      description: "Complete 6 reps with ≥78% form score in 4 sessions",
+      minReps: 6,
+      minFormScore: 78,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "core-band-1",
+    path: "core-instability",
+    pathLabel: "Power & Instability Specialist",
+    equipmentTag: "rings",
+    equipmentSpecialty: true,
+  },
+];
+
 // ── LEGS — Weighted Specialist (branches from legs-1, south lane) ─────────────
 // legs-weighted-1 → legs-weighted-2 → legs-weighted-3 → legs-weighted-4
 const LEGS_WEIGHTED_NODES: SkillNode[] = [
@@ -1495,6 +1563,74 @@ const LEGS_WEIGHTED_NODES: SkillNode[] = [
   },
 ];
 
+// ── LEGS — Power / Instability Specialist (branches from legs-1, south-2 lane) ──
+// legs-band-1 → legs-box-1 → legs-sliders-1
+const LEGS_POWER_NODES: SkillNode[] = [
+  {
+    id: "legs-band-1",
+    branch: "LEGS",
+    level: 2,
+    levelName: "Novice",
+    type: "standard",
+    title: "Banded Lateral Walks",
+    description: "Place a resistance band around your ankles and walk laterally in a quarter-squat position. The band's constant tension activates the gluteus medius and hip abductors, building the lateral hip stability that every advanced leg skill depends on.",
+    exercises: ["Banded Lateral Walks"],
+    masteryRequirement: {
+      description: "Complete 15 steps per side with ≥72% form score in 3 sessions",
+      minReps: 15,
+      minFormScore: 72,
+      minQualifyingSessions: 3,
+    },
+    prerequisiteId: "legs-1",
+    path: "legs-power",
+    pathLabel: "Power & Instability Specialist",
+    equipmentTag: "band",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "legs-box-1",
+    branch: "LEGS",
+    level: 3,
+    levelName: "Intermediate",
+    type: "explosive",
+    title: "Box Jumps",
+    description: "Explode off the ground and land softly on a plyo box, absorbing the impact through a controlled cushioned landing. This introduces rate of force development and elastic energy storage — the traits that separate powerful athletes from merely strong ones.",
+    exercises: ["Box Jumps"],
+    masteryRequirement: {
+      description: "Complete 8 reps with ≥76% form score in 4 sessions",
+      minReps: 8,
+      minFormScore: 76,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "legs-band-1",
+    path: "legs-power",
+    pathLabel: "Power & Instability Specialist",
+    equipmentTag: "box",
+    equipmentSpecialty: true,
+  },
+  {
+    id: "legs-sliders-1",
+    branch: "LEGS",
+    level: 4,
+    levelName: "Advanced",
+    type: "standard",
+    title: "Slider Hamstring Curls",
+    description: "Lie on your back, place sliders under your heels, and curl your legs toward your glutes while keeping your hips bridged. The high eccentric demand and full posterior-chain stretch under tension creates stimulus that machines cannot replicate.",
+    exercises: ["Slider Hamstring Curls"],
+    masteryRequirement: {
+      description: "Complete 10 reps with ≥78% form score in 4 sessions",
+      minReps: 10,
+      minFormScore: 78,
+      minQualifyingSessions: 4,
+    },
+    prerequisiteId: "legs-box-1",
+    path: "legs-power",
+    pathLabel: "Power & Instability Specialist",
+    equipmentTag: "sliders",
+    equipmentSpecialty: true,
+  },
+];
+
 // ── PUSH — Weighted Specialist (branches from push-3 Dip Introduction) ────────
 const PUSH_WEIGHTED_NODES: SkillNode[] = [
   {
@@ -1524,7 +1660,9 @@ export const EQUIPMENT_SPECIALTY_NODES: SkillNode[] = [
   ...PUSH_RINGS_NODES,
   ...PUSH_WEIGHTED_NODES,
   ...CORE_WEIGHTED_NODES,
+  ...CORE_INSTABILITY_NODES,
   ...LEGS_WEIGHTED_NODES,
+  ...LEGS_POWER_NODES,
 ];
 
 // ─── Full registry ─────────────────────────────────────────────────────────────
@@ -1581,7 +1719,7 @@ export type SkillStatus = "locked" | "unlocked" | "mastered";
 
 // ─── Equipment Specialty ───────────────────────────────────────────────────────
 
-export type EquipmentTag = "rings" | "weighted";
+export type EquipmentTag = "rings" | "weighted" | "roller" | "band" | "box" | "sliders";
 
 export const EQUIPMENT_SPECIALTIES: Record<EquipmentTag, {
   label: string;
@@ -1589,8 +1727,12 @@ export const EQUIPMENT_SPECIALTIES: Record<EquipmentTag, {
   color: string;
   bgColor: string;
 }> = {
-  rings:    { label: "Rings Specialist",    shortLabel: "Rings",    color: "#06b6d4", bgColor: "rgba(6,182,212,0.12)"  },
-  weighted: { label: "Weighted Specialist", shortLabel: "Weighted", color: "#8b5cf6", bgColor: "rgba(139,92,246,0.12)" },
+  rings:    { label: "Rings Specialist",    shortLabel: "Rings",     color: "#06b6d4", bgColor: "rgba(6,182,212,0.12)"   },
+  weighted: { label: "Weighted Specialist", shortLabel: "Weighted",  color: "#8b5cf6", bgColor: "rgba(139,92,246,0.12)"  },
+  roller:   { label: "Ab Roller Specialist",shortLabel: "Ab Roller", color: "#f97316", bgColor: "rgba(249,115,22,0.12)"  },
+  band:     { label: "Band Specialist",     shortLabel: "Band",      color: "#ec4899", bgColor: "rgba(236,72,153,0.12)"  },
+  box:      { label: "Plyo Specialist",     shortLabel: "Plyo Box",  color: "#84cc16", bgColor: "rgba(132,204,22,0.12)"  },
+  sliders:  { label: "Sliders Specialist",  shortLabel: "Sliders",   color: "#f43f5e", bgColor: "rgba(244,63,94,0.12)"   },
 };
 
 export interface SessionSummary {

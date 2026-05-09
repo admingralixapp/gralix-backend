@@ -245,11 +245,19 @@ const EQUIPMENT_NODE_POS: Record<string, { x: number; y: number }> = {
   "core-rings-1":    { x: HUB_X + SIDE * 3, y: HUB_Y + GAP * 2 },  // (1995, 1800)
   "core-weighted-2": { x: HUB_X + SIDE * 3, y: HUB_Y + GAP * 3 },  // (1995, 1950)
   "core-weighted-3": { x: HUB_X + SIDE * 3, y: HUB_Y + GAP * 4 },  // (1995, 2100)
+  // ── CORE — Power/Instability Specialist (east-2 column at x + SIDE*4) ────
+  "core-roller-1":   { x: HUB_X + SIDE * 4, y: HUB_Y + GAP },      // (2160, 1650)
+  "core-band-1":     { x: HUB_X + SIDE * 4, y: HUB_Y + GAP * 2 },  // (2160, 1800)
+  "core-rings-2":    { x: HUB_X + SIDE * 4, y: HUB_Y + GAP * 3 },  // (2160, 1950)
   // ── LEGS — Weighted Specialist (south row at y + SIDE*2) ─────────────────
   "legs-weighted-1": { x: HUB_X - GAP,      y: HUB_Y + SIDE * 2 }, // (1350, 1830)
   "legs-weighted-2": { x: HUB_X - GAP * 2,  y: HUB_Y + SIDE * 2 }, // (1200, 1830)
   "legs-weighted-3": { x: HUB_X - GAP * 3,  y: HUB_Y + SIDE * 2 }, // (1050, 1830)
   "legs-weighted-4": { x: HUB_X - GAP * 4,  y: HUB_Y + SIDE * 2 }, //  (900, 1830)
+  // ── LEGS — Power/Instability Specialist (south-2 row at y + SIDE*3) ──────
+  "legs-band-1":     { x: HUB_X - GAP,      y: HUB_Y + SIDE * 3 }, // (1350, 1995)
+  "legs-box-1":      { x: HUB_X - GAP * 2,  y: HUB_Y + SIDE * 3 }, // (1200, 1995)
+  "legs-sliders-1":  { x: HUB_X - GAP * 3,  y: HUB_Y + SIDE * 3 }, // (1050, 1995)
 };
 
 // Equipment edges follow the prerequisite chain defined in skill-tree.ts
@@ -265,34 +273,50 @@ const EQUIPMENT_EDGES: Array<[string, string]> = [
   // CORE weighted/rings (from core-1)
   ["core-1", "core-weighted-1"], ["core-weighted-1", "core-rings-1"],
   ["core-rings-1", "core-weighted-2"], ["core-weighted-2", "core-weighted-3"],
+  // CORE power/instability (from core-1)
+  ["core-1", "core-roller-1"], ["core-roller-1", "core-band-1"], ["core-band-1", "core-rings-2"],
   // LEGS weighted (from legs-1)
   ["legs-1", "legs-weighted-1"], ["legs-weighted-1", "legs-weighted-2"],
   ["legs-weighted-2", "legs-weighted-3"], ["legs-weighted-3", "legs-weighted-4"],
+  // LEGS power/instability (from legs-1)
+  ["legs-1", "legs-band-1"], ["legs-band-1", "legs-box-1"], ["legs-box-1", "legs-sliders-1"],
 ];
 
 // Equipment tag → color (matches EQUIPMENT_SPECIALTIES exported from skill-tree.ts)
 const EQUIPMENT_COLORS: Record<string, string> = {
   rings:    "#06b6d4",
   weighted: "#a855f7",
+  roller:   "#f97316",
+  band:     "#ec4899",
+  box:      "#84cc16",
+  sliders:  "#f43f5e",
 };
 
-// Path labels that appear when lens is on
-const EQUIPMENT_PATH_LABELS = [
+// Path labels that appear when lens is on (tag field drives filter dimming)
+const EQUIPMENT_PATH_LABELS: Array<{ x: number; y: number; text: string; color: string; tag: string }> = [
   // PULL — rings and weighted
-  { x: HUB_X + GAP * 3,       y: HUB_Y + SIDE * 3 - 38, text: "Rings",            color: EQUIPMENT_COLORS.rings },
-  { x: HUB_X + GAP * 3,       y: HUB_Y + SIDE * 4 - 38, text: "Weighted",          color: EQUIPMENT_COLORS.weighted },
+  { x: HUB_X + GAP * 3,       y: HUB_Y + SIDE * 3 - 38, text: "Rings",              color: EQUIPMENT_COLORS.rings,    tag: "rings"    },
+  { x: HUB_X + GAP * 3,       y: HUB_Y + SIDE * 4 - 38, text: "Weighted",            color: EQUIPMENT_COLORS.weighted, tag: "weighted" },
   // PUSH
-  { x: HUB_X - SIDE - 40,     y: HUB_Y - GAP * 3.4,     text: "Rings",             color: EQUIPMENT_COLORS.rings },
-  { x: HUB_X - SIDE * 2 - 48, y: HUB_Y - GAP * 3.4,     text: "Weighted",          color: EQUIPMENT_COLORS.weighted },
-  // CORE weighted / rings
-  { x: HUB_X + SIDE * 3 + 50, y: HUB_Y + GAP * 2.4,     text: "Weighted / Rings",  color: EQUIPMENT_COLORS.weighted },
-  // LEGS weighted
-  { x: HUB_X - GAP * 2.5,     y: HUB_Y + SIDE * 2 - 38, text: "Weighted",          color: EQUIPMENT_COLORS.weighted },
+  { x: HUB_X - SIDE - 40,     y: HUB_Y - GAP * 3.4,     text: "Rings",              color: EQUIPMENT_COLORS.rings,    tag: "rings"    },
+  { x: HUB_X - SIDE * 2 - 48, y: HUB_Y - GAP * 3.4,     text: "Weighted",           color: EQUIPMENT_COLORS.weighted, tag: "weighted" },
+  // CORE weighted / rings (column 1)
+  { x: HUB_X + SIDE * 3 + 50, y: HUB_Y + GAP * 2.4,     text: "Weighted / Rings",   color: EQUIPMENT_COLORS.weighted, tag: "weighted" },
+  // CORE power / instability (column 2)
+  { x: HUB_X + SIDE * 4 + 55, y: HUB_Y + GAP * 2,       text: "Power / Instability",color: EQUIPMENT_COLORS.roller,   tag: "roller"   },
+  // LEGS weighted (row 1)
+  { x: HUB_X - GAP * 2.5,     y: HUB_Y + SIDE * 2 - 38, text: "Weighted",            color: EQUIPMENT_COLORS.weighted, tag: "weighted" },
+  // LEGS power / instability (row 2)
+  { x: HUB_X - GAP * 2,       y: HUB_Y + SIDE * 3 - 38, text: "Power / Instability", color: EQUIPMENT_COLORS.box,      tag: "box"      },
 ];
 
 function equipmentNodeColor(id: string): string {
   if (id.includes("-rings-"))    return EQUIPMENT_COLORS.rings;
   if (id.includes("-weighted-")) return EQUIPMENT_COLORS.weighted;
+  if (id.includes("-roller-"))   return EQUIPMENT_COLORS.roller;
+  if (id.includes("-band-"))     return EQUIPMENT_COLORS.band;
+  if (id.includes("-box-"))      return EQUIPMENT_COLORS.box;
+  if (id.includes("-sliders-"))  return EQUIPMENT_COLORS.sliders;
   return MUTED;
 }
 
@@ -1075,7 +1099,7 @@ interface OverlayState {
   screenY: number;
 }
 
-function TreeCanvas({ evaluated, lensOn }: { evaluated: EvaluatedSkill[]; lensOn: boolean }) {
+function TreeCanvas({ evaluated, lensOn, filterTag }: { evaluated: EvaluatedSkill[]; lensOn: boolean; filterTag: EquipmentTag | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [pan,  setPan]         = useState({ x: 0, y: 0 });
   const [zoom, setZoom]        = useState(0.52);
@@ -1383,18 +1407,22 @@ function TreeCanvas({ evaluated, lensOn }: { evaluated: EvaluatedSkill[]; lensOn
               const toPos   = EQUIPMENT_NODE_POS[toId] ?? allNodePos[toId];
               if (!fromPos || !toPos) return null;
               const fromSkill = skillMap.get(fromId);
+              const toSkill   = skillMap.get(toId);
               const mastered  = fromSkill?.status === "mastered";
               const lit = hoveredId === fromId || hoveredId === toId;
               const color = equipmentNodeColor(toId) || equipmentNodeColor(fromId);
+              const edgeTag = toSkill?.equipmentTag ?? fromSkill?.equipmentTag;
+              const dimmed = filterTag !== null && edgeTag !== filterTag;
               return (
-                <EquipmentConnectorPath
-                  key={`eq-${fromId}-${toId}`}
-                  fromPos={fromPos}
-                  toPos={toPos}
-                  color={color}
-                  mastered={mastered}
-                  lit={lit}
-                />
+                <g key={`eq-${fromId}-${toId}`} opacity={dimmed ? 0.1 : 1} style={{ transition: "opacity 0.2s" }}>
+                  <EquipmentConnectorPath
+                    fromPos={fromPos}
+                    toPos={toPos}
+                    color={color}
+                    mastered={mastered}
+                    lit={lit}
+                  />
+                </g>
               );
             })}
 
@@ -1440,14 +1468,19 @@ function TreeCanvas({ evaluated, lensOn }: { evaluated: EvaluatedSkill[]; lensOn
             ))}
 
             {/* ── Equipment path labels (only when lens is on and zoomed in) ── */}
-            {lensOn && showLabel && EQUIPMENT_PATH_LABELS.map(({ x, y, text, color }) => (
-              <text key={`eq-lbl-${text}-${x}`} x={x} y={y} textAnchor="middle"
-                fontSize={8} fill={color} opacity={0.70}
-                fontFamily="ui-sans-serif, system-ui, sans-serif"
-                fontStyle="italic" fontWeight="600">
-                {text} ◆
-              </text>
-            ))}
+            {lensOn && showLabel && EQUIPMENT_PATH_LABELS.map(({ x, y, text, color, tag }) => {
+              const dimmed = filterTag !== null && tag !== filterTag;
+              return (
+                <text key={`eq-lbl-${text}-${x}`} x={x} y={y} textAnchor="middle"
+                  fontSize={8} fill={color}
+                  opacity={dimmed ? 0.08 : 0.70}
+                  fontFamily="ui-sans-serif, system-ui, sans-serif"
+                  fontStyle="italic" fontWeight="600"
+                  style={{ transition: "opacity 0.2s" }}>
+                  {text} ◆
+                </text>
+              );
+            })}
 
             {/* ── Bodyweight skill nodes (circles) ── */}
             {Object.keys(NODE_POS).map((nodeId) => {
@@ -1472,16 +1505,18 @@ function TreeCanvas({ evaluated, lensOn }: { evaluated: EvaluatedSkill[]; lensOn
             {lensOn && Object.keys(EQUIPMENT_NODE_POS).map((nodeId) => {
               const skill = skillMap.get(nodeId);
               if (!skill) return null;
+              const dimmed = filterTag !== null && skill.equipmentTag !== filterTag;
               return (
-                <DiamondNode
-                  key={nodeId}
-                  nodeId={nodeId}
-                  skill={skill}
-                  isHovered={hoveredId === nodeId}
-                  showLabel={showLabel}
-                  onClick={handleNodeClick}
-                  onHover={setHoveredId}
-                />
+                <g key={nodeId} opacity={dimmed ? 0.1 : 1} style={{ transition: "opacity 0.2s" }}>
+                  <DiamondNode
+                    nodeId={nodeId}
+                    skill={skill}
+                    isHovered={hoveredId === nodeId}
+                    showLabel={showLabel}
+                    onClick={handleNodeClick}
+                    onHover={setHoveredId}
+                  />
+                </g>
               );
             })}
           </g>
@@ -1531,10 +1566,13 @@ export function SkillTreePage() {
   const [lensOn, setLensOn] = useState<boolean>(() => {
     try { return localStorage.getItem(LENS_STORAGE_KEY) === "true"; } catch { return false; }
   });
+  // Equipment filter: null = show all, tag = highlight only that equipment type
+  const [filterTag, setFilterTag] = useState<EquipmentTag | null>(null);
 
   const toggleLens = () => {
     const next = !lensOn;
     setLensOn(next);
+    if (!next) setFilterTag(null); // reset filter when hiding overlay
     try { localStorage.setItem(LENS_STORAGE_KEY, String(next)); } catch {}
     // Dispatch a storage event so other tabs / the workout page can react
     window.dispatchEvent(new StorageEvent("storage", { key: LENS_STORAGE_KEY, newValue: String(next) }));
@@ -1649,21 +1687,32 @@ export function SkillTreePage() {
           </span>
           <span style={{ color: "#d97706" }}>L5 Elite</span>
         </span>
-        {/* Equipment legend items — shown only when lens is on */}
+        {/* Equipment filter pills — shown only when lens is on; clicking highlights that type across all branches */}
         {lensOn && (
           <>
             <span className="h-4 w-px bg-white/10" />
-            {[
-              { color: EQUIPMENT_COLORS.rings,    label: `${t("skillTree.ringsOverlay")} ◆` },
-              { color: EQUIPMENT_COLORS.weighted, label: `${t("skillTree.weightedOverlay")} ◆` },
-            ].map(({ color, label }) => (
-              <span key={label} className="flex items-center gap-1.5">
-                <svg width="12" height="12" viewBox="0 0 12 12">
-                  <polygon points="6,0 12,6 6,12 0,6" fill={color} opacity={0.85} />
-                </svg>
-                <span style={{ color }}>{label}</span>
-              </span>
-            ))}
+            {(Object.entries(EQUIPMENT_SPECIALTIES) as [EquipmentTag, typeof EQUIPMENT_SPECIALTIES[EquipmentTag]][]).map(([tag, spec]) => {
+              const active = filterTag === tag;
+              const faded  = filterTag !== null && !active;
+              return (
+                <button
+                  key={tag}
+                  onClick={() => setFilterTag(active ? null : tag)}
+                  title={active ? "Click to clear filter" : `Show only ${spec.label} nodes`}
+                  className="flex items-center gap-1.5 rounded px-1.5 py-0.5 select-none transition-all"
+                  style={{
+                    opacity: faded ? 0.35 : 1,
+                    background: active ? `${spec.bgColor}` : "transparent",
+                    outline: active ? `1px solid ${spec.color}55` : "none",
+                  }}
+                >
+                  <svg width="11" height="11" viewBox="0 0 12 12">
+                    <polygon points="6,0 12,6 6,12 0,6" fill={spec.color} opacity={0.9} />
+                  </svg>
+                  <span style={{ color: spec.color }} className="text-xs font-medium">{spec.shortLabel}</span>
+                </button>
+              );
+            })}
           </>
         )}
       </div>
@@ -1673,7 +1722,7 @@ export function SkillTreePage() {
         <Skeleton className="w-full rounded-2xl" style={{ height: "calc(100vh - 210px)", minHeight: 430 }} />
       ) : (
         <>
-          <TreeCanvas evaluated={evaluated} lensOn={lensOn} />
+          <TreeCanvas evaluated={evaluated} lensOn={lensOn} filterTag={filterTag} />
         </>
       )}
     </div>
