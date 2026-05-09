@@ -137,25 +137,41 @@ import { getTestPhrase } from "./cue-translations.js";
 
 let _speechLang = "en-US";
 
-// ISO 639-1 code for ElevenLabs — derived from the global UI language.
-// Initialised from the stored i18n key so it's correct even before the user
-// visits Settings in this session.
-let _coachLang: string = (() => {
+/**
+ * Read the active coach language live from localStorage at the moment of use.
+ *
+ * WHY live reads instead of a cached variable:
+ * - workout.tsx calls setVoiceLanguage(i18n.language) in a useEffect.
+ *   On mount, i18n.language may briefly be "en" (before the LanguageDetector
+ *   reads localStorage), which would reset a cached variable to "en" even
+ *   though the user chose French/Spanish.
+ * - Reading localStorage directly always returns the value written by
+ *   i18next's LanguageDetector (key: "calicoach_lang") which is updated
+ *   atomically whenever the user changes language in Settings.
+ */
+function getLiveCoachLang(): string {
   try {
     const stored = localStorage.getItem("calicoach_lang");
     return resolveElevenLabsLang(stored ?? "en");
   } catch {
     return "en";
   }
-})();
+}
 
 /**
- * Called by Settings whenever the user changes the UI language.
- * Updates both the browser TTS locale and the ElevenLabs coach language.
+ * Called by Settings / Workout whenever the UI language changes.
+ * Updates the browser TTS locale (Web Speech API lang attribute).
+ * ElevenLabs language is now always derived live via getLiveCoachLang()
+ * so this no longer needs to maintain a separate _coachLang variable.
  */
 export function setVoiceLanguage(bcp47: string): void {
   _speechLang = bcp47;
-  _coachLang  = resolveElevenLabsLang(bcp47);
+  // Write to localStorage so getLiveCoachLang() picks it up immediately
+  // (i18next also writes here via LanguageDetector, but this guards the
+  //  case where setVoiceLanguage is called before i18next persists the key).
+  try {
+    localStorage.setItem("calicoach_lang", bcp47);
+  } catch { /* ignore */ }
 }
 
 // ─── Browser TTS (FREE profiles ONLY: classic, classic_female) ───────────────
@@ -218,12 +234,14 @@ function _speakWithAudioElement(
   // Stop previous audio element — never browser TTS.
   stopCurrentAudio();
 
+  // Always read the language live — never use a cached variable, which can be
+  // stale if workout.tsx's useEffect fired while i18n was still initialising.
   const params = new URLSearchParams({
     text:         text.slice(0, 500),
     profile:      profileId,
     exerciseName: exerciseName,
     cacheKey:     cacheKey,
-    language:     _coachLang,
+    language:     getLiveCoachLang(),
   });
 
   const url = `/api/tts/stream?${params.toString()}`;
@@ -353,12 +371,15 @@ export function testCoachVoice(profileId: string, label?: string): Promise<void>
     rio_flair:      "Vamos! Keep your chest up and drive through with power — Ginga is in your soul!",
   };
 
+  // Read the active language live — never use a potentially-stale cached var.
+  const activeLang = getLiveCoachLang();
+
   // When the app is set to a non-English language, use a pre-translated test
   // phrase so ElevenLabs receives the correct language in the text payload.
-  // For English, keep the personality-specific English cue for character flavour.
+  // For English, keep the personality-specific cue for character flavour.
   const sampleText =
-    _coachLang !== "en"
-      ? getTestPhrase(_coachLang)
+    activeLang !== "en"
+      ? getTestPhrase(activeLang)
       : (SAMPLE_CUES[profileId] ??
          "Great form — keep your core tight and breathe through the movement.");
 
