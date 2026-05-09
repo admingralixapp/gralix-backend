@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
 import { useToast } from "@/hooks/use-toast";
 import {
   getTasksForPreferences,
@@ -482,6 +483,7 @@ function TaskCard({
         expanded ? "border-primary/40" : "",
       )}
     >
+
       <button
         onClick={() => setExpanded(v => !v)}
         className="w-full flex items-center gap-3 p-4 text-left"
@@ -510,8 +512,11 @@ function TaskCard({
 
       {expanded && (
         <div className="px-4 pb-4 pt-0 space-y-3 border-t border-border/50">
+          {/* 3-panel motion snapshot */}
+          <ExerciseMotionSnapshot exerciseName={name} className="pt-3" />
+
           {/* Why this exercise for your goal */}
-          <div className="flex items-start gap-2 pt-3 rounded-lg bg-primary/5 px-3 py-2.5 -mx-0">
+          <div className="flex items-start gap-2 rounded-lg bg-primary/5 px-3 py-2.5 -mx-0">
             <span className="text-[10px] font-bold text-primary uppercase tracking-widest shrink-0 mt-px">
               Why
             </span>

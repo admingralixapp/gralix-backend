@@ -5,6 +5,7 @@ import { Dumbbell, Info, Volume2, Crosshair } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { getExerciseConfig } from "@/lib/exercise-registry";
+import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
 
 export function Exercises() {
   const { data: exercises, isLoading } = useListExercises();
@@ -44,6 +45,12 @@ export function Exercises() {
               </div>
             </CardHeader>
             <CardContent className="p-6 flex-1 flex flex-col">
+              {/* 3-panel motion snapshot */}
+              <ExerciseMotionSnapshot
+                exerciseName={exercise.name}
+                className="mb-5"
+              />
+
               <p className="text-sm text-muted-foreground mb-6 line-clamp-2">
                 {exercise.description}
               </p>
