@@ -564,7 +564,7 @@ export function ShopPage() {
                         try {
                           await testCoachVoice(p.id, p.label);
                         } catch {
-                          toast({ title: "ElevenLabs Connection Error", description: `Could not fetch audio for ${p.label}. Check connection.`, variant: "destructive" });
+                          toast({ title: t("shop.elevenLabsError"), description: t("shop.elevenLabsErrorDesc", { name: p.label }), variant: "destructive" });
                         } finally {
                           setTestingVoiceId(null);
                         }

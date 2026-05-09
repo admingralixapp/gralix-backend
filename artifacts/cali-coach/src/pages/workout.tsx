@@ -2411,8 +2411,7 @@ export function Workout() {
               <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/60 border border-white/15 backdrop-blur-sm">
                 <Layers className="w-3.5 h-3.5 text-primary" />
                 <span className="text-sm font-bold text-white">
-                  Set <span className="text-primary">{currentSet}</span>
-                  <span className="text-white/35"> / {totalSets}</span>
+                  {t("workout.setOfTotal", { current: currentSet, total: totalSets })}
                 </span>
               </div>
             </div>
