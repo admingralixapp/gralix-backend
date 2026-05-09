@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
 import { useTranslation } from "react-i18next";
-import { speak } from "@/lib/voice-service";
-import { getVoiceCues } from "@/lib/workout-preferences";
-import { getWorkoutCue } from "@/lib/cue-translations";
+import { speak, setActiveVoiceProfile } from "@/lib/voice-service";
+import { getVoiceCues, getVoiceProfile } from "@/lib/workout-preferences";
+import { getWorkoutCue, getStretchCue } from "@/lib/cue-translations";
 import {
   getTasksForPreferences,
   routineDurationMinutes,
@@ -123,15 +123,22 @@ function ActiveWorkoutPlayer({
 
   const { i18n } = useTranslation();
 
+  // ── Sync the equipped voice profile so ElevenLabs uses Sensei/Sergeant/etc ─
+  useEffect(() => {
+    setActiveVoiceProfile(getVoiceProfile());
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Speak the exercise coaching cue at the START of each stretch ─────────
-  // The English coachingCue text is sent to the backend where the LLM
-  // rephrases it in character AND in the target language. If the LLM is
-  // unavailable the raw text goes to ElevenLabs as-is (degraded: English audio).
+  // Pre-translated text (same pattern as Shop Test buttons) is sent directly
+  // to ElevenLabs in the active language. Paid profiles get LLM character
+  // rephrasing on the backend; free profiles get the translated browser TTS.
   useEffect(() => {
     if (!getVoiceCues()) return;
     if (!currentStretch) return;
+    const cue = getStretchCue(currentStretch.id, i18n.language) || currentStretch.coachingCue;
     const t = setTimeout(() => {
-      speak(currentStretch.coachingCue, "encouraging");
+      console.log(`[CaliCoach Mobility] speak → lang="${i18n.language}" stretch="${currentStretch.id}" cue="${cue.slice(0, 60)}"`);
+      speak(cue, "encouraging");
     }, 600);
     return () => clearTimeout(t);
   }, [stretchIndex]); // eslint-disable-line react-hooks/exhaustive-deps
