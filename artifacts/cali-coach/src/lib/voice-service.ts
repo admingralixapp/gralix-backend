@@ -138,6 +138,16 @@ export function setVoiceLanguage(bcp47: string): void {
   _speechLang = bcp47;
 }
 
+// ─── Coach language (ElevenLabs Multilingual v2) ──────────────────────────────
+// ISO 639-1 code sent as ?language= to /api/tts/stream so the LLM generates
+// the coaching cue in the correct language.
+
+let _coachLang = "en";
+
+export function setCoachLang(code: string): void {
+  _coachLang = code;
+}
+
 // ─── Browser TTS (FREE profiles ONLY: classic, classic_female) ───────────────
 
 function browserSpeakForProfile(text: string, profileId: string): void {
@@ -203,6 +213,7 @@ function _speakWithAudioElement(
     profile:      profileId,
     exerciseName: exerciseName,
     cacheKey:     cacheKey,
+    language:     _coachLang,
   });
 
   const url = `/api/tts/stream?${params.toString()}`;

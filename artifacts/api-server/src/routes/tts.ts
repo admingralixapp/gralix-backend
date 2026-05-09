@@ -323,11 +323,12 @@ router.get("/tts/stream", async (req: Request, res: Response) => {
     return;
   }
 
-  const { text, profile: profileId, exerciseName, cacheKey } = req.query as {
+  const { text, profile: profileId, exerciseName, cacheKey, language } = req.query as {
     text?:         string;
     profile?:      string;
     exerciseName?: string;
     cacheKey?:     string;
+    language?:     string;
   };
 
   if (!text?.trim()) {
@@ -353,7 +354,11 @@ router.get("/tts/stream", async (req: Request, res: Response) => {
   // ── 2. LLM personality injection ────────────────────────────────────────
   let cueText = text.trim();
   const ai = getOpenAI();
-  if (ai && exerciseName?.trim()) {
+  if (ai) {
+    const langInstruction =
+      language && language !== "en"
+        ? ` Reply in the language with ISO 639-1 code "${language}". Do NOT switch to English.`
+        : "";
     try {
       const completion = await ai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -363,9 +368,9 @@ router.get("/tts/stream", async (req: Request, res: Response) => {
           {
             role: "user",
             content:
-              `Exercise: ${exerciseName}. Form issue detected: "${cueText}". ` +
-              `Generate exactly one coaching sentence in character. ` +
-              `Do NOT use quotes. Max 15 words.`,
+              `Exercise: ${exerciseName?.trim() || "workout"}. Coaching cue: "${cueText}". ` +
+              `Generate exactly one coaching sentence in character.` +
+              `${langInstruction} Do NOT use quotes. Max 15 words.`,
           },
         ],
       });

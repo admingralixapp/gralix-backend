@@ -1,10 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Flame, Pause, Play, SkipForward, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
+import { speak, setCoachLang } from "@/lib/voice-service";
+import { getVoiceCues } from "@/lib/workout-preferences";
+import { getCoachLanguage } from "@/lib/coach-language";
 import {
   getTasksForPreferences,
   routineDurationMinutes,
@@ -116,6 +119,27 @@ function ActiveWorkoutPlayer({
   const currentStretch = routine[stretchIndex];
   const nextStretch = routine[stretchIndex + 1];
   const isLast = stretchIndex + 1 >= routine.length;
+
+  // ── Initialise coach language on player mount ─────────────────────────────
+  useEffect(() => {
+    setCoachLang(getCoachLanguage());
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Voice cues at 30 s remaining and at 0 s (stretch complete) ───────────
+  const spokenRef = useRef<Record<string, boolean>>({});
+  useEffect(() => {
+    if (!getVoiceCues()) return;
+    const key30 = `${stretchIndex}:30`;
+    const key0  = `${stretchIndex}:0`;
+    if (secondsLeft === 30 && !spokenRef.current[key30]) {
+      spokenRef.current[key30] = true;
+      speak("30 seconds — keep it up, you've got this!", "encouraging");
+    }
+    if (secondsLeft === 0 && !spokenRef.current[key0]) {
+      spokenRef.current[key0] = true;
+      speak("Great work — stretch complete!", "encouraging");
+    }
+  }, [secondsLeft, stretchIndex]);
 
   // ── SCROLL LOCK — fires exactly on mount, unlocks exactly on unmount ─────
   useEffect(() => {

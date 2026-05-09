@@ -5,12 +5,18 @@ import { useUser, useClerk } from "@clerk/react";
 import {
   Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video,
   AlertTriangle, Timer, Camera, Volume2, FlipHorizontal2, Ruler, ExternalLink,
-  Globe, Search, Check, Crown, X,
+  Globe, Search, Check, Crown, X, Languages,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LANGUAGES, getLang } from "@/i18n/languages";
-import { setVoiceLanguage } from "@/lib/voice-service";
+import { setVoiceLanguage, setCoachLang } from "@/lib/voice-service";
 import { setAuraLanguage } from "@/lib/aura-audio";
+import {
+  COACH_LANGUAGES,
+  getCoachLanguage,
+  setCoachLanguage,
+  getCoachLanguageName,
+} from "@/lib/coach-language";
 import {
   getVoiceCues, setVoiceCues,
   getCameraFacing, setCameraFacing, type CameraFacing,
@@ -115,6 +121,8 @@ export function Settings() {
   const [cameraFacing,     setCameraFacingState] = useState<CameraFacing>(() => getCameraFacing());
   const [mirrorVideoOn,    setMirrorVideoState]  = useState<boolean>(() => getMirrorVideo());
   const [voiceProfileId,   setVoiceProfileState] = useState<string>(() => getVoiceProfile());
+  const [coachLangCode,    setCoachLangState]    = useState<string>(() => getCoachLanguage());
+  const [coachLangOpen,    setCoachLangOpen]     = useState(false);
 
   function handleVoiceCuesToggle() {
     const next = !voiceCuesEnabled;
@@ -137,6 +145,14 @@ export function Settings() {
     setVoiceProfile(profileId);
     setVoiceProfileState(profileId);
     clearCueCache();
+  }
+
+  function handleCoachLangChange(code: string) {
+    setCoachLanguage(code);
+    setCoachLangState(code);
+    setCoachLang(code);
+    setCoachLangOpen(false);
+    toast({ title: `Coach language set to ${getCoachLanguageName(code)}` });
   }
 
   useEffect(() => {
@@ -646,6 +662,70 @@ export function Settings() {
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          <div className="h-px bg-white/[0.07]" />
+
+          {/* Coach Language */}
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-teal-500/15 border border-teal-500/25 flex items-center justify-center shrink-0">
+                <Languages className="w-4 h-4 text-teal-400" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-foreground">Coach Language</div>
+                <div className="text-[11px] text-muted-foreground">
+                  Language for AI voice coaching cues (ElevenLabs Multilingual v2)
+                </div>
+              </div>
+            </div>
+
+            <div className="relative">
+              <button
+                onClick={() => setCoachLangOpen((o) => !o)}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-white/10 text-sm text-foreground transition-all"
+                style={{ background: "rgba(255,255,255,0.05)" }}
+              >
+                <span className="font-medium">
+                  {COACH_LANGUAGES.find((l) => l.code === coachLangCode)?.nativeName ?? "English"}
+                  <span className="ml-2 text-muted-foreground text-xs">
+                    ({COACH_LANGUAGES.find((l) => l.code === coachLangCode)?.name ?? "English"})
+                  </span>
+                </span>
+                <span className="text-muted-foreground text-xs ml-2">{coachLangOpen ? "▲" : "▼"}</span>
+              </button>
+
+              {coachLangOpen && (
+                <div
+                  className="absolute z-50 left-0 right-0 mt-1 rounded-xl border border-white/10 overflow-y-auto"
+                  style={{
+                    background: "rgba(18,18,24,0.97)",
+                    backdropFilter: "blur(20px)",
+                    maxHeight: 260,
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  {COACH_LANGUAGES.map((lang) => {
+                    const active = coachLangCode === lang.code;
+                    return (
+                      <button
+                        key={lang.code}
+                        onClick={() => handleCoachLangChange(lang.code)}
+                        className="w-full flex items-center justify-between px-4 py-2.5 text-left text-sm transition-colors hover:bg-white/[0.07]"
+                      >
+                        <span>
+                          <span className={active ? "text-primary font-semibold" : "text-foreground"}>
+                            {lang.nativeName}
+                          </span>
+                          <span className="ml-2 text-muted-foreground text-xs">{lang.name}</span>
+                        </span>
+                        {active && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
