@@ -90,6 +90,199 @@ function ProgressDots({
   );
 }
 
+// ─── Active Workout Player ────────────────────────────────────────────────────
+// Extracted into its own component so that useEffect(fn,[]) fires exactly on
+// mount (scroll lock) and unmount (scroll unlock) — not on pageState changes.
+
+interface ActiveWorkoutPlayerProps {
+  routine: Stretch[];
+  stretchIndex: number;
+  secondsLeft: number;
+  paused: boolean;
+  onExit: () => void;
+  onSkip: () => void;
+  onPauseToggle: () => void;
+}
+
+function ActiveWorkoutPlayer({
+  routine,
+  stretchIndex,
+  secondsLeft,
+  paused,
+  onExit,
+  onSkip,
+  onPauseToggle,
+}: ActiveWorkoutPlayerProps) {
+  const currentStretch = routine[stretchIndex];
+  const nextStretch = routine[stretchIndex + 1];
+  const isLast = stretchIndex + 1 >= routine.length;
+
+  // ── SCROLL LOCK — fires exactly on mount, unlocks exactly on unmount ─────
+  useEffect(() => {
+    window.scrollTo(0, 0);
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = "0";
+    document.body.style.left = "0";
+    document.body.style.width = "100vw";
+    document.body.style.height = "100vh";
+
+    return () => {
+      document.documentElement.style.overflow = "auto";
+      document.body.style.overflow = "auto";
+      document.body.style.position = "static";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.width = "auto";
+      document.body.style.height = "auto";
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!currentStretch) return null;
+
+  return (
+    <div
+      id="workout-shell"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        maxWidth: "100vw",
+        margin: 0,
+        padding: 0,
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
+      }}
+      className="bg-background"
+    >
+      {/* ── TOP: Exit · ProgressDots · Pause · Skip ───────────────────────── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+        <button
+          onClick={onExit}
+          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer" }}
+        >
+          <ArrowLeft size={16} />
+          Exit
+        </button>
+
+        <ProgressDots
+          total={routine.length}
+          current={stretchIndex}
+          done={secondsLeft === 0}
+        />
+
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <button
+            onClick={onPauseToggle}
+            aria-label={paused ? "Resume" : "Pause"}
+            style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer" }}
+          >
+            {paused ? <Play size={14} /> : <Pause size={14} />}
+          </button>
+          <button
+            onClick={onSkip}
+            style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer" }}
+          >
+            Skip <SkipForward size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── BODY: 3 zones, space-between ──────────────────────────────────── */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          alignItems: "center",
+          overflow: "hidden",
+          padding: "12px 16px 16px",
+          maxWidth: 448,
+          width: "100%",
+          margin: "0 auto",
+          boxSizing: "border-box",
+        }}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={stretchIndex}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", flex: 1, width: "100%", minHeight: 0 }}
+          >
+            {/* ZONE 1 — label */}
+            <div style={{ textAlign: "center", width: "100%", flexShrink: 0 }}>
+              <div style={{ fontSize: 10, color: "var(--primary)", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 2 }}>
+                Stretch {stretchIndex + 1} of {routine.length}
+              </div>
+              <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, margin: 0 }}>{currentStretch.name}</h2>
+            </div>
+
+            {/* ZONE 2 — 3-panel snapshot */}
+            <div
+              className={cn(
+                "w-full",
+                paused ? "opacity-50" : secondsLeft === 0 ? "opacity-100" : "[animation:ghostPulse_2.5s_ease-in-out_infinite]",
+              )}
+              style={{ flex: "1 1 0", minHeight: 0, maxHeight: 240, display: "flex", alignItems: "center", width: "100%", overflow: "hidden" }}
+            >
+              <ExerciseMotionSnapshot
+                exerciseName={currentStretch.name}
+                color="#22c55e"
+                glow={!paused}
+                className="w-full h-full"
+              />
+            </div>
+
+            {/* ZONE 3 — timer + info */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%", flexShrink: 0 }}>
+              <p style={{ fontSize: 12, color: "var(--muted-foreground)", textAlign: "center", maxWidth: 280, lineHeight: 1.5, margin: 0, padding: "0 8px" }}>
+                {currentStretch.coachingCue}
+              </p>
+
+              <CircularTimer secondsLeft={secondsLeft} total={currentStretch.durationSeconds} paused={paused} />
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
+                {currentStretch.targetMuscles.map((m) => (
+                  <span key={m} className="px-2.5 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">{m}</span>
+                ))}
+              </div>
+
+              <div style={{ fontSize: 12, textAlign: "center" }}>
+                {!isLast && nextStretch
+                  ? <span style={{ color: "var(--muted-foreground)" }}>Next: <strong>{nextStretch.name}</strong></span>
+                  : <span style={{ color: "var(--primary)", fontWeight: 600 }}>Last stretch — finish strong!</span>}
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <style>{`
+        @keyframes ghostPulse { 0%,100%{opacity:.72} 50%{opacity:1} }
+        #workout-shell, #workout-shell * {
+          scrollbar-width: none; -ms-overflow-style: none;
+          max-width: 100vw; box-sizing: border-box;
+        }
+        #workout-shell::-webkit-scrollbar, #workout-shell *::-webkit-scrollbar {
+          display: none; width: 0; height: 0;
+        }
+      `}</style>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 type PageState = "ready" | "active" | "done";
@@ -130,38 +323,6 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  // ── Document-level scroll lock while the active workout timer is on screen ───
-  // This useEffect lives INSIDE MobilityPage so it fires regardless of which
-  // parent mounts it (overlay or standalone /mobility route).
-  useEffect(() => {
-    if (pageState !== "active") {
-      // Restore scroll when we leave the active state
-      document.documentElement.style.overflow = "auto";
-      document.body.style.overflow = "auto";
-      document.body.style.position = "static";
-      document.body.style.width = "auto";
-      return;
-    }
-
-    // LOCK — apply to both <html> and <body>
-    document.documentElement.style.overflow = "hidden";
-    document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = "0";
-    document.body.style.left = "0";
-    document.body.style.width = "100vw";
-
-    return () => {
-      // UNLOCK on unmount or state change
-      document.documentElement.style.overflow = "auto";
-      document.body.style.overflow = "auto";
-      document.body.style.position = "static";
-      document.body.style.top = "";
-      document.body.style.left = "";
-      document.body.style.width = "auto";
-    };
-  }, [pageState]);
 
   // ── Reset timer + pause state when exercise changes ─────────────────────────
   useEffect(() => {
@@ -343,206 +504,20 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
     );
   }
 
-  // ── ACTIVE STATE ────────────────────────────────────────────────────────────
-  if (!currentStretch) return null;
+  // ── ACTIVE STATE — rendered by its own component which owns the scroll lock ──
+  if (pageState === "active") {
+    return (
+      <ActiveWorkoutPlayer
+        routine={routine}
+        stretchIndex={stretchIndex}
+        secondsLeft={secondsLeft}
+        paused={paused}
+        onExit={exitSession}
+        onSkip={advanceStretch}
+        onPauseToggle={() => setPaused((p) => !p)}
+      />
+    );
+  }
 
-  const nextStretch = routine[stretchIndex + 1];
-  const isLast = stretchIndex + 1 >= routine.length;
-
-  return (
-    // position:fixed + inset:0 = physically impossible to be offset by parent scroll
-    <div
-      id="workout-shell"
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: "100vw",
-        height: "100dvh",
-        maxWidth: "100vw",
-        margin: 0,
-        padding: 0,
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        boxSizing: "border-box",
-      }}
-      className="bg-background"
-    >
-
-      {/* ── TOP: Exit · ProgressDots · Pause · Skip ───────────────────────── */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-border shrink-0 gap-2">
-        <button
-          onClick={exitSession}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Exit
-        </button>
-
-        <ProgressDots
-          total={routine.length}
-          current={stretchIndex}
-          done={secondsLeft === 0}
-        />
-
-        <div className="flex items-center gap-4 shrink-0">
-          <button
-            onClick={() => setPaused((p) => !p)}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            aria-label={paused ? "Resume" : "Pause"}
-          >
-            {paused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
-          </button>
-          <button
-            onClick={advanceStretch}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Skip
-            <SkipForward className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* ── CONTENT: space-between across 3 zones ─────────────────────────── */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          alignItems: "center",
-          overflow: "hidden",
-          padding: "12px 16px 16px",
-          maxWidth: 448,
-          width: "100%",
-          margin: "0 auto",
-        }}
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={stretchIndex}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flex: 1,
-              width: "100%",
-              minHeight: 0,
-            }}
-          >
-
-            {/* ZONE 1 — Exercise label (top) */}
-            <div className="text-center w-full shrink-0">
-              <div className="text-[10px] text-primary font-bold tracking-widest uppercase mb-0.5">
-                Stretch {stretchIndex + 1} of {routine.length}
-              </div>
-              <h2 className="text-lg font-bold leading-tight">{currentStretch.name}</h2>
-            </div>
-
-            {/* ZONE 2 — 3-panel snapshot (middle, flex-grow to fill space) */}
-            <div
-              className={cn(
-                "w-full",
-                paused
-                  ? "opacity-50"
-                  : secondsLeft === 0
-                    ? "opacity-100"
-                    : "[animation:ghostPulse_2.5s_ease-in-out_infinite]",
-              )}
-              style={{ flex: "1 1 0", minHeight: 0, maxHeight: 240, display: "flex", alignItems: "center" }}
-            >
-              <ExerciseMotionSnapshot
-                exerciseName={currentStretch.name}
-                color="#22c55e"
-                glow={!paused}
-                className="w-full h-full"
-              />
-            </div>
-
-            {/* ZONE 3 — Timer + info (bottom) */}
-            <div className="flex flex-col items-center gap-2 w-full shrink-0">
-
-              {/* Coaching cue */}
-              <p className="text-xs text-muted-foreground text-center max-w-xs leading-relaxed px-2">
-                {currentStretch.coachingCue}
-              </p>
-
-              {/* Circular timer */}
-              <CircularTimer
-                secondsLeft={secondsLeft}
-                total={currentStretch.durationSeconds}
-                paused={paused}
-              />
-
-              {/* Muscle group tags */}
-              <div className="flex flex-wrap gap-1.5 justify-center">
-                {currentStretch.targetMuscles.map((m) => (
-                  <span
-                    key={m}
-                    className="px-2.5 py-0.5 rounded-full bg-muted text-xs text-muted-foreground"
-                  >
-                    {m}
-                  </span>
-                ))}
-              </div>
-
-              {/* Next up / finish line */}
-              <div className="text-xs text-center">
-                {!isLast && nextStretch
-                  ? <span className="text-muted-foreground/70">Next: <span className="text-muted-foreground font-medium">{nextStretch.name}</span></span>
-                  : <span className="text-primary/70 font-medium">Last stretch — finish strong!</span>}
-              </div>
-
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      <style>{`
-        @keyframes ghostPulse {
-          0%, 100% { opacity: 0.72; }
-          50%       { opacity: 1;    }
-        }
-
-        /* ── Total scrollbar elimination while workout is active ── */
-        html.workout-active,
-        html.workout-active body {
-          overflow: hidden !important;
-          height: 100% !important;
-          max-width: 100vw !important;
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        html.workout-active::-webkit-scrollbar,
-        html.workout-active body::-webkit-scrollbar {
-          display: none !important;
-          width: 0 !important;
-          height: 0 !important;
-        }
-
-        /* ── Workout shell + all its descendants ── */
-        #workout-shell,
-        #workout-shell * {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          max-width: 100vw;
-          box-sizing: border-box;
-        }
-        #workout-shell::-webkit-scrollbar,
-        #workout-shell *::-webkit-scrollbar {
-          display: none;
-          width: 0;
-          height: 0;
-        }
-      `}</style>
-    </div>
-  );
+  return null;
 }
