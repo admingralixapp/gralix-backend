@@ -386,7 +386,7 @@ router.get("/tts/stream", async (req: Request, res: Response) => {
   }
 
   // ── 3. ElevenLabs TTS ───────────────────────────────────────────────────
-  console.log(`[ElevenLabs] /api/tts/stream — profile="${profile.id}" voiceId="${profile.voiceId}" text="${cueText.slice(0, 60)}"`);
+  console.log(`[CaliCoach TTS] Sending to ElevenLabs: "${cueText.slice(0, 80)}" in "${language ?? "en"}" (profile="${profile.id}")`);
   let audioBuffer: Buffer;
   try {
     audioBuffer = await elevenLabsTTS(

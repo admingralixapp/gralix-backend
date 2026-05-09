@@ -383,15 +383,21 @@ export function testCoachVoice(profileId: string, label?: string): Promise<void>
       : (SAMPLE_CUES[profileId] ??
          "Great form — keep your core tight and breathe through the movement.");
 
+  // ── Verification log — visible in browser DevTools console ─────────────
+  console.log(
+    `%c[CaliCoach Voice] Sending to ElevenLabs: "${sampleText}" in "${activeLang}"`,
+    "color: #22c55e; font-weight: bold;",
+  );
+
   if (FREE_VOICE_PROFILES.has(profileId)) {
-    console.log(`[CaliCoach Voice] testCoachVoice() → FREE profile="${profileId}" — browser TTS`);
+    console.log(`[CaliCoach Voice] testCoachVoice() → FREE profile="${profileId}" — browser TTS (lang: ${activeLang})`);
     browserSpeakForProfile(sampleText, profileId);
     return Promise.resolve();
   }
 
   // Paid profile — ElevenLabs ONLY. window.speechSynthesis is NOT called.
   const voiceName = label ?? profileId;
-  console.log(`[CaliCoach Voice] 🎙️ Fetching ElevenLabs Audio for ${voiceName}... (profile="${profileId}" → /api/tts/stream)`);
+  console.log(`[CaliCoach Voice] 🎙️ profile="${profileId}" (${voiceName}) → /api/tts/stream?language=${activeLang}`);
 
   stopCurrentAudio();
   // Use a timestamp suffix so the browser never serves a cached response for test clicks.
