@@ -119,6 +119,19 @@ function ActiveWorkoutPlayer({
   const nextStretch = routine[stretchIndex + 1];
   const isLast = stretchIndex + 1 >= routine.length;
 
+  // ── Speak the exercise coaching cue at the START of each stretch ─────────
+  // The text is the English coachingCue; the backend LLM translates it into
+  // the active coach language before sending it to ElevenLabs.
+  useEffect(() => {
+    if (!getVoiceCues()) return;
+    if (!currentStretch) return;
+    // Small delay so the exercise title animation settles first
+    const t = setTimeout(() => {
+      speak(currentStretch.coachingCue, "encouraging");
+    }, 600);
+    return () => clearTimeout(t);
+  }, [stretchIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Voice cues at 30 s remaining and at 0 s (stretch complete) ───────────
   const spokenRef = useRef<Record<string, boolean>>({});
   useEffect(() => {
@@ -127,7 +140,7 @@ function ActiveWorkoutPlayer({
     const key0  = `${stretchIndex}:0`;
     if (secondsLeft === 30 && !spokenRef.current[key30]) {
       spokenRef.current[key30] = true;
-      speak("30 seconds — keep it up, you've got this!", "encouraging");
+      speak("30 seconds remaining — keep going, you've got this!", "encouraging");
     }
     if (secondsLeft === 0 && !spokenRef.current[key0]) {
       spokenRef.current[key0] = true;

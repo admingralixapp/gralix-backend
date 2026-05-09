@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { LANGUAGES, getLang } from "@/i18n/languages";
 import { setVoiceLanguage } from "@/lib/voice-service";
 import { setAuraLanguage } from "@/lib/aura-audio";
+import { ELEVENLABS_SUPPORTED } from "@/lib/coach-language";
 import {
   getVoiceCues, setVoiceCues,
   getCameraFacing, setCameraFacing, type CameraFacing,
@@ -65,14 +66,18 @@ export function Settings() {
 
   const currentLang = getLang(i18n.language ?? "en") ?? LANGUAGES[0]!;
 
+  // Only offer languages that ElevenLabs Multilingual v2 can actually speak.
+  // UI text is served via i18n for all 100 languages — voice is the constraint.
+  const EL_LANGUAGES = LANGUAGES.filter((l) => ELEVENLABS_SUPPORTED.has(l.code));
+
   const filteredLangs = langSearch.trim()
-    ? LANGUAGES.filter(
+    ? EL_LANGUAGES.filter(
         (l) =>
           l.name.toLowerCase().includes(langSearch.toLowerCase()) ||
           l.nativeName.toLowerCase().includes(langSearch.toLowerCase()) ||
           l.code.toLowerCase().includes(langSearch.toLowerCase()),
       )
-    : LANGUAGES;
+    : EL_LANGUAGES;
 
   function handleLanguageChange(code: string) {
     i18n.changeLanguage(code);
