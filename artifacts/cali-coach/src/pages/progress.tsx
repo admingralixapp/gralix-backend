@@ -37,6 +37,12 @@ import {
 } from "@/lib/skill-tree";
 import { useMyProfile, useActivatePro } from "@/lib/social";
 
+// ─── Exercise name → i18n key ─────────────────────────────────────────────────
+
+function sanitizeExName(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+}
+
 // ─── Exercise → Branch lookup ────────────────────────────────────────────────
 
 const EXERCISE_BRANCH: Record<string, string> = {};
@@ -410,7 +416,7 @@ export function Progress() {
                     axisLine={false}
                     domain={[0, 100]}
                     label={{
-                      value: "Form",
+                      value: t("progress.formLabel"),
                       angle: -90,
                       position: "insideLeft",
                       fill: "#666",
@@ -426,7 +432,7 @@ export function Progress() {
                     tickLine={false}
                     axisLine={false}
                     label={{
-                      value: "Reps",
+                      value: t("progress.repsLabel"),
                       angle: 90,
                       position: "insideRight",
                       fill: "#666",
@@ -675,6 +681,7 @@ export function Progress() {
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
+                    tickFormatter={(name: string) => t(`exercises.${sanitizeExName(name)}`, { defaultValue: name })}
                   />
                   <YAxis
                     stroke="#888888"
@@ -689,6 +696,7 @@ export function Progress() {
                       borderColor: "hsl(var(--border))",
                       borderRadius: "8px",
                     }}
+                    labelFormatter={(label: string) => t(`exercises.${sanitizeExName(label)}`, { defaultValue: label })}
                   />
                   <Bar
                     dataKey="totalReps"
@@ -757,7 +765,7 @@ export function Progress() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-semibold leading-tight">
-                            {skill.title}
+                            {t(`skillTree.nodeTitle.${skill.id}`, { defaultValue: skill.title })}
                           </span>
                           <span
                             className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
@@ -767,10 +775,10 @@ export function Progress() {
                               border: `1px solid ${color}30`,
                             }}
                           >
-                            {skill.branch} · L{skill.level}
+                            {t(BRANCH_LABEL_KEYS[skill.branch] ?? skill.branch)} · L{skill.level}
                           </span>
                           <span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground">
-                            {skill.levelName}
+                            {t(`skillTree.levelName.${skill.levelName.toLowerCase()}`, { defaultValue: skill.levelName })}
                           </span>
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5">
