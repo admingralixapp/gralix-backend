@@ -36,6 +36,50 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { MasteryRequirement } from "@/lib/skill-tree";
+
+// ─── i18n helpers ─────────────────────────────────────────────────────────────
+
+const PATH_LABEL_I18N: Record<string, string> = {
+  "Overhead Path":                  "skillTree.pathLabel.overhead",
+  "Planche Path":                   "skillTree.pathLabel.planche",
+  "Front Lever Path":               "skillTree.pathLabel.frontLever",
+  "Muscle-Up Path":                 "skillTree.pathLabel.muscleUp",
+  "Advanced Moves Path":            "skillTree.pathLabel.advancedMoves",
+  "Hollow Holds Path":              "skillTree.pathLabel.hollowHolds",
+  "Bar Based Path":                 "skillTree.pathLabel.barBased",
+  "Human Flag Path":                "skillTree.pathLabel.humanFlag",
+  "L-Sit Path":                     "skillTree.pathLabel.lSit",
+  "Pistol Squat Path":              "skillTree.pathLabel.pistolSquat",
+  "One-Arm Path":                   "skillTree.pathLabel.oneArm",
+  "Rings Specialist":               "skillTree.pathLabel.ringsSpecialist",
+  "Weighted Specialist":            "skillTree.pathLabel.weightedSpecialist",
+  "Weighted Core Specialist":       "skillTree.pathLabel.weightedCoreSpecialist",
+  "Power & Instability Specialist": "skillTree.pathLabel.powerInstability",
+  "Weighted Legs Specialist":       "skillTree.pathLabel.weightedLegs",
+};
+
+function translateReq(
+  req: MasteryRequirement,
+  t: (key: string, opts?: Record<string, number>) => string,
+): string {
+  const { minReps, minFormScore, minQualifyingSessions, description } = req;
+  const lower = description.toLowerCase();
+  const opts = { reps: minReps, form: minFormScore, sessions: minQualifyingSessions };
+  if (lower.startsWith("hold") && lower.includes("per side")) {
+    return t("skillTree.req.holdSide", opts);
+  }
+  if (lower.startsWith("hold")) {
+    return t("skillTree.req.hold", opts);
+  }
+  if (lower.includes("steps per side")) {
+    return t("skillTree.req.completeSteps", opts);
+  }
+  if (lower.includes("per side")) {
+    return t("skillTree.req.completeSide", opts);
+  }
+  return t("skillTree.req.complete", opts);
+}
 
 // ─── Layout constants ─────────────────────────────────────────────────────────
 
@@ -198,27 +242,27 @@ const EDGES: [string, string][] = [
   ["legs-ps-2", "legs-ps-3"], ["legs-ps-3", "legs-ps-4"],
 ];
 
-// Section labels (positioned at branch tips + outward)
+// Section labels (positioned at branch tips + outward) — label field holds i18n key
 const SECTION_LABELS = [
-  { x: HUB_X,                y: HUB_Y - GAP * 5 - 52,  label: "PUSH", color: BRANCH_COLOR.PUSH, anchor: "middle" },
-  { x: HUB_X + GAP * 6 + 64, y: HUB_Y,                 label: "PULL", color: BRANCH_COLOR.PULL, anchor: "start" },
-  { x: HUB_X,                y: HUB_Y + GAP * 5 + 56,  label: "CORE", color: BRANCH_COLOR.CORE, anchor: "middle" },
-  { x: HUB_X - GAP * 5 - 64, y: HUB_Y,                 label: "LEGS", color: BRANCH_COLOR.LEGS, anchor: "end" },
+  { x: HUB_X,                y: HUB_Y - GAP * 5 - 52,  label: "skillTree.push", color: BRANCH_COLOR.PUSH, anchor: "middle" },
+  { x: HUB_X + GAP * 6 + 64, y: HUB_Y,                 label: "skillTree.pull", color: BRANCH_COLOR.PULL, anchor: "start" },
+  { x: HUB_X,                y: HUB_Y + GAP * 5 + 56,  label: "skillTree.core", color: BRANCH_COLOR.CORE, anchor: "middle" },
+  { x: HUB_X - GAP * 5 - 64, y: HUB_Y,                 label: "skillTree.legs", color: BRANCH_COLOR.LEGS, anchor: "end" },
 ];
 
-// Sub-path labels
+// Sub-path labels — text field holds i18n key
 const PATH_LABELS = [
-  { x: HUB_X + SIDE + 14,     y: HUB_Y - GAP * 1.5,   text: "Overhead",     color: BRANCH_COLOR.PUSH },
-  { x: HUB_X + SIDE * 2 + 14, y: HUB_Y - GAP * 2.4,   text: "Planche",      color: BRANCH_COLOR.PUSH },
-  { x: HUB_X + GAP * 3,       y: HUB_Y - SIDE - 32,    text: "Front Lever",  color: BRANCH_COLOR.PULL },
-  { x: HUB_X + GAP * 4,       y: HUB_Y - 32,           text: "Muscle-Up",    color: BRANCH_COLOR.PULL },
-  { x: HUB_X + GAP * 5,       y: HUB_Y + SIDE + 22,    text: "Advanced",     color: BRANCH_COLOR.PULL },
-  { x: HUB_X + GAP * 4.5,    y: HUB_Y + SIDE * 2 + 22, text: "One-Arm",      color: BRANCH_COLOR.PULL },
-  { x: HUB_X - SIDE - 14,     y: HUB_Y + GAP * 0.55,  text: "Hollow Holds", color: BRANCH_COLOR.CORE },
-  { x: HUB_X + SIDE + 14,     y: HUB_Y + GAP * 0.55,  text: "Bar Based",    color: BRANCH_COLOR.CORE },
-  { x: HUB_X + SIDE * 2 + 14, y: HUB_Y + GAP * 1.6,   text: "Human Flag",   color: BRANCH_COLOR.CORE },
-  { x: HUB_X - GAP * 2,       y: HUB_Y - SIDE - 32,   text: "L-Sit",        color: BRANCH_COLOR.LEGS },
-  { x: HUB_X - GAP * 2,       y: HUB_Y + SIDE + 22,   text: "Pistol Squat", color: BRANCH_COLOR.LEGS },
+  { x: HUB_X + SIDE + 14,     y: HUB_Y - GAP * 1.5,    text: "skillTree.svgPath.overhead",    color: BRANCH_COLOR.PUSH },
+  { x: HUB_X + SIDE * 2 + 14, y: HUB_Y - GAP * 2.4,    text: "skillTree.svgPath.planche",     color: BRANCH_COLOR.PUSH },
+  { x: HUB_X + GAP * 3,       y: HUB_Y - SIDE - 32,     text: "skillTree.svgPath.frontLever",  color: BRANCH_COLOR.PULL },
+  { x: HUB_X + GAP * 4,       y: HUB_Y - 32,            text: "skillTree.svgPath.muscleUp",    color: BRANCH_COLOR.PULL },
+  { x: HUB_X + GAP * 5,       y: HUB_Y + SIDE + 22,     text: "skillTree.svgPath.advanced",    color: BRANCH_COLOR.PULL },
+  { x: HUB_X + GAP * 4.5,     y: HUB_Y + SIDE * 2 + 22, text: "skillTree.svgPath.oneArm",      color: BRANCH_COLOR.PULL },
+  { x: HUB_X - SIDE - 14,     y: HUB_Y + GAP * 0.55,   text: "skillTree.svgPath.hollowHolds", color: BRANCH_COLOR.CORE },
+  { x: HUB_X + SIDE + 14,     y: HUB_Y + GAP * 0.55,   text: "skillTree.svgPath.barBased",    color: BRANCH_COLOR.CORE },
+  { x: HUB_X + SIDE * 2 + 14, y: HUB_Y + GAP * 1.6,    text: "skillTree.svgPath.humanFlag",   color: BRANCH_COLOR.CORE },
+  { x: HUB_X - GAP * 2,       y: HUB_Y - SIDE - 32,    text: "skillTree.svgPath.lSit",        color: BRANCH_COLOR.LEGS },
+  { x: HUB_X - GAP * 2,       y: HUB_Y + SIDE + 22,    text: "skillTree.svgPath.pistolSquat", color: BRANCH_COLOR.LEGS },
 ];
 
 // ─── Equipment Specialty Node Positions ──────────────────────────────────────
@@ -292,22 +336,22 @@ const EQUIPMENT_COLORS: Record<string, string> = {
   sliders:  "#f43f5e",
 };
 
-// Path labels that appear when lens is on (tag field drives filter dimming)
+// Path labels that appear when lens is on (tag field drives filter dimming) — text field holds i18n key
 const EQUIPMENT_PATH_LABELS: Array<{ x: number; y: number; text: string; color: string; tag: string }> = [
   // PULL — rings and weighted
-  { x: HUB_X + GAP * 3,       y: HUB_Y + SIDE * 3 - 38, text: "Rings",              color: EQUIPMENT_COLORS.rings,    tag: "rings"    },
-  { x: HUB_X + GAP * 3,       y: HUB_Y + SIDE * 4 - 38, text: "Weighted",            color: EQUIPMENT_COLORS.weighted, tag: "weighted" },
+  { x: HUB_X + GAP * 3,       y: HUB_Y + SIDE * 3 - 38, text: "skillTree.svgEq.rings",              color: EQUIPMENT_COLORS.rings,    tag: "rings"    },
+  { x: HUB_X + GAP * 3,       y: HUB_Y + SIDE * 4 - 38, text: "skillTree.svgEq.weighted",            color: EQUIPMENT_COLORS.weighted, tag: "weighted" },
   // PUSH
-  { x: HUB_X - SIDE - 40,     y: HUB_Y - GAP * 3.4,     text: "Rings",              color: EQUIPMENT_COLORS.rings,    tag: "rings"    },
-  { x: HUB_X - SIDE * 2 - 48, y: HUB_Y - GAP * 3.4,     text: "Weighted",           color: EQUIPMENT_COLORS.weighted, tag: "weighted" },
+  { x: HUB_X - SIDE - 40,     y: HUB_Y - GAP * 3.4,     text: "skillTree.svgEq.rings",              color: EQUIPMENT_COLORS.rings,    tag: "rings"    },
+  { x: HUB_X - SIDE * 2 - 48, y: HUB_Y - GAP * 3.4,     text: "skillTree.svgEq.weighted",           color: EQUIPMENT_COLORS.weighted, tag: "weighted" },
   // CORE weighted / rings (column 1)
-  { x: HUB_X + SIDE * 3 + 50, y: HUB_Y + GAP * 2.4,     text: "Weighted / Rings",   color: EQUIPMENT_COLORS.weighted, tag: "weighted" },
+  { x: HUB_X + SIDE * 3 + 50, y: HUB_Y + GAP * 2.4,     text: "skillTree.svgEq.weightedRings",      color: EQUIPMENT_COLORS.weighted, tag: "weighted" },
   // CORE power / instability (column 2)
-  { x: HUB_X + SIDE * 4 + 55, y: HUB_Y + GAP * 2,       text: "Power / Instability",color: EQUIPMENT_COLORS.roller,   tag: "roller"   },
+  { x: HUB_X + SIDE * 4 + 55, y: HUB_Y + GAP * 2,       text: "skillTree.svgEq.powerInstability",   color: EQUIPMENT_COLORS.roller,   tag: "roller"   },
   // LEGS weighted (row 1)
-  { x: HUB_X - GAP * 2.5,     y: HUB_Y + SIDE * 2 - 38, text: "Weighted",            color: EQUIPMENT_COLORS.weighted, tag: "weighted" },
+  { x: HUB_X - GAP * 2.5,     y: HUB_Y + SIDE * 2 - 38, text: "skillTree.svgEq.weighted",            color: EQUIPMENT_COLORS.weighted, tag: "weighted" },
   // LEGS power / instability (row 2)
-  { x: HUB_X - GAP * 2,       y: HUB_Y + SIDE * 3 - 38, text: "Power / Instability", color: EQUIPMENT_COLORS.box,      tag: "box"      },
+  { x: HUB_X - GAP * 2,       y: HUB_Y + SIDE * 3 - 38, text: "skillTree.svgEq.powerInstability",    color: EQUIPMENT_COLORS.box,      tag: "box"      },
 ];
 
 function equipmentNodeColor(id: string): string {
@@ -385,6 +429,7 @@ function DiamondNode({
   onClick:   (skill: EvaluatedSkill, e: React.MouseEvent) => void;
   onHover:   (id: string | null) => void;
 }) {
+  const { t } = useTranslation();
   const pos = EQUIPMENT_NODE_POS[nodeId];
   if (!pos) return null;
   const { x, y } = pos;
@@ -408,7 +453,8 @@ function DiamondNode({
   const glowPts7   = `${x},${y - (R+7)}  ${x+(R+7)},${y}  ${x},${y+(R+7)}  ${x-(R+7)},${y}`;
   const hitPts     = `${x},${y - (R+20)} ${x+(R+20)},${y} ${x},${y+(R+20)} ${x-(R+20)},${y}`;
 
-  const shortTitle = skill.title.length > 13 ? skill.title.slice(0, 12) + "…" : skill.title;
+  const nodeTitle  = t(`skillTree.nodeTitle.${nodeId}`);
+  const shortTitle = nodeTitle.length > 13 ? nodeTitle.slice(0, 12) + "…" : nodeTitle;
 
   return (
     <g
@@ -424,7 +470,7 @@ function DiamondNode({
         transition: "transform 0.14s cubic-bezier(0.34,1.56,0.64,1)",
       }}
       role="button"
-      aria-label={skill.title}
+      aria-label={nodeTitle}
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onClick(skill, e as unknown as React.MouseEvent);
@@ -725,6 +771,7 @@ function GlassNode({
   onClick:   (skill: EvaluatedSkill, e: React.MouseEvent) => void;
   onHover:   (id: string | null) => void;
 }) {
+  const { t } = useTranslation();
   const pos = NODE_POS[nodeId];
   if (!pos) return null;
   const { x, y } = pos;
@@ -741,7 +788,8 @@ function GlassNode({
   const RING_R = NODE_R + 8;
   const CIRC   = 2 * Math.PI * RING_R;
 
-  const shortTitle = skill.title.length > 13 ? skill.title.slice(0, 12) + "…" : skill.title;
+  const nodeTitle  = t(`skillTree.nodeTitle.${nodeId}`);
+  const shortTitle = nodeTitle.length > 13 ? nodeTitle.slice(0, 12) + "…" : nodeTitle;
 
   return (
     <g
@@ -757,7 +805,7 @@ function GlassNode({
         transition: "transform 0.14s cubic-bezier(0.34,1.56,0.64,1)",
       }}
       role="button"
-      aria-label={skill.title}
+      aria-label={nodeTitle}
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onClick(skill, e as unknown as React.MouseEvent);
@@ -930,7 +978,7 @@ function SkillOverlay({
             style={{ backgroundColor: isLocked ? "#4b5563" : color }} />
           <span className="text-[11px] font-bold uppercase tracking-wider truncate"
             style={{ color: isLocked ? "#6b7280" : color }}>
-            {t("skillTree.level")} {skill.level} · {skill.levelName}
+            {t("skillTree.level")} {skill.level} · {t(`skillTree.levelName.${skill.levelName.toLowerCase()}`)}
           </span>
         </div>
         <button onClick={onClose}
@@ -964,9 +1012,11 @@ function SkillOverlay({
       </div>
 
       {/* Title */}
-      <p className="font-bold text-sm text-white mb-0.5 leading-tight">{skill.title}</p>
+      <p className="font-bold text-sm text-white mb-0.5 leading-tight">{t(`skillTree.nodeTitle.${skill.id}`)}</p>
       {skill.pathLabel && (
-        <p className="text-[10px] text-zinc-500 mb-2">{skill.pathLabel}</p>
+        <p className="text-[10px] text-zinc-500 mb-2">
+          {t(PATH_LABEL_I18N[skill.pathLabel] ?? "skillTree.pathLabel.overhead", { defaultValue: skill.pathLabel })}
+        </p>
       )}
 
       {/* "Why train this?" */}
@@ -982,7 +1032,7 @@ function SkillOverlay({
         <p className="text-[11px] text-zinc-300 leading-relaxed">
           {isLocked
             ? t("skillTree.masterPrereq")
-            : skill.description}
+            : t(`skillTree.nodeDesc.${skill.id}`, { defaultValue: skill.description })}
         </p>
       </div>
 
@@ -1005,7 +1055,7 @@ function SkillOverlay({
                   <span className="w-1.5 h-1.5 rounded-full shrink-0"
                     style={{ backgroundColor: isMet ? reqColor : "#ef4444" }} />
                   <span className="text-[10px] text-zinc-300 flex-1 truncate">
-                    {reqNode.title}
+                    {t(`skillTree.nodeTitle.${reqNode.id}`, { defaultValue: reqNode.title })}
                   </span>
                   <span className={cn(
                     "text-[9px] font-bold",
@@ -1034,7 +1084,7 @@ function SkillOverlay({
             <div className="h-full rounded-full transition-all duration-300"
               style={{ width: `${masteryPct}%`, backgroundColor: isMastered ? GOLD : color }} />
           </div>
-          <p className="text-[9px] text-zinc-600 mt-1">{req.description}</p>
+          <p className="text-[9px] text-zinc-600 mt-1">{translateReq(req, t)}</p>
           <p className="text-[9px] text-zinc-600 mt-0.5">
             {t("skillTree.qualifyingSessions", { done: Math.min(prog.qualifyingSessions, req.minQualifyingSessions), total: req.minQualifyingSessions })}
           </p>
@@ -1071,8 +1121,8 @@ function SkillOverlay({
       {isLocked && prereqNode && (
         <div className="rounded-xl bg-zinc-800/50 border border-zinc-700/40 px-3 py-2 mb-3">
           <p className="text-[9px] text-zinc-500 uppercase tracking-wide mb-0.5">{t("skillTree.requiresLabel")}</p>
-          <p className="text-[11px] font-semibold text-zinc-300">{prereqNode.title}</p>
-          <p className="text-[9px] text-zinc-500 mt-0.5">{prereqNode.masteryRequirement.description}</p>
+          <p className="text-[11px] font-semibold text-zinc-300">{t(`skillTree.nodeTitle.${prereqNode.id}`, { defaultValue: prereqNode.title })}</p>
+          <p className="text-[9px] text-zinc-500 mt-0.5">{translateReq(prereqNode.masteryRequirement, t)}</p>
         </div>
       )}
 
@@ -1455,7 +1505,7 @@ function TreeCanvas({ evaluated, lensOn, filterTag }: { evaluated: EvaluatedSkil
                 fontSize={13} fontWeight="800" fill={color}
                 fontFamily="ui-sans-serif, system-ui, sans-serif"
                 letterSpacing="0.1em" opacity={0.88}>
-                {label}
+                {t(label).toUpperCase()}
               </text>
             ))}
 
@@ -1465,7 +1515,7 @@ function TreeCanvas({ evaluated, lensOn, filterTag }: { evaluated: EvaluatedSkil
                 fontSize={8} fill={color} opacity={0.55}
                 fontFamily="ui-sans-serif, system-ui, sans-serif"
                 fontStyle="italic">
-                {text}
+                {t(text)}
               </text>
             ))}
 
@@ -1479,7 +1529,7 @@ function TreeCanvas({ evaluated, lensOn, filterTag }: { evaluated: EvaluatedSkil
                   fontFamily="ui-sans-serif, system-ui, sans-serif"
                   fontStyle="italic" fontWeight="600"
                   style={{ transition: "opacity 0.2s" }}>
-                  {text} ◆
+                  {t(text)} ◆
                 </text>
               );
             })}
@@ -1711,7 +1761,7 @@ export function SkillTreePage() {
                   <svg width="11" height="11" viewBox="0 0 12 12">
                     <polygon points="6,0 12,6 6,12 0,6" fill={spec.color} opacity={0.9} />
                   </svg>
-                  <span style={{ color: spec.color }} className="text-xs font-medium">{spec.shortLabel}</span>
+                  <span style={{ color: spec.color }} className="text-xs font-medium">{t(`skillTree.eqShort.${tag}`)}</span>
                 </button>
               );
             })}
