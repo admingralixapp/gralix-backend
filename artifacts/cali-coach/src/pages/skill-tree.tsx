@@ -1593,7 +1593,7 @@ function TreeCanvas({ evaluated, lensOn, filterTag }: { evaluated: EvaluatedSkil
 
         {/* Hint */}
         <p className="absolute bottom-3 left-3 text-[10px] text-zinc-600 pointer-events-none select-none">
-          Drag to pan · Scroll or pinch to zoom · Tap node for details · {
+          {t("skillTree.dragToPan")} · {t("skillTree.scrollOrPinchToZoom")} · {t("skillTree.tapNodeForDetails")} · {
             zoom < 0.48 ? t("skillTree.zoomInToSeeLabels") : t("skillTree.tapToSnapToActive")
           }
         </p>
