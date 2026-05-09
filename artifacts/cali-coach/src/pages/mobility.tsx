@@ -126,10 +126,42 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
 
   const currentStretch: Stretch | undefined = routine[stretchIndex];
 
-  // ── Hard-scroll to origin on mount so the overlay always starts at the top ──
+  // ── Hard-scroll to origin on mount ──────────────────────────────────────────
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // ── Document-level scroll lock while the active workout timer is on screen ───
+  // This useEffect lives INSIDE MobilityPage so it fires regardless of which
+  // parent mounts it (overlay or standalone /mobility route).
+  useEffect(() => {
+    if (pageState !== "active") {
+      // Restore scroll when we leave the active state
+      document.documentElement.style.overflow = "auto";
+      document.body.style.overflow = "auto";
+      document.body.style.position = "static";
+      document.body.style.width = "auto";
+      return;
+    }
+
+    // LOCK — apply to both <html> and <body>
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = "0";
+    document.body.style.left = "0";
+    document.body.style.width = "100vw";
+
+    return () => {
+      // UNLOCK on unmount or state change
+      document.documentElement.style.overflow = "auto";
+      document.body.style.overflow = "auto";
+      document.body.style.position = "static";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.width = "auto";
+    };
+  }, [pageState]);
 
   // ── Reset timer + pause state when exercise changes ─────────────────────────
   useEffect(() => {
