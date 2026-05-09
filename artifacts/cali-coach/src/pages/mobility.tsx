@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, CheckCircle2, Flame, Play, SkipForward, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, CheckCircle2, Flame, Pause, Play, SkipForward, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
@@ -23,9 +24,11 @@ import {
 function CircularTimer({
   secondsLeft,
   total,
+  paused,
 }: {
   secondsLeft: number;
   total: number;
+  paused: boolean;
 }) {
   const r = 52;
   const circ = 2 * Math.PI * r;
@@ -39,19 +42,19 @@ function CircularTimer({
         cy={60}
         r={r}
         fill="none"
-        stroke="#22c55e"
+        stroke={paused ? "#64748b" : "#22c55e"}
         strokeWidth={8}
         strokeLinecap="round"
         strokeDasharray={circ}
         strokeDashoffset={offset}
         transform="rotate(-90 60 60)"
-        style={{ transition: "stroke-dashoffset 0.8s linear" }}
+        style={{ transition: "stroke-dashoffset 0.8s linear, stroke 0.3s ease" }}
       />
       <text x={60} y={56} textAnchor="middle" fill="#f8fafc" fontSize={30} fontWeight="bold" fontFamily="monospace">
         {secondsLeft}
       </text>
-      <text x={60} y={76} textAnchor="middle" fill="#94a3b8" fontSize={11}>
-        seconds
+      <text x={60} y={76} textAnchor="middle" fill={paused ? "#64748b" : "#94a3b8"} fontSize={11}>
+        {paused ? "paused" : "seconds"}
       </text>
     </svg>
   );
@@ -88,8 +91,6 @@ function ProgressDots({
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-// onDismiss — when provided, "back" / "close" calls it instead of navigating.
-// This lets the component be embedded as an in-page overlay.
 
 type PageState = "ready" | "active" | "done";
 
@@ -119,15 +120,28 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
   const [pageState, setPageState] = useState<PageState>(autoStart ? "active" : "ready");
   const [stretchIndex, setStretchIndex] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [paused, setPaused] = useState(false);
   const [finalStreak, setFinalStreak] = useState<number | null>(null);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
   const currentStretch: Stretch | undefined = routine[stretchIndex];
 
-  // ── Timer ──────────────────────────────────────────────────────────────────
+  // ── Scroll to top whenever exercise changes ─────────────────────────────────
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [stretchIndex]);
+
+  // ── Reset timer + pause state when exercise changes ─────────────────────────
   useEffect(() => {
     if (pageState !== "active") return;
     if (!currentStretch) return;
     setSecondsLeft(currentStretch.durationSeconds);
+    setPaused(false);
+  }, [pageState, stretchIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Tick the timer when active and not paused ───────────────────────────────
+  useEffect(() => {
+    if (pageState !== "active" || paused || secondsLeft === 0) return;
     const interval = setInterval(() => {
       setSecondsLeft((s) => {
         if (s <= 1) { clearInterval(interval); return 0; }
@@ -135,13 +149,14 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [pageState, stretchIndex, currentStretch]);
+  }, [pageState, paused, stretchIndex]); // restart interval on exercise change / pause toggle
 
+  // ── Auto-advance when timer hits zero ──────────────────────────────────────
   useEffect(() => {
     if (pageState !== "active" || secondsLeft !== 0) return;
     const t = setTimeout(() => advanceStretch(), 600);
     return () => clearTimeout(t);
-  }, [secondsLeft, pageState]);
+  }, [secondsLeft, pageState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const advanceStretch = useCallback(() => {
     if (stretchIndex + 1 >= routine.length) {
@@ -149,7 +164,7 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
     } else {
       setStretchIndex((i) => i + 1);
     }
-  }, [stretchIndex, routine.length]);
+  }, [stretchIndex, routine.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function completeSession() {
     completeMobility.mutate(
@@ -169,17 +184,14 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
 
   function startSession() {
     setStretchIndex(0);
+    setPaused(false);
     setPageState("active");
   }
 
   function exitSession() {
+    setPaused(false);
     setPageState("ready");
     setStretchIndex(0);
-  }
-
-  function handleBack() {
-    if (onDismiss) onDismiss();
-    // else navigate is handled by Link href below
   }
 
   // ── READY STATE ──────────────────────────────────────────────────────────
@@ -278,7 +290,7 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
         </div>
 
         <div className="flex gap-3 pt-2">
-          <Button variant="outline" onClick={() => { setStretchIndex(0); setPageState("active"); }}>
+          <Button variant="outline" onClick={startSession}>
             Repeat Session
           </Button>
           {onDismiss ? (
@@ -300,99 +312,124 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
   const isLast = stretchIndex + 1 >= routine.length;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+    <div className="flex flex-col h-screen bg-background overflow-hidden">
+      {/* Header — Exit · ProgressDots · Pause · Skip */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 gap-2">
         <button
           onClick={exitSession}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
           Exit
         </button>
+
         <ProgressDots
           total={routine.length}
           current={stretchIndex}
           done={secondsLeft === 0}
         />
-        <button
-          onClick={advanceStretch}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Skip
-          <SkipForward className="w-3.5 h-3.5" />
-        </button>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            onClick={() => setPaused((p) => !p)}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={paused ? "Resume" : "Pause"}
+          >
+            {paused
+              ? <Play className="w-3.5 h-3.5" />
+              : <Pause className="w-3.5 h-3.5" />}
+          </button>
+          <button
+            onClick={advanceStretch}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Skip
+            <SkipForward className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
-      {/* Content area — scrollable on very small screens */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-4 gap-4 max-w-md mx-auto w-full overflow-y-auto">
+      {/* Scrollable content — ref for scroll-to-top on exercise change */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={stretchIndex}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="flex flex-col items-center px-4 py-6 gap-5 max-w-md mx-auto w-full"
+          >
+            {/* Exercise label */}
+            <div className="text-center">
+              <div className="text-[10px] text-primary font-bold tracking-widest uppercase mb-0.5">
+                Stretch {stretchIndex + 1} of {routine.length}
+              </div>
+              <h2 className="text-lg font-bold leading-tight">{currentStretch.name}</h2>
+            </div>
 
-        {/* Exercise label */}
-        <div className="text-center shrink-0">
-          <div className="text-[10px] text-primary font-bold tracking-widest uppercase mb-0.5">
-            Stretch {stretchIndex + 1} of {routine.length}
-          </div>
-          <h2 className="text-lg font-bold leading-tight">{currentStretch.name}</h2>
-        </div>
-
-        {/* 3-panel motion snapshot — bounded height so timer always fits */}
-        <div
-          className={cn(
-            "w-full shrink-0",
-            secondsLeft === 0
-              ? "opacity-100"
-              : "[animation:ghostPulse_2.5s_ease-in-out_infinite]",
-          )}
-          style={{ maxHeight: 180 }}
-        >
-          <ExerciseMotionSnapshot
-            exerciseName={currentStretch.name}
-            color="#22c55e"
-            glow
-            className="w-full h-full"
-          />
-        </div>
-
-        {/* Coaching cue */}
-        <p className="text-xs text-muted-foreground text-center max-w-xs leading-relaxed shrink-0">
-          {currentStretch.coachingCue}
-        </p>
-
-        {/* Circular timer */}
-        <div className="shrink-0">
-          <CircularTimer secondsLeft={secondsLeft} total={currentStretch.durationSeconds} />
-        </div>
-
-        {/* Muscle targets */}
-        <div className="flex flex-wrap gap-1.5 justify-center shrink-0">
-          {currentStretch.targetMuscles.map((m) => (
-            <span
-              key={m}
-              className="px-2.5 py-0.5 rounded-full bg-muted text-xs text-muted-foreground"
+            {/* 3-panel motion snapshot */}
+            <div
+              className={cn(
+                "w-full",
+                paused
+                  ? "opacity-50"
+                  : secondsLeft === 0
+                    ? "opacity-100"
+                    : "[animation:ghostPulse_2.5s_ease-in-out_infinite]",
+              )}
+              style={{ maxHeight: 180 }}
             >
-              {m}
-            </span>
-          ))}
-        </div>
+              <ExerciseMotionSnapshot
+                exerciseName={currentStretch.name}
+                color="#22c55e"
+                glow={!paused}
+                className="w-full h-full"
+              />
+            </div>
 
-        {/* Next up / last indicator */}
-        {!isLast && nextStretch && (
-          <div className="text-xs text-muted-foreground/70 text-center shrink-0">
-            Next: <span className="text-muted-foreground font-medium">{nextStretch.name}</span>
-          </div>
-        )}
-        {isLast && (
-          <div className="text-xs text-primary/70 text-center font-medium shrink-0">
-            Last stretch — finish strong!
-          </div>
-        )}
-      </div>
+            {/* Coaching cue */}
+            <p className="text-xs text-muted-foreground text-center max-w-xs leading-relaxed">
+              {currentStretch.coachingCue}
+            </p>
 
-      {/* Description bar — pinned to bottom */}
-      <div className="px-4 py-3 border-t border-border bg-card/50 shrink-0">
-        <p className="text-xs text-muted-foreground text-center leading-relaxed max-w-sm mx-auto">
-          {currentStretch.description}
-        </p>
+            {/* Circular timer */}
+            <CircularTimer
+              secondsLeft={secondsLeft}
+              total={currentStretch.durationSeconds}
+              paused={paused}
+            />
+
+            {/* Muscle targets */}
+            <div className="flex flex-wrap gap-1.5 justify-center">
+              {currentStretch.targetMuscles.map((m) => (
+                <span
+                  key={m}
+                  className="px-2.5 py-0.5 rounded-full bg-muted text-xs text-muted-foreground"
+                >
+                  {m}
+                </span>
+              ))}
+            </div>
+
+            {/* Next up / last indicator */}
+            {!isLast && nextStretch && (
+              <div className="text-xs text-muted-foreground/70 text-center">
+                Next: <span className="text-muted-foreground font-medium">{nextStretch.name}</span>
+              </div>
+            )}
+            {isLast && (
+              <div className="text-xs text-primary/70 text-center font-medium">
+                Last stretch — finish strong!
+              </div>
+            )}
+
+            {/* Description */}
+            <p className="text-xs text-muted-foreground text-center leading-relaxed max-w-sm border-t border-border/50 pt-4 mt-1">
+              {currentStretch.description}
+            </p>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       <style>{`

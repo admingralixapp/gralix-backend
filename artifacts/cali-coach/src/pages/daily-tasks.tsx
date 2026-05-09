@@ -898,31 +898,35 @@ export function DailyTasksPage() {
         </AnimatePresence>
       </div>
 
-      {/* Start Session CTA */}
-      <Button
-        size="lg"
-        className="w-full font-bold"
-        onClick={() => {
-          const repeat = !!status?.completedToday;
-          setAutoStart(repeat);
-          setShowSession(true);
-        }}
-      >
-        <Play className="w-5 h-5 mr-2" />
-        {status?.completedToday ? "Repeat Session" : "Start Today's Session"}
-      </Button>
+      {/* Start Session CTA — hidden while session overlay is open */}
+      {!showSession && (
+        <Button
+          size="lg"
+          className="w-full font-bold"
+          onClick={() => {
+            const repeat = !!status?.completedToday;
+            setAutoStart(repeat);
+            setShowSession(true);
+          }}
+        >
+          <Play className="w-5 h-5 mr-2" />
+          {status?.completedToday ? "Repeat Session" : "Start Today's Session"}
+        </Button>
+      )}
 
-      {/* Notification card */}
-      <NotificationCard
-        enabled={enabled}
-        blocked={notifBlocked}
-        notificationTime={notificationTime}
-        goalLabel={goalLabel}
-        stiffnessAreas={stiffnessAreas}
-        dailyTimeMinutes={dailyTimeMinutes}
-        onToggle={handleToggleNotification}
-        onTimeChange={handleTimeChange}
-      />
+      {/* Notification card — hidden while session overlay is open */}
+      {!showSession && (
+        <NotificationCard
+          enabled={enabled}
+          blocked={notifBlocked}
+          notificationTime={notificationTime}
+          goalLabel={goalLabel}
+          stiffnessAreas={stiffnessAreas}
+          dailyTimeMinutes={dailyTimeMinutes}
+          onToggle={handleToggleNotification}
+          onTimeChange={handleTimeChange}
+        />
+      )}
 
       {/* Questionnaire modal — rendered with AnimatePresence for slide-up enter/exit */}
       <AnimatePresence>
