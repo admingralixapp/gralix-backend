@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link, useLocation } from "wouter";
-import { ArrowLeft, CheckCircle2, Flame, Play, SkipForward } from "lucide-react";
+import { Link } from "wouter";
+import { ArrowLeft, CheckCircle2, Flame, Play, SkipForward, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
@@ -18,9 +18,6 @@ import {
   useNotificationScheduler,
 } from "@/lib/use-mobility";
 
-// ─── Ghost Pose SVG ──────────────────────────────────────────────────────────
-
-
 // ─── Circular Countdown Timer ────────────────────────────────────────────────
 
 function CircularTimer({
@@ -35,7 +32,7 @@ function CircularTimer({
   const offset = circ * (1 - secondsLeft / total);
 
   return (
-    <svg viewBox="0 0 120 120" width={160} height={160}>
+    <svg viewBox="0 0 120 120" width={148} height={148}>
       <circle cx={60} cy={60} r={r} fill="none" stroke="#1e293b" strokeWidth={8} />
       <circle
         cx={60}
@@ -77,7 +74,7 @@ function ProgressDots({
         <div
           key={i}
           className={cn(
-            "w-2.5 h-2.5 rounded-full transition-colors duration-300",
+            "w-2 h-2 rounded-full transition-colors duration-300",
             i < current
               ? "bg-primary"
               : i === current && !done
@@ -90,12 +87,12 @@ function ProgressDots({
   );
 }
 
-// ─── Main Page ───────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
+// onDismiss — when provided, "back" / "close" calls it instead of navigating.
+// This lets the component be embedded as an in-page overlay.
 
 type PageState = "ready" | "active" | "done";
 
-// Read the same localStorage key that DailyTasksPage writes so the session
-// always reflects the latest user preferences even before the server responds.
 const LS_PREFS_KEY = "calicoach:dailyPrefs";
 interface CachedPrefs { mobilityGoal: string; stiffnessAreas: string; dailyTimeMinutes: number }
 function readCachedPrefs(): CachedPrefs | null {
@@ -103,14 +100,12 @@ function readCachedPrefs(): CachedPrefs | null {
   catch { return null; }
 }
 
-export function MobilityPage() {
-  const [, setLocation] = useLocation();
+export function MobilityPage({ onDismiss }: { onDismiss?: () => void } = {}) {
   const { data: status } = useMobilityStatus();
   const completeMobility = useCompleteMobility();
 
   useNotificationScheduler(status);
 
-  // Derive goal + preferences: server settings first, localStorage as instant fallback
   const cached = readCachedPrefs();
   const goal = ((status?.settings.mobilityGoal ?? cached?.mobilityGoal ?? "general")) as MobilityGoal;
   const goalLabel = GOAL_LABELS[goal] ?? goal;
@@ -119,7 +114,6 @@ export function MobilityPage() {
   const areasArray = rawAreas ? (rawAreas.split(",").filter(Boolean) as StiffnessArea[]) : [];
   const dailyTimeMinutes = status?.settings.dailyTimeMinutes ?? cached?.dailyTimeMinutes ?? 10;
 
-  // Use the same personalised routine the DailyTasks tab shows
   const routine = getTasksForPreferences(goal, areasArray, dailyTimeMinutes);
 
   const [pageState, setPageState] = useState<PageState>("ready");
@@ -129,25 +123,20 @@ export function MobilityPage() {
 
   const currentStretch: Stretch | undefined = routine[stretchIndex];
 
-  // ── Timer logic ────────────────────────────────────────────────────────────
+  // ── Timer ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (pageState !== "active") return;
     if (!currentStretch) return;
-
     setSecondsLeft(currentStretch.durationSeconds);
     const interval = setInterval(() => {
       setSecondsLeft((s) => {
-        if (s <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
+        if (s <= 1) { clearInterval(interval); return 0; }
         return s - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
   }, [pageState, stretchIndex, currentStretch]);
 
-  // Auto-advance when timer hits 0
   useEffect(() => {
     if (pageState !== "active" || secondsLeft !== 0) return;
     const t = setTimeout(() => advanceStretch(), 600);
@@ -188,16 +177,27 @@ export function MobilityPage() {
     setStretchIndex(0);
   }
 
-  // ── READY STATE ────────────────────────────────────────────────────────────
+  function handleBack() {
+    if (onDismiss) onDismiss();
+    // else navigate is handled by Link href below
+  }
+
+  // ── READY STATE ──────────────────────────────────────────────────────────
   if (pageState === "ready") {
     return (
       <div className="p-6 max-w-lg mx-auto space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild className="shrink-0">
-            <Link href="/">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-          </Button>
+          {onDismiss ? (
+            <Button variant="ghost" size="icon" onClick={onDismiss} className="shrink-0">
+              <X className="w-5 h-5" />
+            </Button>
+          ) : (
+            <Button variant="ghost" size="icon" asChild className="shrink-0">
+              <Link href="/">
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+            </Button>
+          )}
           <div>
             <h1 className="text-2xl font-bold">Daily Mobility</h1>
             <p className="text-sm text-muted-foreground">Goal: {goalLabel}</p>
@@ -247,11 +247,7 @@ export function MobilityPage() {
             ))}
           </div>
 
-          <Button
-            onClick={startSession}
-            className="w-full font-bold"
-            size="lg"
-          >
+          <Button onClick={startSession} className="w-full font-bold" size="lg">
             <Play className="w-5 h-5 mr-2" />
             {status?.completedToday ? "Repeat Session" : "Begin Session"}
           </Button>
@@ -260,7 +256,7 @@ export function MobilityPage() {
     );
   }
 
-  // ── DONE STATE ─────────────────────────────────────────────────────────────
+  // ── DONE STATE ──────────────────────────────────────────────────────────────
   if (pageState === "done") {
     const streak = finalStreak ?? 1;
     return (
@@ -285,15 +281,19 @@ export function MobilityPage() {
           <Button variant="outline" onClick={() => { setStretchIndex(0); setPageState("active"); }}>
             Repeat Session
           </Button>
-          <Button asChild>
-            <Link href="/">Back to Dashboard</Link>
-          </Button>
+          {onDismiss ? (
+            <Button onClick={onDismiss}>Back to Daily Tasks</Button>
+          ) : (
+            <Button asChild>
+              <Link href="/">Back to Dashboard</Link>
+            </Button>
+          )}
         </div>
       </div>
     );
   }
 
-  // ── ACTIVE STATE ───────────────────────────────────────────────────────────
+  // ── ACTIVE STATE ────────────────────────────────────────────────────────────
   if (!currentStretch) return null;
 
   const nextStretch = routine[stretchIndex + 1];
@@ -302,10 +302,10 @@ export function MobilityPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
         <button
           onClick={exitSession}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Exit
@@ -324,44 +324,47 @@ export function MobilityPage() {
         </button>
       </div>
 
-      {/* Active exercise area */}
-      <div className="flex-1 flex flex-col items-center justify-center px-5 py-4 gap-5 max-w-lg mx-auto w-full">
+      {/* Content area — scrollable on very small screens */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-4 gap-4 max-w-md mx-auto w-full overflow-y-auto">
 
         {/* Exercise label */}
-        <div className="text-center space-y-0.5">
-          <div className="text-xs text-primary font-bold tracking-widest uppercase">
+        <div className="text-center shrink-0">
+          <div className="text-[10px] text-primary font-bold tracking-widest uppercase mb-0.5">
             Stretch {stretchIndex + 1} of {routine.length}
           </div>
-          <h2 className="text-xl font-bold leading-tight">{currentStretch.name}</h2>
+          <h2 className="text-lg font-bold leading-tight">{currentStretch.name}</h2>
         </div>
 
-        {/* 3-panel motion snapshot — brand green + neon glow */}
+        {/* 3-panel motion snapshot — bounded height so timer always fits */}
         <div
           className={cn(
-            "w-full transition-opacity duration-500",
+            "w-full shrink-0",
             secondsLeft === 0
               ? "opacity-100"
               : "[animation:ghostPulse_2.5s_ease-in-out_infinite]",
           )}
+          style={{ maxHeight: 180 }}
         >
           <ExerciseMotionSnapshot
             exerciseName={currentStretch.name}
             color="#22c55e"
             glow
-            className="w-full"
+            className="w-full h-full"
           />
         </div>
 
         {/* Coaching cue */}
-        <p className="text-sm text-muted-foreground text-center max-w-xs leading-relaxed">
+        <p className="text-xs text-muted-foreground text-center max-w-xs leading-relaxed shrink-0">
           {currentStretch.coachingCue}
         </p>
 
-        {/* Countdown timer */}
-        <CircularTimer secondsLeft={secondsLeft} total={currentStretch.durationSeconds} />
+        {/* Circular timer */}
+        <div className="shrink-0">
+          <CircularTimer secondsLeft={secondsLeft} total={currentStretch.durationSeconds} />
+        </div>
 
         {/* Muscle targets */}
-        <div className="flex flex-wrap gap-1.5 justify-center">
+        <div className="flex flex-wrap gap-1.5 justify-center shrink-0">
           {currentStretch.targetMuscles.map((m) => (
             <span
               key={m}
@@ -372,21 +375,21 @@ export function MobilityPage() {
           ))}
         </div>
 
-        {/* Next up / last stretch indicator */}
+        {/* Next up / last indicator */}
         {!isLast && nextStretch && (
-          <div className="text-xs text-muted-foreground/70 text-center">
+          <div className="text-xs text-muted-foreground/70 text-center shrink-0">
             Next: <span className="text-muted-foreground font-medium">{nextStretch.name}</span>
           </div>
         )}
         {isLast && (
-          <div className="text-xs text-primary/70 text-center font-medium">
+          <div className="text-xs text-primary/70 text-center font-medium shrink-0">
             Last stretch — finish strong!
           </div>
         )}
       </div>
 
-      {/* Description card at bottom */}
-      <div className="p-4 border-t border-border bg-card/50">
+      {/* Description bar — pinned to bottom */}
+      <div className="px-4 py-3 border-t border-border bg-card/50 shrink-0">
         <p className="text-xs text-muted-foreground text-center leading-relaxed max-w-sm mx-auto">
           {currentStretch.description}
         </p>
@@ -394,8 +397,8 @@ export function MobilityPage() {
 
       <style>{`
         @keyframes ghostPulse {
-          0%, 100% { opacity: 0.7; }
-          50% { opacity: 1; }
+          0%, 100% { opacity: 0.72; }
+          50%       { opacity: 1;    }
         }
       `}</style>
     </div>

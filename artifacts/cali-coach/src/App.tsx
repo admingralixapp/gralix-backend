@@ -256,7 +256,7 @@ function AppRouter() {
                 <Route path="/settings" component={Settings} />
                 <Route path="/shop" component={ShopPage} />
                 <Route path="/calibration" component={BodyCalibration} />
-                <Route path="/mobility" component={MobilityPage} />
+                <Route path="/mobility">{() => <MobilityPage />}</Route>
                 <Route path="/daily-tasks" component={DailyTasksPage} />
                 <Route component={NotFound} />
               </Switch>

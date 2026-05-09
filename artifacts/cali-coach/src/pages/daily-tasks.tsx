@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
+import { MobilityPage } from "@/pages/mobility";
 import {
   Bell,
   BellOff,
@@ -617,13 +617,13 @@ function NotificationCard({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function DailyTasksPage() {
-  const [, setLocation]    = useLocation();
   const { data: status }   = useMobilityStatus();
   const updateSettings     = useUpdateMobilitySettings();
   const { toast }          = useToast();
 
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [showSavedBadge,    setShowSavedBadge]    = useState(false);
+  const [showSession,       setShowSession]       = useState(false);
 
   // ── Optimistic local preferences ──────────────────────────────────────────
   // Initialised from localStorage (instant) then overwritten by server data.
@@ -901,7 +901,7 @@ export function DailyTasksPage() {
       <Button
         size="lg"
         className="w-full font-bold"
-        onClick={() => setLocation("/mobility")}
+        onClick={() => setShowSession(true)}
       >
         <Play className="w-5 h-5 mr-2" />
         {status?.completedToday ? "Repeat Session" : "Start Today's Session"}
@@ -935,6 +935,21 @@ export function DailyTasksPage() {
       {/* Saved badge */}
       <AnimatePresence>
         {showSavedBadge && <SavedBadge />}
+      </AnimatePresence>
+
+      {/* Inline session overlay — slides up over this page, no navigation */}
+      <AnimatePresence>
+        {showSession && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-background overflow-auto"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 32, stiffness: 320 }}
+          >
+            <MobilityPage onDismiss={() => setShowSession(false)} />
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

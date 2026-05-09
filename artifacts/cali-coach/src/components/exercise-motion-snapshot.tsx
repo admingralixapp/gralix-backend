@@ -1,21 +1,22 @@
 /**
  * ExerciseMotionSnapshot
  *
- * 3-panel stick-figure grid: Start → Mid → End.
+ * 3-panel bold stick-figure grid: Start → Mid → End.
+ *
+ * Art style: thick rounded strokes (sw=6), filled circular head, filled joint
+ * circles at every limb bend-point — matching the "pivot stickman" look.
  *
  * Props:
- *   exerciseName — used to look up pose set + intensity
- *   color        — stroke colour (default "#e2e8f0")
+ *   exerciseName — pose lookup + intensity classification
+ *   color        — stroke / fill colour (default "#e2e8f0")
  *   glow         — neon panel border + box-shadow
  *   className    — extra wrapper classes
  *
- * Animations driven by exercise intensity:
- *   strenuous → subtle CSS tremble (muscle effort)
- *   relaxed   → softer stroke weight + slow sway
- *   neutral   → no animation
+ * Intensity animations (active session only, when glow=true):
+ *   strenuous → subtle CSS tremor
+ *   relaxed   → slow gentle sway + slightly thinner strokes
  *
- * Muscle glow — pulsating SVG ellipse on the MID frame only,
- * positioned over the primary muscle region defined in PoseData.
+ * Muscle glow — pulsating SVG ellipse on MID frame only (from PoseData).
  */
 
 import { getPoseSet, getExerciseIntensity, type PoseData } from "@/lib/exercise-poses";
@@ -29,25 +30,41 @@ function hexToRgbParts(hex: string): string {
   const b = parseInt(h.slice(4, 6), 16);
   return `${r},${g},${b}`;
 }
-
 function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${hexToRgbParts(hex)},${alpha})`;
 }
 
-// ─── SVG stick figure ─────────────────────────────────────────────────────────
+// ─── Bold anatomical stick figure ─────────────────────────────────────────────
+//
+// Visual anatomy rules:
+//  • Head: large filled circle (r ≈ 8–9)
+//  • Limbs: thick polylines with round caps/joins (sw = 5.5–6.5)
+//  • Joints: filled circles at every intermediate polyline point
+//    (radius ≈ sw × 0.55) — creates the "pivot" look from the reference image
+//  • Muscle glow: pulsating ellipse on MID frame
 
 function StickFigure({
   pose,
   color,
-  strokeWidth,
+  sw,           // stroke width
   showMuscleGlow,
 }: {
   pose: PoseData;
   color: string;
-  strokeWidth: number;
+  sw: number;
   showMuscleGlow: boolean;
 }) {
   const { head, lines, muscleGlow } = pose;
+  const jointR = sw * 0.52;
+
+  // Collect all intermediate bend points (joints)
+  const joints: [number, number][] = [];
+  for (const pts of lines) {
+    for (let i = 1; i < pts.length - 1; i++) {
+      joints.push(pts[i]);
+    }
+  }
+
   return (
     <svg
       viewBox="0 0 100 100"
@@ -56,7 +73,7 @@ function StickFigure({
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      {/* Muscle group glow — pulsating ellipse on mid frame */}
+      {/* Muscle group glow (mid frame only) */}
       {showMuscleGlow && muscleGlow && (
         <ellipse
           cx={muscleGlow.cx}
@@ -69,34 +86,36 @@ function StickFigure({
         />
       )}
 
-      {/* Head */}
-      <circle
-        cx={head.cx}
-        cy={head.cy}
-        r={head.r ?? 7}
-        fill="none"
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-      />
-
-      {/* Body polylines */}
+      {/* Limb segments */}
       {lines.map((pts, i) => (
         <polyline
           key={i}
           points={pts.map(([x, y]) => `${x},${y}`).join(" ")}
           fill="none"
           stroke={color}
-          strokeWidth={strokeWidth}
+          strokeWidth={sw}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
       ))}
+
+      {/* Joint circles (pivot dots) */}
+      {joints.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={jointR} fill={color} />
+      ))}
+
+      {/* Head — solid filled circle */}
+      <circle
+        cx={head.cx}
+        cy={head.cy}
+        r={head.r ?? 8}
+        fill={color}
+      />
     </svg>
   );
 }
 
-// ─── Panel (figure + caption) ─────────────────────────────────────────────────
+// ─── Panel ────────────────────────────────────────────────────────────────────
 
 const PANEL_LABELS = ["Start", "Mid", "End"] as const;
 
@@ -105,14 +124,14 @@ function SnapshotPanel({
   label,
   color,
   glow,
-  strokeWidth,
+  sw,
   showMuscleGlow,
 }: {
   pose: PoseData;
   label: (typeof PANEL_LABELS)[number];
   color: string;
   glow: boolean;
-  strokeWidth: number;
+  sw: number;
   showMuscleGlow: boolean;
 }) {
   const glowRgba   = hexToRgba(color, 0.35);
@@ -136,12 +155,12 @@ function SnapshotPanel({
         <StickFigure
           pose={pose}
           color={color}
-          strokeWidth={strokeWidth}
+          sw={sw}
           showMuscleGlow={showMuscleGlow && label === "Mid"}
         />
       </div>
       <span
-        className="text-[10px] font-bold tracking-widest uppercase"
+        className="text-[9px] font-bold tracking-widest uppercase"
         style={{ color: glow ? hexToRgba(color, 0.75) : "rgba(148,163,184,0.65)" }}
       >
         {label}
@@ -150,28 +169,27 @@ function SnapshotPanel({
   );
 }
 
-// ─── Keyframes injected once ──────────────────────────────────────────────────
+// ─── CSS keyframes (injected once) ───────────────────────────────────────────
 
 const KEYFRAMES = `
   @keyframes muscleGlowPulse {
-    0%, 100% { opacity: 0.08; }
-    50%       { opacity: 0.38; }
+    0%, 100% { opacity: 0.07; }
+    50%       { opacity: 0.36; }
   }
   @keyframes strenuousTremble {
-    0%,100% { transform: translate(0,0)   rotate(0deg);    }
-    20%     { transform: translate(-1px,0.5px) rotate(-0.4deg); }
-    40%     { transform: translate(1px,0)  rotate(0.4deg);  }
-    60%     { transform: translate(-0.5px,1px) rotate(-0.2deg); }
-    80%     { transform: translate(0.5px,-0.5px) rotate(0.2deg); }
+    0%,100% { transform: translate(0,0)         rotate(0deg);    }
+    20%     { transform: translate(-1px, 0.5px) rotate(-0.4deg); }
+    40%     { transform: translate( 1px, 0)     rotate( 0.4deg); }
+    60%     { transform: translate(-0.5px,1px)  rotate(-0.2deg); }
+    80%     { transform: translate( 0.5px,-0.5px) rotate(0.2deg); }
   }
   @keyframes relaxedSway {
-    0%,100% { transform: translateY(0);   }
-    50%     { transform: translateY(1.5px); }
+    0%,100% { transform: translateY(0);    }
+    50%     { transform: translateY(1.5px);}
   }
 `;
-
 let injected = false;
-function injectKeyframes() {
+function injectKF() {
   if (injected || typeof document === "undefined") return;
   const s = document.createElement("style");
   s.textContent = KEYFRAMES;
@@ -192,15 +210,15 @@ export function ExerciseMotionSnapshot({
   glow?: boolean;
   className?: string;
 }) {
-  injectKeyframes();
+  injectKF();
 
   const [start, mid, end] = getPoseSet(exerciseName);
   const intensity = getExerciseIntensity(exerciseName);
 
-  // Personality tweaks per intensity
-  const strokeWidth = intensity === "relaxed" ? 1.9 : 2.4;
+  // Stroke width varies by intensity
+  const sw = intensity === "relaxed" ? 5 : intensity === "strenuous" ? 6.5 : 6;
 
-  // Animation only when glow is on (active session) — library cards stay static
+  // Personality animation — only during active session (glow=true)
   const animStyle: React.CSSProperties = glow
     ? intensity === "strenuous"
       ? { animation: "strenuousTremble 0.18s linear infinite" }
@@ -210,31 +228,10 @@ export function ExerciseMotionSnapshot({
     : {};
 
   return (
-    <div className={`flex gap-2.5 ${className}`} style={animStyle}>
-      <SnapshotPanel
-        pose={start}
-        label="Start"
-        color={color}
-        glow={glow}
-        strokeWidth={strokeWidth}
-        showMuscleGlow={false}
-      />
-      <SnapshotPanel
-        pose={mid}
-        label="Mid"
-        color={color}
-        glow={glow}
-        strokeWidth={strokeWidth}
-        showMuscleGlow={glow}
-      />
-      <SnapshotPanel
-        pose={end}
-        label="End"
-        color={color}
-        glow={glow}
-        strokeWidth={strokeWidth}
-        showMuscleGlow={false}
-      />
+    <div className={`flex gap-2 ${className}`} style={animStyle}>
+      <SnapshotPanel pose={start} label="Start" color={color} glow={glow} sw={sw} showMuscleGlow={false} />
+      <SnapshotPanel pose={mid}   label="Mid"   color={color} glow={glow} sw={sw} showMuscleGlow={glow}  />
+      <SnapshotPanel pose={end}   label="End"   color={color} glow={glow} sw={sw} showMuscleGlow={false} />
     </div>
   );
 }
