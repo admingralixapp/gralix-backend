@@ -1,0 +1,1234 @@
+{
+  "nav": {
+    "dashboard": "Bảng điều khiển",
+    "workout": "Luyện tập",
+    "daily": "Hàng ngày",
+    "community": "Cộng đồng",
+    "history": "Lịch sử",
+    "progress": "Tiến trình",
+    "skillTree": "Cây kỹ năng",
+    "leaderboard": "Bảng xếp hạng",
+    "friends": "Bạn bè",
+    "shop": "Cửa hàng",
+    "settings": "Cài đặt"
+  },
+  "common": {
+    "save": "Lưu",
+    "cancel": "Hủy bỏ",
+    "confirm": "Xác nhận",
+    "close": "Đóng",
+    "loading": "Đang tải...",
+    "error": "Đã xảy ra sự cố",
+    "signIn": "Đăng nhập",
+    "signOut": "Đăng xuất",
+    "getStarted": "Bắt đầu",
+    "learnMore": "Tìm hiểu thêm",
+    "back": "Trở lại",
+    "next": "Tiếp theo",
+    "done": "Hoàn thành",
+    "active": "Đang hoạt động",
+    "activate": "Kích hoạt",
+    "buy": "Mua",
+    "free": "Miễn phí",
+    "pro": "Chuyên nghiệp",
+    "locked": "Đã khóa",
+    "search": "Tìm kiếm",
+    "noResults": "Không tìm thấy kết quả",
+    "or": "hoặc",
+    "view": "Xem"
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "account": "Tài khoản",
+    "editFromProfile": "Chỉnh sửa ảnh và tên của bạn từ trang Hồ sơ.",
+    "viewProfile": "Xem Hồ sơ",
+    "language": "Ngôn ngữ",
+    "languageDesc": "Chọn ngôn ngữ hiển thị ưa thích của bạn",
+    "searchLanguages": "Tìm kiếm 29 ngôn ngữ...",
+    "noLanguagesFound": "Không tìm thấy ngôn ngữ",
+    "videoStorage": "Lưu trữ video",
+    "videoStorageDesc": "Quản lý clip luyện tập lưu trữ cục bộ",
+    "noClipsStored": "Chưa lưu trữ clip nào",
+    "clipsOnDevice": "{{count}} clip trên thiết bị này",
+    "clipsOnDevice_other": "{{count}} clips trên thiết bị này",
+    "videoFilesOnly": "Chỉ các tệp video — số liệu luyện tập luôn được giữ lại",
+    "autoDeleteAfter": "Tự xóa clip sau",
+    "clipsOlderRemoved": "Các clip cũ hơn sẽ bị xóa khi mở ứng dụng",
+    "clearAllClips": "Xóa tất cả các clip",
+    "freeUpSpace": "Giải phóng bộ nhớ ngay lập tức. Số lần lặp, số set và điểm hình thức không bị ảnh hưởng.",
+    "deleteConfirm": "Điều này sẽ xóa {{count}} clip khỏi thiết bị này. Bạn có chắc không?",
+    "deleteConfirm_other": "Điều này sẽ xóa {{count}} clips khỏi thiết bị này. Bạn có chắc không?",
+    "yesClearAll": "Vâng, xóa tất cả",
+    "workout": "Luyện tập",
+    "restDuration": "Thời gian nghỉ",
+    "restDurationDesc": "Thời gian giữa các set trong luyện tập nhiều set.",
+    "cameraAudio": " Camera & Âm thanh luyện tập",
+    "aiVoiceCoaching": "Hướng dẫn bằng giọng nói AI",
+    "spokenCues": "Lời hướng dẫn bằng giọng nói trong quá trình luyện tập",
+    "defaultCamera": "Camera mặc định",
+    "defaultCameraDesc": "Camera nào sẽ mở khi bạn bắt đầu luyện tập",
+    "cameraFacingFront": "Phía trước",
+    "cameraFacingBack": "Phía sau",
+    "mirrorCameraPreview": "Phản chiếu xem trước camera",
+    "flipCamera": "Lật camera phía trước như phản chiếu",
+    "bodyCalibration": "Hiệu chỉnh cơ thể",
+    "recalibrateDesc": "Chạy lại quét cơ thể dạng T-Pose lần duy nhất",
+    "recalibrate": "Hiệu chỉnh lại",
+    "mobility": "Nhắc nhở di chuyển hàng ngày",
+    "enableDailyReminders": "Bật nhắc nhở hàng ngày",
+    "browserNotification": " Nhận thông báo trình duyệt vào thời gian bạn chọn mỗi ngày.",
+    "notificationsBlocked": "Thông báo bị chặn trong trình duyệt của bạn. Vui lòng cho phép trong cài đặt trình duyệt/hệ điều hành và tải lại trang.",
+    "reminderTime": "Thời gian nhắc",
+    "mobilityGoal": "Mục tiêu linh hoạt",
+    "mobilityGoalDesc": "Chương trình trên trang linh hoạt của bạn sẽ phù hợp với mục tiêu này.",
+    "saving": "Đang lưu...",
+    "profilePrivacy": "Quyền riêng tư hồ sơ",
+    "showCommunityPosts": "Hiện bài đăng cộng đồng cho tất cả mọi người",
+    "communityPostsDesc": "Khi tắt, chỉ bạn bè mới xem được bài đăng của bạn trong tab Cộng đồng.",
+    "session": "Phiên tập luyện",
+    "signedInAs": "Đăng nhập với tư cách",
+    "signOut": "Đăng xuất",
+    "clipAutoDelete": "Tự xóa clip sau",
+    "clearAll": "Xóa tất cả các clip",
+    "confirmClear": "Nhấn nữa để xác nhận",
+    "clipsStored": "{{count}} clip đã lưu",
+    "clipsStored_other": "{{count}} clips đã lưu",
+    "voiceCues": "Lời nhắc bằng giọng nói",
+    "voiceCuesDesc": "Phản hồi hướng dẫn của AI trong quá trình luyện tập",
+    "cameraFacing": "Hướng camera",
+    "mirrorVideo": "Phản chiếu video",
+    "mirrorVideoDesc": "Lật hình ảnh camera theo chiều ngang",
+    "calibration": "Hiệu chỉnh cơ thể",
+    "recalibrateBody": "Hiệu chỉnh lại quét cơ thể",
+    "recalibrateBodyDesc": "Làm lại quét T-Pose để cập nhật số đo cơ thể",
+    "mobilityDesc": "Nhận nhắc nhở hàng ngày để duy trì sự linh hoạt",
+    "communityPosts": "Hiện bài đăng cộng đồng cho tất cả mọi người",
+    "setUpProfile": "Hãy thiết lập hồ sơ của bạn để bật tính năng quyền riêng tư.",
+    "membership": "Thẻ Hội Viên",
+    "activeMembership": "Thẻ Hội Viên Đang Kích Hoạt",
+    "cancelMembership": "Hủy Thẻ Hội Viên",
+    "cancelMembershipDesc": "Bạn sẽ vẫn có quyền truy cập cho đến hết chu kỳ thanh toán của bạn.",
+    "cancelButton": "Hủy",
+    "retentionOfferBar": "Ưu đãi đặc biệt — dành riêng cho bạn",
+    "retentionHeadline": "Chờ đã! Đừng rời đi vội...",
+    "retentionBody": "Nâng cấp lên Pro và nhận GIẢM GIÁ 40% cho tháng kế tiếp. Tiếp tục hành trình chinh phục thể hình cùng những huấn luyện AI hàng đầu thế giới.",
+    "claim40Discount": "Nhận Giảm Giá 40%",
+    "noThanksCancel": "Không, cảm ơn, tiếp tục hủy →",
+    "sorryToSeeYouGo": "Chúng tôi rất tiếc khi thấy bạn rời đi.",
+    "loseAccessDesc": "Bạn sẽ mất quyền truy cập vào Phân Tích Nâng Cao và Aura Pro sau chu kỳ thanh toán.",
+    "goBack": "Quay lại",
+    "cancelling": "Đang hủy…",
+    "discountApplied": "Giảm giá đã áp dụng!",
+    "discountAppliedDesc": "Giảm 40% đã được áp dụng cho chu kỳ thanh toán tiếp theo của bạn.",
+    "subscriptionCancelled": "Hợp đồng đã hủy",
+    "subscriptionCancelledDesc": "Hợp đồng của bạn đã bị hủy. Bạn còn quyền truy cập đến ngày {{date}}."
+  },
+  "shop": {
+    "title": "CaliShop",
+    "subtitle": "Thẻ Hội Viên, Gói Aura, và nâng cấp độc quyền",
+    "signInPrompt": "Đăng nhập để đăng ký, duyệt Gói Aura, và đổi mã giảm giá.",
+    "proTitle": "CaliCoach Pro",
+    "proSubtitle": "Mở khóa toàn bộ trải nghiệm",
+    "proActive": "✓ Đang Kích Hoạt",
+    "whyPro": "Tại sao nên nâng cấp lên Pro?",
+    "whyProItems": {
+      "coaching": "Huấn luyện viên AI camera theo thời gian thực",
+      "badge": "Biểu tượng xác thực màu tím phát sáng",
+      "bonus": "Thưởng ký gửi Gói Aura miễn phí 1 lần"
+    },
+    "monthly": "Hàng tháng",
+    "yearly": "Hàng năm",
+    "save20": "Tiết kiệm 20%",
+    "perMonth": "/tháng",
+    "perYear": "/năm",
+    "perMonthFull": "/ tháng",
+    "perYearFull": "/ năm",
+    "trialNote": "Không cam kết. Hủy bất kỳ lúc nào.",
+    "startTrial": "Bắt đầu Thử nghiệm miễn phí 3 ngày",
+    "manageSubscription": "Quản lý Thẻ Hội Viên",
+    "signingBonus": "Thưởng ký hợp đồng Pro",
+    "signingBonusDesc": "Bạn đã mở khóa Gói Aura miễn phí! Nhận ngay dưới đây.",
+    "claimBonus": "Nhận Gói miễn phí của bạn",
+    "auraPacks": "Gói Aura",
+    "auraPacksDesc": "Tùy chỉnh giọng nói huấn luyện và avatar ma hologram của bạn",
+    "buyFor": "Mua với {{price}}",
+    "promoCode": "Mã Khuyến Mãi",
+    "promoPlaceholder": "Nhập mã giảm giá",
+    "redeem": "Đổi mã",
+    "claimTitle": "Nhận Aura miễn phí của bạn",
+    "claimSubtitle": "Chào mừng đến với Pro! Chọn bất kỳ gói nào — hoàn toàn miễn phí của bạn.",
+    "voice": "Giọng nói",
+    "ghost": "Avatar Ma",
+    "claimVoiceTitle": "Nhận Giọng nói miễn phí của bạn",
+    "claimVoiceSubtitle": "Chào mừng đến với Pro! Chọn bất kỳ giọng AI nào — miễn phí của bạn.",
+    "claiming": "Đang nhận…",
+    "claimVoice": "Nhận {{name}}",
+    "selectVoice": "Chọn một giọng để tiếp tục",
+    "trialStarted": "Thử nghiệm miễn phí 3 ngày bắt đầu! 🎉",
+    "trialStartedDesc": "Bạn đã có quyền truy cập đầy đủ vào CaliCoach Pro.",
+    "signInToPurchase": "Đăng nhập để mua",
+    "signInToPurchaseDesc": "Tạo tài khoản để mua giọng AI.",
+    "purchaseFailed": "Mua thất bại",
+    "claimFailed": "Lấy mã thất bại",
+    "invalidCode": "Mã không hợp lệ",
+    "unlocked": "{{name}} đã mở khóa! 🎉",
+    "unlockedDesc": "Chọn nó từ danh sách để làm huấn luyện viên chủ động của bạn.",
+    "codeRedeemed": "Đã đổi mã! 🎉",
+    "elevenLabsError": "Lỗi Kết Nối ElevenLabs",
+    "elevenLabsErrorDesc": "Không thể lấy âm thanh cho {{name}}. Vui lòng kiểm tra kết nối.",
+    "proActiveManage": "Pro chủ động —",
+    "claimBonusTitle": "Nhận Gói Aura Miễn Phí của Bạn",
+    "claimBonusDesc": "Chào mừng đến với Pro! Chọn bất kỳ gói trả phí nào miễn phí.",
+    "claim": "Nhận",
+    "voicesTitle": "Giọng Nói Huấn Luyện AI",
+    "voicesDesc": "Chọn phong cách huấn luyện viên của bạn. Giọng miễn phí sử dụng engine thoại của thiết bị. Giọng Pro sử dụng ElevenLabs AI + injection nhân vật GPT-4o.",
+    "starterVoices": "Giọng Khởi Đầu",
+    "customAuras": "Aura Tùy Chỉnh",
+    "premiumVoices": "Giọng Nói & Giao Diện Ma Premium",
+    "redeemCodeSection": "Đổi Mã",
+    "redeemCodeDesc": "Mã mở khóa các gói, quyền truy cập Pro hoặc thưởng giới hạn thời gian.",
+    "test": "Kiểm Tra",
+    "select": "Chọn",
+    "equip": "Trang Bị",
+    "owned": "Sở Hữu",
+    "activeLabel": "✓ Đang Kích Hoạt",
+    "signInToClaim": "Đăng nhập để đổi mã",
+    "whyProItem1Label": "Huấn luyện viên AI camera theo thời gian thực",
+    "whyProItem1Desc": "Nhận phản hồi trực tiếp về dạng chuẩn và tư thế của bạn ở mỗi buổi tập.",
+    "whyProItem2Label": "Biểu tượng xác thực màu tím phát sáng",
+    "whyProItem2Desc": "Nổi bật trong cộng đồng và bảng xếp hạng với biểu tượng chỉ dành riêng cho Pro.",
+    "whyProItem3Label": "Thưởng ký gửi Gói Aura miễn phí 1 lần",
+    "whyProItem3Desc": "Bắt đầu luyện tập với bất kỳ Aura cao cấp nào bạn thích, mãi mãi mở khóa.",
+    "whyProItem4Label": "Phân tích Tiến trình Nâng cao",
+    "whyProItem4Desc": "Phân tích sâu về xu hướng dạng, sức mạnh và hiệu suất của bạn.",
+    "packClaimed": "{{name}} đã nhận! 🎁",
+    "packClaimedDesc": "Thưởng ký hợp đồng Pro của bạn đã được áp dụng.",
+    "somethingWentWrong": "Đã xảy ra lỗi"
+  },
+  "progress": {
+    "title": "Tiến Trình",
+    "subtitle": "Thông tin thể thao sâu sắc và phân tích hiệu suất.",
+    "premiumAnalytics": "Phân Tích Cao Cấp",
+    "unlockTitle": "Mở Khóa Dữ Liệu Hiệu Suất của Bạn",
+    "unlockDesc": "Theo dõi sự tiến bộ về góc khớp, độ chính xác trong tư thế và ngày đạt mastery dự kiến với Pro.",
+    "featureForm": "Điểm số tư thế dựa trên góc khớp theo thời gian",
+    "featureVolume": "Phân tích xu hướng Tư thế so với Khối lượng",
+    "featureMastery": "Ngày dự kiến đạt mastery cho từng kỹ năng",
+    "featureTimeline": "Lịch trình Mở Khóa Kỹ Năng & radar nhánh kỹ năng",
+    "startTrial": "Bắt đầu Thử Nghiệm 3 Ngày Miễn Phí",
+    "trialNote": "Không cam kết. Hủy bất kỳ lúc nào.",
+    "formScore": "Điểm số Tư thế",
+    "totalSessions": "Tổng Số Buổi Tập",
+    "totalReps": "Tổng Số Rep",
+    "streak": "Chuỗi Ngày Tập",
+    "avgFormScore": "Điểm trung bình Tư thế",
+    "bestFormScore": "Điểm Tư thế Tốt Nhất",
+    "verifiedReps": "Rep Được Xác Thực",
+    "formImprovement": "Cải thiện Tư thế",
+    "formVsVolume": "Điểm Tư thế so với Khối lượng",
+    "formVsVolumeDesc": "Xem tư thế của bạn có giữ vững khi tăng cường độ — trong 90 ngày qua",
+    "notEnoughData": "Chưa đủ dữ liệu. Hoàn thành vài buổi tập để thấy xu hướng của bạn.",
+    "formLabel": "Tư thế",
+    "repsLabel": "Rep",
+    "formScoreLabel": "Điểm Tư thế",
+    "totalRepsLabel": "Tổng Rep",
+    "aiVerified": "Xác thực bởi AI",
+    "selfReported": "Tự báo cáo",
+    "volumeByCategory": "Khối lượng theo Danh mục",
+    "volumeByCategoryDesc": "Xác định các yếu điểm — tổng reps theo nhánh chuyển động",
+    "noSessionData": "Chưa có dữ liệu buổi tập.",
+    "verificationRatio": "Tỷ lệ Xác Thực",
+    "verificationRatioDesc": "Rep xác thực bởi AI so với tự báo cáo — chỉ tính reps được xác thực vào thứ hạng",
+    "verified": "đã xác thực",
+    "noSessionsYet": "Chưa có buổi tập nào.",
+    "repsByExercise": "Reps theo Bài Tập",
+    "repsByExerciseDesc": "Tổng khối lượng theo từng bài tập",
+    "notEnoughDataChart": "Chưa đủ dữ liệu để hiển thị biểu đồ.",
+    "skillUnlockTimeline": "Lịch trình Mở Khóa Kỹ Năng",
+    "skillUnlockTimelineDesc": "Mỗi lần lên cấp trong cây kỹ năng — từ rep đầu tiên đến mastery đỉnh cao",
+    "noSkillsYet": "Chưa thành thạo kỹ năng nào. Hoàn thành buổi tập để mở khóa kỹ năng đầu tiên!"
+  },
+  "dashboard": {
+    "title": "Bảng Điều Khiển",
+    "welcomeBack": "Chào mừng trở lại. Sẵn sàng bắt đầu luyện tập chứ?",
+    "startWorkout": "Bắt đầu Buổi Tập",
+    "workoutStreak": "Chuỗi Tập",
+    "daysInARow": "ngày liên tiếp",
+    "avgForm": "Tư thế Trung bình",
+    "outOf100": "trên 100",
+    "totalReps": "Tổng Reps",
+    "allTime": "mọi thời đại",
+    "sessions": "Buổi Tập",
+    "completed": "đã hoàn thành",
+    "mobilityStreak": "Chuỗi Linh Hoạt",
+    "stretchDays": "ngày kéo giãn",
+    "dailyMobility": "Linh hoạt hàng ngày",
+    "done": "Đã xong",
+    "stretchInfo": "5 bài kéo giãn · ~5 phút",
+    "dayStreak": "{{count}}-ngày liên tiếp",
+    "startStreak": "Bắt đầu chuỗi của bạn hôm nay",
+    "repeat": "Lặp lại",
+    "begin": "Bắt đầu",
+    "skillMap": "Bản đồ Kỹ năng",
+    "fullTree": "Cây toàn diện →",
+    "recentSessions": "Các Buổi Gần Đây",
+    "viewAll": "Xem Tất Cả",
+    "noSessionsYet": "Chưa ghi nhận buổi tập nào.",
+    "startFirstWorkout": "Bắt đầu buổi tập đầu tiên của bạn",
+    "reps": "reps",
+    "manual": "Thủ công",
+    "avgFormLabel": "tư thế trung bình",
+    "friendsActivity": "Hoạt động Bạn Bè",
+    "loadingMobility": "đang tải…",
+    "welcome": "Chào mừng trở lại",
+    "welcomeName": "Chào mừng trở lại, {{name}}",
+    "totalSessions": "Tổng Buổi Tập",
+    "streak": "Chuỗi Ngày",
+    "noSessions": "Chưa có buổi tập nào",
+    "startFirst": "Bắt đầu buổi tập đầu tiên để xem thống kê của bạn tại đây.",
+    "recentActivity": "Hoạt động Gần Đây",
+    "quickStart": "Khởi động Nhanh"
+  },
+  "workout": {
+    "title": "Buổi Tập",
+    "startWorkout": "Bắt đầu Buổi Tập",
+    "endWorkout": "Kết thúc Buổi Tập",
+    "endSet": "Kết thúc Hiệp",
+    "nextSet": "Hiệp tiếp theo",
+    "reps": "reps",
+    "sets": "hiệp",
+    "set": "Hiệp",
+    "of": "của",
+    "formScore": "Điểm Tư thế",
+    "repCount": "Số Rep",
+    "rest": "Nghỉ",
+    "restTimer": "Hẹn giờ Nghỉ",
+    "listening": "Đang nghe…",
+    "goodForm": "Tư thế tốt! Cứ tiếp tục nhé.",
+    "watchForm": "Chú ý tư thế của bạn.",
+    "lastRep": "Lần cuối — hãy làm thật có ý nghĩa!",
+    "pushHarder": "Thử thách hơn nữa — bạn làm được mà!",
+    "almostThere": "Gần tới rồi — cứ cố gắng nhé.",
+    "selectExercise": "Chọn Bài Tập",
+    "manualLog": "Ghi chép Thủ Công",
+    "camera": "Camera",
+    "sets_label": "Hiệp",
+    "repsTarget": "Mục Tiêu Reps",
+    "searchPlaceholder": "Tìm kiếm hoặc chọn bài tập…",
+    "searchEquipmentPlaceholder": "Tìm kiếm hoặc chọn thiết bị…",
+    "noExercisesFound": "Không tìm thấy bài tập phù hợp với \"{{query}}\"",
+    "loadingModel": "Đang tải…",
+    "readyToTrain": "Sẵn sàng luyện tập chưa?",
+    "ghostSkeletonDesc": "Cấu hình xương ảo thể hiện kỹ thuật hoàn hảo — đồng bộ cơ thể của bạn với nó để ghi nhận số lần lặp và thời gian giữ yên.",
+    "gearCheck": "Kiểm tra thiết bị",
+    "push": "Đẩy",
+    "pull": "Kéo",
+    "addOn": "Phần mở rộng",
+    "proTip": "Mẹo chuyên nghiệp",
+    "saving": "Đang lưu…",
+    "logIt": "Ghi lại",
+    "manualLogNoAI": "Ghi chép thủ công (Không có AI)",
+    "start": "KHỞI ĐỘNG",
+    "testMode": "Làm bài kiểm tra (Chế độ thử nghiệm)",
+    "testModeDesc": "Lưu một mục luyện tập giả lập trực tiếp vào cơ sở dữ liệu — không cần camera. Dùng để điền biểu đồ và ghi chú lịch sử.",
+    "savingTest": "Đang lưu...",
+    "saveTest": "Lưu bài kiểm tra luyện tập",
+    "trainNow": "Luyện tập ngay",
+    "holdTime": "Thời gian giữ",
+    "repsLabel": "Lặp lại",
+    "ghostSync": " Đồng bộ xương ảo",
+    "formLabel": "Kỹ thuật",
+    "syncedHoldIt": "● Đồng bộ — giữ yên nó",
+    "matchGhost": "○ Phù hợp vị trí xương ảo",
+    "lockedIn": "● Đã cố định",
+    "adjust": "○ Điều chỉnh",
+    "cameraInitializing": "Khởi động camera…",
+    "voicePacing": "Chỉ đạo bằng giọng nói",
+    "minimalist": "Tối giản",
+    "fullSkeleton": "Xương toàn diện",
+    "listeningLabel": "Đang nghe",
+    "ghostMode": "Chế độ xương ảo",
+    "setOfTotal": "Hiệp {{current}} / {{total}}",
+    "restLabel": "Nghỉ",
+    "nextSetOf": "Tiếp theo: Hiệp {{next}} trong tổng {{total}}",
+    "startNow": "Bắt đầu ngay",
+    "endWorkoutEarly": "Kết thúc luyện tập sớm",
+    "endSetN": "KẾT THÚC HIỆP {{set}}",
+    "bodyweight": "Khối lượng cơ thể",
+    "equipmentLabel": "Thiết bị",
+    "setsLabel": "Hiệp",
+    "voiceCommands": "Lệnh thoại",
+    "manualLogTitle": "Ghi chép thủ công",
+    "repsCompleted": "Số lần lặp đã hoàn thành",
+    "rpeLabel": "RPE — Độ khó thế nào?",
+    "rpeHint": "1 = rất dễ · 10 = tối đa · tùy chọn",
+    "workoutTitle": "Chương trình luyện tập",
+    "workoutSubtitle": "Hướng dẫn kỹ thuật AI cùng Chế độ xương ảo",
+    "exerciseLocked": "Bài tập bị khóa",
+    "exerciseLockedPrereq": "Hoàn thành cấp {{level}} {{title}} trong Cây kỹ năng để mở khóa bài tập này.",
+    "exerciseLockedGeneric": "Hoàn thành kỹ năng tiền đề trong Cây kỹ năng để mở khóa bài tập này.",
+    "viewSkillTree": "Xem Cây kỹ năng",
+    "trainExercise": "Luyện {{name}}",
+    "lockedCompleteFirst": "Khóa — hoàn thành kỹ năng tiền đề trước",
+    "poseTrackingUnavailable": "Không thể theo dõi tư thế",
+    "poseTrackingDesc": "Không thể tải thư viện thị giác. Kiểm tra kết nối của bạn.",
+    "milestoneUnlocked": "🏅 Mốc thành tựu đã mở khoá: {{name}}",
+    "milestoneDesc": "{{icon}} Bạn đã đạt huy chương {{tier}} cho khối lượng {{category}}!",
+    "newTitle": "{{icon}} Tiêu đề mới: \"{{title}}\"",
+    "newTitleDesc": "{{exercise}} · Mở khóa thành thạo {{tier}}!",
+    "selectExerciseFirst": "Chọn một bài tập",
+    "pickExerciseFirst": "Chọn bài tập trước khi bắt đầu.",
+    "targetMuscles": "Cơ mục tiêu",
+    "criticalJoints": "Khớp quan trọng",
+    "barSpecialist": "Chuyên gia thanh thuỳ",
+    "rings": "Vòng",
+    "weighted": "Có tạ"
+  },
+  "session": {
+    "manualLog": "GHI CHÉP THỦ CÔNG",
+    "formMastery": "THÀNH THẠO KỸ THUẬT",
+    "sessions": "lần tập",
+    "skillComplete": "Kỹ năng hoàn thành — mở khóa cấp tiếp theo!",
+    "progressThisSet": "+{{pct}}% tiến bộ trong hiệp này",
+    "skillUnlocked": "Kỹ năng đã mở khóa!",
+    "setComplete": "Hiệp hoàn thành",
+    "bestGhostSync": " Đồng bộ xương ảo tốt nhất",
+    "elite": "Tinh hoa",
+    "perfectSet": "Hiệp hoàn hảo!",
+    "perfectSetDesc": "{{reps}} lần lặp · {{form}}% kỹ thuật — thực hiện xuất sắc",
+    "mastered": "— Thành thạo",
+    "next": "Tiếp theo:",
+    "skillProgress": "Tiến bộ kỹ năng",
+    "viewSession": "Xem buổi tập",
+    "trainNext": "Luyện tiếp →",
+    "continue": "Tiếp tục",
+    "backToHistory": "Quay lại lịch sử",
+    "totalReps": "Tổng số lần lặp",
+    "avgFormScore": "Điểm kỹ thuật trung bình",
+    "duration": "Thời lượng",
+    "savedClip": "Clip đã lưu",
+    "expiresInDays_one": "Hết hạn trong {{count}} ngày",
+    "expiresInDays_other": "Hết hạn trong {{count}} ngày",
+    "loopInfo_one": "Vòng lặp tự động · chạm để phát/dừng · hết hạn trong {{count}} ngày",
+    "loopInfo_other": "Vòng lặp tự động · chạm để phát/dừng · hết hạn trong {{count}} ngày",
+    "shareToCommunity": "Chia sẻ cộng đồng",
+    "noClipSaved": "Chưa lưu clip nào cho buổi tập này. Sử dụng \"Lưu vào lịch sử\" sau hiệp tiếp theo để xem lại.",
+    "aiVerified": "Đã xác thực AI",
+    "sessionNotFound": "Không tìm thấy buổi tập.",
+    "loadingSession": "Đang tải…"
+  },
+  "skillTree": {
+    "title": "Cây Kỹ Năng",
+    "subtitle": "Bốn nhánh tỏa ra từ trung tâm Sức Mạnh Cốt Lõi của bạn. Chạm vào bất kỳ nút nào · kéo để khám phá · pinch để phóng to.",
+    "skillsMastered": "Kỹ Năng Đã Thuần Thục",
+    "push": "Đẩy",
+    "pull": "Kéo",
+    "core": "Cốt Lõi",
+    "legs": "Chân",
+    "mastered": "Đã thành thạo",
+    "inProgress": "Đang tiến hành",
+    "locked": "Khóa",
+    "equipmentOverlay": "Lớp phủ thiết bị",
+    "barOverlay": "Thanh",
+    "ringsOverlay": "Vòng",
+    "weightedOverlay": "Trọng lượng",
+    "trainNow": "Luyện Ngay",
+    "hideEquipmentPaths": "Ẩn các đường dẫn chuyên môn thiết bị",
+    "showEquipmentPaths": "Hiện các đường dẫn chuyên môn thiết bị trong cây kỹ năng",
+    "zoomInToSeeLabels": "Phóng to để xem nhãn",
+    "tapToSnapToActive": "Chạm ✛ để định hướng đến kỹ năng đang hoạt động",
+    "lockedNode": "🔒 Đã khóa",
+    "whyTrain": "Tại sao luyện tập điều này?",
+    "masterPrereq": "Chinh phục kỹ năng tiền đề để mở khóa nút này.",
+    "practiceAgain": "Luyện lại →",
+    "trainNowArrow": "Luyện Ngay →",
+    "levelLabel": "Cấp {{level}} · {{levelName}}",
+    "staticHold": "Giữ Tĩnh",
+    "explosive": "Phản Xung",
+    "whyTrainThis": "Tại sao luyện tập điều này?",
+    "alsoRequires": "Cũng Cần Thiết",
+    "masteryLabel": "Tinh thông",
+    "completeLabel": "Hoàn Thành",
+    "qualifyingSessions": "{{done}}/{{total}} buổi tập chuẩn bị",
+    "bestHold": "Giữ tốt nhất",
+    "bestRepsLabel": "Số lần tốt nhất",
+    "formScoreLabel": "Điểm hình thức",
+    "requiresLabel": "Yêu cầu",
+    "coreStrengthHub": "TRỤ SỨC MẠNH NỀN TẢNG",
+    "nodes": {
+      "push_1": {
+        "title": "Chống Đẩy Đầu Tiên",
+        "description": "Hoàn thành chống đẩy sạch sẽ đầu tiên: đường thẳng cơ thể, ngực chạm sàn, duỗi toàn bộ cánh tay."
+      },
+      "push_2": {
+        "title": "Sức Mạnh Chống Đẩy",
+        "description": "Nhân đôi khả năng chống đẩy của bạn và nâng cao kỹ thuật — các bộ tập hợp nhất quán mở khóa các đường dẫn overhead và planche."
+      },
+      "push_3": {
+        "title": "Chống Đẩy Kim Cương",
+        "description": "Bàn tay tạo hình kim cương dưới ngực, khuỷu tay theo dõi phía sau — tập trung tricep và ngực trong để tăng mật độ đẩy tối đa."
+      },
+      "push_4": {
+        "title": "Chống Đẩy Cung Thủ",
+        "description": "Một cánh tay gập lại trong khi cánh tay kia duỗi rộng — bài tập bất đối xứng phát triển sức mạnh đẩy không đối xứng hướng tới làm việc bằng một tay."
+      },
+      "push_5": {
+        "title": "Chống Đẩy Pseudo Planche",
+        "description": "Bàn tay xoay ra ngoài sát hông, thân nghiêng về phía trước — mô phỏng tải planche trên cổ tay và vai khi đẩy."
+      },
+      "push_oh_1": {
+        "title": "Chống Đẩy Pike",
+        "description": "Hông cao, tay rộng vai — hạ đầu xuống giữa hai tay và đẩy lên lại. Chuyển tải sang vai, cầu nối đến đẩy overhead."
+      },
+      "push_oh_2": {
+        "title": "Chống Đẩy Pike Nâng Cao",
+        "description": "Chân trên hộp hoặc ghế — góc nghiêng cao hơn tăng phạm vi chuyển động của vai và tải trọng, bước trực tiếp đến chống đẩy theo kiểu gập tay."
+      },
+      "push_oh_3": {
+        "title": "Chống Đẩy Chống Đầu Gối Dựa Tường",
+        "description": "Chồm vào tường và đẩy toàn bộ trọng lượng qua đầu — mô hình tải trọng trực tiếp nhất để tăng sức mạnh đẩy overhead."
+      },
+      "push_oh_4": {
+        "title": "Chống Đầu Dựa",
+        "description": "Cân bằng trên tay xa khỏi tường — đảo ngược kiểm soát, yêu cầu sức mạnh vai, linh hoạt cổ tay và nhận thức không gian."
+      },
+      "push_oh_5": {
+        "title": "Chống Đẩy Bằng Chống Đầu Dưới Tường",
+        "description": "Đẩy từ sàn đến khóa toàn bộ khi đảo ngược — đỉnh cao của sức mạnh đẩy overhead trong calisthenics."
+      },
+      "push_pp_1": {
+        "title": "Nghiêng Planche",
+        "description": "Nghiêng về phía trước trên cổ tay trong tư thế chống đẩy với tay xoay ra ngoài — tôi luyện cổ tay và vai trước để chuẩn bị cho tải planche."
+      },
+      "push_pp_2": {
+        "title": "Planche Gập Gối",
+        "description": "Nâng cả hai chân khỏi mặt đất trong khi nghiêng trên cổ tay với đầu gối thu lại — tư thế planche đầu tiên đúng nghĩa."
+      },
+      "push_pp_3": {
+        "title": "Planche Chồm Ngang",
+        "description": "Chân mở rộng ra hai bên trong tư thế planche — cực kỳ khó hơn so với gập gối, đòi hỏi căng toàn thân."
+      },
+      "push_pp_4": {
+        "title": "Planche Hoàn Chỉnh",
+        "description": "Thân người hoàn hảo song song, chân khép chặt và khóa — đỉnh cao của sức mạnh đẩy calisthenics."
+      },
+      "pull_1": {
+        "title": "Chải Lần Đầu Ti",
+        "description": "Hoàn thành pull-up trọn vẹn, sạch sẽ từ treo động."
+      },
+      "pull_2": {
+        "title": "Độ Bền Pull-Up",
+        "description": "Phát triển sức mạnh pull-up đáng tin cậy qua nhiều lần lặp. Mở khóa đường dẫn Front Lever."
+      },
+      "pull_3": {
+        "title": "Pull-Ups Âm Vang",
+        "description": "Bắt đầu từ cằm trên thanh và hạ người chậm nhất có thể. Biến thể này tập trung vào kiểm soát kỳ eccentric, xây dựng sức mạnh kéo bùng nổ cần thiết cho đường dẫn Muscle-Up."
+      },
+      "pull_fl_1": {
+        "title": "Front Lever Gập Gối",
+        "description": "Treo trên thanh, gập gối về phía ngực và giữ thân ngang — phát triển khả năng hạ xườn vai và sức mạnh rộng của lưng để đạt tới full lever."
+      },
+      "pull_fl_2": {
+        "title": "Front Lever Ngang Chéo",
+        "description": "Duổi chân ra hai bên trong tư thế rộng chéo và giữ ngang — khó hơn nhiều so với gập gối, yêu cầu toàn bộ cơ thể căng cứng."
+      },
+      "pull_fl_3": {
+        "title": "Front Lever Toàn Phần",
+        "description": "Thân người hoàn toàn ngang, tay duỗi thẳng, chân khóa chặt — một trong những tư thế tĩnh nổi bật nhất trong calisthenics."
+      },
+      "pull_mu_1": {
+        "title": "Pull-Up Ngực Chạm Thanh",
+        "description": "Bùng nổ vượt qua cằm trên thanh — đẩy tới chạm ngực vào thanh. Yêu cầu sức mạnh kéo vượt xa pull-up tiêu chuẩn."
+      },
+      "pull_mu_2": {
+        "title": "Muscle-Up Kipping",
+        "description": "Sử dụng cú bật hông kiểm soát để tạo đà qua chuyển đổi thanh. Thành thạo thời điểm trước khi loại bỏ cú bật."
+      },
+      "pull_mu_3": {
+        "title": "Muscle-Up Chính Xác",
+        "description": "Không dao động, không dùng đà — kéo qua và đẩy lên trên thanh bằng sức mạnh phần trên của cơ thể thuần khiết. Tiêu chuẩn vàng của sức mạnh kéo."
+      },
+      "pull_am_1": {
+        "title": "Pull-Up Cung Thủ",
+        "description": "Một tay kéo trong khi tay kia duỗi thẳng — bài tập bất đối xứng tàn bạo phát triển sức mạnh lưng bên đơn hướng tới pull-up một tay."
+      },
+      "pull_am_2": {
+        "title": "Pull-Up Loại Cây Sần",
+        "description": "Kéo tới thanh rồi trượt sang trái hoặc phải tại đỉnh — thể hiện sức mạnh kéo ngang và kiểm soát vượt trội."
+      },
+      "pull_oah_1": {
+        "title": "Treo Chuyển Động Một Tay",
+        "description": "Treo từ thanh bằng một tay, vai cúi xuống và giữ thấp. Phát triển ổn định vai đơn bên, sức bền grip và sức mạnh chuỗi bên."
+      },
+      "pull_oapu_1": {
+        "title": "Pull-Up Một Tay",
+        "description": "Thử thách tối cao của khả năng kéo đơn bên — thực hiện pull-up toàn phần bằng một tay, không trợ lực, không đà. Một trong những thành tích hiếm có trong calisthenics."
+      },
+      "pull_rings_1": {
+        "title": "Giữ Trụ Trên Vòng",
+        "description": "Giữ vị trí hỗ trợ tích cực trên vòng — tay thẳng, thân đứng thẳng. Vị trí nền tảng này yêu cầu ổn định cổ tay, khuỷu tay và vai trước khi bắt đầu kéo vòng."
+      },
+      "pull_rings_2": {
+        "title": "Kéo Vòng",
+        "description": "Kéo toàn phần trên vòng thể thao đòi hỏi kiểm soát cổ tay, vai và giữ vững sự ổn định cao hơn thanh cố định. Sự không ổn định làm mọi lần lặp trở nên khó khăn hơn."
+      },
+      "pull_rings_3": {
+        "title": "Muscle-Up Trên Vòng",
+        "description": "Tối thượng của kéo vòng: đòi hỏi sức mạnh chuyển đổi đỉnh cao, ổn định vai và kiểm soát cổ tay trong trạng thái không ổn định."
+      },
+      "pull_weighted_1": {
+        "title": "Pull-Up Trọng Lượng",
+        "description": " Thêm veste hoặc đai và thực hiện pull-up chính xác có tải trọng. Bắt đầu từ 10–20% trọng lượng cơ thể, sức đề kháng tăng lên thúc đẩy tiến bộ nhanh hơn so với tập luyện chỉ với trọng lượng cơ thể."
+      },
+      "pull_weighted_2": {
+        "title": "Khối Lượng Pull-Up Có Trọng Lượng",
+        "description": "Thực hiện chuỗi tập kéo tạ nặng với số lần lặp cao. Khối lượng dưới tải giúp xây dựng sức mạnh kéo thô sơ cần thiết cho muscle-up có tải trọng và các bài tập nặng hơn."
+      },
+      "pull_weighted_3": {
+        "title": "Muscle-Up Tải Trọng",
+        "description": "Một bài muscle-up kèm tải — một trong những thành tích mạnh mẽ nhất trong calisthenics. Yêu cầu sức bật nổ, điều chỉnh chuyển động chính xác và căng đầy toàn bộ cơ thể."
+      },
+      "core_1": {
+        "title": "Nền Tảng Plank",
+        "description": " Giữ tư thế plank hoàn hảo — thân thẳng từ đầu đến chân, mông và cơ bụng siết chặt. Điểm khởi đầu toàn diện cho mọi công đoạn luyện tập core."
+      },
+      "core_2": {
+        "title": "Plank Nghiêng",
+        "description": "Chống khuỷu tay một bên, nâng hông — tạo độ cứng cáp bên cơ trung tâm giúp kiểm soát flag người và bài tập chân treo."
+      },
+      "core_hh_1": {
+        "title": "Dead Bug",
+        "description": " Nằm ngửa, nâng chân và tay — hạ tay và chân đối diện trong khi giữ cơ thể siết chặt. Bài tập cốt lõi chống mở rộng cơ thể nền tảng."
+      },
+      "core_hh_2": {
+        "title": "Nghiên Cổ Lưng",
+        "description": " Nằm sấp, nâng ngực và chân khỏi sàn (Superman). Phát triển sức mạnh chuỗi sau giúp cân bằng công việc hollow body."
+      },
+      "core_hh_3": {
+        "title": "Giữ Hollow Body",
+        "description": " Nằm ngửa, siết sát cơ thể theo hình vòng hollow — vai rời khỏi mặt đất, chân duỗi thẳng nâng thấp. Kỹ năng căng đầy toàn thân căn bản, nền tảng cho mọi chuyển động calisthenics."
+      },
+      "core_hh_4": {
+        "title": "Flag Rồng Tử Tiêu",
+        "description": " Nằm trên ghế dài, giữ chặt sau đầu, từ từ hạ thấp cơ thể từ vị trí thẳng đứng đến ngang — tác động lệch tâm giúp bạn chuẩn bị cho full flag rồng."
+      },
+      "core_hh_5": {
+        "title": "Flag Rồng",
+        "description": " Giữ chặt sau đầu, giữ hoặc hạ thấp cơ thể hoàn toàn nằm ngang — chỉ vai chạm ghế. Sức mạnh chống mở rộng toàn diện đạt đỉnh cao."
+      },
+      "core_bb_1": {
+        "title": "Treo Chủ Động",
+        "description": " Treo từ thanh xà, vai thẳng và siết chặt — nền tảng cho mọi vận động core và kéo trên xà."
+      },
+      "core_bb_2": {
+        "title": "Gập Gối Treo",
+        "description": " Treo trên xà, nâng gối về phía ngực. Phát triển lực siết hông và ổn định vai cần thiết cho các bài tập core treo khó hơn."
+      },
+      "core_bb_3": {
+        "title": "Nhấc Chân Treo",
+        "description": " Treo trên xà, nâng chân thẳng tới ngang — đòi hỏi sức mạnh hông, sức bám và kiểm soát cột sống toàn diện."
+      },
+      "core_bb_4": {
+        "title": "Chạm Ngón Chân Xà",
+        "description": " Từ tư thế treo, gập người và chạm ngón chân vào xà — hoàn hảo trong sức mạnh hông, độ bám và kiểm soát toàn thân trong một động tác."
+      },
+      "core_hf_1": {
+        "title": "Chà Xoay Windshield",
+        "description": " Treo xà, nâng chân đến ngang và quét sang hai bên. Tăng sức mạnh cơ trung tâm bên và khả năng di chuyển hông cho flag người."
+      },
+      "core_hf_2": {
+        "title": "Flag Người Tô",
+        "description": " Giữ chặt cột thẳng đứng, chân gập, thân ngang — vị trí flag đầu tiên yêu cầu sức mạnh lực lượng bên tinh nhuệ."
+      },
+      "core_hf_3": {
+        "title": "Flag Người Một Chân",
+        "description": " Một chân duỗi thẳng, chân kia gập — vị trí trung chuyển giảm bớt lực đòn bẩy, rèn luyện dây bên cho full flag."
+      },
+      "core_hf_4": {
+        "title": "Flag Người",
+        "description": " Giữ chặt cột thẳng đứng, toàn bộ thân ngang — một kỳ tích đòi hỏi sức mạnh cơ trung tâm bên và vai tinh nhuệ."
+      },
+      "core_weighted_1": {
+        "title": "Plank Tải Trọng",
+        "description": " Giữ tư thế plank cứng chắc với tạ đeo trên lưng hoặc đai tạ. Tải thêm tăng yêu cầu chống mở rộng, đường tắt nhanh nhất đến sức cứng cơ trung tâm đỉnh cao dưới tải trọng."
+      },
+      "core_weighted_2": {
+        "title": "Nâng Chân Tải Trọng",
+        "description": " Treo trên xà, đeo tạ chân, nâng chân thẳng tới ngang — tăng đáng kể yêu cầu sức mạnh hông và sức bám."
+      },
+      "core_weighted_3": {
+        "title": "Dragon Flag Tải Trọng",
+        "description": " Thực hiện Dragon Flag đeo balo tạ — một trong những bài tập core bằng trọng lượng cơ thể nặng nhất. Sức mạnh chống mở rộng toàn diện dưới tải trọng ngoài."
+      },
+      "core_rings_1": {
+        "title": "Nâng Gối Trên Xà",
+        "description": " Treo từ vòng xà gym, nâng gối về phía ngực. Sự mất ổn định thúc đẩy packing vai sâu hơn và siết chặt core tốt hơn so với thanh cố định."
+      },
+      "core_rings_2": {
+        "title": "Rollout Vòng Xà",
+        "description": " Từ tư thế quỳ, bóp vòng xà rồi lăn ra duỗi thẳng toàn bộ. Không ổn định liên tục này yêu cầu các cơ ổn định sâu hoạt động tối đa — khó hơn bất kỳ bài tập tương đương nào với thanh tạ hoặc roller."
+      },
+      "core_roller_1": {
+        "title": "Lăn Động Ab",
+        "description": " Cầm roller bụng, lăn từ quỳ đến duỗi toàn bộ, giữ hông cố định. Yêu cầu phản ứng chống mở rộng đột phá và phạm vi chuyển động toàn diện làm cho đây là bài tập core có tải hiệu quả nhất."
+      },
+      "core_band_1": {
+        "title": "Bắn Tạ Pallof",
+        "description": " Gắn dây kháng lực ngang ngực, đẩy tay cầm ra xa cơ thể trong khi chống xoay. Yêu cầu chống xoay sâu, tác động đến các cơ ổn định cột sống khó tiếp cận bằng các bài crunching."
+      },
+      "legs_1": {
+        "title": "Nền Tảng Squat",
+        "description": " Xây dựng mẫu squat hai bên với độ sâu đầy đủ và tư thế đứng thẳng."
+      },
+      "legs_2": {
+        "title": "Sức Mạnh Squat",
+        "description": " Tăng khối lượng squat và chỉnh sửa theo dõi gối cũng như độ sâu. Mở ra các đường tiến tới L-Sit và Pistol Squat."
+      },
+      "legs_3": {
+        "title": "Squat Tôm",
+        "description": " Squat một chân, chân phía sau giữ phía sau — yêu cầu sức mạnh đùi tuyệt đối, khả năng di động cổ chân và cân bằng đồng thời."
+      },
+      "legs_4": {
+        "title": "Split Squat Bulgaria",
+        "description": " Gác chân sau, chân trước bước về phía trước — hạ thấp đến khi gối sau gần chạm sàn. Xây dựng sức mạnh độc lập hiệu quả nhất."
+      },
+      "legs_ls_1": {
+        "title": "Duỗi Gập Pike",
+        "description": " Ngồi thẳng, duỗi chân rồi gập người về phía trước qua chân — tăng độ linh hoạt gân kheo và khả năng kích hoạt híp hông cho L-sit đầy đủ."
+      },
+      "legs_ls_2": {
+        "title": "Nén L-Sit",
+        "description": " Ngồi, đẩy gót chân xuống sàn và cố gắng nâng chúng lên — phát triển khả năng siết hông chủ động thay thế cho sự linh hoạt bằng sức mạnh trong L-sit."
+      },
+      "legs_ls_3": {
+        "title": "Tuck L-Sit",
+        "description": " Đẩy qua thanh song hoặc sàn, nâng hông khỏi mặt đất — gối gập chặt vào ngực, tay giữ thẳng. Vị trí mở khóa cho full L-sit."
+      },
+      "legs_ls_4": {
+        "title": "L-sit Toàn Diện",
+        "description": " Tay giữ chặt, hông nâng cao, chân thẳng nằm ngang — thể hiện sức mạnh hông, đẩy lực và nén toàn thân toàn diện."
+      },
+      "legs_ps_1": {
+        "title": "Bước Lên",
+        "description": " Bước lên bề mặt nâng cao trong kiểm soát — phát triển ổn định chân đơn và kích hoạt cơ đùi như bước đầu hướng tới Pistol Squat."
+      },
+      "legs_ps_2": {
+        "title": "Pistol Squat Hỗ Trợ",
+        "description": " Squat một chân toàn độ, giữ hỗ trợ hoặc dùng điểm tựa — xây dựng sức mạnh và khả năng di chuyển trước khi bỏ hỗ trợ."
+      },
+      "legs_ps_3": {
+        "title": "Squat Đứng Gần",
+        "description": " Squat hai chân chụm nhau — gần giống kỹ thuật Pistol Squat và đòi hỏi khả năng di động cổ chân cao hơn trước khi thực hành hoàn toàn đơn chân."
+      },
+      "legs_ps_4": {
+        "title": "Pistol Squat Toàn Phần",
+        "description": " Squat một chân toàn độ, chân tự do duỗi thẳng — đòi hỏi sức mạnh đùi, khả năng di động cổ chân và cân bằng toàn thân đỉnh cao trong một động tác chuyên sâu."
+      },
+      "legs_weighted_1": {
+        "title": "Squat Khoẻ Đeo Tạ",
+        "description": " Giữ kettlebell hoặc tạ đòn ở ngực, squat tới độ sâu tối đa. Vị trí goblet giúp giữ thẳng thân và theo dõi gối sâu, chuẩn là bước vào thể lực nặng cho chân."
+      },
+      "legs_weighted_2": {
+        "title": "Split Squat Bulgariêm Đeo Tạ",
+        "description": " Giữ tạ đòn, thực hiện split squat chân sau nâng cao. Tải đơn chân dưới dạng kéo giãn hông giúp phát triển sức mạnh chân tối ưu."
+      },
+      "legs_weighted_3": {
+        "title": "Pistol Squat Đeo Tạ",
+        "description": " Thực hiện full pistol squat đeo tạ hoặc tạ đĩa — tăng tải cùng đòi hỏi khả năng di động cổ chân, sức mạnh đùi và cân bằng tuyệt đỉnh."
+      },
+      "legs_weighted_4": {
+        "title": "Squat Tôm Đeo Tạ",
+        "description": " Thực hiện tôm squat mang tạ hoặc đai tạ — một trong những động tác tải riêng cao cấp nhất đòi hỏi hông, đùi và cân bằng đỉnh cao dưới tải trọng ngoài."
+      },
+      "legs_band_1": {
+        "title": "Đi Bộ Ngang Dây Kháng",
+        "description": " Đặt dây kháng lực quanh mắt cá, đi bộ sang hai bên trong tư thế squat nhỏ. Tập trung vào cơ mông giữa và các cơ đùi hông giúp ổn định mọi chuyển động chân một chân."
+      },
+      "legs_box_1": {
+        "title": "Nhảy Từ Thùng",
+        "description": " Phóng mạnh khỏi mặt đất, tiếp đất nhẹ nhàng trên thùng plyo, hấp thụ lực qua tiếp đất có kiểm soát. Giới thiệu về tốc độ phát huy lực và lưu trữ năng lượng đàn hồi."
+      },
+      "legs_sliders_1": {
+        "title": "Curls Gân kheo Dùng Slider",
+        "description": " Nằm ngửa, đặt slider dưới gót chân, cuộn chân về phía mông trong khi giữ hông cầu — yêu cầu chịu tải eccentrics cao giúp tạo stimulus vượt xa các máy móc mô phỏng."
+      },
+      "push_rings_1": {
+        "title": "Dùng Vòng Xà Đẩy",
+        "description": " Đẩy trên vòng xà gym với kiểm soát RTO (Vòng Xà Duỗi Ra) khi khóa thân. Không ổn định yêu cầu khả năng ổn định của cơ tam đầu, ngực và vai đẳng cấp thế giới trong từng lần đẩy."
+      },
+      "push_rings_2": {
+        "title": "Muscle-Up Trên Vòng Xà",
+        "description": " Kết hợp sức kéo và đẩy trên vòng xà trong một chuyển động nổ lực duy nhất trên vòng. Kỹ năng tối thượng đòi hỏi sự ổn định đẳng cấp xuyên suốt toàn bộ chuỗi động lực học."
+      },
+      "push_weighted_1": {
+        "title": "Dips Tải Trọng",
+        "description": " Thêm đai hoặc balo tạ khi đẩy xuống — các dips có tải trọng xây dựng sức mạnh đẩy đỉnh cao nhanh hơn bất kỳ bài tập đẩy nào khác bằng trọng lượng cơ thể."
+      }
+    }
+  },
+  "history": {
+    "title": "Lịch Sử Luyện Tập",
+    "subtitle": "Xem lại thành tích các buổi tập trước.",
+    "noSessions": "Chưa ghi nhận buổi tập nào.",
+    "startWorkout": "Bắt đầu buổi tập để xây dựng lịch sử của bạn.",
+    "session": "Phiên",
+    "duration": "Thời lượng",
+    "verified": "Đã xác thực",
+    "unverified": "Chưa xác thực",
+    "formScore": "Điểm Đảm Bảo Thống Nhất",
+    "reps": "Lặp lại",
+    "viewDetail": "Xem Chi Tiết",
+    "avgForm": "Form Trung Bình",
+    "aiVerified": "Được Chứng Thực Bởi AI",
+    "selfReported": "Tự Báo Cáo",
+    "viewClip": "Xem Clip",
+    "clipPolicy": "Các clip đánh dấu \"Xem Clip\" được lưu tại bộ nhớ cục bộ trong 7 ngày, sau đó tự động xóa để tiết kiệm dung lượng."
+  },
+  "leaderboard": {
+    "title": "Bảng Xếp Hạng",
+    "subtitle": "Tổng Điểm Thu Nhập · Chỉ lặp lại được xác thực bởi AI",
+    "global": "Toàn Cầu",
+    "national": "Quốc Gia",
+    "friends": "Bạn Bè",
+    "rank": "Xếp Hạng",
+    "yourRank": "Hạng của Bạn",
+    "athlete": "Vận Động Viên",
+    "totalPoints": "Tổng Điểm",
+    "points": "Điểm",
+    "skills": "Kỹ Năng",
+    "masteryPoints": "Điểm Thành Thạo",
+    "you": "Bạn",
+    "skillsLabel": "{{count}} kỹ năng",
+    "moveValueGuide": "Hướng Dẫn Giá Trị Chuyển Động",
+    "pointsPerRep": "Điểm mỗi lần lặp với 100% độ chính xác",
+    "ptsRep": "điểm/lặp",
+    "ptsSec": "điểm/giây",
+    "moveValueDesc": "Mỗi lặp được xác thực bởi AI (hoặc giây giữ nguyên) sẽ nhận trọng lượng × số lần lặp × (độ chính xác form / 100) điểm. Tự nhập nhật ký chỉ tính cho XP của Cây Kỹ Năng — không cộng điểm bảng xếp hạng.",
+    "exampleCalc": "Ví dụ: 10 lần Muscle-Up với 90% form = 10 × 10.0 × 0.9 = 90 điểm",
+    "onlyVerified": "Chỉ các lần lặp xác thực bởi AI mới được tính điểm vào bảng xếp hạng. Nhật ký thủ công chỉ tính vào XP của Cây Kỹ Năng.",
+    "formula": "Công thức: độ khó × số lần lặp × (độ chính xác form / 100) · Giới hạn không hạn chế",
+    "signInToSeeFriends": "Đăng nhập để xem Bạn Bè",
+    "compareRank": "So sánh hạng của bạn với những người bạn tập luyện cùng.",
+    "countryNotDetected": "Chưa xác định quốc gia",
+    "countryNotDetectedDesc": "Chúng tôi không thể nhận diện quốc gia của bạn. Thiết lập trong Cài Đặt để mở khóa bảng xếp hạng quốc gia.",
+    "failedToLoad": "Không thể tải bảng xếp hạng. Vui lòng thử lại sau.",
+    "noFriendsEmpty": "Chưa có bạn bè nào tập luyện — hoặc bạn chưa thêm bạn bè.",
+    "noAthletesRegion": "Chưa có vận động viên trong khu vực này. Hãy là người đầu tiên!",
+    "noFriends": "Thêm bạn bè để xem bảng xếp hạng bạn bè.",
+    "noNational": "Chưa có dữ liệu quốc gia nào."
+  },
+  "friends": {
+    "title": "Bạn Bè",
+    "addFriend": "Thêm Bạn Bè",
+    "searchPlaceholder": "Tìm theo tên đăng nhập…",
+    "pendingRequests": "Yêu cầu đang chờ",
+    "sent": "Đã Gửi",
+    "accept": "Chấp Nhận",
+    "decline": "Từ Chối",
+    "remove": "Xóa",
+    "noFriends": "Chưa có bạn bè. Tìm kiếm vận động viên để kết nối nào!",
+    "noPending": "Không có yêu cầu nào đang chờ.",
+    "viewProfile": "Xem Hồ Sơ",
+    "sendRequest": "Gửi Yêu Cầu",
+    "requestSent": "Yêu Cầu Đã Gửi",
+    "signInTitle": "Đăng nhập để sử dụng Danh Sách Bạn Bè",
+    "signInDesc": "Tạo tài khoản để kết nối với các vận động viên khác.",
+    "profileSetupWarning": "Hồ sơ của bạn đang trong quá trình thiết lập — nếu vẫn còn lâu, hãy truy cập Cài Đặt để hoàn tất.",
+    "findAthletes": "Tìm Vận Động Viên",
+    "searching": "Đang Tìm…",
+    "noUsersFound": "Không tìm thấy người dùng cho \"{{query}}\"",
+    "friendsBadge": "Bạn Bè",
+    "pending": "Đang Chờ",
+    "add": "Thêm",
+    "pendingRequestsCount": "Yêu cầu đang chờ ({{count}})",
+    "sentRequestsCount": "Yêu cầu đã Gửi ({{count}})",
+    "myFriends": "Bạn Bè của Tôi",
+    "noFriendsYet": "Chưa có bạn bè nào. Tìm kiếm ở trên để thêm người nào đó!",
+    "view": "Xem",
+    "removeFriend": "Xóa Bạn Bè",
+    "requestSentTitle": "Yêu cầu kết bạn đã Gửi",
+    "friendAdded": "Bạn Bè đã được thêm!",
+    "requestDeclined": "Yêu cầu đã bị từ chối",
+    "friendRemoved": "Bạn Bè đã bị xóa",
+    "somethingWentWrong": "Đã xảy ra lỗi"
+  },
+  "community": {
+    "title": "Cộng Đồng",
+    "feed": "Bảng Tin",
+    "post": "Bài Viết",
+    "like": "Thích",
+    "comment": "Bình luận",
+    "share": "Chia Sẻ",
+    "noposts": "Chưa có bài đăng nào — hãy là người đầu tiên chia sẻ buổi tập luyện!",
+    "shareWorkout": "Chia Sẻ Buổi Tập",
+    "aiVerified": "Xác Thực Bởi AI",
+    "selfReported": "Tự Báo Cáo",
+    "justNow": "vừa xong",
+    "minutesAgo": "{{n}} phút trước",
+    "hoursAgo": "{{n}} giờ trước",
+    "daysAgo": "{{n}} ngày trước",
+    "noClipAttached": "Chưa có clip đính kèm",
+    "commentLabel": "Bình luận",
+    "noComments": "Chưa có bình luận nào. Hãy là người đầu tiên!",
+    "addComment": "Thêm bình luận…",
+    "signInToComment": "Đăng nhập để bình luận",
+    "startWorkout": "Bắt Đầu Buổi Tập",
+    "communityTitle": "Cộng Đồng",
+    "communitySubtitle": "Các buổi tập của các vận động viên từ khắp nơi thế giới",
+    "searchAthletes": "Tìm theo vận động viên, bài tập hoặc #hashtag…",
+    "filterAll": "Tổng Quát",
+    "filterPush": "Đẩy",
+    "filterPull": "Kéo",
+    "filterCore": "Core",
+    "filterLegs": "Chân",
+    "emptyAll1": "Chưa có bài đăng nào",
+    "emptyAll2": "Chia sẻ clip sau buổi tập tiếp theo của bạn để trở thành người đầu tiên!",
+    "emptyPush1": "Chưa có clip ngày đẩy nào!",
+    "emptyPush2": "Hãy là người đầu tiên đăng bài tập đẩy.",
+    "emptyPull1": "Chưa có clip ngày kéo nào!",
+    "emptyPull2": "Hãy là người đầu tiên đăng bài tập kéo.",
+    "emptyCore1": "Chưa có clip tập trung trung tâm nào!",
+    "emptyCore2": "Hãy là người đầu tiên đăng bài tập trung trung tâm.",
+    "emptyLegs1": "Chưa có clip ngày chân! Hãy là người đầu tiên đăng bài.",
+    "emptyLegs2": "Đến phòng tập và thể hiện sức mạnh chân của bạn.",
+    "noEliteAchievements": "Chưa có thành tích Elite nào.",
+    "masterEliteSkill": "Làm chủ kỹ năng Elite để xuất hiện ở đây!",
+    "you": "Bạn",
+    "justMastered": "mới làm chủ",
+    "postClip": "Đăng Clip",
+    "shareClip": "Chia sẻ Clip",
+    "shareToCommunity": "Chia sẻ với Cộng đồng",
+    "addCaption": "Thêm chú thích… (tùy chọn)",
+    "uploadStarted": "Đang tải lên — bạn có thể duyệt tự do!",
+    "publishingPost": "Đang đăng bài…",
+    "postedToCommunity": "Đã đăng lên cộng đồng!",
+    "savedClipLabel": "Clip đã lưu"
+  },
+  "profile": {
+    "masteryPoints": "Điểm Thành Thạo",
+    "skillsMastered": "Kỹ năng đã làm chủ",
+    "totalSessions": "Tổng số Buổi Tập",
+    "skillTree": "Hệ Thống Kỹ Năng",
+    "milestones": "Các mốc quan trọng",
+    "mastery": "Chuyên Môn",
+    "badges": "Huy Hiệu",
+    "noMastery": "Chưa có kỹ năng nào làm chủ.",
+    "privateProfile": "Hồ sơ này riêng tư."
+  },
+  "privacy": {
+    "public": "Công Khai",
+    "publicDesc": "Bất cứ ai cũng có thể xem hồ sơ, hệ thống kỹ năng, và huy hiệu thành thạo của bạn.",
+    "friends": "Chỉ Bạn Bè",
+    "friendsDesc": "Chỉ những người bạn đã chấp thuận mới xem hồ sơ của bạn.",
+    "private": "Riêng Tư",
+    "privateDesc": "Hồ sơ của bạn được ẩn — ngay cả với bạn bè."
+  },
+  "calibration": {
+    "title": "Hiệu Chuẩn Thân Thể",
+    "subtitle": "Đứng ở tư thế chữ T để chúng tôi có thể hiệu chỉnh số đo cơ thể của bạn",
+    "instructions": "Đứng ở tư thế chữ T: tay dang rộng hai bên, chân rộng bằng vai.",
+    "scanning": "Đang quét...",
+    "complete": "Hiệu Chuẩn Hoàn Tất",
+    "retry": "Thử lại"
+  },
+  "daily": {
+    "title": "Khả Năng Vận Động Hàng Ngày",
+    "streak": "Dây chuyền thành tích",
+    "days": "ngày",
+    "routine": "Thói Quen Hôm Nay",
+    "complete": "Hoàn thành",
+    "completed": "Đã hoàn thành",
+    "questionnaire": {
+      "title": "Cập Nhật Mục Tiêu Của Tôi",
+      "subtitle": "Tùy chỉnh các nhiệm vụ vận động hàng ngày của bạn",
+      "goalQuestion": "Mục tiêu calisthenics chính của bạn là gì?",
+      "areasQuestion": "Những nhóm cơ và khớp nào đang gây cản trở bạn?",
+      "areasHint": "(chọn tất cả những gì phù hợp)",
+      "timeQuestion": "Bạn dành bao nhiêu thời gian cho khả năng vận động hàng ngày?",
+      "save": "Lưu Tùy Chọn của Tôi",
+      "tapToChange": "Chạm vào dưới để thay đổi",
+      "suggested": "Đề Xuất",
+      "searchGoal": "Tìm kiếm một động tác hoặc kỹ năng…",
+      "searchBodyPart": "Tìm kiếm một bộ phận cơ thể…",
+      "minLabel": "{{n}} phút",
+      "goalsUpdated": "Mục tiêu đã cập nhật! Thói quen của bạn đã được tùy chỉnh."
+    }
+  },
+  "errors": {
+    "notFound": "Trang không tìm thấy",
+    "notFoundDesc": "Trang bạn muốn truy cập không tồn tại.",
+    "unauthorized": "Vui lòng đăng nhập để tiếp tục",
+    "serverError": "Lỗi máy chủ — vui lòng thử lại",
+    "goHome": "Về Trang Chủ"
+  },
+  "coaching": {
+    "rep": "Lặp {{count}}",
+    "goodRep": "Lặp tốt!",
+    "formWarning": "Giữ đúng kỹ thuật.",
+    "breathe": "Hít thở đều đặn trong quá trình tập.",
+    "almostDone": "Gần xong rồi — giữ vững phong độ.",
+    "setComplete": "Bộ hoàn thành! Nghỉ ngơi một chút.",
+    "workoutComplete": "Buổi tập kết thúc! Nỗ lực tuyệt vời."
+  },
+  "exercises": {
+    "push_up": "Hít đất",
+    "diamond_push_up": "Hít đất hình kim cương",
+    "archer_push_up": "Hít đất kiểu cung thủ",
+    "pseudo_planche_push_up": "Hít đất giả tư thế plank",
+    "pike_push_up": "Hít đất hình chữ V",
+    "elevated_pike_push_up": "Hít đất chữ V nâng cao",
+    "handstand_push_up": "Hít đất tay đứng",
+    "handstand": "Tay đứng",
+    "wall_handstand_push_up": "Hít đất tay đứng dựa tường",
+    "planche_lean": "Nghiêng tư thế planche",
+    "tuck_planche": "Planche cuộn gối",
+    "straddle_planche": "Planche dạng chữ V mở rộng",
+    "planche": "Tư thế planche",
+    "full_planche": "Tư thế full planche",
+    "scapular_shrugs": "Nhún vai scapular",
+    "australian_rows": "Kéo xô kiểu Úc",
+    "negative_pull_ups": "Chống kéo âm",
+    "negative_pull_up": "Chống kéo âm đơn",
+    "pull_up": "Chống kéo",
+    "tuck_front_lever": "Giữ dạng đuôi cá gập gối",
+    "straddle_front_lever": "Chồm đuôi cá mở rộng chân",
+    "full_front_lever": "Đuôi cá toàn phần",
+    "chest_to_bar_pull_up": "Chống kéo chạm ngực",
+    "muscle_up": "Chướn cơ",
+    "kipping_muscle_up": "Chướn cơ kiểu xóc",
+    "strict_muscle_up": "Chướn cơ chính xác",
+    "archer_pull_up": "Chống kéo kiểu cung thủ",
+    "typewriter_pull_up": "Chin-Up kiểu Đánh Giấy Mực",
+    "one_arm_active_hang": "Treo Chống Chống Tay Một bên Chủ Động",
+    "one_arm_pull_up": "Chin-Up Một Tay",
+    "plank": "Bạn Chống Thẳng",
+    "side_plank": "Chống Ngang Bánh Xe",
+    "dead_bug": "Chống Bước Chết",
+    "superman": "Siêu Nhân",
+    "hollow_body_hold": "Giữ Thân Rỗng",
+    "dragon_flag_negative": "Chữ Rồng Hạ Cao",
+    "dragon_flag": "Chữ Rồng",
+    "active_hang": "Treo Chủ Động",
+    "hanging_knee_tuck": "Kẹp Gối Khi Treo",
+    "hanging_knee_tucks": "Kẹp Gối Khi Treo Nhiều Lần",
+    "hanging_leg_raise": "Nâng Chân Khi Treo",
+    "hanging_leg_raises": "Nâng Chân Khi Treo Nhiều Lần",
+    "toes_to_bar": "Chạm Ngón Chân Đến Thanh Xà",
+    "windshield_wiper": "Chổi Gió Xe Ô Tô",
+    "windshield_wipers": "Chổi Gió Xe Ô Tô Nhiều Lần",
+    "hanging_windshield_wipers": "Chổi Gió trên Thanh Treo",
+    "tucked_human_flag": "Cờ Người Gập Gọn",
+    "one_leg_human_flag": "Cờ Người Một Chân",
+    "human_flag": "Cờ Người",
+    "squat": "Ngồi xổm",
+    "air_squat": "Ngồi Xoạc Không Tải Trọng",
+    "shrimp_squat": "Ngồi Xoạc Nhím",
+    "bulgarian_split_squat": "Ngồi Xoạc Bù-đê",
+    "nordic_curls": "Gập Người kiểu Bắc Âu",
+    "pike_stretch": "Duỗi Cánh Bưới",
+    "l_sit_compression": "Nén L-Sit",
+    "l_sit_compressions": "Nén L-Sit Nhiều Lần",
+    "tuck_l_sit": "Tuck L-Sit",
+    "l_sit": "L-Sit",
+    "full_l_sit": "L-Sit Đầy Đủ",
+    "step_up": "Bước Lên Cầu Thang",
+    "step_ups": "Bước Lên Nhiều Lần",
+    "assisted_pistol_squat": "Ngồi xổm Một chân hỗ trợ",
+    "close_stance_squat": "Ngồi Xoạc Thắt Chặt",
+    "pistol_squat": "Ngồi Xoạc Một Chân",
+    "explosive_pull_up": "Lên xung kích bắn phá",
+    "ring_support_hold": "Giữ Thăng Bồng Tưng Thanh",
+    "ring_pull_up": "Chin-Up trên Thanh Đũng Quần Đảo",
+    "ring_muscle_up": "Chuyên Nghiệp Bằng Thanh Đánh Giầy",
+    "ring_dip": "Chéo Tay Đáo Bồng Thanh",
+    "weighted_pull_up": "Chin-Up Có Tải Trọng",
+    "weighted_muscle_up": "Chuyển Đổi Bắp Quỳ có Trọng lượng",
+    "weighted_dip": "Chéo Tay Tải Trọng",
+    "weighted_plank": "Bạn Chống Thẳng Có Tải Trọng",
+    "weighted_dragon_flag": "Chữ Rồng có Tải Trọng",
+    "weighted_leg_raises": "Nâng Chân Có Trọng Lượng",
+    "weighted_goblet_squat": "Ngồi Xoạc Goblet Tải Trọng",
+    "weighted_bulgarian_split_squat": "Ngồi Xoạc Bù-đê Tải Trọng",
+    "weighted_pistol_squat": "Ngồi Xoạc Một Chân có Trọng Lượng",
+    "weighted_shrimp_squat": "Ngồi Xoạc Nhím Tải Trọng",
+    "bar_volume_pull_up": "Chin-Up Thể Dục Thanh Cần Cẩu",
+    "explosive_bar_pull_up": "Chin-Up Xung Kích Thanh Cần Cẩu",
+    "strict_bar_muscle_up": "Chuyên Nghiệp Bắp Quỳ Thanh Cần Cẩu",
+    "weighted_volume": "Khối Lượng Tải Trọng",
+    "ab_roller_rollout": "Roller Ép Bụng Ra Ngoài",
+    "banded_pallof_press": "Đẩy Pallof bằng Dây Đai",
+    "banded_lateral_walks": "Đi Bước Ngang bằng Dây Đai",
+    "box_jumps": "Nhảy Lên Thùng",
+    "slider_hamstring_curls": "Cuộn Gân Khoeo bằng Đá Trượt",
+    "ring_knee_raises": "Nâng Gối Trên Thanh Đánh Quần Đảo",
+    "ring_rollouts": "Kéo Rollout trên Thanh Đánh Quần Đảo",
+    "lunge": "Bước Sang Một Bước",
+    "burpee": "Chạy Nhảy Burpee",
+    "back_extensions": "Duỗi Lưng"
+  },
+  "muscles": {
+    "wrist_flexors": "Cơ Cổ Tay Gập",
+    "forearms": "Cẳng Tay",
+    "wrist_extensors": "Cơ Duỗi Cổ Tay",
+    "shoulders": "Vai",
+    "chest": "Ngực",
+    "lats": "Lưng Xô",
+    "thoracic_spine": "Xương Sống Ngực",
+    "anterior_shoulders": "Vai Trước",
+    "biceps": "Bắp Tay Trước",
+    "hip_flexors": "Cơ Gấp H hip",
+    "quads": "Cơ Băm",
+    "psoas": "Cơ Psoas",
+    "hamstrings": "Gân Đùi Sau",
+    "calves": "Chày)",
+    "lower_back": "Lưng Dưới",
+    "obliques": "Cơ Bên Bụng",
+    "rotator_cuff": "Gân Bóp Xoay Vai",
+    "hip_external_rotators": "Cơ Xoay Ngoài Háng",
+    "glutes": "Mông",
+    "it_band": "Dải Chày",
+    "triceps": "Tam Chấu",
+    "posterior_shoulder": "Vai Sau",
+    "lat": "Lưng",
+    "hip_adductors": "Cơ Gần Trong Háng",
+    "anterior_deltoid": "Đa Thương Trước",
+    "ankles": "Mắt Cá Chân",
+    "achilles": "Gân Achilles",
+    "wrists": "Cổ Tay",
+    "finger_flexors": "Cơ Gập Ngón Tay",
+    "serratus": "Cơ Răng Rừa",
+    "shoulder_extension": "Duỗi Vai",
+    "scapular_stabilisers": "Cơ Ổn Định Gáy Vai",
+    "teres_major": "Cơ Thùy Phía Trước",
+    "shoulder_protraction": "Kéo Chụi Vai Trước",
+    "wrist_tendons": "Gân Cổ Tay",
+    "ankle_dorsiflexors": "Cơ Dorsiflexion Bắp Chân",
+    "tibialis_anterior": "Cơ Chày Trước",
+    "hip_adductors_": "Cơ Hạ Mông",
+    "serratus_anterior": "Cơ Gạc Nách",
+    "lower_traps": "Nhịn Thắt Lưng Dưới",
+    "scapular_retractors": "Cơ Thu Gồng Lưng Vai",
+    "lower_trapezius": "Cơ Rẻ Hạ Gáy",
+    "posterior_deltoid": "Cơ Đầu Vai Sau",
+    "rhomboids": "Cơ Chám",
+    "hip_extensors": "Cơ Kéo Thải Hông",
+    "anterior_deltoids": "Cơ Đầu Vai Trước",
+    "wrist_extensors_": "Cơ Duỗi Cổ Tay"
+  },
+  "mobility": {
+    "stretches": {
+      "wristExtension": {
+        "name": "Duỗi Duỗi Cổ Tay",
+        "muscles": "Cơ Cổ Tay, Cẳng Tay"
+      },
+      "wristFlexion": {
+        "name": "Duỗi Gập Cổ Tay",
+        "muscles": "Cơ Duỗi Cổ Tay, Cẳng Tay"
+      },
+      "shoulderDislocates": {
+        "name": "Dãn Rời Vai",
+        "muscles": "Vai, Ngực, Lưng xốp"
+      },
+      "latStretch": {
+        "name": "Dãn Lưng Xoăn",
+        "muscles": "Cơ Lưng Xoăn, Cột Sống Ngực, Vai"
+      },
+      "chestOpener": {
+        "name": "Duỗi Ngực Qua Khung Cửa",
+        "muscles": "Ngực, Vai Trước, Bắp Tay"
+      },
+      "hipFlexorLunge": {
+        "name": "Bước Với Cơ Gấp Hông",
+        "muscles": "Cơ Gấp Hông, Đùi Trước, Psoas"
+      },
+      "hamstring": {
+        "name": "Duỗi Gân Hamstring Đứng",
+        "muscles": "Gân Hamstring, Bắp Chân, Lưng dưới"
+      },
+      "thoracicRotation": {
+        "name": "Xoay Ngực Ngồi",
+        "muscles": "Cột Sống Ngực, Obliques, Cơ Bóng Xoay"
+      },
+      "pigeonPose": {
+        "name": "Dễ Thở Vá Hông",
+        "muscles": "Cơ Ngoại Cử Động Hông, Mông, Dây Thừng IT"
+      },
+      "tricepsStretch": {
+        "name": "Duỗi Triceps Trên Đầu",
+        "muscles": "Triceps, Vai Sau, Lưng Xoăn"
+      },
+      "pancake": {
+        "name": "Duỗi Pancake",
+        "muscles": "Gân Hamstring, Cơ Hạ Mông, Lưng Dưới"
+      },
+      "shoulderFlexion": {
+        "name": "Nghiêm Gấp Vai Ngược",
+        "muscles": "Đầu Vai Trước, Ngực, Bắp Tay"
+      },
+      "ankleCircles": {
+        "name": "Vòng Quay Cổ Chân",
+        "muscles": "Cổ Chân, Bắp Chân, Gân Achilles"
+      },
+      "calfStretch": {
+        "name": "Duỗi Cách Chân Dính Vách Tường",
+        "muscles": "Bắp Chân, Gân Achilles, Cổ Chân"
+      },
+      "wallPuppyPose": {
+        "name": "Tư Thế Cún Trên Tường",
+        "muscles": "Cột Sống Ngực, Cơ Gấp Vai, Lưng Xoăn"
+      },
+      "firstKnuckleRaises": {
+        "name": "Nâng Đầu Các Ngón",
+        "muscles": "Cơ Cổ Tay, Cơ Ngón Tay, Cẳng Tay"
+      },
+      "butchersBlock": {
+        "name": "Duỗi Gấp Bục Búa",
+        "muscles": "Triceps, Lưng Xoăn, Gạc Nách"
+      },
+      "germanHang": {
+        "name": "Treo Thẳng Đung Đưa (Thụ Động)",
+        "muscles": "Kéo Dài Vai, Vai Trước, Bắp Tay"
+      },
+      "skinTheCat": {
+        "name": "Lột Da Đánh Thể (Một Phần)",
+        "muscles": "Vai, Cơ Ổn Định Vai, Lưng Xoăn"
+      },
+      "deepLatStretch": {
+        "name": "Lăn Lỏng Cơ Lưng Xoăn Sâu",
+        "muscles": "Lưng Xoăn, Teres Major, Cột Sống Ngực"
+      },
+      "plancheLeans": {
+        "name": "Nghiêng Chuỗi Đá Nước",
+        "muscles": "Cổ Tay, Kéo Dài Vai, Gạc Nách"
+      },
+      "reverseTabletop": {
+        "name": "Kéo Dài Bảng Đảo Ngược",
+        "muscles": "Vai Trước, Ngực, Cơ Duỗi Cổ Tay"
+      },
+      "fingerPulses": {
+        "name": "Nhịp Gân Ngón Tay",
+        "muscles": "Cơ Gấp Ngón, Gân Cổ Tay, Cẳng Tay"
+      },
+      "ankleDorsiflexion": {
+        "name": "Dãn Tăng Cử Động Cổ Chân Có Trọng Lượng",
+        "muscles": "Cơ Dorsiflexion Cổ Chân, Gân Achilles, Cơ Chày Trước"
+      },
+      "cossackSquats": {
+        "name": "Ngồi Cossack",
+        "muscles": "Cơ Hạ Mông, Mông, Cổ Chân"
+      },
+      "scapularHangs": {
+        "name": "Treo Căng Vai Chủ Động",
+        "muscles": "Gạc Nách, Trapezius Dưới, Thu Gồng Lưng Vai"
+      },
+      "proneYRaises": {
+        "name": "Nâng Y Khi Nằm Sấp",
+        "muscles": "Trapezius Dưới, Vai Sau, Rhomboids"
+      },
+      "thoracicBridge": {
+        "name": "Liên Kết Ngực Ngồi",
+        "muscles": "Cột Sống Ngực, Mông, Cơ Kéo Thải Hông"
+      }
+    }
+  }
+}

@@ -31,60 +31,62 @@ import {
   type FeedComment,
 } from "@/lib/community-feed";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
+import { type TFunction } from "i18next";
 
 // ─── Category filter definitions ──────────────────────────────────────────────
 
 type CategoryKey = "all" | "push" | "pull" | "core" | "legs";
 
 interface CategoryFilter {
-  key: CategoryKey;
-  label: string;
-  color: string;
-  glow: string;
-  emptyLine1: string;
-  emptyLine2: string;
+  key:          CategoryKey;
+  labelKey:     string;
+  color:        string;
+  glow:         string;
+  emptyLine1Key: string;
+  emptyLine2Key: string;
 }
 
 const CATEGORY_FILTERS: CategoryFilter[] = [
   {
-    key:       "all",
-    label:     "All",
-    color:     "#22c55e",
-    glow:      "rgba(34,197,94,0.35)",
-    emptyLine1: "No posts yet",
-    emptyLine2: "Share a clip after your next workout to be the first!",
+    key:          "all",
+    labelKey:     "community.filterAll",
+    color:        "#22c55e",
+    glow:         "rgba(34,197,94,0.35)",
+    emptyLine1Key: "community.emptyAll1",
+    emptyLine2Key: "community.emptyAll2",
   },
   {
-    key:       "push",
-    label:     "Push",
-    color:     "#f97316",
-    glow:      "rgba(249,115,22,0.35)",
-    emptyLine1: "No Push Day clips yet!",
-    emptyLine2: "Be the first to post a push workout.",
+    key:          "push",
+    labelKey:     "community.filterPush",
+    color:        "#f97316",
+    glow:         "rgba(249,115,22,0.35)",
+    emptyLine1Key: "community.emptyPush1",
+    emptyLine2Key: "community.emptyPush2",
   },
   {
-    key:       "pull",
-    label:     "Pull",
-    color:     "#3b82f6",
-    glow:      "rgba(59,130,246,0.35)",
-    emptyLine1: "No Pull Day clips yet!",
-    emptyLine2: "Be the first to post a pull workout.",
+    key:          "pull",
+    labelKey:     "community.filterPull",
+    color:        "#3b82f6",
+    glow:         "rgba(59,130,246,0.35)",
+    emptyLine1Key: "community.emptyPull1",
+    emptyLine2Key: "community.emptyPull2",
   },
   {
-    key:       "core",
-    label:     "Core",
-    color:     "#a855f7",
-    glow:      "rgba(168,85,247,0.35)",
-    emptyLine1: "No Core clips yet!",
-    emptyLine2: "Be the first to post a core workout.",
+    key:          "core",
+    labelKey:     "community.filterCore",
+    color:        "#a855f7",
+    glow:         "rgba(168,85,247,0.35)",
+    emptyLine1Key: "community.emptyCore1",
+    emptyLine2Key: "community.emptyCore2",
   },
   {
-    key:       "legs",
-    label:     "Legs",
-    color:     "#10b981",
-    glow:      "rgba(16,185,129,0.35)",
-    emptyLine1: "No Leg Day clips yet! Be the first to post.",
-    emptyLine2: "Hit the gym and show your leg strength.",
+    key:          "legs",
+    labelKey:     "community.filterLegs",
+    color:        "#10b981",
+    glow:         "rgba(16,185,129,0.35)",
+    emptyLine1Key: "community.emptyLegs1",
+    emptyLine2Key: "community.emptyLegs2",
   },
 ];
 
@@ -121,12 +123,12 @@ function toHashtag(name: string): string {
 
 // ─── Time formatter ───────────────────────────────────────────────────────────
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, t: TFunction): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60)    return "just now";
-  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+  if (diff < 60)    return t("community.justNow");
+  if (diff < 3600)  return t("community.minutesAgo", { n: Math.floor(diff / 60) });
+  if (diff < 86400) return t("community.hoursAgo", { n: Math.floor(diff / 3600) });
+  return t("community.daysAgo", { n: Math.floor(diff / 86400) });
 }
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -154,11 +156,12 @@ function Avatar({ url, name, size = 8 }: { url: string | null; name: string; siz
 // ─── Video card ───────────────────────────────────────────────────────────────
 
 function VideoCard({ post }: { post: FeedPost }) {
-  const videoRef                      = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying]         = useState(false);
-  const [showComments, setShowComments] = useState(false);
-  const toggleLike                    = useToggleLike(post.id);
-  const accentColor                   = exerciseColor(post.exerciseName);
+  const { t }                             = useTranslation();
+  const videoRef                          = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying]             = useState(false);
+  const [showComments, setShowComments]   = useState(false);
+  const toggleLike                        = useToggleLike(post.id);
+  const accentColor                       = exerciseColor(post.exerciseName);
 
   const handleTogglePlay = useCallback(() => {
     const v = videoRef.current;
@@ -199,12 +202,12 @@ function VideoCard({ post }: { post: FeedPost }) {
             {post.isAiVerified ? (
               <span className="flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded-full border border-emerald-400/20 shrink-0">
                 <CheckCircle2 className="w-2.5 h-2.5" />
-                AI Verified
+                {t("community.aiVerified")}
               </span>
             ) : (
               <span className="flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-400 bg-slate-400/10 px-1.5 py-0.5 rounded-full border border-slate-400/20 shrink-0">
                 <Shield className="w-2.5 h-2.5" />
-                Self-Reported
+                {t("community.selfReported")}
               </span>
             )}
           </div>
@@ -227,7 +230,7 @@ function VideoCard({ post }: { post: FeedPost }) {
             >
               {toHashtag(post.exerciseName)}
             </span>
-            <span className="text-[10px] text-white/30">{timeAgo(post.createdAt)}</span>
+            <span className="text-[10px] text-white/30">{timeAgo(post.createdAt, t)}</span>
           </div>
         </div>
       </div>
@@ -280,7 +283,7 @@ function VideoCard({ post }: { post: FeedPost }) {
         >
           <div className="flex flex-col items-center gap-2">
             <Video className="w-8 h-8 opacity-30" />
-            <span className="text-xs opacity-40">No clip attached</span>
+            <span className="text-xs opacity-40">{t("community.noClipAttached")}</span>
           </div>
         </div>
       )}
@@ -314,7 +317,7 @@ function VideoCard({ post }: { post: FeedPost }) {
           )}
         >
           <MessageCircle className={cn("w-5 h-5", showComments && "fill-cyan-400/20")} />
-          <span>Comment</span>
+          <span>{t("community.comment")}</span>
           <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", showComments && "rotate-180")} />
         </button>
       </div>
@@ -340,6 +343,7 @@ function VideoCard({ post }: { post: FeedPost }) {
 // ─── Comments panel ───────────────────────────────────────────────────────────
 
 function CommentsPanel({ postId }: { postId: number }) {
+  const { t }   = useTranslation();
   const { user } = useUser();
   const { data: comments, isLoading } = usePostComments(postId);
   const addComment = useAddComment(postId);
@@ -360,7 +364,7 @@ function CommentsPanel({ postId }: { postId: number }) {
           </div>
         )}
         {!isLoading && (!comments || comments.length === 0) && (
-          <p className="text-xs text-white/25 text-center py-2">No comments yet. Be first!</p>
+          <p className="text-xs text-white/25 text-center py-2">{t("community.noComments")}</p>
         )}
         {comments?.map((c: FeedComment) => (
           <div key={c.id} className="flex gap-2.5 items-start">
@@ -378,7 +382,7 @@ function CommentsPanel({ postId }: { postId: number }) {
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Add a comment…"
+            placeholder={t("community.addCommentPlaceholder")}
             className="flex-1 bg-white/[0.06] border border-white/10 rounded-full px-3 py-1.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-400/40 transition-colors"
             maxLength={280}
           />
@@ -393,7 +397,7 @@ function CommentsPanel({ postId }: { postId: number }) {
           </button>
         </form>
       ) : (
-        <p className="text-xs text-white/30 text-center">Sign in to comment</p>
+        <p className="text-xs text-white/30 text-center">{t("community.signInToComment")}</p>
       )}
     </div>
   );
@@ -402,7 +406,8 @@ function CommentsPanel({ postId }: { postId: number }) {
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
 function EmptyFeed({ category }: { category: CategoryFilter }) {
-  const [, navigate] = useLocation();
+  const { t }         = useTranslation();
+  const [, navigate]  = useLocation();
 
   return (
     <motion.div
@@ -425,8 +430,8 @@ function EmptyFeed({ category }: { category: CategoryFilter }) {
       </div>
 
       <div>
-        <p className="font-bold text-base text-white/70">{category.emptyLine1}</p>
-        <p className="text-sm text-white/35 mt-1 max-w-[260px] mx-auto">{category.emptyLine2}</p>
+        <p className="font-bold text-base text-white/70">{t(category.emptyLine1Key)}</p>
+        <p className="text-sm text-white/35 mt-1 max-w-[260px] mx-auto">{t(category.emptyLine2Key)}</p>
       </div>
 
       {/* Start Workout shortcut */}
@@ -441,7 +446,7 @@ function EmptyFeed({ category }: { category: CategoryFilter }) {
         }}
       >
         <Dumbbell className="w-4 h-4" />
-        Start Workout
+        {t("community.startWorkout")}
       </button>
     </motion.div>
   );
@@ -456,6 +461,8 @@ function CategoryFilterBar({
   active: CategoryKey;
   onChange: (key: CategoryKey) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex items-center justify-center gap-2 flex-wrap">
       {CATEGORY_FILTERS.map((cat) => {
@@ -483,13 +490,12 @@ function CategoryFilterBar({
             }
           >
             {isActive && (
-              /* Subtle glow dot */
               <span
                 className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
                 style={{ backgroundColor: cat.color, boxShadow: `0 0 4px ${cat.color}` }}
               />
             )}
-            {cat.label}
+            {t(cat.labelKey)}
           </button>
         );
       })}
@@ -500,10 +506,10 @@ function CategoryFilterBar({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function CommunityFeedPage() {
-  const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
-  const [searchQuery,    setSearchQuery]    = useState("");
+  const { t }                                         = useTranslation();
+  const [activeCategory, setActiveCategory]           = useState<CategoryKey>("all");
+  const [searchQuery,    setSearchQuery]              = useState("");
 
-  // Always fetch all posts; filter client-side for instant category/search switching
   const { data: allPosts, isLoading, error } = useCommunityFeed();
 
   const category = CATEGORY_FILTERS.find((c) => c.key === activeCategory)!;
@@ -530,8 +536,8 @@ export function CommunityFeedPage() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 pt-2">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white">Community</h1>
-          <p className="text-sm text-white/40 mt-0.5">Workouts from athletes around the world</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-white">{t("community.title")}</h1>
+          <p className="text-sm text-white/40 mt-0.5">{t("community.subtitle")}</p>
         </div>
         <div
           className="w-2 h-2 rounded-full mt-3 shrink-0"
@@ -556,7 +562,7 @@ export function CommunityFeedPage() {
         <input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by athlete, exercise or #hashtag…"
+          placeholder={t("community.searchPlaceholder")}
           className="w-full bg-transparent pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-white/28 focus:outline-none rounded-[13px]"
         />
         {searchQuery && (
@@ -575,39 +581,29 @@ export function CommunityFeedPage() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="rounded-2xl border border-white/[0.06] overflow-hidden animate-pulse"
-              style={{ background: "rgba(15,23,42,0.6)" }}
-            >
-              <div className="p-4 flex gap-3">
-                <div className="w-9 h-9 rounded-full bg-white/10" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-white/10 rounded w-1/3" />
-                  <div className="h-2.5 bg-white/[0.07] rounded w-1/4" />
-                </div>
-              </div>
-              <div className="bg-white/[0.04]" style={{ aspectRatio: "16/9" }} />
-              <div className="p-4 h-10" />
-            </div>
+              className="h-72 rounded-2xl animate-pulse"
+              style={{ background: "rgba(255,255,255,0.04)" }}
+            />
           ))}
         </div>
       )}
 
       {error && (
-        <div className="text-center py-12 text-red-400/70 text-sm">
-          Failed to load feed. Please try again.
+        <div className="text-center py-12 text-red-400 text-sm">
+          {t("community.failedToLoad")}
         </div>
       )}
 
-      {!isLoading && !error && posts && posts.length === 0 && (
-        <EmptyFeed category={category} />
-      )}
-
-      {!isLoading && !error && posts && posts.length > 0 && (
-        <div className="space-y-4 pb-8">
-          {posts.map((post) => (
-            <VideoCard key={post.id} post={post} />
-          ))}
-        </div>
+      {!isLoading && !error && posts && (
+        posts.length === 0
+          ? <EmptyFeed category={category} />
+          : (
+            <div className="flex flex-col gap-4">
+              {posts.map((post) => (
+                <VideoCard key={post.id} post={post} />
+              ))}
+            </div>
+          )
       )}
     </div>
   );

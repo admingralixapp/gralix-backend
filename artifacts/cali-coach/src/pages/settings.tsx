@@ -912,7 +912,7 @@ export function Settings() {
       {/* ── Manage Membership (Pro only) ─────────────────────────────────────── */}
       {profile?.isPro && (
         <section ref={membershipRef}>
-          <SectionHeader icon={<Crown className="w-4 h-4" />} label="Membership" />
+          <SectionHeader icon={<Crown className="w-4 h-4" />} label={t("settings.membership")} />
           <div
             className="rounded-2xl border p-5 space-y-4"
             style={{
@@ -930,7 +930,7 @@ export function Settings() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold" style={{ color: "#e9d5ff" }}>CaliCoach Pro</div>
-                <div className="text-[11px]" style={{ color: "#c084fc" }}>Active membership</div>
+                <div className="text-[11px]" style={{ color: "#c084fc" }}>{t("settings.activeMembership")}</div>
               </div>
               <span
                 className="text-[10px] font-black px-2.5 py-1 rounded-full shrink-0"
@@ -945,16 +945,16 @@ export function Settings() {
             {/* Cancel button */}
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-sm font-semibold text-foreground">Cancel Membership</div>
+                <div className="text-sm font-semibold text-foreground">{t("settings.cancelMembership")}</div>
                 <div className="text-[11px] text-muted-foreground mt-0.5">
-                  You keep access until the end of your billing cycle.
+                  {t("settings.cancelMembershipDesc")}
                 </div>
               </div>
               <button
                 onClick={() => setCancelStep("retention")}
                 className="shrink-0 px-3.5 py-1.5 rounded-lg text-xs font-bold border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors"
               >
-                Cancel
+                {t("common.cancel")}
               </button>
             </div>
           </div>
@@ -1017,7 +1017,7 @@ export function Settings() {
               className="w-full py-1.5 text-center text-[10px] font-black uppercase tracking-widest"
               style={{ background: "linear-gradient(90deg, #7c3aed, #a855f7)", color: "#fff" }}
             >
-              Special offer — just for you
+              {t("settings.retentionOfferBar")}
             </div>
 
             <div className="p-6 space-y-4 relative">
@@ -1032,11 +1032,9 @@ export function Settings() {
               {/* Headline */}
               <div className="text-center pt-1 space-y-2">
                 <div className="text-3xl">🎁</div>
-                <h3 className="text-xl font-black text-white">Wait! Don't go just yet...</h3>
+                <h3 className="text-xl font-black text-white">{t("settings.retentionHeadline")}</h3>
                 <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
-                  Stay Pro and get{" "}
-                  <span className="font-black" style={{ color: "#c084fc" }}>40% OFF</span>{" "}
-                  your next month. Continue your journey with the world's best AI coaching.
+                  {t("settings.retentionBody")}
                 </p>
               </div>
 
@@ -1061,7 +1059,7 @@ export function Settings() {
               <button
                 onClick={() => {
                   setCancelStep(null);
-                  toast({ title: "Discount applied!", description: "40% off has been applied to your next billing cycle." });
+                  toast({ title: t("settings.discountApplied"), description: t("settings.discountAppliedDesc") });
                 }}
                 className="w-full py-3 rounded-xl text-sm font-black transition-all"
                 style={{
@@ -1070,7 +1068,7 @@ export function Settings() {
                   boxShadow: "0 4px 24px rgba(168,85,247,0.50)",
                 }}
               >
-                Claim 40% Discount
+                {t("settings.claim40Discount")}
               </button>
 
               {/* Secondary */}
@@ -1081,7 +1079,7 @@ export function Settings() {
                 onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.55)")}
                 onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.30)")}
               >
-                No thanks, continue to cancel →
+                {t("settings.noThanksCancel")}
               </button>
             </div>
           </div>
@@ -1122,7 +1120,7 @@ export function Settings() {
                 >
                   <AlertTriangle className="w-4 h-4 text-red-400" />
                 </div>
-                <span className="font-black text-base text-white">We're sorry to see you go.</span>
+                <span className="font-black text-base text-white">{t("settings.sorryToSeeYouGo")}</span>
               </div>
               <button
                 onClick={() => setCancelStep(null)}
@@ -1134,10 +1132,7 @@ export function Settings() {
 
             {/* Body */}
             <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
-              You will lose access to{" "}
-              <span className="font-semibold text-white/85">Advanced Analytics</span> and{" "}
-              <span className="font-semibold text-white/85">Pro Auras</span>{" "}
-              at the end of your billing cycle.
+              {t("settings.loseAccessDesc")}
             </p>
 
             {/* Actions */}
@@ -1153,7 +1148,7 @@ export function Settings() {
                 onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.12)"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.07)"; }}
               >
-                Go Back
+                {t("settings.goBack")}
               </button>
               <button
                 onClick={() => {
@@ -1163,11 +1158,11 @@ export function Settings() {
                     onSuccess: () => {
                       setCancelStep(null);
                       toast({
-                        title: "Subscription cancelled",
-                        description: `Your subscription has been cancelled. You will have access until ${accessUntil}.`,
+                        title: t("settings.subscriptionCancelled"),
+                        description: t("settings.subscriptionCancelledDesc", { date: accessUntil }),
                       });
                     },
-                    onError: () => toast({ title: "Something went wrong", variant: "destructive" }),
+                    onError: () => toast({ title: t("common.error"), variant: "destructive" }),
                   });
                 }}
                 disabled={cancelSubscription.isPending}
@@ -1180,7 +1175,7 @@ export function Settings() {
                 onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.25)"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.15)"; }}
               >
-                {cancelSubscription.isPending ? "Cancelling…" : "Cancel Membership"}
+                {cancelSubscription.isPending ? t("settings.cancelling") : t("settings.cancelMembership")}
               </button>
             </div>
           </div>

@@ -103,7 +103,25 @@
     "recalibrateBodyDesc": "Refaites votre scan T-Pose pour mettre à jour les mesures corporelles",
     "mobilityDesc": "Recevez des rappels quotidiens pour rester en mouvement",
     "communityPosts": "Afficher les publications de la communauté à tous",
-    "setUpProfile": "Configurez votre profil pour activer les contrôles de confidentialité"
+    "setUpProfile": "Configurez votre profil pour activer les contrôles de confidentialité",
+    "membership": "Adhésion",
+    "activeMembership": "Adhésion active",
+    "cancelMembership": "Annuler l'adhésion",
+    "cancelMembershipDesc": "Vous gardez l'accès jusqu'à la fin de votre cycle de facturation.",
+    "cancelButton": "Annuler",
+    "retentionOfferBar": "Offre spéciale — rien que pour vous",
+    "retentionHeadline": "Attendez ! Ne partez pas encore...",
+    "retentionBody": "Restez Pro et bénéficiez de 40% DE réduction sur votre prochain mois. Continuez votre progression avec le meilleur coaching IA au monde.",
+    "claim40Discount": "Réclamer 40% de réduction",
+    "noThanksCancel": "Non merci, continuer pour annuler →",
+    "sorryToSeeYouGo": "Nous sommes désolés de vous voir partir.",
+    "loseAccessDesc": "Vous perdrez l'accès aux Analyses Avancées et aux Auras Pro à la fin de votre cycle de facturation.",
+    "goBack": "Revenir",
+    "cancelling": "Annulation en cours…",
+    "discountApplied": "Réduction appliquée !",
+    "discountAppliedDesc": "Une réduction de 40% a été appliquée à votre prochain cycle de facturation.",
+    "subscriptionCancelled": "Abonnement annulé",
+    "subscriptionCancelledDesc": "Votre abonnement a été annulé. Vous aurez accès jusqu'au {{date}}."
   },
   "shop": {
     "title": "CaliShop",
@@ -383,7 +401,21 @@
     "skillProgress": "Progression de la compétence",
     "viewSession": "Voir la séance",
     "trainNext": "Entraîner Suivant →",
-    "continue": "Continuer"
+    "continue": "Continuer",
+    "backToHistory": "Retour à l'historique",
+    "totalReps": "Total des répétitions",
+    "avgFormScore": "Score de Forme Moyen",
+    "duration": "Durée",
+    "savedClip": "Clip Enregistré",
+    "expiresInDays_one": "Expire dans {{count}} jour",
+    "expiresInDays_other": "Expire dans {{count}} jours",
+    "loopInfo_one": "Boucles automatiques · tapotez pour lire / mettre en pause · expire dans {{count}} jour",
+    "loopInfo_other": "Boucles automatiques · tapotez pour lire / mettre en pause · expire dans {{count}} jours",
+    "shareToCommunity": "Partager avec la communauté",
+    "noClipSaved": "Aucun clip enregistré pour cette session. Utilisez « Enregistrer dans l'historique » sur l'écran de revue POV après votre prochaine série.",
+    "aiVerified": "Vérifié par IA",
+    "sessionNotFound": "Session non trouvée.",
+    "loadingSession": "Chargement…"
   },
   "skillTree": {
     "title": "Arbre des Compétences",
@@ -409,7 +441,330 @@
     "whyTrain": "Pourquoi s’entraîner à ça ?",
     "masterPrereq": "Maîtrise la compétence préalable pour débloquer cette node.",
     "practiceAgain": "Pratique encore →",
-    "trainNowArrow": "Entraîne-toi Maintenant →"
+    "trainNowArrow": "Entraîne-toi Maintenant →",
+    "levelLabel": "Niveau {{level}} · {{levelName}}",
+    "staticHold": "Maintien statique",
+    "explosive": " Explosif",
+    "whyTrainThis": "Pourquoi s'entraîner à cela ?",
+    "alsoRequires": "Require également",
+    "masteryLabel": "Maîtrise",
+    "completeLabel": "Complété",
+    "qualifyingSessions": "{{done}}/{{total}} sessions qualificatives",
+    "bestHold": "Meilleur maintien",
+    "bestRepsLabel": "Meilleures répétitions",
+    "formScoreLabel": "Score de contrôle",
+    "requiresLabel": "Require",
+    "coreStrengthHub": "FORCE DU TRonc",
+    "nodes": {
+      "push_1": {
+        "title": "Premier Pompe",
+        "description": "Réalisez votre première pompe propre : corps en ligne droite, poitrine touchant le sol, bras complètement tendus."
+      },
+      "push_2": {
+        "title": "Force de la Pompe",
+        "description": "Doublez votre capacité en pompes et améliorez votre forme — des séries cohérentes débloquent les trajectoires de détente et de planche."
+      },
+      "push_3": {
+        "title": "Pompe Diamant",
+        "description": "Mains formant un diamant sous la poitrine, coudes en arrière — isole les triceps et le haut du torse pour une densité de pressing d’élite."
+      },
+      "push_4": {
+        "title": "Pompe Archer",
+        "description": "Un bras fléchit pendant que l'autre s'étend largement — exercice asymétrique qui développe la force unilatérale de pressing pour le travail à un bras."
+      },
+      "push_5": {
+        "title": "Pompe Pseudo-Planche",
+        "description": "Mains tournées vers l’extérieur au niveau des hanches, corps penché en avant — simule une planche en sollicitant poignets et épaules durant la poussée."
+      },
+      "push_oh_1": {
+        "title": "Pompe Signet",
+        "description": "Hanches hautes, mains à la largeur des épaules — descendez votre tête entre vos mains puis repoussez. Transfère la charge sur les épaules, préparant à la presse au-dessus de la tête."
+      },
+      "push_oh_2": {
+        "title": "Pompe Signet Élevée",
+        "description": "Pieds sur une boîte ou un banc — l'angle élevé augmente la mobilité de l'épaule et la charge, étape directe vers la pompe en handstand."
+      },
+      "push_oh_3": {
+        "title": "Pompe Handstand Mur",
+        "description": "Balancé contre le mur et pressez tout votre poids en équilibre au-dessus. Le pattern de charge le plus direct pour renforcer la pompe en handstand."
+      },
+      "push_oh_4": {
+        "title": "Handstand",
+        "description": "Équilibrez sur vos mains, loin du mur — inversion contrôlée nécessitant force des épaules, souplesse des poignets et conscience spatiale."
+      },
+      "push_oh_5": {
+        "title": "Pompe Handstand",
+        "description": "Pressez depuis le sol en verrouillant complètement en inversion — le sommet de la force en pressing overhead en calisthenics."
+      },
+      "push_pp_1": {
+        "title": "Inclinaison Planche",
+        "description": "Penchez-vous en avant sur vos poignets en position de pompe, mains tournées vers l’extérieur — prépare les poignets et l’avant de l’épaule pour la charge en planche."
+      },
+      "push_pp_2": {
+        "title": "Planche Tuck",
+        "description": "Soulevez les deux pieds du sol en se penchant sur les poignets, genoux reagis — première vraie position de planche."
+      },
+      "push_pp_3": {
+        "title": "Planche Écartée",
+        "description": "Jambes tendues en écart large en maintenant la position — bien plus difficile que la version pliée, nécessite une tension totale du corps."
+      },
+      "push_pp_4": {
+        "title": "Planche Complète",
+        "description": "Corps parfaitement horizontal, jambes jointes et verrouillées — apogée légendaire de la force de pressing en calisthenics."
+      },
+      "pull_1": {
+        "title": "Premier Tirage",
+        "description": "Réalisez votre premier tirage complet, propre, depuis une suspension totale."
+      },
+      "pull_2": {
+        "title": "Répétitions Fiables",
+        "description": "Développez une force de tirage fiable sur plusieurs répétitions. Débloque la trajectoire du Lévitation Frontal."
+      },
+      "pull_3": {
+        "title": "Tirages Négatifs",
+        "description": "Commencez par la barre au niveau du menton et descendez lentement. Variation axée sur l’excentricité, développant la puissance explosive de tirage pour la trajectoire du Muscle-Up."
+      },
+      "pull_fl_1": {
+        "title": "Lévitation Frontale Tuck",
+        "description": "Accrochez-vous à la barre, ramenez les genoux à la poitrine et maintenez votre corps horizontal. Développe la dépression scapulaire et la force latérale nécessaire pour la levée complète."
+      },
+      "pull_fl_2": {
+        "title": "Lévitation Frontale Écartée",
+        "description": "Étendez vos jambes en écart large et maintenez en position horizontale. Bien plus difficile que la version tuck — exige une tension corporelle totale."
+      },
+      "pull_fl_3": {
+        "title": "Lévitation Frontale Complète",
+        "description": "Corps parfaitement horizontal, bras tendus, jambes verrouillées — l’un des maintien statique les plus prisés en calisthenics."
+      },
+      "pull_mu_1": {
+        "title": "Tirage Poitrine à Barre",
+        "description": "Explosez au-delà du menton au-dessus de la barre — faites toucher votre poitrine la barre. Nécessite bien plus de puissance de tirage qu’un simple tirage."
+      },
+      "pull_mu_2": {
+        "title": "Muscle-Up à Balancier",
+        "description": "Utilisez un balancement contrôlé des hanches pour générer l’élan lors de la transition de la barre. Maîtrisez le timing avant d’éliminer le balancier."
+      },
+      "pull_mu_3": {
+        "title": "Muscle-Up Strict",
+        "description": "Sans balancier, sans coup de balancier — tirez puis poussez au-dessus de la barre avec une pure force du haut du corps. La référence en puissance de tirage."
+      },
+      "pull_am_1": {
+        "title": "Tirage Archer",
+        "description": "Un bras tire tandis que l’autre s’étend droit — exercice intensément asymétrique développant la force latérale unilatérale pour le tirage à un bras."
+      },
+      "pull_am_2": {
+        "title": "Tirage Écrivain",
+        "description": "Tirez à la barre puis glissez latéralement de main en main en haut — démonstration extraordinaire de puissance de tirage horizontale et de contrôle."
+      },
+      "pull_oah_1": {
+        "title": "Suspension Active à un Bras",
+        "description": "Suspendu à la barre avec un seul bras, épaule activement stabilisée et abaissée. Renforce la stabilité unilatérale de l’épaule, l’endurance de la prise et la chaîne latérale."
+      },
+      "pull_oapu_1": {
+        "title": "Tirage à un Bras",
+        "description": "L’épreuve ultime de la force unilatérale — un tirage complet avec un seul bras, sans aide, sans élan. L’une des performances les plus rares en calisthenics."
+      },
+      "pull_rings_1": {
+        "title": "Position de Support sur Anneaux",
+        "description": "Maintenez une position de support actif sur les anneaux — bras tendus, corps droit. Cette position fondamentale nécessite une stabilité du poignet, du coude et de l’épaule avant toute traction sur les anneaux."
+      },
+      "pull_rings_2": {
+        "title": "Traction sur Anneaux",
+        "description": "Les tractions complètes sur anneaux de gymnastique demandent une stabilité de prise et un contrôle des épaules que n’offre aucune barre fixe. L’instabilité rend chaque répétition plus difficile."
+      },
+      "pull_rings_3": {
+        "title": "Muscle-Up sur Anneaux",
+        "description": "Le sommet de la traction sur anneaux : un muscle-up strict sur anneaux de gymnastique exige une puissance de transition d’élite, une stabilité des épaules et un contrôle du poignet sous instabilité."
+      },
+      "pull_weighted_1": {
+        "title": "Traction Pondérée",
+        "description": "Ajoutez un gilet ou une ceinture et effectuez des tractions strictes sous charge. En commençant à 10–20 % du poids corporel, la résistance supplémentaire accélère la progression en force bien au-delà de l’entraînement en poids de corps pur."
+      },
+      "pull_weighted_2": {
+        "title": "Volume de Tractions Pondérées",
+        "description": "Maintenez des séries de tractions pondérées à haute répétition. Le volume sous charge construit la force brute de traction nécessaire pour le muscle-up pondéré et les charges plus lourdes."
+      },
+      "pull_weighted_3": {
+        "title": "Muscle-Up Pondéré",
+        "description": "Un muscle-up avec charge supplémentaire — l’un des exploits les plus puissants en calisthenics. Exige une traction explosive, un timing précis de la transition et une tension corporelle totale."
+      },
+      "core_1": {
+        "title": "Fondation en Planche",
+        "description": "Maintenez une planche parfaite — corps droit de la tête aux talons, fessiers et abdominaux contractés. Le point de départ universel pour tout travail de renforcement du tronc."
+      },
+      "core_2": {
+        "title": "Planche Latérale",
+        "description": "Appuyez sur un avant-bras et soulevez vos hanches — crée une rigidité latérale du core qui se transfère directement dans le drapeau humain et le travail des jambes suspendues."
+      },
+      "core_hh_1": {
+        "title": "Dead Bug",
+        "description": "Allongez-vous sur le dos avec les bras et les jambes levés — abaissez le bras et la jambe opposés tout en maintenant la contraction. L’exercice fondamental anti-extension du core."
+      },
+      "core_hh_2": {
+        "title": "Extensions du Dos",
+        "description": "Allongez-vous face contre terre et soulevez votre poitrine et vos jambes du sol (Superman). Développe la force de la chaîne postérieure qui équilibre le travail en hollow body."
+      },
+      "core_hh_3": {
+        "title": "Hold Hollow Body",
+        "description": "Allongez-vous sur le dos et contractez pour former une courbe creuse — épaules décollées du sol, jambes tendues et levées bas. La compétence fondamentale de tension corporelle totale sous-tendue à chaque mouvement de calisthenics."
+      },
+      "core_hh_4": {
+        "title": "Flag Dragon Négatif",
+        "description": "Allongez-vous sur un banc, saisissez derrière la tête, et abaissez lentement votre corps de la position verticale à horizontale. La phase excentrique qui vous prépare au drapeau dragon complet."
+      },
+      "core_hh_5": {
+        "title": "Drapeau Dragon",
+        "description": "Saisissez derrière la tête et maintenez ou abaissez votre corps parfaitement horizontal — seuls vos épaules touchent le banc. La force anti-extension totale à son apogée."
+      },
+      "core_bb_1": {
+        "title": "Suspension Active",
+        "description": "Suspendez-vous à la barre avec les épaules activement abaissées et engagées — fondement de tout le travail de core et de traction basé sur la barre."
+      },
+      "core_bb_2": {
+        "title": "Relevés de Genoux Suspendus",
+        "description": "Suspendez-vous à la barre et ramenez les genoux vers la poitrine. Développe la compression des fléchisseurs de la hanche et la stabilité des épaules nécessaires pour un travail de core suspendu plus avancé."
+      },
+      "core_bb_3": {
+        "title": "Relevés de Jambes Suspendu",
+        "description": "Suspendez-vous à la barre et soulevez les jambes tendues jusqu’à l’horizontale — requiert une force sérieuse des fléchisseurs de la hanche, l’endurance de la prise et un contrôle complet de la colonne vertébrale."
+      },
+      "core_bb_4": {
+        "title": "Toucher les Pieds à la Barre",
+        "description": "Suspendu, pliez tout votre corps et touchez vos orteils à la barre — une démonstration de force des fléchisseurs de la hanche, de prise ferme et de contrôle total du corps en un seul mouvement."
+      },
+      "core_hf_1": {
+        "title": "Balayages avec Essuie-Glaces Suspendu",
+        "description": "Suspendu à la barre, levez les jambes en position horizontale et balayez-les latéralement. Renforce la stabilité latérale du core et la mobilité de la hanche pour réaliser le drapeau humain."
+      },
+      "core_hf_2": {
+        "title": "Flag Humain Tucké",
+        "description": "Saisissez un poteau vertical et maintenez votre corps horizontal avec les genoux rassemblés — la première position réelle de drapeau humain nécessitant une force latérale d’élite."
+      },
+      "core_hf_3": {
+        "title": "Flag Humain à une Jambe",
+        "description": "Une jambe tendue, l'autre pliée — une position transitoire qui réduit considérablement le levier tout en entraînant la chaîne latérale pour le drapeau complet."
+      },
+      "core_hf_4": {
+        "title": "Drapeau Humain",
+        "description": "Saisissez un poteau vertical et maintenez tout votre corps horizontal — un exploit légendaire demandant une force latérale du core et des épaules d’élite."
+      },
+      "core_weighted_1": {
+        "title": "Planche Pondérée",
+        "description": "Maintenez une planche rigide avec des plaques de poids ou un gilet sur le dos. La charge supplémentaire augmente la demande de stabilité anti-extension, constituant le chemin le plus direct vers une rigidité du core d’élite sous charge."
+      },
+      "core_weighted_2": {
+        "title": "Relevés de Jambes Pondérés",
+        "description": "Suspendez-vous à la barre avec des poids aux chevilles et levez les jambes tendues jusqu’à l’horizontale. La charge supplémentaire augmente considérablement la demande sur les fléchisseurs de la hanche et l’endurance de la prise."
+      },
+      "core_weighted_3": {
+        "title": "Dragon Flag Pondéré",
+        "description": "Réalisez le Dragon Flag avec un gilet lesté — l’un des exercices fondamentaux de core en poids de corps, extrêmement exigeant. Force anti-extension totale sous charge externe."
+      },
+      "core_rings_1": {
+        "title": "Relevés de Genoux sur Anneaux",
+        "description": "Suspendez-vous à des anneaux de gymnastique et ramenez vos genoux à la poitrine. L’instabilité exige une stabilisation profonde des épaules et une compression du core supérieure à celle d’une barre fixe."
+      },
+      "core_rings_2": {
+        "title": "Déroulements sur Anneaux",
+        "description": "À genoux, saisissez les anneaux de gymnastique et déroulez jusqu’à l’extension complète. L’instabilité constante oblige les stabilisateurs profonds à travailler en surcharge — plus exigeant que toute barre ou rouleau."
+      },
+      "core_roller_1": {
+        "title": "Déroulement avec Rouleau à Abdos",
+        "description": "Saisissez le rouleau à abdos et roulez de la position à genoux jusqu’à l’extension complète, en maintenant les hanches bloquées. La demande explosive anti-extension et la gamme complète de mouvement en font un des exercices de core lesté les plus efficaces."
+      },
+      "core_band_1": {
+        "title": "Pression avec Bande Pallof",
+        "description": "Fixez une bande de résistance à hauteur de la poitrine et poussez la poignée directement en dehors du corps tout en résistant à la rotation. La demande anti-rotation cible des stabilisateurs profonds de la colonne vertébrale que aucune mobilisation de crunch ne peut atteindre."
+      },
+      "legs_1": {
+        "title": "Fondation de la Squat",
+        "description": "Construisez le schéma de squat bilatéral avec une profondeur complète et une posture droite."
+      },
+      "legs_2": {
+        "title": "Force de Squat",
+        "description": "Augmentez le volume de squat et optimisez le suivi du genou ainsi que la profondeur. Déverrouille les chemins vers le L-Sit et le Pistols Squat."
+      },
+      "legs_3": {
+        "title": "Squat Pêche",
+        "description": "Squat sur une seule jambe avec le pied arrière maintenu derrière vous — exige une force exceptionnelle des quadriceps, une mobilité de la cheville et un équilibre simultanément."
+      },
+      "legs_4": {
+        "title": "Fente Bulgare",
+        "description": "Pied arrière élevé, pied avant en avant — pliez jusqu'à ce que le genou arrière frôle le sol. Un des exercices unilatéraux les plus efficaces pour la force."
+      },
+      "legs_ls_1": {
+        "title": "Étirement Pike",
+        "description": "Asseyez-vous droit avec les jambes tendues et penchez-vous en avant par-dessus — développe la flexibilité des ischio-jambiers et l’activation des fléchisseurs de la hanche pour un L-sit complet."
+      },
+      "legs_ls_2": {
+        "title": "Compression en L-Sit",
+        "description": "Assis, poussez vos talons dans le sol et essayez de les soulever — développe la compression dynamique des fléchisseurs de la hanche qui remplace la flexibilité par la force dans le L-sit."
+      },
+      "legs_ls_3": {
+        "title": "Tuck L-Sit",
+        "description": "Poussez sur les barres parallèles ou sur le sol et soulevez vos hanches — genoux repliés vers la poitrine, bras verrouillés. La position d’entrée pour le full L-sit."
+      },
+      "legs_ls_4": {
+        "title": "L-Sit Complet",
+        "description": "Bras verrouillés, hanches levées, jambes tendues et horizontales — une démonstration complète de force des fléchisseurs de la hanche, de puissance de poussée et de compression corporelle."
+      },
+      "legs_ps_1": {
+        "title": "Montées sur Banc",
+        "description": "Montez contrôlément sur une surface élevée — développe la stabilité sur une jambe et l’activation du quadriceps comme étape initiale vers le Pistols Squat."
+      },
+      "legs_ps_2": {
+        "title": "Pistols Squat Assisté",
+        "description": "Squat à pleine amplitude sur une jambe avec Unterstützung ou appui — construit la force et la mobilité nécessaires avant de retirer l’assistance."
+      },
+      "legs_ps_3": {
+        "title": "Squat à Position Fermée",
+        "description": "Squat bilatéral avec pieds serrés — approche la mécanique du pistols squat et demande une mobilité de cheville avant de passer au mouvement unilatéral complet."
+      },
+      "legs_ps_4": {
+        "title": "Pistol Squat",
+        "description": "Squat complet en une jambe avec la jambe libre tendue — exige une force des quadriceps, une mobilité de la cheville et un équilibre total du corps dans un mouvement d’élite."
+      },
+      "legs_weighted_1": {
+        "title": "Squat Goblet Pondéré",
+        "description": "Tenez une kettlebell ou un haltère à hauteur de poitrine et effectuez un squat jusqu’à la profondeur maximale. La position de goblet favorise une posture verticale et un suivi profond des genoux, idéale pour le renforcement des jambes avec charge."
+      },
+      "legs_weighted_2": {
+        "title": "Fente Bulgare Pondérée",
+        "description": "Tenez des haltères et effectuez une fente arrière avec support. La charge unilatérale avec cette amplitude d’étirement des fléchisseurs de la hanche est l’un des bâtisseurs de force les plus efficaces pour les jambes."
+      },
+      "legs_weighted_3": {
+        "title": "Pistols Squat Pondéré",
+        "description": "Réalisez le pistols squat complet avec un gilet lesté ou une plaque de poids. Ajouter du poids à ce mouvement exigeant requiert une mobilité de la cheville, une force unilatérale et un équilibre exceptionnels."
+      },
+      "legs_weighted_4": {
+        "title": "Fente Pêche Pondérée",
+        "description": "Réalisez la fente pêche avec un gilet lesté ou des haltères — l’un des mouvements unilatéraux lestés les plus avancés. Demande une élite de force des fléchisseurs de la hanche, du quadriceps et de l’équilibre sous résistance externe."
+      },
+      "legs_band_1": {
+        "title": "Marche Latérale avec Bande",
+        "description": "Placez une bande de résistance autour des chevilles et marchez latéralement en position de quarter-squat. Cible les médio-fessiers et les abducteurs de la hanche qui stabilisent chaque mouvement sur une jambe."
+      },
+      "legs_box_1": {
+        "title": "Sauts sur Box",
+        "description": "Explosez du sol et atterrissez en douceur sur une boîte pliométrique, en absorbant l’impact avec un atterrissage amorti contrôlé. Introduit la vitesse de développement de la force et le stockage d’énergie élastique."
+      },
+      "legs_sliders_1": {
+        "title": "Curl des Ischio-Jambiers avec Sliders",
+        "description": "Allongez-vous sur le dos, placez des sliders sous vos talons et faites rouler vos jambes vers les fessiers tout en maintenant les hanches levées. La demande excentrique élevée crée un stimulus que les machines ne peuvent pas reproduire."
+      },
+      "push_rings_1": {
+        "title": "Dips sur Anneaux",
+        "description": "Réalisez un dip sur anneaux avec une stabilisation contrôlée en verrouillage (Rings Turned Out). L’instabilité sollicite les triceps, la poitrine et les épaules en stabilisation sur chaque répétition."
+      },
+      "push_rings_2": {
+        "title": "Muscle-Up sur Anneaux",
+        "description": "Combinez la puissance de traction et de poussée en un mouvement explosif unique au-dessus des anneaux. La maîtrise ultime des anneaux requiert une stabilité d’élite sur toute la chaîne cinétique."
+      },
+      "push_weighted_1": {
+        "title": "Dips Pondérés",
+        "description": "Ajoutez un gilet ou une ceinture et réalisez des dips sous charge. Les dips pondérés développent une puissance d’appui d’élite plus rapidement que tout autre mouvement en poids de corps combiné."
+      }
+    }
   },
   "history": {
     "title": "Historique des Entraînements",
@@ -505,7 +860,49 @@
     "comment": "Commenter",
     "share": "Partager",
     "noposts": "Aucun message pour le moment — soyez le premier à partager un entraînement !",
-    "shareWorkout": "Partager l'entraînement"
+    "shareWorkout": "Partager l'entraînement",
+    "aiVerified": "Vérifié par IA",
+    "selfReported": "Auto-rapporté",
+    "justNow": "à l'instant",
+    "minutesAgo": "il y a {{n}} min",
+    "hoursAgo": "il y a {{n}}h",
+    "daysAgo": "il y a {{n}}j",
+    "noClipAttached": "Aucune vidéo jointe",
+    "commentLabel": "Commentaire",
+    "noComments": "Pas encore de commentaires. Soyez le premier !",
+    "addComment": "Ajouter un commentaire…",
+    "signInToComment": "Connectez-vous pour commenter",
+    "startWorkout": "Démarrer l’Entraînement",
+    "communityTitle": "Communauté",
+    "communitySubtitle": "Entraînements d'athlètes du monde entier",
+    "searchAthletes": "Rechercher par athlète, exercice ou hashtag…",
+    "filterAll": "Tout",
+    "filterPush": "Poussée",
+    "filterPull": "Traction",
+    "filterCore": "Centre",
+    "filterLegs": "Jambes",
+    "emptyAll1": "Aucun post encore",
+    "emptyAll2": "Partagez une vidéo après votre prochain entraînement pour être le premier !",
+    "emptyPush1": "Aucune vidéo de journée Push encore !",
+    "emptyPush2": "Soyez le premier à poster un entraînement push.",
+    "emptyPull1": "Aucune vidéo de journée Pull encore !",
+    "emptyPull2": "Soyez le premier à poster un entraînement pull.",
+    "emptyCore1": "Aucune vidéo de centre encore !",
+    "emptyCore2": "Soyez le premier à poster un entraînement du centre.",
+    "emptyLegs1": "Aucune vidéo de journée jambes encore ! Soyez le premier !",
+    "emptyLegs2": "Allez à la salle et montrez votre force de jambe.",
+    "noEliteAchievements": "Aucune réalisation Elite encore.",
+    "masterEliteSkill": "Maîtrisez une compétence d'élite pour apparaître ici !",
+    "you": "Vous",
+    "justMastered": "vient de maîtriser",
+    "postClip": "Publier la vidéo",
+    "shareClip": "Partager la vidéo",
+    "shareToCommunity": "Partager à la communauté",
+    "addCaption": "Ajouter une légende… (optionnel)",
+    "uploadStarted": "Téléversement lancé — vous pouvez naviguer librement !",
+    "publishingPost": "Publication en cours…",
+    "postedToCommunity": "Publié dans la communauté !",
+    "savedClipLabel": "Vidéo sauvegardée"
   },
   "profile": {
     "masteryPoints": "Points de maîtrise",
@@ -540,7 +937,22 @@
     "days": "jours",
     "routine": "Routine du jour",
     "complete": "Terminer",
-    "completed": "Terminé"
+    "completed": "Terminé",
+    "questionnaire": {
+      "title": "Mettre à jour mes objectifs",
+      "subtitle": "Personnalise tes tâches de mobilité quotidiennes",
+      "goalQuestion": "Quel est ton objectif principal en calisthenics ?",
+      "areasQuestion": "Quels muscles et articulations te bloquent ?",
+      "areasHint": "(coche tout ce qui s'applique)",
+      "timeQuestion": "Combien de temps peux-tu consacrer à ta mobilité quotidienne ?",
+      "save": "Enregistrer mes préférences",
+      "tapToChange": "Appuie ci-dessous pour modifier",
+      "suggested": "Suggéré",
+      "searchGoal": "Rechercher un mouvement ou une compétence…",
+      "searchBodyPart": "Rechercher une partie du corps…",
+      "minLabel": "{{n}} min",
+      "goalsUpdated": "Objectifs mis à jour ! Ta routine a été personnalisée."
+    }
   },
   "errors": {
     "notFound": "Page non trouvée",
@@ -557,5 +969,266 @@
     "almostDone": "Presque terminé — restez puissant.",
     "setComplete": " Série terminée ! Reposez-vous.",
     "workoutComplete": "Entraînement terminé ! Excellent effort."
+  },
+  "exercises": {
+    "push_up": "Pompe",
+    "diamond_push_up": "Pompe diamant",
+    "archer_push_up": "Pompe archer",
+    "pseudo_planche_push_up": "Pompe pseudo planche",
+    "pike_push_up": "Pompe en pike",
+    "elevated_pike_push_up": "Pompe en pike surélevée",
+    "handstand_push_up": "Pompe en équilibre sur les mains",
+    "handstand": "Équilibre sur les mains",
+    "wall_handstand_push_up": "Pompe en équilibre contre un mur",
+    "planche_lean": "Inclinaison en planche",
+    "tuck_planche": "Planche tuck",
+    "straddle_planche": "Planche straddle",
+    "planche": "Planche",
+    "full_planche": "Planche complète",
+    "scapular_shrugs": "Épaules relevées",
+    "australian_rows": "Rowings australiens",
+    "negative_pull_ups": "Tractions négatives",
+    "negative_pull_up": "Traction négative",
+    "pull_up": "Traction",
+    "tuck_front_lever": "Lever ventral en tuck",
+    "straddle_front_lever": "Lever ventral en straddle",
+    "full_front_lever": "Lever ventral complet",
+    "chest_to_bar_pull_up": "Traction poitrine-bar",
+    "muscle_up": "Muscle-up",
+    "kipping_muscle_up": "Muscle-up à balancier",
+    "strict_muscle_up": "Muscle-up strict",
+    "archer_pull_up": "Traction archer",
+    "typewriter_pull_up": "Traction machine à écrire",
+    "one_arm_active_hang": "Suspension active à un bras",
+    "one_arm_pull_up": "Traction à un bras",
+    "plank": "Planche",
+    "side_plank": "Planche latérale",
+    "dead_bug": "Dead Bug",
+    "superman": "Superman",
+    "hollow_body_hold": "Maintien du corps creux",
+    "dragon_flag_negative": "Dragon Flag négatif",
+    "dragon_flag": "Dragon Flag",
+    "active_hang": "Suspension active",
+    "hanging_knee_tuck": "Genoux ramenés en suspension",
+    "hanging_knee_tucks": "Genoux ramenés en suspension",
+    "hanging_leg_raise": "Levant de jambes en suspension",
+    "hanging_leg_raises": "Levant de jambes en suspension",
+    "toes_to_bar": "Pointes aux barres",
+    "windshield_wiper": "Essuie-glaces",
+    "windshield_wipers": "Essuie-glaces",
+    "hanging_windshield_wipers": "Essuie-glaces suspendus",
+    "tucked_human_flag": "Drapeau Humain Enfoui",
+    "one_leg_human_flag": "Drapeau Humain sur Une Jambe",
+    "human_flag": "Drapeau Humain",
+    "squat": "Squat",
+    "air_squat": "Squat aérien",
+    "shrimp_squat": "Squat crevette",
+    "bulgarian_split_squat": "Squat bulgare",
+    "nordic_curls": "Curls Nordic",
+    "pike_stretch": "Etirement en Pique",
+    "l_sit_compression": "Compression en L-Sit",
+    "l_sit_compressions": "Compressons en L-Sit",
+    "tuck_l_sit": "Tuck L-Sit",
+    "l_sit": "L-Sit",
+    "full_l_sit": "L-Sit complet",
+    "step_up": "Montée sur banc",
+    "step_ups": "Montées sur banc",
+    "assisted_pistol_squat": "Squat pistol assisté",
+    "close_stance_squat": "Squat avec stance rapproché",
+    "pistol_squat": "Squat pistol",
+    "explosive_pull_up": "Traction explosive",
+    "ring_support_hold": "Maintien en support sur anneaux",
+    "ring_pull_up": "Traction sur anneaux",
+    "ring_muscle_up": "Muscle-up sur anneaux",
+    "ring_dip": "Dips sur anneaux",
+    "weighted_pull_up": "Traction pondérée",
+    "weighted_muscle_up": "Muscle-up pondéré",
+    "weighted_dip": "Dips pondérés",
+    "weighted_plank": "Planche pondérée",
+    "weighted_dragon_flag": "Drapeau Dragon pondéré",
+    "weighted_leg_raises": "Élévations de jambes pondérées",
+    "weighted_goblet_squat": "Squat goblet pondéré",
+    "weighted_bulgarian_split_squat": "Squat bulgare pondéré",
+    "weighted_pistol_squat": "Squat pistol pondéré",
+    "weighted_shrimp_squat": "Squat crevette pondéré",
+    "bar_volume_pull_up": "Tractions à volume élevé",
+    "explosive_bar_pull_up": "Traction explosive à la barre",
+    "strict_bar_muscle_up": "Muscle-up strict à la barre",
+    "weighted_volume": "Volume pondéré",
+    "ab_roller_rollout": "Avancée avec roulette abdominale",
+    "banded_pallof_press": "Pression Pallof avec bande elastique",
+    "banded_lateral_walks": "Marches latérales avec bande",
+    "box_jumps": "Sauts sur boîte",
+    "slider_hamstring_curls": "Curls ischio-jambiers avec slider",
+    "ring_knee_raises": "Élévations de genoux sur anneaux",
+    "ring_rollouts": "Extensions sur anneaux",
+    "lunge": "Fente",
+    "burpee": "Burpee",
+    "back_extensions": "Extensions de dos"
+  },
+  "muscles": {
+    "wrist_flexors": "Fléchisseurs du poignet",
+    "forearms": "Avant-bras",
+    "wrist_extensors": "Extenseurs du poignet",
+    "shoulders": "Épaules",
+    "chest": "Pectoraux",
+    "lats": "Grand dorsal",
+    "thoracic_spine": "Colonne thoracique",
+    "anterior_shoulders": "Épaules antérieures",
+    "biceps": "Biceps",
+    "hip_flexors": "Fléchisseurs de la hanche",
+    "quads": "Quadriceps",
+    "psoas": "Psoas",
+    "hamstrings": "Ischio-jambiers",
+    "calves": "Mollets",
+    "lower_back": "Bas du dos",
+    "obliques": "Obliques",
+    "rotator_cuff": "Sceau de l'épaule",
+    "hip_external_rotators": "Rotateurs externes de la hanche",
+    "glutes": "Grand glutéal",
+    "it_band": "tractus IT",
+    "triceps": "Triceps",
+    "posterior_shoulder": "Épaule postérieure",
+    "lat": "Latissimus",
+    "hip_adductors": "Adducteurs de la hanche",
+    "anterior_deltoid": "Deltoïde antérieur",
+    "ankles": "Chevilles",
+    "achilles": "Tendon d'Achille",
+    "wrists": "Poignets",
+    "finger_flexors": "Fléchisseurs des doigts",
+    "serratus": "Serratus",
+    "shoulder_extension": "Extension de l'épaule",
+    "scapular_stabilisers": "Stabilisateurs de la scapula",
+    "teres_major": "Teres majeur",
+    "shoulder_protraction": "Protraction de l'épaule",
+    "wrist_tendons": "Tendons du poignet",
+    "ankle_dorsiflexors": "Dorsiflexeurs de la cheville",
+    "tibialis_anterior": "Tibial antérieur",
+    "hip_adductors_": "Adducteurs de la hanche",
+    "serratus_anterior": "Serratus antérieur",
+    "lower_traps": "Trapèzes inférieurs",
+    "scapular_retractors": "Retraiteurs de la scapula",
+    "lower_trapezius": "Trapèze inférieur",
+    "posterior_deltoid": "Deltoïde postérieur",
+    "rhomboids": "Rhomboïdes",
+    "hip_extensors": "Extenseurs de la hanche",
+    "anterior_deltoids": "Deltoïdes antérieurs",
+    "wrist_extensors_": "Extenseurs du poignet"
+  },
+  "mobility": {
+    "stretches": {
+      "wristExtension": {
+        "name": "Étirement en extension du poignet",
+        "muscles": "Fléchisseurs du poignet, avant-bras"
+      },
+      "wristFlexion": {
+        "name": "Étirement en flexion du poignet",
+        "muscles": "Extenseurs du poignet, avant-bras"
+      },
+      "shoulderDislocates": {
+        "name": "Dislocations d'épaule",
+        "muscles": "Épaules, Pecs, Lats"
+      },
+      "latStretch": {
+        "name": "Étirement latéral en suspension",
+        "muscles": "Lats, Colonne thoracique, Épaules"
+      },
+      "chestOpener": {
+        "name": "Ouvre-poitrine à la porte",
+        "muscles": "Poitrine, Épaules antérieures, Biceps"
+      },
+      "hipFlexorLunge": {
+        "name": "Fente pour fléchisseurs de la hanche",
+        "muscles": "Fléchisseurs de la hanche, Quadriceps, Psoas"
+      },
+      "hamstring": {
+        "name": "Étirement des ischio-jambiers en stationnaire",
+        "muscles": "Ischio-jambiers, Mollets, Bas du dos"
+      },
+      "thoracicRotation": {
+        "name": "Rotation thoracique assise",
+        "muscles": "Colonne thoracique, Obliques, Rotateurs de la coiffe"
+      },
+      "pigeonPose": {
+        "name": "Ouverture de la hanche en posture du pigeon",
+        "muscles": "Rotateurs externes de la hanche, Glutes, Bande Iliotibiale"
+      },
+      "tricepsStretch": {
+        "name": "Étirement direct des triceps en extension haute",
+        "muscles": "Triceps, Épaules postérieures, Lats"
+      },
+      "pancake": {
+        "name": "Étirement en pancake",
+        "muscles": "Ischio-jambiers, Adducteurs de la hanche, Bas du dos"
+      },
+      "shoulderFlexion": {
+        "name": "Flexion inverse de l’épaule",
+        "muscles": "Deltoïde antérieur, Pecs, Biceps"
+      },
+      "ankleCircles": {
+        "name": "Cercles de mobilité de la cheville",
+        "muscles": "Chevilles, Mollets, Tendon d'Achille"
+      },
+      "calfStretch": {
+        "name": "Étirement des mollets contre le mur",
+        "muscles": "Mollets, Tendon d'Achille, Chevilles"
+      },
+      "wallPuppyPose": {
+        "name": "Posture du chiot contre le mur",
+        "muscles": "Colonne thoracique, Fléchisseurs d’épaules, Lats"
+      },
+      "firstKnuckleRaises": {
+        "name": "Montées du premier doigt",
+        "muscles": "Flexeurs du poignet, Flexeurs des doigts, Avant-bras"
+      },
+      "butchersBlock": {
+        "name": "Étirement du bloc du boucher",
+        "muscles": "Triceps, Lats, Dentelé antérieur"
+      },
+      "germanHang": {
+        "name": "Suspension passive en German Hang",
+        "muscles": "Extension de l’épaule, Épaule antérieure, Biceps"
+      },
+      "skinTheCat": {
+        "name": "Exercice partiel Skin the Cat",
+        "muscles": "Épaules, Stabilisateurs de la scapula, Lats"
+      },
+      "deepLatStretch": {
+        "name": "Roulade profonde du latissimus dorsi",
+        "muscles": "Lats, Teres majeur, Colonne thoracique"
+      },
+      "plancheLeans": {
+        "name": "Inclinaisons en planche",
+        "muscles": "Poignets, Protraction des épaules, Dentelé"
+      },
+      "reverseTabletop": {
+        "name": "Étirement de la table inversée",
+        "muscles": "Deltoïde antérieur, Pecs, Extenseurs du poignet"
+      },
+      "fingerPulses": {
+        "name": "Pouls des tendons des doigts",
+        "muscles": "Flexeurs des doigts, Tendons du poignet, Avant-bras"
+      },
+      "ankleDorsiflexion": {
+        "name": "Dorsiflexion de la cheville avec charge",
+        "muscles": "Dorsiflexeurs de la cheville, Tendon d'Achille, Tibial antérieur"
+      },
+      "cossackSquats": {
+        "name": "Squats Cossack",
+        "muscles": "Adducteurs de la hanche, Glutes, Chevilles"
+      },
+      "scapularHangs": {
+        "name": "Hangs scapulaires actifs",
+        "muscles": "Serratus antérieur, Trapèzes inférieurs, Rétracteurs de la scapula"
+      },
+      "proneYRaises": {
+        "name": "Montées en Y en position ventrale",
+        "muscles": "Trapèze inférieur, Deltoïde postérieur, Rhomboïdes"
+      },
+      "thoracicBridge": {
+        "name": "Pont thoracique",
+        "muscles": "Colonne thoracique, Glutes, Extenseurs de la hanche"
+      }
+    }
   }
 }

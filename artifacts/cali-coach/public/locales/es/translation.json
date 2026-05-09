@@ -103,7 +103,25 @@
     "recalibrateBodyDesc": "Vuelve a hacer el escaneo T-Pose para actualizar las medidas corporales",
     "mobilityDesc": "Recibe recordatorios diarios para mantenerte en movimiento",
     "communityPosts": "Mostrar publicaciones de la Comunidad a todos",
-    "setUpProfile": "Configura tu perfil para habilitar controles de privacidad."
+    "setUpProfile": "Configura tu perfil para habilitar controles de privacidad.",
+    "membership": "Membresía",
+    "activeMembership": "Membresía activa",
+    "cancelMembership": "Cancelar Membresía",
+    "cancelMembershipDesc": "Mantienes el acceso hasta el final de tu ciclo de facturación.",
+    "cancelButton": "Cancelar",
+    "retentionOfferBar": "Oferta especial — solo para ti",
+    "retentionHeadline": "¡Espera! No te vayas todavía...",
+    "retentionBody": "Mantente en Pro y obtén un 40% DE DESCUENTO en tu próximo mes. Continúa tu camino con el mejor coaching de IA del mundo.",
+    "claim40Discount": "Reclama un 40% de Descuento",
+    "noThanksCancel": "No, gracias, continúa con la cancelación →",
+    "sorryToSeeYouGo": "Lamentamos verte partir.",
+    "loseAccessDesc": "Perderás acceso a Análisis Avanzados y Auras Pro al final de tu ciclo de facturación.",
+    "goBack": "Regresar",
+    "cancelling": "Cancelando…",
+    "discountApplied": "¡Descuento aplicado!",
+    "discountAppliedDesc": "El 40% de descuento se ha aplicado a tu próximo ciclo de facturación.",
+    "subscriptionCancelled": "Membresía cancelada",
+    "subscriptionCancelledDesc": "Tu suscripción ha sido cancelada. Tendrás acceso hasta {{date}}."
   },
   "shop": {
     "title": "CaliShop",
@@ -383,7 +401,21 @@
     "skillProgress": "Progreso de la Habilidad",
     "viewSession": "Ver Sesión",
     "trainNext": "Entrenar Siguiente →",
-    "continue": "Continuar"
+    "continue": "Continuar",
+    "backToHistory": "Volver a Historial",
+    "totalReps": "Total de Repeticiones",
+    "avgFormScore": "Puntaje Promedio de Forma",
+    "duration": "Duración",
+    "savedClip": "Clip Guardado",
+    "expiresInDays_one": "Vence en {{count}} día",
+    "expiresInDays_other": "Vence en {{count}} días",
+    "loopInfo_one": "Bucle automático · toca para reproducir/pausar · vence en {{count}} día",
+    "loopInfo_other": "Bucle automático · toca para reproducir/pausar · vence en {{count}} días",
+    "shareToCommunity": "Compartir en la Comunidad",
+    "noClipSaved": "No hay ningún clip guardado para esta sesión. Usa \"Guardar en Historial\" en la pantalla de revisión POV después de tu próxima serie.",
+    "aiVerified": "Verificado por IA",
+    "sessionNotFound": "Sesión no encontrada.",
+    "loadingSession": "Cargando…"
   },
   "skillTree": {
     "title": "Skill Tree",
@@ -409,7 +441,330 @@
     "whyTrain": "¿Por qué entrenar esto?",
     "masterPrereq": "Domina la skill prerequisito para desbloquear este nodo.",
     "practiceAgain": "Practica de nuevo →",
-    "trainNowArrow": "Entrenar ahora →"
+    "trainNowArrow": "Entrenar ahora →",
+    "levelLabel": "Nivel {{level}} · {{levelName}}",
+    "staticHold": "Sujeción Estática",
+    "explosive": "Explosivo",
+    "whyTrainThis": "¿Por qué entrenar esto?",
+    "alsoRequires": "También requiere",
+    "masteryLabel": "Dominio",
+    "completeLabel": "Completo",
+    "qualifyingSessions": "{{done}}/{{total}} sesiones calificantes",
+    "bestHold": "Mejor Sostenido",
+    "bestRepsLabel": "Mejoras Repeticiones",
+    "formScoreLabel": "Puntaje de Forma",
+    "requiresLabel": "Requiere",
+    "coreStrengthHub": "Fuerza del Núcleo",
+    "nodes": {
+      "push_1": {
+        "title": "Primera Flexión",
+        "description": "Logra tu primera flexión limpia: línea corporal recta, pecho tocando el suelo, extensión completa de brazos."
+      },
+      "push_2": {
+        "title": "Fuerza en Flexiones",
+        "description": "Duplica tu capacidad de flexiones y afina tu forma — series constantes desbloquean los caminos del press y la plancha con sobrecarga."
+      },
+      "push_3": {
+        "title": "Flexión Diamante",
+        "description": "Manos formando un diamante bajo el pecho, codos siguiendo la línea de la espalda — enfoca en tríceps y pecho interior para una densidad de presiones élite."
+      },
+      "push_4": {
+        "title": "Flexión de Arquero",
+        "description": "Un brazo flexiona mientras el otro extiende a lo ancho — ejercicio asimétrico que desarrolla fuerza unilateral para trabajo con un brazo."
+      },
+      "push_5": {
+        "title": "Flexión Pseudo Planche",
+        "description": "Manos rotadas hacia afuera a la altura de las caderas, cuerpo inclinado hacia adelante — simula carga de planche en las muñecas y hombros durante la presión."
+      },
+      "push_oh_1": {
+        "title": "Flexión Pike",
+        "description": "Caderas altas, manos a la anchura de hombros — baja la cabeza entre las manos y empuja hacia arriba. Transfiere peso a los hombros, acercándote a la press overhead."
+      },
+      "push_oh_2": {
+        "title": "Flexión Pike Elevada",
+        "description": "Pies en una caja o banco — el ángulo elevado aumenta el rango de movimiento de los hombros y la carga, acercándote a la flexión en pica con apoyo en la pared."
+      },
+      "push_oh_3": {
+        "title": "Flexión en Pared Handstand",
+        "description": "Impúlsate contra la pared y presiona todo tu peso por encima de la cabeza — patrón de carga más directo para fortalecer la flexión en handstand."
+      },
+      "push_oh_4": {
+        "title": "Handstand",
+        "description": "Mantén el equilibrio sobre las manos alejado de la pared — inversión controlada que exige fuerza en hombros, flexibilidad en muñecas y conciencia espacial."
+      },
+      "push_oh_5": {
+        "title": "Flexión Handstand Push-Up",
+        "description": "Empuja desde el suelo hasta bloqueo total mientras estás invertido — máxima expresión de fuerza en press overhead calisténico."
+      },
+      "push_pp_1": {
+        "title": "Inclinación en Planche",
+        "description": "Inclínate hacia adelante sobre las muñecas en posición de flexión con manos rotadas hacia afuera — prepara las muñecas y el hombro anterior para la carga en planche."
+      },
+      "push_pp_2": {
+        "title": "Planche en Tuck",
+        "description": "Levanta ambos pies del suelo mientras te inclinas sobre las muñecas con las rodillas flexionadas — primera posición real de planche."
+      },
+      "push_pp_3": {
+        "title": "Planche en Estribado",
+        "description": "Piernas extendidas en un amplio estribo mientras mantienes la posición de planche — mucho más difícil que el tuck, requiere tensión total en el cuerpo."
+      },
+      "push_pp_4": {
+        "title": "Planche Completo",
+        "description": "Cuerpo perfectamente horizontal, piernas juntas y bloqueadas — el pináculo legendario de la fuerza en press calisténico."
+      },
+      "pull_1": {
+        "title": "Prim Pull-Up",
+        "description": "Logra tu primera pull-up limpia y completa desde suspensión muerta."
+      },
+      "pull_2": {
+        "title": "Consistencia en Pull-Ups",
+        "description": "Desarrolla fuerza confiable en pull-up a través de varias repeticiones. Desbloquea el camino hacia el Lever Frontal."
+      },
+      "pull_3": {
+        "title": "Pull-Ups Negativos",
+        "description": "Comienza con la barbilla por encima de la barra y baja lentamente. Esta variante excéntrica desarrolla la potencia explosiva de tracción necesaria para el Muscle-Up."
+      },
+      "pull_fl_1": {
+        "title": "Levantamiento del Lever Frontal en Tuck",
+        "description": "Cuélgate de la barra, junta las rodillas al pecho y mantiene el cuerpo en posición horizontal. Desarrolla la depresión escapular y fuerza en dorsal para el lever completo."
+      },
+      "pull_fl_2": {
+        "title": "Lever Frontal en Estribado",
+        "description": "Extiende las piernas en un amplio estribo y mantén en posición horizontal. Mucho más difícil que el tuck — requiere tensión total en el cuerpo."
+      },
+      "pull_fl_3": {
+        "title": "Lever Frontal Completo",
+        "description": "Cuerpo perfectamente horizontal, brazos rectos, piernas juntas y bloqueadas — una de las posiciones estáticas más codiciadas en calistenia."
+      },
+      "pull_mu_1": {
+        "title": "Pull-Up a Pecho a Barra",
+        "description": "Impúlsate más allá de la barbilla sobre la barra — lleva hasta que el pecho toque la barra. Exige mucho más poder de tracción que una pull-up convencional."
+      },
+      "pull_mu_2": {
+        "title": "Muscle-Up con Kip Controlado",
+        "description": "Usa un impulso controlado de cadera para generar momentum durante la transición en la barra. Domina el ritmo antes de eliminar el kip."
+      },
+      "pull_mu_3": {
+        "title": "Muscle-Up Estricto",
+        "description": "Sin oscilaciones ni impulso — realiza la tracción y empuja por encima de la barra con pura fuerza de la parte superior del cuerpo. El estándar de oro en tracción."
+      },
+      "pull_am_1": {
+        "title": "Pull-Up en Arquero",
+        "description": "Un brazo tira mientras el otro extiende a lo largo — ejercicio sumamente asimétrico que desarrolla fuerza unilateral en dorsal para el pull-up en un brazo."
+      },
+      "pull_am_2": {
+        "title": "Pull-Up en Máquina de Escriba",
+        "description": "Tira hasta la barra y deslízate lateralmente de mano en mano en la parte superior — muestra extraordinaria de fuerza y control en tracción horizontal."
+      },
+      "pull_oah_1": {
+        "title": "Colgado Activo con Un Solo Brazo",
+        "description": "Cuélgate de la barra con un solo brazo, con el hombro activamente estabilizado y deprimido. Desarrolla estabilidad unilateral en los hombros, resistencia en agarre y fuerza en la cadena lateral."
+      },
+      "pull_oapu_1": {
+        "title": "Pull-Up con Un Solo Brazo",
+        "description": "La prueba definitiva de fuerza unilateral en tracción — una pull-up completa con un solo brazo, sin asistencia ni impulso. Una de las hazañas más raras en calistenia."
+      },
+      "pull_rings_1": {
+        "title": "Soporte en Anillas",
+        "description": "Mantén un apoyo activo en los anillos — brazos extendidos, cuerpo erguido. Esta posición fundamental exige estabilidad en la muñeca, el codo y el hombro antes de realizar cualquier tracción en los anillos."
+      },
+      "pull_rings_2": {
+        "title": "Dominada en Anillos",
+        "description": "Las dominadas completas en anillos gimnásticos requieren estabilidad en la empuñadura y control en el movimiento del hombro que ninguna barra fija puede replicar. La inestabilidad hace que cada repetición sea más exigente."
+      },
+      "pull_rings_3": {
+        "title": "Muscle-Up en Anillos",
+        "description": "La cúspide de la tracción en anillos: un muscle-up estricto en anillos gimnásticos exige potencia de transición de élite, estabilidad del hombro y control de la muñeca bajo inestabilidad."
+      },
+      "pull_weighted_1": {
+        "title": "Dominada con Carga",
+        "description": "Agrega un chaleco o cinturón y realiza dominadas estrictas con carga. Comenzando en un 10-20% del peso corporal, la resistencia adicional acelera las ganancias de fuerza más allá del entrenamiento con peso corporal puro."
+      },
+      "pull_weighted_2": {
+        "title": "Volumen de Dominadas con Carga",
+        "description": "Mantén series de dominadas con carga y altas repeticiones. El volumen con peso construye la fuerza bruta de tracción necesaria para el muscle-up con peso y cargas más pesadas."
+      },
+      "pull_weighted_3": {
+        "title": "Muscle-Up con Carga",
+        "description": "Un muscle-up con peso adicional — uno de los movimientos más potentes en calistenia. Exige tracción explosiva, timing preciso en la transición y tensión corporal total."
+      },
+      "core_1": {
+        "title": "Fundación en Plancha",
+        "description": "Mantén una plancha perfecta — cuerpo recto desde la cabeza hasta los pies, glúteos y abdomen tensos. El punto de partida universal para todo trabajo de core."
+      },
+      "core_2": {
+        "title": "Plancha Lateral",
+        "description": "Apóyate en un antebrazo y levanta las caderas — crea rigidez lateral en el core que se transfiere directamente a la bandera humana y trabajo de piernas colgado."
+      },
+      "core_hh_1": {
+        "title": "Hombre Muerto (Dead Bug)",
+        "description": "Recuéstate boca arriba con brazos y piernas elevados — baja el brazo y la pierna opuestos mientras mantienes la tensión. El ejercicio fundamental anti-extensión del core."
+      },
+      "core_hh_2": {
+        "title": "Extensiones de Espalda",
+        "description": "Recuéstate boca abajo y eleva el pecho y las piernas del suelo (Superman). Desarrolla la fuerza de la cadena posterior que equilibra el trabajo de cuerpo hueco."
+      },
+      "core_hh_3": {
+        "title": "Sostén de Cuerpo Hueco",
+        "description": "Recuéstate y contrae en una curva hueca — hombros fuera del suelo, piernas rectas elevadas ligeramente. La habilidad fundamental de tensión corporal que sustenta todos los movimientos de calistenia."
+      },
+      "core_hh_4": {
+        "title": "Flag de Dragón Negativo",
+        "description": "Recuéstate en un banco, agarra detrás de la cabeza y baja lentamente el cuerpo de posición vertical a horizontal. La fase excéntrica que te prepara para el full flag de dragón."
+      },
+      "core_hh_5": {
+        "title": "Flag de Dragón",
+        "description": "Agarra detrás de la cabeza y mantén o baja tu cuerpo en posición completamente horizontal — solo los hombros tocan el banco. Máximo nivel de fuerza anti-extensión."
+      },
+      "core_bb_1": {
+        "title": "Colgado Activo",
+        "description": "Cuelga de la barra con los hombros activos y deprimidos — la base de todo trabajo de core y tracción en barra."
+      },
+      "core_bb_2": {
+        "title": "Tuck de Rodillas Colgado",
+        "description": "Cuelga de la barra y lleva las rodillas al pecho. Desarrolla la compresión del flexor de cadera y la estabilidad del hombro necesaria para trabajos de núcleo colgado más intensos."
+      },
+      "core_bb_3": {
+        "title": "Elevaciones de Piernas Colgado",
+        "description": "Cuelga de la barra y eleva las piernas rectas hasta la posición horizontal — requiere fuerza del flexor de cadera, resistencia en la empuñadura y control completo de la columna vertebral."
+      },
+      "core_bb_4": {
+        "title": "Toes to Bar",
+        "description": "Desde colgado, dobla el cuerpo completo y toca los dedos de los pies en la barra — combina fuerza del flexor de cadera, agarre y control del cuerpo en un solo movimiento."
+      },
+      "core_hf_1": {
+        "title": "Limpia Parabrisas Colgado",
+        "description": "Cuelga de la barra, eleva las piernas en posición horizontal y barre de lado a lado. Fortalece el core lateral y la movilidad de cadera necesarios para la bandera humana."
+      },
+      "core_hf_2": {
+        "title": "Flag Humano Tucked",
+        "description": "Agarra una barra vertical y sostiene el cuerpo en posición horizontal con las rodillas dobladas — la primera posición real de flag humano que requiere fuerza lateral de élite."
+      },
+      "core_hf_3": {
+        "title": "Flag Humano de Una Pierna",
+        "description": "Una pierna extendida, la otra doblada — una postura transicional que reduce drásticamente el momento de palanca mientras entrena la cadena lateral para el flag completo."
+      },
+      "core_hf_4": {
+        "title": "Flag Humano",
+        "description": "Agarra una barra vertical y sostiene tu cuerpo entero en posición horizontal — un logro legendario que exige fuerza lateral en el core y en el hombro de élite."
+      },
+      "core_weighted_1": {
+        "title": "Plancha con Peso",
+        "description": "Mantén una plancha rígida con discos de peso o chaleco en la espalda. La carga adicional intensifica la demanda anti-extensión, siendo el camino más directo hacia una rigidez del core de élite bajo carga."
+      },
+      "core_weighted_2": {
+        "title": "Elevaciones de Piernas con Peso",
+        "description": "Cuelga de la barra con pesas en los tobillos y eleva las piernas rectas hasta la posición horizontal. La carga adicional aumenta significativamente la demanda en los flexores de cadera y la resistencia en la agarradera."
+      },
+      "core_weighted_3": {
+        "title": "Flag de Dragón con Peso",
+        "description": "Realiza el flag de dragón usando un chaleco con peso — uno de los ejercicios de núcleo con peso más duros en existencia. Máxima fuerza anti-extensión bajo carga externa."
+      },
+      "core_rings_1": {
+        "title": "Elevaciones de Rodillas en Anillos",
+        "description": "Cuelga de anillos gimnásticos y lleva las rodillas al pecho. La inestabilidad requiere una profunda activación en los hombros y una compresión superior del core en comparación con una barra fija."
+      },
+      "core_rings_2": {
+        "title": "Rodados en Anillos",
+        "description": "Desde rodillas, agarra los anillos gimnásticos y rueda hasta la extensión completa. La inestabilidad constante obliga a trabajar a los estabilizadores profundos — más exigente que cualquier barra o rodillo equivalente."
+      },
+      "core_roller_1": {
+        "title": "Rodillo de Abdominales",
+        "description": "Agarra el rodillo y rueda desde rodillas hasta extensión completa, manteniendo las caderas estables. La demanda explosiva anti-extensión y el rango completo de movimiento hacen de este uno de los movimientos de núcleo cargado más efectivos."
+      },
+      "core_band_1": {
+        "title": "Prensa Pallof con Banda",
+        "description": "Ancla una banda de resistencia a la altura del pecho y empuja la manija alejándote del cuerpo mientras resistes la rotación. La demanda anti-rotación activa los estabilizadores profundos de la columna que ninguna contracción puede acceder."
+      },
+      "legs_1": {
+        "title": "Fundación en Sentadillas",
+        "description": "Construye el patrón de sentadilla bilateral con profundidad completa y postura erguida."
+      },
+      "legs_2": {
+        "title": "Fuerza en Sentadillas",
+        "description": "Aumenta el volumen de sentadillas y ajusta el seguimiento de las rodillas y la profundidad. Abre las rutas hacia la posición de L-sit y la sentadilla pistola."
+      },
+      "legs_3": {
+        "title": "Sentadilla Pistol",
+        "description": "Sentadilla en una pierna con el pie trasero sostenido detrás — requiere fuerza excepcional en cuádriceps, movilidad en tobillos y equilibrio simultáneamente."
+      },
+      "legs_4": {
+        "title": "Sentadilla Balanza Búlgara",
+        "description": "Pie trasero elevado, pie delantero hacia adelante — baja hasta que la rodilla trasera roce el suelo. Uno de los ejercicios unilaterales más efectivos para fuerza de extremidades inferiores."
+      },
+      "legs_ls_1": {
+        "title": "Estiramiento Pike",
+        "description": "Siéntate erguido con las piernas rectas y flexiona hacia adelante sobre ellas — desarrolla la flexibilidad en los isquiotibiales y la activación del flexor de cadera necesaria para un completo L-sit."
+      },
+      "legs_ls_2": {
+        "title": "Compresiones L-Sit",
+        "description": "Sentado, impulsa los talones contra el suelo y trata de levantarlos — desarrolla la compresión activa de los flexores de cadera que reemplaza la flexibilidad con fuerza en el L-sit."
+      },
+      "legs_ls_3": {
+        "title": "Tuck L-Sit",
+        "description": "Presiona en barras paralelas o en el suelo y eleva las caderas — rodillas al pecho, brazos bloqueados. La posición de entrada para el full L-sit."
+      },
+      "legs_ls_4": {
+        "title": "L-Sit Completo",
+        "description": "Brazos bloqueados, caderas elevadas, piernas rectas y horizontales — muestra completa de fuerza en los flexores de cadera, potencia de empuje y compresión corporal."
+      },
+      "legs_ps_1": {
+        "title": "Paso a Paso (Step-Ups)",
+        "description": "Sube controladamente a una superficie elevada — desarrolla estabilidad en una pierna y activación de cuádriceps como primer paso hacia la posición de pistola."
+      },
+      "legs_ps_2": {
+        "title": "Sentadilla Pistola Asistida",
+        "description": "Sentadilla en una pierna con profundidad completa usando contrapeso o soporte — construye fuerza y movilidad antes de eliminar la asistencia."
+      },
+      "legs_ps_3": {
+        "title": "Sentadilla con Estatura Cerrada",
+        "description": "Sentadilla bilateral con pies juntos — se acerca a la mecánica de la pistola y las demandas de movilidad del tobillo antes de pasar a una sola pierna."
+      },
+      "legs_ps_4": {
+        "title": "Sentadilla Pistola",
+        "description": "Sentadilla en una pierna hasta profundidad máxima, con la pierna libre extendida — exige fuerza en cuádriceps, movilidad en tobillos y equilibrio total en un movimiento de élite."
+      },
+      "legs_weighted_1": {
+        "title": "Sentadilla Goblet con Peso",
+        "description": "Sostén una kettlebell o mancuerna a la altura del pecho y realiza una sentadilla hasta el fondo. La posición de copa favorece una postura vertical y seguimiento profundo de rodillas, siendo la vía de entrada ideal para la fuerza en las piernas con carga."
+      },
+      "legs_weighted_2": {
+        "title": "Sentadilla Búlgara con Peso",
+        "description": "Sostén mancuernas y realiza una sentadilla dividida con pie trasero elevado. La carga unilateral en este grado de estiramiento del flexor de cadera es uno de los métodos más efectivos para fortalecer las piernas."
+      },
+      "legs_weighted_3": {
+        "title": "Sentadilla Pistola con Peso",
+        "description": "Realiza la sentadilla pistola con peso, usando kettlebell o pesas. Añadir carga a este movimiento exigente requiere movilidad en tobillos, fuerza en una pierna y equilibrio excepcionales."
+      },
+      "legs_weighted_4": {
+        "title": "Sentadilla Balanza con Peso",
+        "description": "Realiza la sentadilla balanza con peso o pesas, uno de los movimientos unilaterales con carga más avanzados. Exige fuerza en flexores de cadera, cuádriceps y equilibrio bajo resistencia externa."
+      },
+      "legs_band_1": {
+        "title": "Camino Lateral con Banda",
+        "description": "Coloca una banda de resistencia alrededor de los tobillos y camina lateralmente en posición de media sentadilla. Trabaja el glúteo medio y los abductores de cadera que estabilizan cada movimiento en una pierna."
+      },
+      "legs_box_1": {
+        "title": "Saltos al Cajón",
+        "description": "Explota desde el suelo y aterriza suavemente en una caja pliométrica, absorbiendo el impacto de manera controlada y acolchada. Introduce el desarrollo de fuerza y almacenamiento de energía elástica."
+      },
+      "legs_sliders_1": {
+        "title": "Curl de Isquiotibiales con Deslizadores",
+        "description": "Recuéstate boca arriba, coloca deslizadores bajo los talones y curva las piernas hacia los glúteos mientras mantienes las caderas elevadas. La alta demanda excéntrica crea estímulo que ninguna máquina puede replicar."
+      },
+      "push_rings_1": {
+        "title": "Fondos en Anillos",
+        "description": "Haz fondos en anillos gimnásticos con control de rotación (RTO — Rings Turned Out) en bloqueo. La inestabilidad exige estabilización de tríceps, pectorales y hombros de élite en cada repetición."
+      },
+      "push_rings_2": {
+        "title": "Muscle-Up en Anillos",
+        "description": "Combina potencia de tracción y empuje en un solo movimiento explosivo sobre los anillos. La habilidad definitiva en anillos requiere estabilidad de élite en toda la cadena cinética."
+      },
+      "push_weighted_1": {
+        "title": "Fondos con Carga",
+        "description": "Agrega un chaleco o cinturón y realiza fondos con peso. Los fondos con carga aumentan la fuerza de empuje de élite más rápido que cualquier otro movimiento de peso corporal compuesto."
+      }
+    }
   },
   "history": {
     "title": "Historial de entrenamientos",
@@ -505,7 +860,49 @@
     "comment": "Comentar",
     "share": "Compartir",
     "noposts": "Aún no hay publicaciones — ¡sé el primero en compartir un entrenamiento!",
-    "shareWorkout": "Compartir entrenamiento"
+    "shareWorkout": "Compartir entrenamiento",
+    "aiVerified": "Verificación por IA",
+    "selfReported": "Autoreportado",
+    "justNow": "justo ahora",
+    "minutesAgo": "hace {{n}} min",
+    "hoursAgo": "hace {{n}} h",
+    "daysAgo": "hace {{n}} d",
+    "noClipAttached": "No hay clip adjunto",
+    "commentLabel": "Comentario",
+    "noComments": "Aún no hay comentarios. ¡Sé el primero!",
+    "addComment": "Agregar un comentario…",
+    "signInToComment": "Inicia sesión para comentar",
+    "startWorkout": "Iniciar Entrenamiento",
+    "communityTitle": "Comunidad",
+    "communitySubtitle": "Entrenamientos de atletas de todo el mundo",
+    "searchAthletes": "Buscar por atleta, ejercicio o #hashtag…",
+    "filterAll": "Todos",
+    "filterPush": "Empeje",
+    "filterPull": "Jalón",
+    "filterCore": "Core",
+    "filterLegs": " Piernas",
+    "emptyAll1": "Aún no hay publicaciones",
+    "emptyAll2": "¡Comparte un clip después de tu próximo entrenamiento para ser el primero!",
+    "emptyPush1": "¡Aún no hay clips del Día de Empeje!",
+    "emptyPush2": "Sé el primero en publicar un entrenamiento de empeje.",
+    "emptyPull1": "¡Aún no hay clips del Día de Jalón!",
+    "emptyPull2": "Sé el primero en publicar un entrenamiento de jalón.",
+    "emptyCore1": "¡Aún no hay clips del Core!",
+    "emptyCore2": "Sé el primero en publicar un entrenamiento de core.",
+    "emptyLegs1": "¡Aún no hay clips del Día de Piernas! Sé el primero en publicar.",
+    "emptyLegs2": "Ve al gimnasio y demuestra tu fuerza en las piernas.",
+    "noEliteAchievements": "Aún no hay logros de Elite.",
+    "masterEliteSkill": "¡Domina una habilidad de Elite para aparecer aquí!",
+    "you": "Tú",
+    "justMastered": "justo ahora dominaste",
+    "postClip": "Publicar Clip",
+    "shareClip": "Compartir Clip",
+    "shareToCommunity": "Compartir en la Comunidad",
+    "addCaption": "Agregar una leyenda… (opcional)",
+    "uploadStarted": "Carga iniciada — ¡puedes explorar libremente!",
+    "publishingPost": "Publicando publicación…",
+    "postedToCommunity": "¡Publicado en la Comunidad!",
+    "savedClipLabel": "Clip guardado"
   },
   "profile": {
     "masteryPoints": "Mastery Points",
@@ -540,7 +937,22 @@
     "days": "días",
     "routine": "Rutina de hoy",
     "complete": "Completar",
-    "completed": "Completado"
+    "completed": "Completado",
+    "questionnaire": {
+      "title": "Actualizar Mis Metas",
+      "subtitle": "Personaliza tus tareas diarias de movilidad",
+      "goalQuestion": "¿Cuál es tu objetivo principal en calistenia?",
+      "areasQuestion": "¿Qué músculos y articulaciones te están frenando?",
+      "areasHint": "(elige todos los que apliquen)",
+      "timeQuestion": "¿Cuánto tiempo puedes dedicar a la movilidad diaria?",
+      "save": "Guardar mis preferencias",
+      "tapToChange": "Toca abajo para cambiar",
+      "suggested": "Sugerido",
+      "searchGoal": "Busca un movimiento o habilidad…",
+      "searchBodyPart": "Busca una parte del cuerpo…",
+      "minLabel": "{{n}} min",
+      "goalsUpdated": "Metas actualizadas! Tu rutina ha sido personalizaday"
+    }
   },
   "errors": {
     "notFound": "Página no encontrada",
@@ -557,5 +969,266 @@
     "almostDone": "Casi terminas — mantente fuerte.",
     "setComplete": "¡Set completado! Descansa.",
     "workoutComplete": "¡Entrenamiento completado! Gran esfuerzo."
+  },
+  "exercises": {
+    "push_up": "Flexión",
+    "diamond_push_up": "Flexión Diamante",
+    "archer_push_up": "Flexión Arquero",
+    "pseudo_planche_push_up": "Flexión Pseudo Planche",
+    "pike_push_up": "Flexión Pike",
+    "elevated_pike_push_up": "Flexión Pike Elevada",
+    "handstand_push_up": "Flexión en Handstand",
+    "handstand": "Handstand",
+    "wall_handstand_push_up": "Flexión en Handstand contra la pared",
+    "planche_lean": "Inclinación a Planche",
+    "tuck_planche": "Planche Tuck",
+    "straddle_planche": "Planche en V",
+    "planche": "Planche",
+    "full_planche": "Planche Completa",
+    "scapular_shrugs": "encogimientos de Escápula",
+    "australian_rows": "Remo Australiano",
+    "negative_pull_ups": "Pull-Ups Negativos",
+    "negative_pull_up": "Pull-Up Negativo",
+    "pull_up": "Pull-Up",
+    "tuck_front_lever": "Levantamiento anticipado de barra frontal",
+    "straddle_front_lever": "Levantamiento en V de barra frontal",
+    "full_front_lever": "Barra frontal completa",
+    "chest_to_bar_pull_up": "Pull-Up de pecho a barra",
+    "muscle_up": "Muscle-Up",
+    "kipping_muscle_up": "Muscle-Up con kipping",
+    "strict_muscle_up": "Muscle-Up estricto",
+    "archer_pull_up": "Pull-Up Arquero",
+    "typewriter_pull_up": "Pull-Up Máquina de escribir",
+    "one_arm_active_hang": "Colgamiento activo de un brazo",
+    "one_arm_pull_up": "Pull-Up de un brazo",
+    "plank": "Plancha",
+    "side_plank": "Plancha lateral",
+    "dead_bug": "Insecto muerto",
+    "superman": "Superman",
+    "hollow_body_hold": "Sostén en posición hollow",
+    "dragon_flag_negative": "Bandera de Dragón Negativa",
+    "dragon_flag": "Bandera de Dragón",
+    "active_hang": "Colgamiento activo",
+    "hanging_knee_tuck": "Rodillas en colgado",
+    "hanging_knee_tucks": "Rodillas en cola colgado",
+    "hanging_leg_raise": "Elevación de piernas colgado",
+    "hanging_leg_raises": "Elevaciones de piernas en colgado",
+    "toes_to_bar": "Dedos a la barra",
+    "windshield_wiper": "Limpiaparabrisas",
+    "windshield_wipers": "Limpia parabrisas",
+    "hanging_windshield_wipers": "Limpia parabrisas en colgado",
+    "tucked_human_flag": "Bandera Humana Tuck",
+    "one_leg_human_flag": "Bandera Humana de Una Pierna",
+    "human_flag": "Bandera Humana",
+    "squat": "Sentadilla",
+    "air_squat": "Sentadilla en Aire",
+    "shrimp_squat": "Sentadilla Camarón",
+    "bulgarian_split_squat": "Sentadilla Búlgara Split",
+    "nordic_curls": "Curl Nórdico",
+    "pike_stretch": "Estiramiento Pike",
+    "l_sit_compression": "Compresión en L-Sit",
+    "l_sit_compressions": "Compresiones en L-Sit",
+    "tuck_l_sit": "L-Sit Tuck",
+    "l_sit": "L-Sit",
+    "full_l_sit": "L-Sit Completo",
+    "step_up": "Paso al Foso",
+    "step_ups": "Pasos al Foso",
+    "assisted_pistol_squat": "Sentadilla Pistol Asistida",
+    "close_stance_squat": "Sentadilla con Estilo Cerrado",
+    "pistol_squat": "Sentadilla Pistol",
+    "explosive_pull_up": "Dominada Explosiva",
+    "ring_support_hold": "Sostenimiento en Anillas",
+    "ring_pull_up": "Dominada en Anillas",
+    "ring_muscle_up": "Muscle-Up en Anillas",
+    "ring_dip": "Fondos en Anillas",
+    "weighted_pull_up": "Dominada con Peso",
+    "weighted_muscle_up": "Muscle-Up con Peso",
+    "weighted_dip": "Fondos con Peso",
+    "weighted_plank": "Plancha con Peso",
+    "weighted_dragon_flag": "Flag Dragón con Peso",
+    "weighted_leg_raises": "Elevaciones de Piernas con Peso",
+    "weighted_goblet_squat": "Sentadilla Goblet con Peso",
+    "weighted_bulgarian_split_squat": "Sentadilla Split Búlgara con Peso",
+    "weighted_pistol_squat": "Sentadilla Pistol con Peso",
+    "weighted_shrimp_squat": "Sentadilla Camarón con Peso",
+    "bar_volume_pull_up": "Dominada por Volumen en Barra",
+    "explosive_bar_pull_up": "Dominada Explosiva en Barra",
+    "strict_bar_muscle_up": "Muscle-Up Estricto en Barra",
+    "weighted_volume": "Volumen con Peso",
+    "ab_roller_rollout": "Despliegue con Rueda Abdominal",
+    "banded_pallof_press": "Press Pallof con Bandas",
+    "banded_lateral_walks": "Caminar Lateral con Bandas",
+    "box_jumps": "Saltos en Caja",
+    "slider_hamstring_curls": "Curl de Isquiotibiales con Deslizador",
+    "ring_knee_raises": "Elevaciones de Rodillas en Anillas",
+    "ring_rollouts": "Despliegues en Anillas",
+    "lunge": " Zancada",
+    "burpee": "Burpee",
+    "back_extensions": "Extensiones de Espalda"
+  },
+  "muscles": {
+    "wrist_flexors": "Flexores de Muñeca",
+    "forearms": "Antebrazos",
+    "wrist_extensors": "Extensores de Muñeca",
+    "shoulders": "Hombros",
+    "chest": "Pecho",
+    "lats": "Dorsales",
+    "thoracic_spine": "Columna Torácica",
+    "anterior_shoulders": "Hombros Anteriores",
+    "biceps": " Bíceps",
+    "hip_flexors": "Flexores de Cilla",
+    "quads": "Cuádriceps",
+    "psoas": "Psoas",
+    "hamstrings": "Isquiotibiales",
+    "calves": "Pantorrillas",
+    "lower_back": "Parte Inferior de la Espalda",
+    "obliques": "Oblicuos",
+    "rotator_cuff": "Manguito Rotador",
+    "hip_external_rotators": "Rotadores Externos de Cadera",
+    "glutes": "Glúteos",
+    "it_band": "Banda Iliotibial",
+    "triceps": "Tríceps",
+    "posterior_shoulder": "Hombro Posterior",
+    "lat": "Lat",
+    "hip_adductors": "Aductores de Cadera",
+    "anterior_deltoid": "Deltoides Anterior",
+    "ankles": "Tobillos",
+    "achilles": "Tendón de Aquiles",
+    "wrists": "Muñecas",
+    "finger_flexors": "Flexores de Dedos",
+    "serratus": "Serrato",
+    "shoulder_extension": "Extensión del Hombro",
+    "scapular_stabilisers": "Estabilizadores Escapulares",
+    "teres_major": "Teres Mayor",
+    "shoulder_protraction": "Protracción del Hombro",
+    "wrist_tendons": "Tendones de Muñeca",
+    "ankle_dorsiflexors": "Dorsiflexores del Tobillo",
+    "tibialis_anterior": "Tibial Anterior",
+    "hip_adductors_": "Aductores de Cadera",
+    "serratus_anterior": "Serrato Anterior",
+    "lower_traps": "Trapecio Inferior",
+    "scapular_retractors": "Retractores Escapulares",
+    "lower_trapezius": "Trapecio Inferior",
+    "posterior_deltoid": "Deltoides Posterior",
+    "rhomboids": "Romboides",
+    "hip_extensors": "Extensores de Cadera",
+    "anterior_deltoids": "Deltoides Anteriores",
+    "wrist_extensors_": "Extensores de Muñeca"
+  },
+  "mobility": {
+    "stretches": {
+      "wristExtension": {
+        "name": "Estiramiento de Extensión de Muñeca",
+        "muscles": "Flexores de Muñeca, Antebrazos"
+      },
+      "wristFlexion": {
+        "name": "Estiramiento de Flexión de Muñeca",
+        "muscles": "Extensores de Muñeca, Antebrazos"
+      },
+      "shoulderDislocates": {
+        "name": "Dislocaciones de Hombro",
+        "muscles": "Hombros, Pecho, Dorsales"
+      },
+      "latStretch": {
+        "name": "Estiramiento de Dorsal colgante",
+        "muscles": "Dorsales, Columna Torácica, Hombros"
+      },
+      "chestOpener": {
+        "name": "Apertor de Pecho en Puerta",
+        "muscles": "Pecho, Deltoides anteriores, Bíceps"
+      },
+      "hipFlexorLunge": {
+        "name": "Estocada profunda para flexores de cadera",
+        "muscles": "Flexores de cadera, Cuádriceps, Psoas"
+      },
+      "hamstring": {
+        "name": "Estiramiento de Isquiotibiales de pie",
+        "muscles": "Isquiotibiales, Pantorrillas, Región lumbar"
+      },
+      "thoracicRotation": {
+        "name": "Rotación torácica sentado",
+        "muscles": "Columna torácica, Oblicuos, Manguito rotador"
+      },
+      "pigeonPose": {
+        "name": "Estiramiento del Pigeon para apertura de cadera",
+        "muscles": "Rotadores externos de cadera, Glúteos, Banda Iliotibial"
+      },
+      "tricepsStretch": {
+        "name": "Estiramiento de tríceps por encima de la cabeza",
+        "muscles": "Tríceps, Deltoides posterior, Dorsal ancho"
+      },
+      "pancake": {
+        "name": "Estiramiento Pancake",
+        "muscles": "Isquiotibiales, Aductores de cadera, Región lumbar"
+      },
+      "shoulderFlexion": {
+        "name": "Flexión inversa del hombro",
+        "muscles": "Deltoides anterior, Pecho, Bíceps"
+      },
+      "ankleCircles": {
+        "name": "Círculos de movilidad de tobillo",
+        "muscles": "Tobillos, Pantorrillas, Aquiles"
+      },
+      "calfStretch": {
+        "name": "Estiramiento de pantorrillas contra la pared",
+        "muscles": "Pantorrillas, Aquiles, Tobillos"
+      },
+      "wallPuppyPose": {
+        "name": "Posición del cachorro en la pared",
+        "muscles": "Columna torácica, Flexores del hombro, Dorsales"
+      },
+      "firstKnuckleRaises": {
+        "name": "Elevaciones del primer nudillo",
+        "muscles": "Flexores de muñeca, Flexores de dedos, Antebrazos"
+      },
+      "butchersBlock": {
+        "name": "Estiramiento de bloque de carnicero",
+        "muscles": "Tríceps, Dorsales, Serrato anterior"
+      },
+      "germanHang": {
+        "name": "Colgar alemán (pasivo)",
+        "muscles": "Extensión de hombro, Deltoides anterior, Bíceps"
+      },
+      "skinTheCat": {
+        "name": "Estiramiento parcial de Skin the Cat",
+        "muscles": "Hombros, Estabilizadores de escápula, Dorsales"
+      },
+      "deepLatStretch": {
+        "name": "Rodillo de espuma profundo para dorsal",
+        "muscles": "Dorsales, Teres mayor, Columna torácica"
+      },
+      "plancheLeans": {
+        "name": "Inclinaciones en planche",
+        "muscles": "Muñecas, Protracción de hombro, Serrato"
+      },
+      "reverseTabletop": {
+        "name": "Estiramiento de mesa invertida",
+        "muscles": "Deltoides anterior, Pecho, Extensores de muñeca"
+      },
+      "fingerPulses": {
+        "name": "Pulsos tendinosos de dedos",
+        "muscles": "Flexores de dedos, Tendones de muñeca, Antebrazos"
+      },
+      "ankleDorsiflexion": {
+        "name": "Dorsiflexión de tobillo con peso",
+        "muscles": "Dorsiflexores de tobillo, Aquiles, Tibial anterior"
+      },
+      "cossackSquats": {
+        "name": "Sentadillas Cossack",
+        "muscles": "Aductores de cadera, Glúteos, Tobillos"
+      },
+      "scapularHangs": {
+        "name": "Sujeciones activas de escápula",
+        "muscles": " Serrato anterior, Trapecios inferiores, Retraedores de escápula"
+      },
+      "proneYRaises": {
+        "name": "Elevaciones en Y en posición prone",
+        "muscles": "Trapecio inferior, Deltoides posterior, Rombos"
+      },
+      "thoracicBridge": {
+        "name": "Puente torácico",
+        "muscles": "Columna torácica, Glúteos, Extensores de cadera"
+      }
+    }
   }
 }

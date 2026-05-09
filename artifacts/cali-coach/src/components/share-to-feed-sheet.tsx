@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useCreatePost } from "@/lib/community-feed";
 import { useUploadManager } from "@/lib/upload-manager";
 import { useUser } from "@clerk/react";
+import { useTranslation } from "react-i18next";
 
 interface ShareToFeedSheetProps {
   exerciseName:       string;
@@ -35,11 +36,12 @@ export function ShareToFeedSheet({
   blob,
   existingObjectPath,
 }: ShareToFeedSheetProps) {
-  const { user }         = useUser();
+  const { t }             = useTranslation();
+  const { user }          = useUser();
   const [caption, setCaption] = useState("");
   const [stage, setStage]     = useState<"idle" | "posting" | "done">("idle");
-  const { enqueue }      = useUploadManager();
-  const createPost       = useCreatePost();
+  const { enqueue }       = useUploadManager();
+  const createPost        = useCreatePost();
 
   const handleShare = async () => {
     if (!user) return;
@@ -104,7 +106,7 @@ export function ShareToFeedSheet({
           <div className="px-5 pb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Share2 className="w-4 h-4 text-primary" />
-              <span className="font-bold text-white">Share to Community</span>
+              <span className="font-bold text-white">{t("community.shareToCommunity")}</span>
             </div>
             <button
               onClick={onClose}
@@ -124,12 +126,12 @@ export function ShareToFeedSheet({
               {isAiVerified && (
                 <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
                   <CheckCircle2 className="w-2.5 h-2.5" />
-                  AI Verified
+                  {t("community.aiVerified")}
                 </span>
               )}
               {existingObjectPath && (
                 <span className="text-[10px] text-white/40 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
-                  Saved clip
+                  {t("community.savedClipLabel")}
                 </span>
               )}
             </div>
@@ -139,7 +141,7 @@ export function ShareToFeedSheet({
               <textarea
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
-                placeholder="Add a caption… (optional)"
+                placeholder={t("community.addCaption")}
                 rows={3}
                 maxLength={280}
                 disabled={stage !== "idle"}
@@ -154,7 +156,7 @@ export function ShareToFeedSheet({
             {blob && stage === "done" && (
               <div className="flex items-center gap-2 text-emerald-400 py-1">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span className="text-sm font-medium">Upload started — you can browse freely!</span>
+                <span className="text-sm font-medium">{t("community.uploadStarted")}</span>
               </div>
             )}
 
@@ -162,7 +164,7 @@ export function ShareToFeedSheet({
             {stage === "posting" && (
               <div className="flex items-center gap-2 text-white/50 py-1">
                 <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin shrink-0" />
-                <span className="text-sm">Publishing post…</span>
+                <span className="text-sm">{t("community.publishingPost")}</span>
               </div>
             )}
 
@@ -170,7 +172,7 @@ export function ShareToFeedSheet({
             {stage === "done" && existingObjectPath && (
               <div className="flex items-center justify-center gap-2 text-emerald-400 py-2">
                 <CheckCircle2 className="w-5 h-5" />
-                <span className="font-semibold">Posted to Community!</span>
+                <span className="font-semibold">{t("community.postedToCommunity")}</span>
               </div>
             )}
 
@@ -182,7 +184,7 @@ export function ShareToFeedSheet({
                   className="flex-1 border-white/15 text-white/60 hover:bg-white/5"
                   onClick={onClose}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   className="flex-1 font-bold gap-2"
@@ -190,7 +192,7 @@ export function ShareToFeedSheet({
                   disabled={!user}
                 >
                   <Share2 className="w-4 h-4" />
-                  {existingObjectPath ? "Post Clip" : "Share Clip"}
+                  {existingObjectPath ? t("community.postClip") : t("community.shareClip")}
                 </Button>
               </div>
             )}

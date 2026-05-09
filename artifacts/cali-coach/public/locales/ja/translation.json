@@ -103,7 +103,25 @@
     "recalibrateBodyDesc": "Tポーズスキャンを再実行して身体の測定値を更新",
     "mobilityDesc": "毎日動き続けるためのリマインダーを受け取る",
     "communityPosts": "すべての人にコミュニティ投稿を表示",
-    "setUpProfile": "プライバシーコントロールを有効にするためにプロフィールを設定してください"
+    "setUpProfile": "プライバシーコントロールを有効にするためにプロフィールを設定してください",
+    "membership": "会員登録",
+    "activeMembership": "アクティブ会員資格",
+    "cancelMembership": "会員解除",
+    "cancelMembershipDesc": "請求サイクルの終了までアクセス権を保持します。",
+    "cancelButton": "解約する",
+    "retentionOfferBar": "あなた専用の特別オファー",
+    "retentionHeadline": "ちょっと待って！諦めないで...",
+    "retentionBody": "Pro会員のままで次の月が超割引！世界最高峰のAIコーチングと共にトレーニングの旅を続けよう。",
+    "claim40Discount": "40%割引を獲得",
+    "noThanksCancel": "いいえ、キャンセルを続ける →",
+    "sorryToSeeYouGo": "ご退会残念です。",
+    "loseAccessDesc": "請求サイクル終了後、上級分析とProオーラのアクセスを失います。",
+    "goBack": "戻る",
+    "cancelling": "解約処理中…",
+    "discountApplied": "割引適用完了！",
+    "discountAppliedDesc": "次回請求に40%割引が適用されました。",
+    "subscriptionCancelled": "契約解約完了",
+    "subscriptionCancelledDesc": "あなたの契約は解約されました。{{date}}までアクセス可能です。"
   },
   "shop": {
     "title": "CaliShop",
@@ -383,7 +401,21 @@
     "skillProgress": "スキル進展",
     "viewSession": "セッションを表示",
     "trainNext": "次にトレーニング→",
-    "continue": "続ける"
+    "continue": "続ける",
+    "backToHistory": "履歴に戻る",
+    "totalReps": "総レップ数",
+    "avgFormScore": "フォームスコア平均",
+    "duration": "所要時間",
+    "savedClip": "保存クリップ",
+    "expiresInDays_one": "あと {{count}} 日で期限切れ",
+    "expiresInDays_other": "あと {{count}} 日で期限切れ",
+    "loopInfo_one": "自動ループ · タップで再生/停止 · {{count}}日後に期限",
+    "loopInfo_other": "自動ループ · タップで再生/停止 · {{count}}日後に期限",
+    "shareToCommunity": "コミュニティにシェア",
+    "noClipSaved": "このセッションの保存クリップがありません。次のセット後にPOVレビュー画面で\"履歴に保存\"を利用してください。",
+    "aiVerified": "AI認証済み",
+    "sessionNotFound": "セッションが見つかりません。",
+    "loadingSession": "読み込み中…"
   },
   "skillTree": {
     "title": "スキルツリー",
@@ -409,7 +441,330 @@
     "whyTrain": "なぜこれをトレーニングするのですか？",
     "masterPrereq": "このノードを解除するには、前提スキルを習得してください。",
     "practiceAgain": "もう一度練習 →",
-    "trainNowArrow": "今すぐトレーニング →"
+    "trainNowArrow": "今すぐトレーニング →",
+    "levelLabel": "レベル {{level}} · {{levelName}}",
+    "staticHold": "静止保持",
+    "explosive": "爆発的動作",
+    "whyTrainThis": "なぜこのトレーニングを？",
+    "alsoRequires": "他にも必要な要素",
+    "masteryLabel": "マスタリー",
+    "completeLabel": "完了",
+    "qualifyingSessions": "{{done}}/{{total}} 条件を満たすセッション",
+    "bestHold": "最高保持記録",
+    "bestRepsLabel": "最高レップ数",
+    "formScoreLabel": "フォームスコア",
+    "requiresLabel": "必要条件",
+    "coreStrengthHub": "コア筋力",
+    "nodes": {
+      "push_1": {
+        "title": "最初のプッシュアップ",
+        "description": "きれいなプッシュアップを初達成：体一直線、胸が床に触れる、完全な腕の伸展。"
+      },
+      "push_2": {
+        "title": "プッシュアップ耐久力",
+        "description": "プッシュアップの回数を倍にしてフォームを引き締める — 持続的なセットでオーバーヘッド・プランche・プランシェの動作ルートが解放される。"
+      },
+      "push_3": {
+        "title": "ダイヤモンドプッシュアップ",
+        "description": "手は胸の下にダイヤモンド型、肘は後ろを追い、三頭筋と内胸を集中的に鍛えるエリートプレス動作。"
+      },
+      "push_4": {
+        "title": "アーチャープッシュアップ",
+        "description": "片腕は曲げてもう片腕は広く伸ばす非対称ドリル、一側のプレス力を高め一腕作業に近づく。"
+      },
+      "push_5": {
+        "title": "擬似プランシェプッシュアップ",
+        "description": "手は腰の外側に回旋、身体は前方に傾く — 手首と肩のプランシェ負荷をシミュレートしながらプッシュ。"
+      },
+      "push_oh_1": {
+        "title": "パイクプッシュアップ",
+        "description": "ヒップ高く、手は肩幅 ― 頭を手の間に下ろし再び押し上げ。肩に負荷を移しながらオーバーヘッドプレスへの橋渡し。"
+      },
+      "push_oh_2": {
+        "title": "高架パイクプッシュアップ",
+        "description": "台やベンチの上に足を置く — 角度が肩の可動域と負荷を増やし、ハンドスタンドプッシュアップへの最短ステップ。"
+      },
+      "push_oh_3": {
+        "title": "壁倒立プッシュアップ",
+        "description": "壁に蹴り上げて全身重量を頭上へ − 倒立プッシュアップの最も直接的な負荷動作。"
+      },
+      "push_oh_4": {
+        "title": "倒立",
+        "description": "壁から離れてバランスを保つ倒立 — 肩耐久性、手首の柔軟性、空間認識力を要するコントロールされた逆立ち。"
+      },
+      "push_oh_5": {
+        "title": "倒立プッシュアップ",
+        "description": "倒立しながら床から完全ロックアウトまでプッシュ — calisthenicsのオーバーヘッドプレスの頂点。"
+      },
+      "push_pp_1": {
+        "title": "プランシェ・リーニング",
+        "description": "手首の上に前傾し、手は外側に回してプッシュアップ姿勢に。手首と前肩をプランシェ負荷に適応させる。"
+      },
+      "push_pp_2": {
+        "title": "タック・プランシェ",
+        "description": "膝を曲げて足を持ち上げ、手首越しに倒れる — 初めての本格的なプランシェ姿勢。"
+      },
+      "push_pp_3": {
+        "title": "ストラドル・プランシェ",
+        "description": "脚を広げて外側に伸ばし、プランシェ維持 — タックより遥かに難易度高く全身の緊張が必要。"
+      },
+      "push_pp_4": {
+        "title": "フル・プランシェ",
+        "description": "身体は完全に水平、脚は揃えてロック — calisthenicsの伝説的なプレス力の頂点。"
+      },
+      "pull_1": {
+        "title": "最初のプルアップ",
+        "description": "完全なフルレンジのプルアップをデッドハングから初達成。"
+      },
+      "pull_2": {
+        "title": "プルアップの継続性",
+        "description": "複数回できる信頼性の高いプルアップ力を養成。フロントレバーへの道を開く。"
+      },
+      "pull_3": {
+        "title": "ネガティブプルアップ",
+        "description": "あごがバーを越えた状態からゆっくり降ろす動作。エキセントリック集中型で筋トレーニングや筋肉アップの爆発的瞬発力を養う。"
+      },
+      "pull_fl_1": {
+        "title": "タックフロントレバー",
+        "description": "バーにぶら下がり、膝を胸に引き寄せ水平姿勢を保持。肩甲骨の下制と広背筋の強化に最適。"
+      },
+      "pull_fl_2": {
+        "title": "ストラドルフロントレバー",
+        "description": "脚を広げて水平をキープ。タックよりも遥かに難しく、全身の緊張が必要。"
+      },
+      "pull_fl_3": {
+        "title": "フルフロントレバー",
+        "description": "身体は完全水平、腕は伸ばし、脚は固定されたまま — calisthenicsの最も価値ある静止保持。"
+      },
+      "pull_mu_1": {
+        "title": "チェスト・トゥ・バー・プルアップ",
+        "description": "あごを超越して、胸がバーに触れるまで爆発的に引き上げる。標準的なプルアップよりもはるかに高い引き上げ動作力を要する。"
+      },
+      "pull_mu_2": {
+        "title": "キッピング・ミュージャルアップ",
+        "description": "コントロールされたヒップキップで勢いをつけ、バーの移行をスムーズに。タイミングに慣れ、キップをなくすことを目指す。"
+      },
+      "pull_mu_3": {
+        "title": "ストリクト・ミュージャルアップ",
+        "description": "スウィングなし、キップなし — 引き上げとプレスを上半身だけで行い、pulling力の金字塔。"
+      },
+      "pull_am_1": {
+        "title": "アーチャープルアップ",
+        "description": "片腕は引き、もう一腕はまっすぐ伸ばす非対称トレーニング。片腕プルアップに必要な unilateral背筋力を養成。"
+      },
+      "pull_am_2": {
+        "title": "タイプライター・プルアップ",
+        "description": "バーに引きつけた後、ハンドトップで横にスライド。水平に引く力とコントロールの極み。"
+      },
+      "pull_oah_1": {
+        "title": "片腕アクティブハング",
+        "description": "片腕でバーにぶら下がり、肩を積極的に寄せて下制。片側の肩安定性、グリップ耐久性、横連鎖の強さを養成。"
+      },
+      "pull_oapu_1": {
+        "title": "片腕プルアップ",
+        "description": "片腕で行う究極の片側引き上げ。補助なし、勢いなしの完全なプルアップで稀少な偉業。"
+      },
+      "pull_rings_1": {
+        "title": "リングサポートホールド",
+        "description": "リングでアクティブサポートを保持しよう — 腕を伸ばし、体をまっすぐに保つ基本姿勢。これはリスト、肘、肩の安定性を必要とし、リングプルの前に重要な基盤を築く。"
+      },
+      "pull_rings_2": {
+        "title": "リングプルアップ",
+        "description": "体操リングでの完全なプルアップは、グリップの安定性と肩の制御を求められ、固定バーでは再現できない動的安定性を伴う。反動のないコントロールが挑战だ。"
+      },
+      "pull_rings_3": {
+        "title": "リングマッスルアップ",
+        "description": "リングプルの頂点技術：厳格なマッスルアップはエリートなトランジション動力、肩の安定性、協調した腕のコントロールを要求し、不安定な状況下でのトップレベル技術だ。"
+      },
+      "pull_weighted_1": {
+        "title": "加重プルアップ",
+        "description": "ベストやベルトを追加し、負荷をかけてストリクトなプルアップを行う。体重の10〜20%から始め、抵抗を増やすことで純粋な体重トレーニングを超える筋力増強を促進する。"
+      },
+      "pull_weighted_2": {
+        "title": "加重プルアップボリューム",
+        "description": "高レップの加重プルアップセットを長時間維持。負荷下でのボリュームが加重マッスルアップやより重い負荷を可能にするための生の引きの筋力を鍛える。"
+      },
+      "pull_weighted_3": {
+        "title": "加重マッスルアップ",
+        "description": "負荷を伴うマッスルアップ — カリステニクスの中でも最もパワフルな技の一つ。爆発的な引きと正確なトランジション、全身の緊張を要求する。"
+      },
+      "core_1": {
+        "title": "プランク基礎",
+        "description": "完璧なプランクを維持しよう — 頭からかかとまでまっすぐな体、腰と腹筋を緊張させる。すべてのコアトレーニングの出発点だ。"
+      },
+      "core_2": {
+        "title": "サイドプランク",
+        "description": "片肘をついて体を持ち上げ、横方向のコアの剛性を高める。これがヒューマンフラッグやハンギングレッグワークに直結する。"
+      },
+      "core_hh_1": {
+        "title": "デッドバグ",
+        "description": "仰向けに横たわり、腕と脚を上げて対側の腕と脚をゆっくり下げながら腹部を緊張させる。基本の反伸展コアトレーニングだ。"
+      },
+      "core_hh_2": {
+        "title": "バックエクステンション",
+        "description": "うつ伏せになり、胸と脚を床から離す（スーパーマン）。ハローボディの動きとバランスの安定性を高め、背面の筋力強化に寄与する。"
+      },
+      "core_hh_3": {
+        "title": "ホローボディホールド",
+        "description": "仰向けでホローカーブを作り、肩を床から離し、脚を低く持ち上げる。全身の緊張と体幹コントロールの基本練習であり、すべてのカルステニクス動作を支える。"
+      },
+      "core_hh_4": {
+        "title": "ドラゴンフラッグネガティブ",
+        "description": "ベンチに横たわり、頭の後ろで握り、垂直から水平にゆっくりと体を下ろす。エccentric負荷の段階で、フルドラゴンフラッグへの準備をする。"
+      },
+      "core_hh_5": {
+        "title": "ドラゴンフラッグ",
+        "description": "頭の後ろで握り、体を完全に水平に保つ — 肩だけがベンチに触れる状態。究極の反伸展筋力とコアの総合的な力を示す伝説的な技術だ。"
+      },
+      "core_bb_1": {
+        "title": "アクティブハング",
+        "description": "バーにぶら下がり、肩を積極的に下制しながらキープ — すべてのバーを使ったコアとプル動作の基盤。"
+      },
+      "core_bb_2": {
+        "title": "ハンギングニーTucks",
+        "description": "バーにぶら下がり、膝を胸に向かって引き寄せる。これにより股関節屈筋の圧縮と肩の安定性が向上し、より難しいハンギングコア動作に備える。"
+      },
+      "core_bb_3": {
+        "title": "ハンギングレッグレイズ",
+        "description": "バーにぶら下がり、脚をまっすぐにして水平位置まで持ち上げる — 股関節屈筋の筋力、グリップ持久力、脊柱全体のコントロールを要求する。"
+      },
+      "core_bb_4": {
+        "title": "トゥーズトゥバー",
+        "description": "ぶら下がった状態で、全身を折りたたんでつま先をバーに触れる — 股関節屈筋の完全な力、グリップ、体のコントロールを一度に鍛える。"
+      },
+      "core_hf_1": {
+        "title": "ハンギングウインドシェイドワイパー",
+        "description": "バーにぶら下がり、脚を水平に上げて左右にスイープ — 横方向のコアの強度と股関節の柔軟性を高め、ヒューマンフラッグの完成に貢献。"
+      },
+      "core_hf_2": {
+        "title": "タックされたヒューマンフラッグ",
+        "description": "垂直ポールに握り、膝を引き寄せて体を水平に保つ — 真のヒューマンフラッグの姿勢で、エリートな横方向の推力を必要とする。"
+      },
+      "core_hf_3": {
+        "title": "片脚ヒューマンフラッグ",
+        "description": "片脚を伸ばし、もう片脚を曲げる — レバーアームを短縮し、フルフラッグのための側面の連鎖を鍛える過渡期のホールド。"
+      },
+      "core_hf_4": {
+        "title": "ヒューマンフラッグ",
+        "description": "垂直ポールに握り、全身を水平にキープ — 横方向のコアと肩のエリート筋力を要求する伝説的な技。"
+      },
+      "core_weighted_1": {
+        "title": "加重プランク",
+        "description": "重りプレートやベストを背負って剛性のあるプランクを維持 — 追加された負荷が反伸展の要求を増大させ、エリートのコアの剛性へ直結。"
+      },
+      "core_weighted_2": {
+        "title": "加重レッグレイズ",
+        "description": "足首にウェイトを付けてバーにぶら下がり、脚を水平に持ち上げる — 負荷が股関節屈筋の要求とグリップ持久力を劇的に増加させる。"
+      },
+      "core_weighted_3": {
+        "title": "加重ドラゴンフラッグ",
+        "description": "重り入りベストを着てドラゴンフラッグを行う — 既存の最も過酷な負荷をかけたコアエクササイズの一つ。外部抵抗下での反伸展筋力を完全に鍛える。"
+      },
+      "core_rings_1": {
+        "title": "リングニーリフト",
+        "description": "ジムナスティックリングにぶら下がり、膝を胸に引き上げる。反動のない不安定性が深い肩の荷重と優れたコア圧縮を強制する。"
+      },
+      "core_rings_2": {
+        "title": "リングロールアウト",
+        "description": "膝をついて、リングを握り、完全に伸ばすまでロールアウトする。絶え間ない不安定さが深い安定筋を働かせ、バーベルやローラーよりハードな負荷をかける。"
+      },
+      "core_roller_1": {
+        "title": "アブロールアウト",
+        "description": "アブロールを握り、膝立ちから完全に伸ばすまでロールアウト — 爆発的な反伸展の要求と全範囲の動きで、最も効果的な負荷付きコア動作の一つ。"
+      },
+      "core_band_1": {
+        "title": "バンドによるパロフプレス",
+        "description": "チェストハイトでレジスタンスバンドを固定し、回転を抵抗しながらハンドルを押し出す。反回転の要求が深層の脊柱安定筋をターゲットにし、クランチではアクセスできない部分を鍛える。"
+      },
+      "legs_1": {
+        "title": "スクワット基礎",
+        "description": "二重のパターンを完全な深さと直立姿勢で構築する。"
+      },
+      "legs_2": {
+        "title": "スクワット筋力",
+        "description": "ボリュームを増やし、膝の追従と深さを調整。L字シットやピストルスクワットへの道を開く。"
+      },
+      "legs_3": {
+        "title": "シュリンプスクワット",
+        "description": "片脚スクワットで、後ろ足を保持して行う — 卓越した大腿四頭筋の力、足首の柔軟性、バランス能力を同時に要求。"
+      },
+      "legs_4": {
+        "title": "ブルガリアンスプリットスクワット",
+        "description": "後ろ足を高くして、前足を前に出す — 後膝が床に触れるまで沈む。効果的な片脚筋力トレーニングの一つ。"
+      },
+      "legs_ls_1": {
+        "title": "パイクストレッチ",
+        "description": "脚をまっすぐ座り、前に折りたたむ — ハムストリングスの柔軟性とヒップ屈筋の活動を高め、完全なL字シットに必要な準備を整える。"
+      },
+      "legs_ls_2": {
+        "title": "Lシット圧縮",
+        "description": "座った状態で踵を床に押し込み、持ち上げようとする — 活動的な股関節屈筋の圧縮を構築し、L字シットの柔軟性を筋力に置き換える。"
+      },
+      "legs_ls_3": {
+        "title": "タックLシット",
+        "description": "平行棒や床に押し上げ、腰を持ち上げる — 膝は胸に引き寄せ、腕はロックアウト。フルLシットへの入門姿勢。"
+      },
+      "legs_ls_4": {
+        "title": "フルLシット",
+        "description": "腕を固定し、腰を持ち上げ、脚は真っ直ぐで水平 — 股関節屈筋のパワーと全身の圧縮を示す最終形態。"
+      },
+      "legs_ps_1": {
+        "title": "ステップアップ",
+        "description": "制御しながら高い場所に踏み込む — 一脚の安定性と大腿四頭筋の活性化を促し、ピストルスクワットへの第一歩。"
+      },
+      "legs_ps_2": {
+        "title": "補助ピストルスクワット",
+        "description": "完全深度の片腳スクワットを支撑や補助を持ちながら行う — 強度と柔軟性のパターンを作り、補助を外す前に習得。"
+      },
+      "legs_ps_3": {
+        "title": "クローズスタンススクワット",
+        "description": "足を閉じて二重のスクワット — ピストルスクワットのメカニクスに似ており、足首の柔軟性と一脚動作の準備。"
+      },
+      "legs_ps_4": {
+        "title": "ピストルスクワット",
+        "description": "完全深度の片脚スクワットで、自由脚を伸ばす — 大腿四頭筋と足首の柔軟性、全身のバランスを要求するエリート動作。"
+      },
+      "legs_weighted_1": {
+        "title": "加重ゴブレットスクワット",
+        "description": "ケトルベルやダンベルを胸の高さで持ち、深くスクワット — 垂直な胴体と深い膝追従を促進し、脚筋力の負荷入りエントリーに最適。"
+      },
+      "legs_weighted_2": {
+        "title": "加重ブルガリアンスプリットスクワット",
+        "description": "ダンベルを持ち、後ろ足を高くして行う。股関節伸展と下肢の負荷を強化し最も効果的な片脚筋力向上策。"
+      },
+      "legs_weighted_3": {
+        "title": "加重ピストルスクワット",
+        "description": "ケトルベルや重量プレートを持ち、フルピストルスクワットを行う。負荷を追加することで、足首の柔軟性と片脚の筋力・バランスを一段と鍛える。"
+      },
+      "legs_weighted_4": {
+        "title": "加重シュリンプスクワット",
+        "description": "重量付ベストやダンベルを使いシュリンプスクワットを行う — 高度な負荷付き片脚動作で、股関節屈筋、大腿四頭筋、バランスのエリートレベルを外部抵抗下で要求。"
+      },
+      "legs_band_1": {
+        "title": "バンド側面歩行",
+        "description": "抵抗バンドを足首に巻き、四つ脚の位置で左右に歩く — 中殿筋と股関節外転筋をターゲットにし、一脚動作の安定性を高める。"
+      },
+      "legs_box_1": {
+        "title": "ボックスジャンプ",
+        "description": "地面から爆発的に跳び上がり、ソフトにパイロボックスに着地 — 力の発揮速度と弾性エネルギーの蓄積を促進。"
+      },
+      "legs_sliders_1": {
+        "title": "スライダーハムストリングカール",
+        "description": "仰向けになり、踵の下にスライダーを置き、臀部を橋の形にしたまま脚を曲げてハムストリングをカール — 高い偏心負荷でマシーンでは再現できない刺激を作り出す。"
+      },
+      "push_rings_1": {
+        "title": "リングディップ",
+        "description": "ジムナスティックリングでディップを行い、LO（リングターンアウト）をロックアウト時に制御。リングの不安定性がエリートな三頭筋、胸筋、肩の安定性を要求する。"
+      },
+      "push_rings_2": {
+        "title": "リングマッスルアップ",
+        "description": "リング引きと押しの動作を爆発的に連結させ、一本の動きで行う。最上級のリング技術であり、全関節の安定性のエリートを必要とする。"
+      },
+      "push_weighted_1": {
+        "title": "加重ディップ",
+        "description": "ベストやベルトを追加し、負荷をかけてディップを行う。加重ディップは、他のどの体重褯計動作よりも迅速にエリートな押しの筋力を鍛える。"
+      }
+    }
   },
   "history": {
     "title": "ワークアウト履歴",
@@ -505,7 +860,49 @@
     "comment": "コメント",
     "share": "共有",
     "noposts": "投稿がまだありません — 最初にワークアウトを共有しましょう！",
-    "shareWorkout": "ワークアウトを共有"
+    "shareWorkout": "ワークアウトを共有",
+    "aiVerified": "AI認証済み",
+    "selfReported": "自己申告",
+    "justNow": "たった今",
+    "minutesAgo": "{{n}}分前",
+    "hoursAgo": "{{n}}時間前",
+    "daysAgo": "{{n}}日前",
+    "noClipAttached": "クリップ未添付",
+    "commentLabel": "コメント",
+    "noComments": "まだコメントはありません。最初の投稿者になろう！",
+    "addComment": "コメントを追加…",
+    "signInToComment": "コメントするにはログインしてください",
+    "startWorkout": "トレーニング開始",
+    "communityTitle": "コミュニティ",
+    "communitySubtitle": "世界中のアスリートによるトレーニング動画",
+    "searchAthletes": "アスリート、エクササイズ、または#ハッシュタグで検索…",
+    "filterAll": "すべて",
+    "filterPush": "プッシュ",
+    "filterPull": "プル",
+    "filterCore": "コア",
+    "filterLegs": "脚",
+    "emptyAll1": "まだ投稿がありません",
+    "emptyAll2": "次のトレーニング後にクリップを共有して最初の投稿者になろう！",
+    "emptyPush1": "プッシュデイのクリップはまだありません！",
+    "emptyPush2": "最初にプッシュワークアウトを投稿しよう。",
+    "emptyPull1": "プルデイのクリップはまだありません！",
+    "emptyPull2": "最初にプルワークアウトを投稿しよう。",
+    "emptyCore1": "コアワークアウトのクリップはまだありません！",
+    "emptyCore2": "最初にコアトレーニングを投稿しよう。",
+    "emptyLegs1": "レッグデイのクリップはまだありません！最初に投稿してみよう。",
+    "emptyLegs2": "ジムに行って脚力を披露しよう。",
+    "noEliteAchievements": "エリート達成はまだありません。",
+    "masterEliteSkill": "エリートスキルをマスターしてここに表示されよう！",
+    "you": "あなた",
+    "justMastered": "ちょうどマスターした",
+    "postClip": "クリップを投稿",
+    "shareClip": "クリップを共有",
+    "shareToCommunity": "コミュニティに共有",
+    "addCaption": "キャプションを追加…（任意）",
+    "uploadStarted": "アップロード開始 — 自由にブラウズ可能です！",
+    "publishingPost": "投稿を公開中…",
+    "postedToCommunity": "コミュニティに投稿完了！",
+    "savedClipLabel": "保存済みクリップ"
   },
   "profile": {
     "masteryPoints": "マスタリーポイント",
@@ -540,7 +937,22 @@
     "days": "日間",
     "routine": "今日のルーチン",
     "complete": "完了",
-    "completed": "完了済み"
+    "completed": "完了済み",
+    "questionnaire": {
+      "title": "目標の更新",
+      "subtitle": "日々のモビリティタスクをパーソナライズ",
+      "goalQuestion": "あなたのメインのカリステニクス目標は何ですか？",
+      "areasQuestion": "どの筋肉や関節があなたの妨げになっていますか？",
+      "areasHint": "(該当するすべてを選択)",
+      "timeQuestion": "毎日の可動範囲にどのくらい時間を割くことができますか？",
+      "save": "設定を保存",
+      "tapToChange": "下をタップして変更",
+      "suggested": "提案済み",
+      "searchGoal": "動きやスキルを検索…",
+      "searchBodyPart": "体の部位を検索…",
+      "minLabel": "{{n}}分",
+      "goalsUpdated": "目標更新完了！あなたのルーティンはパーソナライズされました。"
+    }
   },
   "errors": {
     "notFound": "ページが見つかりません",
@@ -557,5 +969,266 @@
     "almostDone": "もう少しです — 頑張って。",
     "setComplete": "セット完了！休憩してください。",
     "workoutComplete": "ワークアウト完了！素晴らしい努力。"
+  },
+  "exercises": {
+    "push_up": "プッシュアップ",
+    "diamond_push_up": "ダイヤモンドプッシュアップ",
+    "archer_push_up": "アーチャープッシュアップ",
+    "pseudo_planche_push_up": "擬似プランシェプッシュアップ",
+    "pike_push_up": "パイクプッシュアップ",
+    "elevated_pike_push_up": "高めのパイクプッシュアップ",
+    "handstand_push_up": "ハンドスタンドプッシュアップ",
+    "handstand": "ハンドスタンド",
+    "wall_handstand_push_up": "壁倒立プッシュアップ",
+    "planche_lean": "プランシェ・リーン",
+    "tuck_planche": "タックプランシェ",
+    "straddle_planche": "ストラドル・プランシェ",
+    "planche": "プランシェ",
+    "full_planche": "フルプランシェ",
+    "scapular_shrugs": "肩甲骨すくめ",
+    "australian_rows": "オーストラリアン・ローズ",
+    "negative_pull_ups": "ネガティブ懸垂",
+    "negative_pull_up": "ネガティブ懸垂",
+    "pull_up": "懸垂",
+    "tuck_front_lever": "タック・フロントレバー",
+    "straddle_front_lever": "ストラドル・フロントレバー",
+    "full_front_lever": "フルフロントレバー",
+    "chest_to_bar_pull_up": "チェスト・トゥ・バー懸垂",
+    "muscle_up": "マッスルアップ",
+    "kipping_muscle_up": "キッピング・マッスルアップ",
+    "strict_muscle_up": "ストリクト・マッスルアップ",
+    "archer_pull_up": "アーチャー懸垂",
+    "typewriter_pull_up": "タイプライター懸垂",
+    "one_arm_active_hang": "片腕アクティブ・ハング",
+    "one_arm_pull_up": "片腕懸垂",
+    "plank": "プランク",
+    "side_plank": "サイドプランク",
+    "dead_bug": "デッドバグ",
+    "superman": "スーパーマン",
+    "hollow_body_hold": "ホローボディホールド",
+    "dragon_flag_negative": "ドラゴンフラッグ・ネガティブ",
+    "dragon_flag": "ドラゴンフラッグ",
+    "active_hang": "アクティブハング",
+    "hanging_knee_tuck": "ハンギングニー Tuck",
+    "hanging_knee_tucks": "ハンギングニー Tucks",
+    "hanging_leg_raise": "ハンギングレッグレイズ",
+    "hanging_leg_raises": "ハンギングレッグレイズ（複数）",
+    "toes_to_bar": "バー・トゥ・トー",
+    "windshield_wiper": "ウインドシールドワイパー",
+    "windshield_wipers": "ウインドシールドワイパー（複数）",
+    "hanging_windshield_wipers": "ハンギング・ウインドシールドワイパー",
+    "tucked_human_flag": "タック・ヒューマンフラッグ",
+    "one_leg_human_flag": "片足ヒューマンフラッグ",
+    "human_flag": "ヒューマンフラッグ",
+    "squat": "スクワット",
+    "air_squat": "エアスクワット",
+    "shrimp_squat": "シュリンプスクワット",
+    "bulgarian_split_squat": "ブルガリアンスプリットスクワット",
+    "nordic_curls": "ノルディック・ハムストリングカール",
+    "pike_stretch": "パイクストレッチ",
+    "l_sit_compression": "L字膝コントラクション",
+    "l_sit_compressions": "L字膝コントラクション（連続）",
+    "tuck_l_sit": "タック・L字座り",
+    "l_sit": "L字座り",
+    "full_l_sit": "フルL字座り",
+    "step_up": "ステップアップ",
+    "step_ups": "ステップアップ（複数回）",
+    "assisted_pistol_squat": "補助付きピストルスクワット",
+    "close_stance_squat": "クローズスタンススクワット",
+    "pistol_squat": "ピストルスクワット",
+    "explosive_pull_up": "爆発的懸垂",
+    "ring_support_hold": "リングサポートホールド",
+    "ring_pull_up": "リング懸垂",
+    "ring_muscle_up": "リング筋力アップ（ムースル）",
+    "ring_dip": "リングディップ",
+    "weighted_pull_up": "ウエイト懸垂",
+    "weighted_muscle_up": "ウエイトムースル",
+    "weighted_dip": "ウエイトディップ",
+    "weighted_plank": "ウエイトプランク",
+    "weighted_dragon_flag": "ウエイトドラゴンフラッグ",
+    "weighted_leg_raises": "ウエイト脚上げ",
+    "weighted_goblet_squat": "ウエイトゴブレットスクワット",
+    "weighted_bulgarian_split_squat": "ウエイト・ブルガリアンスプリットスクワット",
+    "weighted_pistol_squat": "ウエイトピストルスクワット",
+    "weighted_shrimp_squat": "ウエイトシュリンプスクワット",
+    "bar_volume_pull_up": "バー・ボリューム懸垂",
+    "explosive_bar_pull_up": "爆発的バー懸垂",
+    "strict_bar_muscle_up": "ストリクトバー筋力アップ",
+    "weighted_volume": "ウエイトを使ったトレーニング量",
+    "ab_roller_rollout": "腹筋ローラー前方ローリング",
+    "banded_pallof_press": "ゴムバンド・パロフプレス",
+    "banded_lateral_walks": "ゴムバンド側方ウォーク",
+    "box_jumps": "ボックスジャンプ",
+    "slider_hamstring_curls": "スライダー・ハムストリングカール",
+    "ring_knee_raises": "リング膝上げ",
+    "ring_rollouts": "リングロールアウト",
+    "lunge": "ランジ",
+    "burpee": "バーピー",
+    "back_extensions": "バックエクステンション"
+  },
+  "muscles": {
+    "wrist_flexors": "手首屈筋群",
+    "forearms": "前腕筋群",
+    "wrist_extensors": "手首伸筋群",
+    "shoulders": "肩",
+    "chest": "胸筋",
+    "lats": "広背筋",
+    "thoracic_spine": "胸椎",
+    "anterior_shoulders": "前部肩筋",
+    "biceps": "大胸筋",
+    "hip_flexors": "股関節屈筋群",
+    "quads": "大腿四頭筋",
+    "psoas": "腸腰筋",
+    "hamstrings": "ハムストリングス",
+    "calves": "ふくらはぎ",
+    "lower_back": "下背部",
+    "obliques": "腹斜筋",
+    "rotator_cuff": "肩関節ローテーターカフ",
+    "hip_external_rotators": "股関節外旋筋群",
+    "glutes": "大臀筋",
+    "it_band": "ITバンド",
+    "triceps": "三頭筋",
+    "posterior_shoulder": "後部肩筋",
+    "lat": "ワキ",
+    "hip_adductors": "股関節内転筋群",
+    "anterior_deltoid": "三角筋前部",
+    "ankles": "足首",
+    "achilles": "アキレス腱",
+    "wrists": "手首",
+    "finger_flexors": "指屈筋群",
+    "serratus": "前鋸筋",
+    "shoulder_extension": "肩伸展",
+    "scapular_stabilisers": "肩甲骨安定筋群",
+    "teres_major": "肩甲下筋",
+    "shoulder_protraction": "肩突き出し",
+    "wrist_tendons": "手首腱",
+    "ankle_dorsiflexors": "足首背屈筋群",
+    "tibialis_anterior": "前脛骨筋",
+    "hip_adductors_": "股関節内転筋群",
+    "serratus_anterior": "前鋸筋",
+    "lower_traps": "下部僧帽筋",
+    "scapular_retractors": "肩甲骨収縮筋群",
+    "lower_trapezius": "下部僧帽筋",
+    "posterior_deltoid": "三角筋後部",
+    "rhomboids": "菱形筋",
+    "hip_extensors": "股関節伸筋群",
+    "anterior_deltoids": "三角筋前部",
+    "wrist_extensors_": "手首伸筋群"
+  },
+  "mobility": {
+    "stretches": {
+      "wristExtension": {
+        "name": "手首背屈ストレッチ",
+        "muscles": "手首屈筋群、前腕"
+      },
+      "wristFlexion": {
+        "name": "手首屈曲ストレッチ",
+        "muscles": "手首伸筋群、前腕"
+      },
+      "shoulderDislocates": {
+        "name": "肩の脱臼ストレッチ",
+        "muscles": "肩、胸、広背筋"
+      },
+      "latStretch": {
+        "name": "ハンギングラットストレッチ",
+        "muscles": "広背筋、胸椎、肩甲骨周り"
+      },
+      "chestOpener": {
+        "name": "ドアフレーム胸開きストレッチ",
+        "muscles": "胸、前肩、上腕二頭筋"
+      },
+      "hipFlexorLunge": {
+        "name": "低いランジでの股関節屈筋ストレッチ",
+        "muscles": "股関節屈筋、四頭筋、腸腰筋"
+      },
+      "hamstring": {
+        "name": "立ったままハムストリングストレッチ",
+        "muscles": "ハムストリングス、ふくらはぎ、腰椎"
+      },
+      "thoracicRotation": {
+        "name": "座ったまま胸椎回旋",
+        "muscles": "胸椎、腹斜筋、回旋筋腱板"
+      },
+      "pigeonPose": {
+        "name": "ピジョンポーズ股関節オープナー",
+        "muscles": "股関節外旋筋群、お尻、ITバンド"
+      },
+      "tricepsStretch": {
+        "name": "オーバーヘッドトライセプスストレッチ",
+        "muscles": "三頭筋、後肩、広背筋"
+      },
+      "pancake": {
+        "name": "パンケーキストレッチ",
+        "muscles": "ハムストリングス、股関節内転筋群、腰部"
+      },
+      "shoulderFlexion": {
+        "name": "逆方向の肩屈曲",
+        "muscles": "前部三角筋、胸、上腕二頭筋"
+      },
+      "ankleCircles": {
+        "name": "足首回しエクササイズ",
+        "muscles": "足首、ふくらはぎ、アキレス腱"
+      },
+      "calfStretch": {
+        "name": "壁を使ったふくらはぎストレッチ",
+        "muscles": "ふくらはぎ、アキレス腱、足首"
+      },
+      "wallPuppyPose": {
+        "name": "壁を使ったパピーコブラ",
+        "muscles": "胸椎、肩屈筋、広背筋"
+      },
+      "firstKnuckleRaises": {
+        "name": "第一関節上げ運動",
+        "muscles": "手首屈筋、指屈筋、前腕"
+      },
+      "butchersBlock": {
+        "name": "バターチーズストレッチ",
+        "muscles": "三頭筋、広背筋、前鋸筋"
+      },
+      "germanHang": {
+        "name": "ドイツハング（受動的）",
+        "muscles": "肩の伸展、前部肩、上腕二頭筋"
+      },
+      "skinTheCat": {
+        "name": "スキンザキャット（部分的）",
+        "muscles": "肩、肩甲骨稳定筋、広背筋"
+      },
+      "deepLatStretch": {
+        "name": "深い背中の広背筋フォームローリング",
+        "muscles": "広背筋、大円筋、胸椎"
+      },
+      "plancheLeans": {
+        "name": "プランシェ前傾",
+        "muscles": "手首、肩の前進、前鋸筋"
+      },
+      "reverseTabletop": {
+        "name": "逆向きテーブルトップストレッチ",
+        "muscles": "前部三角筋、胸、手首伸筋"
+      },
+      "fingerPulses": {
+        "name": "指腱脈動",
+        "muscles": "指屈筋、手首腱、前腕"
+      },
+      "ankleDorsiflexion": {
+        "name": "加重付き足首背屈",
+        "muscles": "足首背屈筋、アキレス腱、前脛骨筋"
+      },
+      "cossackSquats": {
+        "name": "コサックスクワット",
+        "muscles": "股関節内転筋群、臀筋、足首"
+      },
+      "scapularHangs": {
+        "name": "動的肩甲骨懸垂",
+        "muscles": "前鋸筋、下部 traps、肩甲骨引き寄せ筋"
+      },
+      "proneYRaises": {
+        "name": "うつ伏せY字肩上げ",
+        "muscles": "下部 traps、後部三角筋、菱形筋"
+      },
+      "thoracicBridge": {
+        "name": "胸椎橋",
+        "muscles": "胸椎、臀筋、股関節伸筋群"
+      }
+    }
   }
 }

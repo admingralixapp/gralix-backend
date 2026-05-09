@@ -1,0 +1,1234 @@
+{
+  "nav": {
+    "dashboard": "Dahboardi",
+    "workout": "Mazoezi",
+    "daily": "Kila Siku",
+    "community": "Jamii",
+    "history": "Historia",
+    "progress": "Maendeleo",
+    "skillTree": "Miti ya Ujuzi",
+    "leaderboard": "Orodha ya Vinara",
+    "friends": "Marafiki",
+    "shop": "Duka",
+    "settings": "Mipangilio"
+  },
+  "common": {
+    "save": "Hifadhi",
+    "cancel": "Ghairi",
+    "confirm": "Thibitisha",
+    "close": "Funga",
+    "loading": "Inapakua...",
+    "error": "Kuna tatizo limejitokeza",
+    "signIn": "Ingia",
+    "signOut": "Toka",
+    "getStarted": "Anza Sasa",
+    "learnMore": "Jifunze Zaidi",
+    "back": "Rudi",
+    "next": "Ifuatayo",
+    "done": "Imekamilika",
+    "active": "Tayari",
+    "activate": "Zima",
+    "buy": "Nunua",
+    "free": "Bure",
+    "pro": "Pro",
+    "locked": "Imfungwa",
+    "search": "Tafuta",
+    "noResults": "Hakuna matokeo zilizopatikana",
+    "or": "au",
+    "view": "Tazama"
+  },
+  "settings": {
+    "title": "Mipangilio",
+    "account": "Akaunti",
+    "editFromProfile": "Hariri picha na jina lako kutoka kwa ukurasa wa Wasifu.",
+    "viewProfile": "Tazama Wasifu",
+    "language": "Lugha",
+    "languageDesc": "Chagua lugha unayoipendelea ya kuonyesha",
+    "searchLanguages": "Tafuta lugha 29...",
+    "noLanguagesFound": "Hakuna lugha zilizopatikana",
+    "videoStorage": "Hifadhi ya Video",
+    "videoStorageDesc": "Simamia klipu za mazoezi zilizohifadhiwa mahali pa ndani ya simu yako",
+    "noClipsStored": "Hakuna klipu zilizohifadhiwa",
+    "clipsOnDevice": "{{count}} klipu kwenye kifaa hiki",
+    "clipsOnDevice_other": "{{count}} klipu kwenye kifaa hiki",
+    "videoFilesOnly": "Faili za video pekee — takwimu za mazoezi zinahifadhiwa daima",
+    "autoDeleteAfter": "Futa Klipu Automatikini Baada ya",
+    "clipsOlderRemoved": "Klipu za zamani kuliko hii zinasafishwa baada ya kuzindua programu",
+    "clearAllClips": "Futa Klipu Zote",
+    "freeUpSpace": "Fungua nafasi mara moja. Reps, seti, na alama za umakini hazibadilikiwi.",
+    "deleteConfirm": "Hii itaondoa {{count}} klipu kutoka kwa kifaa hiki. Una uhakika?",
+    "deleteConfirm_other": "Hii itaondoa {{count}} klipu kutoka kwa kifaa hiki. Una uhakika?",
+    "yesClearAll": "Ndio, Futa Zote",
+    "workout": "Mazoezi",
+    "restDuration": "Muda wa Kupumzika",
+    "restDurationDesc": "Muda kati ya seti wakati wa mazoezi ya seti nyingi.",
+    "cameraAudio": "Kamera & Sauti za Mazoezi",
+    "aiVoiceCoaching": "Mafunzo ya Sauti ya AI",
+    "spokenCues": "Maonyo ya mafunzo kwa sauti wakati wa mazoezi",
+    "defaultCamera": "Kamera Chaguo-msingi",
+    "defaultCameraDesc": "Kamera gani huwa inafungua unapoanza mazoezi",
+    "cameraFacingFront": "Mbele",
+    "cameraFacingBack": "Nyuma",
+    "mirrorCameraPreview": "Kadiria Onyesho la Kamera kwa Kutazama Kioo",
+    "flipCamera": "Geuza Kamera ya mbele kama kioo",
+    "bodyCalibration": "Kiwango cha Mwili",
+    "recalibrateDesc": "Tenya tena skana ya T-Pose ya kupima mwili mmoja mara moja",
+    "recalibrate": "Rekebisha Upya",
+    "mobility": "Kumbusho za Kuhamasisha Sana za Kila Siku",
+    "enableDailyReminders": "Zima kumbusho za kila siku",
+    "browserNotification": "Pata arifa kwenye kivinjari chako wakati uliouchagua kila siku.",
+    "notificationsBlocked": "Arifa zimezuiwa kwenye kivinjari chako. Tafadhali ruhusu kwenye mipangilio ya kivinjari/OS yako na upakie ukurasa tena.",
+    "reminderTime": "Wakati wa Kumbusho",
+    "mobilityGoal": "Lengo la Uhamaji",
+    "mobilityGoalDesc": "Ratiba kwenye ukurasa wako wa uhamaji itatengenezwa kulingana na lengo hili.",
+    "saving": "Ina hifadhi...",
+    "profilePrivacy": "Faragha ya Wasifu",
+    "showCommunityPosts": "Onyesha Machapisho ya Jamii kwa Wote",
+    "communityPostsDesc": "Iwapo imezimwa, ni marafiki zako pekee wanaoona machapisho yako kwenye kichupo cha Jamii.",
+    "session": "Kikao",
+    "signedInAs": "Umekwisha ingia kama",
+    "signOut": "Toka",
+    "clipAutoDelete": "Futa kipepeo papo hapo baada ya",
+    "clearAll": "Futa Kipepeo Vyote",
+    "confirmClear": "Bonyeza tena ili kuthibitisha",
+    "clipsStored": "{{count}} kipepeo kilihifadhiwa",
+    "clipsStored_other": "{{count}} kipepeo kilihifadhiwa",
+    "voiceCues": "Maonyo ya Sauti",
+    "voiceCuesDesc": "Majibu ya mafunzo kwa sauti wakati wa mazoezi",
+    "cameraFacing": "Mwelekeo wa KAMERA",
+    "mirrorVideo": "Kadiria Video kwa Kioo",
+    "mirrorVideoDesc": "Geuza picha ya kamera kwa usawa wa kushoto na kulia",
+    "calibration": "Kiwango cha Mwili",
+    "recalibrateBody": "Rekebisha Upya Skana ya Mwili",
+    "recalibrateBodyDesc": "Fanya tena skana ya T-Pose ili kurekebisha vipimo vya mwili wako",
+    "mobilityDesc": "Pata kumbusho za kila siku za kuhakikishia kuendelea kufanya mazoezi",
+    "communityPosts": "Onyesha Machapisho ya Jamii kwa Wote",
+    "setUpProfile": "Weka wasifu wako ili kuwezesha udhibiti wa faragha.",
+    "membership": "Uanachama wa mazoezi",
+    "activeMembership": "Uanachama uliowasha",
+    "cancelMembership": "Futa Uanachama",
+    "cancelMembershipDesc": "Unaendelea kuwa na ufikiaji hadi mwisho wa mzunguko wako wa malipo.",
+    "cancelButton": "Futa",
+    "retentionOfferBar": "Ofa Maalum — kwa ajili yako pekee",
+    "retentionHeadline": " Subiri! Usiondoke bado...",
+    "retentionBody": "Endelea kuwa Pro na upate PUNGUZO LA 40% kwa mwezi ujao. Endeleza safari yako na mafunzo bora ya AI duniani.",
+    "claim40Discount": "Rejesha Punguzo la 40%",
+    "noThanksCancel": "Hapana asante, endelea kufuta →",
+    "sorryToSeeYouGo": "Tunahisi kuona unakwenda.",
+    "loseAccessDesc": "Utapoteza ufikiaji wa Uchambuzi wa Maendeleo na Aura za Pro mwishoni mwa mzunguko wako wa malipo.",
+    "goBack": "Rudi",
+    "cancelling": "Cancelling…",
+    "discountApplied": "Discount applied!",
+    "discountAppliedDesc": "40% off has been applied to your next billing cycle.",
+    "subscriptionCancelled": "Subscription cancelled",
+    "subscriptionCancelledDesc": "Your subscription has been cancelled. You will have access until {{date}}."
+  },
+  "shop": {
+    "title": "CaliShop",
+    "subtitle": "Subscription, Aura Packs, and exclusive upgrades",
+    "signInPrompt": "Sign in to subscribe, browse Aura Packs, and redeem codes.",
+    "proTitle": "CaliCoach Pro",
+    "proSubtitle": "Unlock the complete experience",
+    "proActive": "✓ Active",
+    "whyPro": "Why go Pro?",
+    "whyProItems": {
+      "coaching": "Real-time AI Camera Coaching",
+      "badge": "Glowing Purple Verified Badge",
+      "bonus": "1x Free Aura Pack Signing Bonus"
+    },
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "save20": "Save 20%",
+    "perMonth": "/mo",
+    "perYear": "/yr",
+    "perMonthFull": "/ month",
+    "perYearFull": "/ year",
+    "trialNote": "No commitment. Cancel anytime.",
+    "startTrial": "Start 3-Day Free Trial",
+    "manageSubscription": "Manage Subscription",
+    "signingBonus": "Pro Signing Bonus",
+    "signingBonusDesc": "You've unlocked a free Aura Pack! Claim it below.",
+    "claimBonus": "Claim Your Free Pack",
+    "auraPacks": "Aura Packs",
+    "auraPacksDesc": "Customize your coaching voice and ghost avatar",
+    "buyFor": "Buy for {{price}}",
+    "promoCode": "Promo Code",
+    "promoPlaceholder": "Enter promo code",
+    "redeem": "Redeem",
+    "claimTitle": "Claim Your Free Aura",
+    "claimSubtitle": "Welcome to Pro! Pick any pack — yours free.",
+    "voice": "Voice",
+    "ghost": "Ghost",
+    "claimVoiceTitle": "Claim Your Free Voice",
+    "claimVoiceSubtitle": "Welcome to Pro! Pick any AI voice — yours free.",
+    "claiming": "Claiming…",
+    "claimVoice": "Claim {{name}}",
+    "selectVoice": "Select a voice to continue",
+    "trialStarted": "3-Day Free Trial started! 🎉",
+    "trialStartedDesc": "You now have full access to CaliCoach Pro.",
+    "signInToPurchase": "Sign in to purchase",
+    "signInToPurchaseDesc": "Create an account to buy AI voices.",
+    "purchaseFailed": "Purchase failed",
+    "claimFailed": "Claim failed",
+    "invalidCode": "Invalid code",
+    "unlocked": "{{name}} unlocked! 🎉",
+    "unlockedDesc": "Select it from the list to make it your active coach.",
+    "codeRedeemed": "Code redeemed! 🎉",
+    "elevenLabsError": "ElevenLabs Connection Error",
+    "elevenLabsErrorDesc": "Could not fetch audio for {{name}}. Check connection.",
+    "proActiveManage": "Pro active —",
+    "claimBonusTitle": "Claim Your Free Aura Pack",
+    "claimBonusDesc": "Welcome to Pro! Choose any paid pack for free.",
+    "claim": "Claim",
+    "voicesTitle": "AI Coach Voices",
+    "voicesDesc": "Choose your coach's personality. Free voices use your device's speech engine. Pro voices use ElevenLabs AI + GPT-4o character injection.",
+    "starterVoices": "Starter Voices",
+    "customAuras": "Custom Auras",
+    "premiumVoices": "Premium Voice & Ghost Skins",
+    "redeemCodeSection": "Redeem Code",
+    "redeemCodeDesc": "Codes unlock packs, Pro access, or limited-time bonuses.",
+    "test": "Test",
+    "select": "Select",
+    "equip": "Equip",
+    "owned": "Owned",
+    "activeLabel": "✓ Active",
+    "signInToClaim": "Sign in to redeem codes",
+    "whyProItem1Label": "Real-time AI Camera Coaching",
+    "whyProItem1Desc": "Get live feedback on your form and posture on every workout.",
+    "whyProItem2Label": "Glowing Purple Verified Badge",
+    "whyProItem2Desc": "Stand out in the community and on the leaderboards with an exclusive Pro-only badge.",
+    "whyProItem3Label": "1x Free Aura Pack Signing Bonus",
+    "whyProItem3Desc": "Kickstart your training with any Premium Aura of your choice, unlocked forever.",
+    "whyProItem4Label": "Advanced Progress Analytics",
+    "whyProItem4Desc": "Deep-dive into your form trends, strength gains, and performance metrics.",
+    "packClaimed": "{{name}} claimed! 🎁",
+    "packClaimedDesc": "Your Pro signing bonus has been applied.",
+    "somethingWentWrong": "Something went wrong"
+  },
+  "progress": {
+    "title": "Progress",
+    "subtitle": "Deep athletic insights and performance analytics.",
+    "premiumAnalytics": "Premium Analytics",
+    "unlockTitle": "Unlock Your Performance Data",
+    "unlockDesc": "Fuata maendeleo ya mzunguko wa joint, ufanisi wa fomu, na tarehe za mafanikio yanayotarajiwa kwa Pro.",
+    "featureForm": "Alama za fomu ya mzunguko wa joint kwa muda",
+    "featureVolume": "Uchambuzi wa mwenendo wa fomu dhidi ya ujazo",
+    "featureMastery": "Tarehe za mafanikio yanayotarajiwa kwa kila ujuzi",
+    "featureTimeline": "Muda wa Fungua Ujuzi & rada ya tawi",
+    "startTrial": "Anza Mtihani wa Bure wa Siku 3",
+    "trialNote": "Hakuna ahadi. Jina uondoe wakati wowote.",
+    "formScore": "Alama za Fomu",
+    "totalSessions": "Jumla ya Mafunzo",
+    "totalReps": "Jumla ya Reps",
+    "streak": "Mfululizo wa Siku",
+    "avgFormScore": "Alama ya Fomu ya Wastani",
+    "bestFormScore": "Alama bora ya Fomu",
+    "verifiedReps": "Reps zilizothibitishwa",
+    "formImprovement": "Uboreshaji wa Fomu",
+    "formVsVolume": "Alama za Fomu dhidi ya Ujazo",
+    "formVsVolumeDesc": "Angalia kama fomu yako inadumu huku ukiongeza nguvu — siku 90 zilizopita",
+    "notEnoughData": "Hajatoshi data bado. Kamalisha mafunzo machache ili kuona mwenendo wako.",
+    "formLabel": "Fomu",
+    "repsLabel": "Reps",
+    "formScoreLabel": "Alama ya Fomu",
+    "totalRepsLabel": "Jumla ya Reps",
+    "aiVerified": "Ithibitishwa na AI",
+    "selfReported": "Yalioripotiwa na Mtu binafsi",
+    "volumeByCategory": "Ujazo kwa Kipengele",
+    "volumeByCategoryDesc": "Tambua viungo dhaifu — jumla ya reps kwa tawi la harakati",
+    "noSessionData": "Bado hakuna data ya mafunzo.",
+    "verificationRatio": "Asilimia ya Uthibitishaji",
+    "verificationRatioDesc": "Reps zilizothibitishwa na AI dhidi ya zilizoripotiwa na mtu binafsi — reps zilizothibitishwa pekee zinahesabiwa katika madaraja",
+    "verified": "imethibitishwa",
+    "noSessionsYet": "Bado hakuna mafunzo.",
+    "repsByExercise": "Reps kwa Mazoezi",
+    "repsByExerciseDesc": "Jumla ya ujazo kwa harakati",
+    "notEnoughDataChart": "Hajatoshi data kuonyesha chati.",
+    "skillUnlockTimeline": "Muda wa Fungua Ujuzi",
+    "skillUnlockTimelineDesc": "Kila kupanda kwa kiwango katika mti wa ujuzi wako — tangu reps za kwanza hadi ustadi wa kitaaluma",
+    "noSkillsYet": "Bado hujafikia ujuzi wowote. Kamalisha mafunzo ili kufungua ujuzi wako wa kwanza!"
+  },
+  "dashboard": {
+    "title": "Dashibodi",
+    "welcomeBack": "Karibu tena. Tayari kujifunza?",
+    "startWorkout": "Anza Mafunzo",
+    "workoutStreak": "Mfululizo wa Mafunzo",
+    "daysInARow": "siku mfululizo",
+    "avgForm": "Fomu ya Wastani",
+    "outOf100": "kati ya 100",
+    "totalReps": "Jumla ya Reps",
+    "allTime": "kwa muda wote",
+    "sessions": "Mafunzo",
+    "completed": "umeisha maliza",
+    "mobilityStreak": "Mfululizo wa Uhamaji",
+    "stretchDays": "siku za nyongeza",
+    "dailyMobility": "Uhamaji wa Kila Siku",
+    "done": "Imekamilika",
+    "stretchInfo": "Kumiminya 5 · ~5 min",
+    "dayStreak": "{{count}}-siku mfululizo",
+    "startStreak": "Anza mfululizo wako leo",
+    "repeat": "Rudia",
+    "begin": "Anza",
+    "skillMap": "Ramani ya Ujuzi",
+    "fullTree": "Miti Kamili →",
+    "recentSessions": "Mafunzo ya Karibuni",
+    "viewAll": "Tazama Yote",
+    "noSessionsYet": "Hakuna mafunzo yaliyoripotiwa bado.",
+    "startFirstWorkout": "Anza mafunzo yako ya kwanza",
+    "reps": "reps",
+    "manual": "Mwongozo",
+    "avgFormLabel": "fomu wastani",
+    "friendsActivity": "Shughuli za Marafiki",
+    "loadingMobility": "inapakiwa…",
+    "welcome": "Karibu tena",
+    "welcomeName": "Karibu tena, {{name}}",
+    "totalSessions": "Jumla ya Mafunzo",
+    "streak": "Mfululizo wa Siku",
+    "noSessions": "Hakuna mafunzo bado",
+    "startFirst": "Anza mafunzo yako ya kwanza ili kuona takwimu zako hapa.",
+    "recentActivity": "Shughuli za Karibuni",
+    "quickStart": "Anza Haraka"
+  },
+  "workout": {
+    "title": "Mafunzo",
+    "startWorkout": "Anza Mafunzo",
+    "endWorkout": "Maliza Mafunzo",
+    "endSet": "Maliza Seti",
+    "nextSet": "Seti Ijayo",
+    "reps": "reps",
+    "sets": "seti",
+    "set": "Seti",
+    "of": "ya",
+    "formScore": "Alama ya Fomu",
+    "repCount": "Hesabu ya Reps",
+    "rest": "Mapumziko",
+    "restTimer": "Kipima Muda cha Mapumziko",
+    "listening": "Inasikiliza...",
+    "goodForm": "Fomu nzuri! Endelea hivyo.",
+    "watchForm": "Angalia fomu yako.",
+    "lastRep": "Rep ya mwisho — itumie kikamilifu!",
+    "pushHarder": "Sugua kwa nguvu zaidi — una uwezo!",
+    "almostThere": "Karibu sana — maliza kwa nguvu.",
+    "selectExercise": "Chagua Mazoezi",
+    "manualLog": "Rekodi kwa Mikono",
+    "camera": "Kamera",
+    "sets_label": "Seti",
+    "repsTarget": "Lengo la Reps",
+    "searchPlaceholder": "Tafuta au chagua mazoezi…",
+    "searchEquipmentPlaceholder": "Tafuta au chagua vifaa…",
+    "noExercisesFound": "Hakuna mazoezi yaliyopatikana kwa \"{{query}}\"",
+    "loadingModel": "Inapakua…",
+    "readyToTrain": "Uko tayari kufanya mazoezi?",
+    "ghostSkeletonDesc": "F skeleton unaonyesha muundo kamili — sambaza mwili wako nayo kupata reps na muda wa kushikilia.",
+    "gearCheck": "Ukaguzi wa Vifaa",
+    "push": "Songa",
+    "pull": "Vuta",
+    "addOn": "Ongeza",
+    "proTip": "Tipu za Mtaalamu",
+    "saving": "Inasave…",
+    "logIt": "Inasaidia Hii",
+    "manualLogNoAI": "Kuingiza kwa Mkono (Bila AI)",
+    "start": "ANZIA",
+    "testMode": "Kamilisha Mazoezi (Mode ya Upitishaji)",
+    "testModeDesc": "Inahifadhi ingizo la mazoezi ya synthetic moja kwa moja kwenye hifadhi — hakuna kamera inayohitajika. Tumia hili kujaza chati na historia.",
+    "savingTest": "Inasave...",
+    "saveTest": "Hifadhi Mazoezi ya Upitishaji",
+    "trainNow": "Fanya Mazoezi Sasa",
+    "holdTime": "Wakati wa Kushikilia",
+    "repsLabel": "Reps",
+    "ghostSync": "Sambaza Ghost",
+    "formLabel": "Fomu",
+    "syncedHoldIt": "● Imesawazishwa — ishatilia",
+    "matchGhost": "○ Pata nafasi ya ghost",
+    "lockedIn": "● Imeshikiliwa",
+    "adjust": "○ Rekebisha",
+    "cameraInitializing": "Kamera inaanza…",
+    "voicePacing": "Mwelekeo wa Sauti",
+    "minimalist": "Wapenzi wa Mnachini",
+    "fullSkeleton": " mifumo Kamili",
+    "listeningLabel": "Inasikiliza",
+    "ghostMode": "Mode ya Ghost",
+    "setOfTotal": "Seti {{current}} / {{total}}",
+    "restLabel": "Pumziko",
+    "nextSetOf": "Ifuatavyo: Set {{next}} ya {{total}}",
+    "startNow": "Anza Sasa",
+    "endWorkoutEarly": "Maliza Mazoezi Mapema",
+    "endSetN": "Malizia SETI {{set}}",
+    "bodyweight": "Mubaluti wa Mwili",
+    "equipmentLabel": "Vifaa",
+    "setsLabel": "Seti",
+    "voiceCommands": "Amri za Sauti",
+    "manualLogTitle": "Inasaidia kwa Mkono",
+    "repsCompleted": "Reps zilizokamilika",
+    "rpeLabel": "RPE — Je, Ilikuwaje Ngumu?",
+    "rpeHint": "1 = rahisi sana · 10 = ghafla sana · hiari",
+    "workoutTitle": "Mazoezi",
+    "workoutSubtitle": "Ufundishaji wa Fomu kwa AI na Mode ya Ghost",
+    "exerciseLocked": "Mazoezi Yamefungwa",
+    "exerciseLockedPrereq": "Kamilisha Lv.{{level}} {{title}} katika Mti wa Ujuzi ili kufungua mazoezi haya.",
+    "exerciseLockedGeneric": "Kamilisha ujuzi wa awali katika Mti wa Ujuzi kufungua mazoezi haya.",
+    "viewSkillTree": "Tazama Mti wa Ujuzi",
+    "trainExercise": "Fanya {{name}}",
+    "lockedCompleteFirst": "Imefungwa — kamilisha sharti la awali kwanza",
+    "poseTrackingUnavailable": "Ufuatiliaji wa Posi Haupatikani",
+    "poseTrackingDesc": "Hatukuweza kupakia maktaba ya maono. Tafadhali angalia muunganisho wako.",
+    "milestoneUnlocked": "🏅 Hatua Muhimu Imelipwa: {{name}}",
+    "milestoneDesc": "{{icon}} Umepata nembo {{tier}} kwa voluma ya {{category}}!",
+    "newTitle": "{{icon}} Kichwa Kipya: \"{{title}}\"",
+    "newTitleDesc": "{{exercise}} · Ufanisi wa {{tier}} umfunguliwa!",
+    "selectExerciseFirst": "Chagua mazoezi",
+    "pickExerciseFirst": "Chagua mazoezi kabla hujaanza.",
+    "targetMuscles": "Misuli Kuu inayolengwa",
+    "criticalJoints": "Viungo Muhimu",
+    "barSpecialist": "Mtaalamu wa Minja",
+    "rings": "Vikapu",
+    "weighted": "Na Uzani"
+  },
+  "session": {
+    "manualLog": "Kuingiza kwa Mkono",
+    "formMastery": "Ufanisi wa Fomu",
+    "sessions": "mazoezi",
+    "skillComplete": "Ujuzi Umemalizika — kiwango kipya kimefunguliwa!",
+    "progressThisSet": "+{{pct}}% maendeleo kwenye seti hii",
+    "skillUnlocked": "Ujuzi Ufunguliwe!",
+    "setComplete": "Seti Imemalizika",
+    "bestGhostSync": "Ufanisi Bora wa Sambazaji wa Ghost",
+    "elite": "Juu Sanaa",
+    "perfectSet": "Seti Kamili!",
+    "perfectSetDesc": "{{reps}} reps · {{form}}% muundo — utekelezaji wa hali ya juu",
+    "mastered": "— Umefafanua",
+    "next": "Ifuatayo:",
+    "skillProgress": "Maendeleo ya Ujuzi",
+    "viewSession": "Tazama Mazoezi",
+    "trainNext": "Fanya Ijayo →",
+    "continue": "Endelea",
+    "backToHistory": "Rudi kwa Historia",
+    "totalReps": "Reps Jumla",
+    "avgFormScore": "Alama ya Muundo ya Wastani",
+    "duration": "Muda",
+    "savedClip": "Kipande Kililohifadhiwa",
+    "expiresInDays_one": "Inamaliza baada ya {{count}} siku",
+    "expiresInDays_other": "Inamaliza baada ya {{count}} siku",
+    "loopInfo_one": "Inarudi kiotomatiki · gonga kuchezha / kusimilia · inamaliza baada ya {{count}} siku",
+    "loopInfo_other": "Inarudi kiotomatiki · gonga kuchezha / kusimilia · inamaliza baada ya {{count}} siku",
+    "shareToCommunity": "Shiriki kwa Jamii",
+    "noClipSaved": "Hakuna kipande kilichohifadhiwa kwa kipindi hiki. Tumia \"Hifadhi kwa Historia\" kwenye skrini ya Mapitio ya POV baada ya seti ijayo.",
+    "aiVerified": "Imethibitishwa na AI",
+    "sessionNotFound": "Mazoezi hayajakutwa.",
+    "loadingSession": "Inapakua…"
+  },
+  "skillTree": {
+    "title": "Mti wa Ujuzi",
+    "subtitle": "Migamvu minne inatoa kutoka kwa kitovu cha Nguvu za Msingi. Gusa kila node · drag ili kuchunguza · pinch kuzoom.",
+    "skillsMastered": "Ujuzi Uliowezeshwa",
+    "push": "Kuma",
+    "pull": "Kuchota",
+    "core": "Katikati",
+    "legs": "Mikono",
+    "mastered": "Imepatikana",
+    "inProgress": "Inaendelea",
+    "locked": "Imefungwa",
+    "equipmentOverlay": "Mazingira ya Vifaa",
+    "barOverlay": "Upinde",
+    "ringsOverlay": "Miungu",
+    "weightedOverlay": "Uzito",
+    "trainNow": "Zoezi Sasa",
+    "hideEquipmentPaths": "Ficha njia za vifaa vya maalum",
+    "showEquipmentPaths": "Onyesha njia za vifaa vya jumuiya katika mti wa ujuzi",
+    "zoomInToSeeLabels": "Zoom kuangalia lebo",
+    "tapToSnapToActive": "Gusa ✛ ili kuunganisha na ujuzi unaofanya kazi",
+    "lockedNode": "🔒 Imeshikiliwa",
+    "whyTrain": "Kwa Nini Zoefu Hili?",
+    "masterPrereq": "Fahamu ujuzi wa msingi ili kufungua node hii.",
+    "practiceAgain": "Zoeza Tena →",
+    "trainNowArrow": "Zoezi Sasa →",
+    "levelLabel": "Kiwango {{level}} · {{levelName}}",
+    "staticHold": "Kushikilia Kwa Mkondo",
+    "explosive": "Mlipuko wa Nguvu",
+    "whyTrainThis": "Kwa Nini Zoezi Hili?",
+    "alsoRequires": "Pia Inahusisha",
+    "masteryLabel": "Umahiri",
+    "completeLabel": "Kamilika",
+    "qualifyingSessions": "{{done}}/{{total}} vipimo vya kuhitimu",
+    "bestHold": "Kushikilia Bora",
+    "bestRepsLabel": "Reps Bora",
+    "formScoreLabel": "Alama ya Fomu",
+    "requiresLabel": "Inahitajika",
+    "coreStrengthHub": "NGUVU ZA MSINGI",
+    "nodes": {
+      "push_1": {
+        "title": "Kuanza Kukaza Katika Kupanua",
+        "description": "Fikia kupunguza kwa usafi wa kwanza: mwili hasa, kifua kinagusa sakafu, mikono imepanuliwa kikamilifu."
+      },
+      "push_2": {
+        "title": "Nguvu ya Kupanua",
+        "description": "Nyumbu uwezo wako wa kupanua na kuongeza ukali wa fomu — seti zinazojirudia mara kwa mara hufungua njia za kupandisha makali na planche."
+      },
+      "push_3": {
+        "title": "Kupanua Randa la Almasi",
+        "description": "Matako yanaunda almasi chini ya kifua, viwiko vinarejea nyuma — vinatenga tricep na kifua cha ndani kwa uzito wa kupiga wa kiwango cha juu."
+      },
+      "push_4": {
+        "title": "Kupanua Khutta ya Mchoro",
+        "description": "Mkono mmoja umekunjwa wakati mwingine mwingine unaPanuka kwa upana — mazoezi ya pande mbili yanayoijenga nguvu ya kupiga upande wa upande mmoja kuelekea kazi ya mkono mmoja."
+      },
+      "push_5": {
+        "title": "Kuharibu Pseudo Planche",
+        "description": "Mikono imegeuka nje kwa nyonga zako, mwili umetikisika mbele — kuiga mzigo wa planche kwenye mikono na nyonga wakati wa kupiga."
+      },
+      "push_oh_1": {
+        "title": "Kupanua Pike",
+        "description": "Nyonga juu, mikono inaeneza kwa upana wa mabega — shushua kichwa chako kati ya mikono yako na kusukuma tena. Hii inashinikiza mzigo kwenye nyonga, inajenga daraja kuelekea kwa kupiga makali ya juu."
+      },
+      "push_oh_2": {
+        "title": "Kupanua Pike Iletwayo Juu",
+        "description": "Miguu kwenye sanduku au benchi — pembe iliyoleta juu huongeza sauti ya nyonga na mzigo, hatua ya moja kwa moja kuelekea kupiga kwa viganja vya mikono."
+      },
+      "push_oh_3": {
+        "title": "Kupanua Kwenye Ukuta wa Handstand",
+        "description": "Kipige ukuta na kusukuma uzito wako wote wa mwili juu — mwelekeo wa mzigo wa moja kwa moja kwa ajili ya nguvu ya handstand push-up."
+      },
+      "push_oh_4": {
+        "title": "Handstand",
+        "description": "Kusawazisha kwenye mikono yako mbali na ukuta — inversion inayoongozwa kwa udhibiti inahitaji nguvu za nyonga, ulegezaji wa mikono na uelewa wa nafasi."
+      },
+      "push_oh_5": {
+        "title": "Handstand Push-Up",
+        "description": "Kusukuma kutoka sakafu hadi kufuli kamili wakati uko ubinafsi — bondia wa nguvu za kupiga makali ya juu kwa calisthenics."
+      },
+      "push_pp_1": {
+        "title": "Kustukia kwa Planche",
+        "description": "Kustukia mbele juu ya mikono yako katika nafasi ya kupigia kwa mikono imegeuka nje — huandika nyonga na nyonga za mbele kwa mzigo wa planche."
+      },
+      "push_pp_2": {
+        "title": "Planche Tuck",
+        "description": "Inua nyayo zote kutoka sakafu wakati unakuka juu ya mikono yako na magoti yakifungikwa — nafasi ya kwanza halisi ya planche."
+      },
+      "push_pp_3": {
+        "title": "Planche ya Kustawisha Miguu",
+        "description": "Miguu imepanuka kwa upana mkubwa wakati wa kushikilia nafasi ya planche — ni ngumu zaidi kuliko tuck, inahitaji utulivu wa mwili wote."
+      },
+      "push_pp_4": {
+        "title": "Planche Kamili",
+        "description": "Mwili umelelekea kikamilifu, miguu pamoja na kufuli — kilele cha nguvu za kupiga kwa calisthenics."
+      },
+      "pull_1": {
+        "title": "Kuanza Kuvuta Kwanza",
+        "description": "Fikia kuvuta kwa usafi, kwa mseto wa jumla kutoka kwa kavae la kufa."
+      },
+      "pull_2": {
+        "title": "Uadilifu wa Kuvuta",
+        "description": "Endelea kujenga nguvu ya kuvuta iliyothibitishwa kwa reps nyingi. Hufungua njia ya Front Lever."
+      },
+      "pull_3": {
+        "title": "Kuvuta Negative",
+        "description": "Anza kutoka kwa kansa ikiwa juu ya ua na punguza taratibu iwezekanavyo. Tofauti hii inayozingatia eccentric inajenga nguvu ya kuvuta ya nguvu inayohitaji Muscle-Up."
+      },
+      "pull_fl_1": {
+        "title": "Front Lever Tuck",
+        "description": "Kaa kwenye kamba, qorora magoti yako kwa kifua na shikilia mwili wako mwelekeo wa mbele. Inajenga kushuka kwa scapula na nguvu ya lat kwa levers kamili."
+      },
+      "pull_fl_2": {
+        "title": "Front Lever Straddle",
+        "description": "Panua miguu yako kwa upana wa straddle na shikilia mwelekeo wa mbele. Ni ngumu zaidi kuliko tuck — inahitaji utulivu wa mwili wote."
+      },
+      "pull_fl_3": {
+        "title": "Full Front Lever",
+        "description": "Mwili kikamilifu mwelekeo wa mbele, mikono imara, miguu imefungwa pamoja — mojawapo ya kushikilia kwa static kubwa zaidi katika calisthenics."
+      },
+      "pull_mu_1": {
+        "title": "Pull-up Mzuka hadi Kwenye Sanduku",
+        "description": "Shuka kwa nguvu zaidi ya kumpanda juu ya ukanda — endesha hadi kifua kinagusa ukanda. Inahitaji nguvu zaidi ya kuvuta kuliko kuvuta kawaida."
+      },
+      "pull_mu_2": {
+        "title": "Muscle-Up Kicheche",
+        "description": "Tumia kipindi cha kupiga kiuno kudhibiti mwendo kupitia mabadiliko ya ukanda. Jifunze wakati bora kabla ya kuondoa kipindi cha kupiga kiuno."
+      },
+      "pull_mu_3": {
+        "title": "Muscle-Up Dhahiri",
+        "description": "Hakuna kizungunzi, hakuna kiuno — kuvuta na kusukuma juu ya ukanda kwa nguvu ya mwili mzima safi. Kiwango cha juu cha nguvu ya kuvuta."
+      },
+      "pull_am_1": {
+        "title": "Archer Pull-Up",
+        "description": "Kuvuta kwa mkono mmoja wakati mwingine mwingine unaenyesha moja kwa moja — mazoezi makali ya asimetriki yanayojenga nguvu ya lat ya pande moja kuelekea kuvuta mkono mmoja."
+      },
+      "pull_am_2": {
+        "title": "Typewriter Pull-Up",
+        "description": "Vuta hadi ukanda kisha tawanya upande wa mkono hadi mkono kwenye juu — onyesha isiyoweza kuwa ya kawaida ya nguvu na udhibiti wa kuvuta kwa mwelekeo wa pamoja."
+      },
+      "pull_oah_1": {
+        "title": "Kushikilia Kwa Mkono Moja Asilia",
+        "description": "Kaa kwenye ukanda kwa mkono mmoja, bega likiwa limeja na limepanda chini. Inajenga utulivu wa bega moja, uvumilivu wa kashikashi, na nguvu ya mnyororo wa upande mmoja."
+      },
+      "pull_oapu_1": {
+        "title": "Kuvuta Kwa Mkono Moja",
+        "description": "Jaribio kuu la nguvu ya kuvuta kwa upande mmoja — kuvuta kamili kwa mkono mmoja, bila msaada, bila mwelekeo. Ni mojawapo ya mafanikio magumu zaidi katika calisthenics."
+      },
+      "pull_rings_1": {
+        "title": "Kushikilia Msaada wa Vitu vya Miungu",
+        "description": "Kaa kwenye vitu vya miungu ukiwa na msaada wa nguvu — mikono imeinuka, mwili umesimama. Nafasi hii msingi inahitaji utulivu wa mikono, kiwiko na bega kabla ya kufanya kazi ya kuvuta kwenye miungu."
+      },
+      "pull_rings_2": {
+        "title": "Kuvuta Kwenye Miungu",
+        "description": "Vuta kwa mkono wote kwenye vitu vya miungu vinahitaji utulivu wa kashikashi na udhibiti wa bega ambalo ukanda wa kawaida hawezi kuiga. Utetetevu huongeza ugumu wa reps zote."
+      },
+      "pull_rings_3": {
+        "title": "Muscle-Up Kwenye Miungu",
+        "description": "Kiwango cha juu cha kuvuta kwenye miungu: muscle-up dhahiri kwenye vitu vya miungu kinahitaji nguvu ya mabadiliko ya haraka, utulivu wa bega, na udhibiti wa kiwiko chini ya utetetevu."
+      },
+      "pull_weighted_1": {
+        "title": "Kuvuta Wenye Uzito",
+        "description": "Ongeza vest au belti na fanya kuvuta kwa uzito mkubwa. Kuanzia 10–20% ya uzito wa mwili, upinzani wa nyongeza huongeza haraka nguvu zaidi kuliko mazoezi ya uzito wa mwili tu."
+      },
+      "pull_weighted_2": {
+        "title": "Kiasi cha Kuvuta Wenye Uzito",
+        "description": "Endelea na seti za pull-up zenye uzito kwa reps nyingi. Kiasi cha kazi chini ya mizigo hujenga nguvu ya mvutano wa machoni inayohitajika kwa muscle-up yenye uzito na kupakia zaidi."
+      },
+      "pull_weighted_3": {
+        "title": "Muscle-Up ya Uzito",
+        "description": "Muscle-up yenye mzigo wa ziada — mojawapo ya mafanikio yenye nguvu zaidi katika calisthenics. Inahitaji mvutano wa nguvu, wakati sahihi wa mabadiliko, na msukumo wa mwili wote."
+      },
+      "core_1": {
+        "title": "Msingi wa Plank",
+        "description": "Shikilia plank kamili — mwili mnyoofu kuanzia kichwa hadi visigani, makalio na misuli ya tumbo vimeimarishwa. Mwanzo wa kawaida wa kazi zote za kifuniko cha katikati ya mwili."
+      },
+      "core_2": {
+        "title": "Plank ya Pembetatu",
+        "description": "Saidia kwa kutegemea kiwiko kimoja na kuinua nyonga zako — huunda ugumu wa pembetatu wa katikati wa mwili unaobeba moja kwa moja katika mbango wa viashara za mwili na kazi za mguu zinazoruka."
+      },
+      "core_hh_1": {
+        "title": "Kondoo wa Kifo",
+        "description": "Lalia upande wa mgongo kwa mikono na miguu vikiwa vimeinuliwa — shusha mkono na mguu vinavyozidiwa wakati wa kuimarisha. Mazoezi msingi dhidi ya kuongezeka kwa urefu wa kiini cha katikati ya mwili."
+      },
+      "core_hh_2": {
+        "title": "Inayozuia Mgongo",
+        "description": "Lalia uso chini na inua kifua na miguu kutoka sakafuni (Superman). Huunda nguvu ya nyuma inayozingatia kazi za mwili mzima zinazobalance kazi za mwili wa hallow."
+      },
+      "core_hh_3": {
+        "title": "Kushikilia Mwili wa Hollow",
+        "description": "Lalia mgongoni na shikilia muundo wa mwelekeo wa hollow — mabega kutoka sakafuni, miguu iliyoinuliwa chini. Ujuzi wa msingi wa kuendeleza mshikamano wa mwili wote unaounganisha kila harakati ya calisthenics."
+      },
+      "core_hh_4": {
+        "title": "Dragon Flag Negative",
+        "description": "Lalia kwenye benchi, shika nyuma ya kichwa chako, na shusha mwili wako polepole kutoka wima hadi nje ya mwelekeo wa mlalo. Awamu ya mzigo wa eccentric inayokuandaa kwa dragon flag kamili."
+      },
+      "core_hh_5": {
+        "title": "Dragon Flag",
+        "description": "Shika nyuma ya kichwa chako na shikilia au shusha mwili wako kwa usahihi wa mlalo kabisa — mabega yako pekee yanagusa benchi. Nguvu kamili ya kuzuia kuongezeka kwa urefu wa mwili wakati wa mzigo wa nje."
+      },
+      "core_bb_1": {
+        "title": "Kushikilia Kwenye Muungano Thabiti",
+        "description": "Shikilia kung'aa kwenye mnyororo wa mazoezi kwa kubeba mabega kwa nguvu — msingi wa kazi zote za kifuniko cha katikati ya mwili na kuvuta mwili kutoka kwa mnyororo huo."
+      },
+      "core_bb_2": {
+        "title": "Kurudi kwa Magoti kwenye Mnyororo",
+        "description": "Shikilia kwenye mnyororo wa mazoezi na kusukuma magoti hadi kifua. Huongeza shinikizo la misuli ya nyonga na utulivu wa mabega kwa kazi ngumu za kuzunguka na kuvuta mwili."
+      },
+      "core_bb_3": {
+        "title": "Kuinua Miguu Kuwa Msambao wa Kwenye Mnyororo",
+        "description": "Shikilia kwenye mnyororo wa mazoezi na inua miguu gulugulu hadi mhimili wa usawa — inahitaji nguvu kubwa ya misuli ya nyonga, uvumilivu wa kiganja cha mkono, na udhibiti kamili wa mgongo."
+      },
+      "core_bb_4": {
+        "title": "Miguu Kufikia Muungano",
+        "description": "Kutoka kwenye kung'aa, folda mwili mzima na gusa nyundo za mguu kwenye mnyororo — unahitaji nguvu ya misuli ya nyonga, uvumilivu wa kiganja na udhibiti wa mwili wote kwa harakati moja kamili."
+      },
+      "core_hf_1": {
+        "title": "Kusafiri kwa Kizingiti cha Mgongo",
+        "description": "Shikilia kwenye mnyororo wa mazoezi, inua miguu hadi mhimili na sukuma yanayopita kutoka upande moja hadi mwingine. Huongeza nguvu za pembetatu za katikati ya mwili na uhamaji wa nyonga kwa ajili ya human flag."
+      },
+      "core_hf_2": {
+        "title": "Human Flag ya Tucked",
+        "description": "Shikilia kamba wima na mubeba mwili wako wa pembetatu ukiwa na nyonga zilizochongwa — nafasi ya kwanza halali ya flag ya binadamu inayohitaji uzalishaji wa nguvu za pembetatu za pembeni za kipekee."
+      },
+      "core_hf_3": {
+        "title": "Flag ya Mguu Mmoja",
+        "description": "Mguu mmoja mrefu, mguu mmoja umevunjika — shikilia ya mpito inayopunguza kwa kiasi kikubwa urefu wa lever wakati wa kufundisha chain ya pembeni kwa flag kamili."
+      },
+      "core_hf_4": {
+        "title": "Human Flag Kamili",
+        "description": "Shikilia kamba wima na shikilia mwili wako wote kwa usahihi wa mwendo wa pembeni — mafanikio maarufu yanayohitaji nguvu za pembeni za kipekee na za mabega."
+      },
+      "core_weighted_1": {
+        "title": "Plank yenye Uzito",
+        "description": "Shikilia plank thabiti ukiwa na gia zilizobeba au g stripes mgongoni mwako. Mizigo ya ziada huongeza shinikizo la kuzuia kuongezeka kwa upana wa kiungo, na kufanya kuwa njia bora ya kupata mkazo wa majimaji wa kifuniko cha katikati cha mwili chini ya mzigo."
+      },
+      "core_weighted_2": {
+        "title": "Kuinua Miguu yenye Uzito",
+        "description": "Shikilia kwenye mnyororo wa mazoezi ukivaa uzito wa kiangalia cha mguu na inua miguu tulivu hadi mhimili wa usawa. Mizigo ya ziada huongeza sana mahitaji ya nguvu za nyonga na uvumilivu wa kiganja cha mkono."
+      },
+      "core_weighted_3": {
+        "title": "Dragon Flag yenye Uzito",
+        "description": "Fanya Dragon Flag ukiwa na g stripes za mzigo — mojawapo ya mazoezi makali zaidi ya kifuniko cha mwili yenye uzito uliobeba. Nguvu kamili ya kuzuia kuongezeka kwa urefu wa mwili chini ya mzigo wa nje."
+      },
+      "core_rings_1": {
+        "title": "Kuinua Magoti kwenye Mnyororo",
+        "description": "Shikilia kwenye mnyororo wa mazoezi na vuta magoti hadi kifua. Utetetezi wa utulivu huongeza usaidizi wa kina wa mabega na shinikizo bora la kifuniko cha katikati kuliko kwenye mnyororo wa kusimama pekee."
+      },
+      "core_rings_2": {
+        "title": "Kurudi kwenye Mnyororo",
+        "description": "Kutoka kwenye magoti, shika kwenye mnyororo wa mazoezi na rudisha hadi ufanane kamili mwelekeo. Utetetezi wa kudumu huleta kazi za vasikari wa kina kwa zamu zisizo na kifani — ngumu kuliko mashine za masanduku au rollers."
+      },
+      "core_roller_1": {
+        "title": "Kuzungusha Ab Roller",
+        "description": "Shikilia ab roller na zungusha kutoka kwenye magoti hadi ufanane kamili, huku makalio yakiwa yamesimama. Shinikizo la kuzuia kuongezeka kwa urefu wa mwili na kupitia kiwango kamili cha harakati huifanya moja kati ya mazoezi bora zaidi ya kifuniko cha mwili yenye mzigo."
+      },
+      "core_band_1": {
+        "title": "Kushikilia Pallof kwa Banda la Kupinga",
+        "description": "Sungulia band ya kupinga kwa uokozi kwenye urefu wa kifua na, shikilia kitenge moja kwa moja mbali na mwili wako huku ukikabiliwa na mzunguko wa mwili. Shinikizo la kuzuia mzunguko linazingatia vasikari wa kina wa mgongo unaoweza kufikiwa na harakati zozote za shnoop."
+      },
+      "legs_1": {
+        "title": "Msingi wa Kukuza Miguu",
+        "description": "Jenga muundo wa kutoshea wa squat wa pande zote kwa kina kamili na mkao wa kusimama wenye msingi."
+      },
+      "legs_2": {
+        "title": "Nguvu ya Kukuza Miguu",
+        "description": "Ongeza kiasi cha squat na sawazisha kufuatilia kwa goti na kina. Inatoa njia za L-Sit na Pistol Squat."
+      },
+      "legs_3": {
+        "title": "Shrimp Squat",
+        "description": "Squat la miguu moja kwa kutumia mguu wa nyuma uliobebwa nyuma yako — linahitaji nguvu ya kipekee ya misuli ya quad, uhamaji wa kiungo cha kiatu na usawa kwa wakati mmoja."
+      },
+      "legs_4": {
+        "title": "Bulgarian Split Squat",
+        "description": "Kuingiza mguu wa nyuma ulioinuliwa, mguu wa mbele ukielekea mbele — shuka hadi goti la nyuma lichruze sakafu. Mojawapo ya mazoezi madhubuti zaidi ya nguvu ya pande moja."
+      },
+      "legs_ls_1": {
+        "title": "Kunyoosha Pike",
+        "description": "Kaa wima na miguu iliyosimama na inama mbele juu yao — huongeza ulegeo wa misuli ya nyumbu na uhamaji wa nyonga unaohitajika kwa L-sit kamili."
+      },
+      "legs_ls_2": {
+        "title": "Kompression za L-Sit",
+        "description": "Kukaa, shinikiza visigani kwenye sakafu na jaribu kuvaa — huunda msukumo wa misuli ya nyonga unaoonekana kama nguvu badala ya ulegeo katika L-sit."
+      },
+      "legs_ls_3": {
+        "title": "Tuck L-Sit",
+        "description": "Gonga kwenye vibanda viwili vya parallel au sakafu na kuinua nyonga zako–kufwochwa kwa magoti kwenye kifua, mikono imefungwa. Hii ni njia ya kuanzisha L-sit kamili."
+      },
+      "legs_ls_4": {
+        "title": "L-sit Kamili",
+        "description": "Mikono imefungwa, nyonga ziko juu, miguu iliyosimama na mhimili — onyesho kamili la nguvu za nyonga, nguvu ya kunyanyua na mashikamano ya mwili mzima."
+      },
+      "legs_ps_1": {
+        "title": "Kupanda kwa Miti",
+        "description": "Pita kwenye uso ulioinuliwa kwa udhibiti — huendeleza utulivu wa mguu mmoja na activation ya quad kama hatua ya kwanza kuelekea kwenye Pistol Squat."
+      },
+      "legs_ps_2": {
+        "title": "Pistol Squat ya Msaada",
+        "description": "Kukaa kwa kina kwa mguu mmoja huku ukiwa na msaada au msaidizi — hujenga nguvu na uhamaji wa muundo kabla ya kuondoa msaada."
+      },
+      "legs_ps_3": {
+        "title": "Squat ya Nafasi Nyembamba",
+        "description": "Squat pande mbili kwa miguu coll na kwamba kuhusu — hufanana na mechanics za Pistol Squat na mahitaji ya uhamaji wa kiungio kabla ya kuingia kikamilifu kwenye pande zote."
+      },
+      "legs_ps_4": {
+        "title": "Pistol Squat Kamili",
+        "description": "Kukaa kwa kina kwa mguu mmoja na mguu wa bure ukiwa umeinuka — linahitaji nguvu ya quad, uhamaji wa kiungio na usawa wa mwili wote kwa harakati ya juu sana."
+      },
+      "legs_weighted_1": {
+        "title": "Squat ya Kila Mzigo wa Mafupa",
+        "description": "Shikilia kettlebell au dumbbell kwenye urefu wa kifua na fanya squat kwa kina. Nafasi ya goblet huendeleza mwelekeo wa mstari wa kima na ufuatiliaji wa goti wa kina, na kuwa njia bora ya kuanza nguvu za mguu kwa mzigo."
+      },
+      "legs_weighted_2": {
+        "title": "Bulgarian Split Squat wenye Uzito",
+        "description": "Shikilia dumbbells na fanya split squat ya kiungo cha nyuma kilicho inuliwa. Mizigo ya peke yake chini ya kiwango hiki cha uhamaji wa nyonga ni mojawapo ya mazoezi bora zaidi ya kujenga nguvu za mguu."
+      },
+      "legs_weighted_3": {
+        "title": "Pistol Squat yenye Uzito",
+        "description": "Fanya Pistol Squat kamili ukiwa na dumbbell au platina ya mzigo. Kuongeza mzigo kwa harakati hii yenye changamoto tayari kunahitaji uhamaji wa kiungio wa kipekee, nguvu ya mguu mmoja, na usawa."
+      },
+      "legs_weighted_4": {
+        "title": "Shrimp Squat yenye Uzito",
+        "description": "Fanya shrimp squat ukiwa na g stripes au dumbbells — moja ya harakati za peke kuzidi za mzigo wa pande moja. Inahitaji ughali wa kipekee wa nyonga, quad, na usawa chini ya upinzani wa nje."
+      },
+      "legs_band_1": {
+        "title": "Harakati za Pembeni za Banda",
+        "description": "Weka banda la kupinga kwenye magoti yako na tembea kwa upande mmoja kwenye nafasi ya squat ya robo. Linalenga gluteus medius na nyonga za kuchukua msukumo wa kila harakati ya mguu mmoja."
+      },
+      "legs_box_1": {
+        "title": "Kuruka kwenye Sanduku",
+        "description": "Rukia kutoka sakafuni na landa kwa uangalifu kwenye sanduku la plyo, ukichukua nguvu kwa kuanguka kwa mseto iliyo na msongamano. Inaleta maendeleo ya kiwango cha nguvu ya kuvuta na uwezo wa kuhifadhi nishati ya mzunguko wa elastic."
+      },
+      "legs_sliders_1": {
+        "title": "Kurudi kwa Mgongo kwa Sliders",
+        "description": "Lalia kwenye mgongo, weka sliders chini ya visigani, na geresha miguu yako kuelekea nyuma kwa kutumia misuli ya nyonga na mashikamano ya pua kubwa ya kiungio na uhamaji wa misuli ya nyonga."
+      },
+      "push_rings_1": {
+        "title": "Push-up kwenye Mnyororo wa Maonesho",
+        "description": "Fanya push-up kwenye mnyororo wa maonesho na kudhibiti RTO (Mnyororo wa Ring uliojaliwa) wakati wa lockout. Utetetezi wa utulivu huhitaji msaada wa kipekee wa nyonga, kifua, na mabega kila reps."
+      },
+      "push_rings_2": {
+        "title": "Muscle-Up ya Mnyororo",
+        "description": "Changanya nguvu ya kuvuta na ya kupress kwenye mnyororo kwa harakati moja ya kifyokoti juu ya mnyororo. Ujuzi wa mnyororo wa kipekee unahitaji utulivu wa kiwango cha juu cha chain ya kinetiki yote."
+      },
+      "push_weighted_1": {
+        "title": "Push-up yenye Uzito",
+        "description": "Ongeza g stripes au kitambaa na fanya push-up ukiwa na mzigo. Push-up zenye uzito hujenga nguvu ya kupress kwa kiwango cha juu kuliko harakati nyingine zozote za mwili kwa uzito wa mwili pekee."
+      }
+    }
+  },
+  "history": {
+    "title": "Historia ya Mazoezi",
+    "subtitle": "Kagua utendaji wako wa zamani.",
+    "noSessions": "Hakuna mazoezi yaliyorekodiwa bado.",
+    "startWorkout": "Anza mazoezi ili kuanza kujenga historia yako.",
+    "session": "Kipindi",
+    "duration": "Muda wa kazi",
+    "verified": "Imethibitishwa",
+    "unverified": "Hajalithibitishwa",
+    "formScore": "Alama ya Fomu",
+    "reps": "Reps",
+    "viewDetail": "Tazama Maelezo",
+    "avgForm": "Formu ya Wastani",
+    "aiVerified": "Imethibitishwa na AI",
+    "selfReported": "Kujislilipia",
+    "viewClip": "Tazama Kata",
+    "clipPolicy": "Vidio zilizoandikwa \"Tazama Kata\" hifadhiwa kwenye simu kwa siku 7, kisha huondolewa kiatomati ili kuokoa nafasi."
+  },
+  "leaderboard": {
+    "title": "Orodha ya Waamuzi",
+    "subtitle": "Pointi Zote Uliyozipata · Reps zilizoithibitishwa na AI pekee",
+    "global": "Ulimwenguni",
+    "national": "Nchini",
+    "friends": "Marafiki",
+    "rank": "Cheo",
+    "yourRank": "Cheo Chako",
+    "athlete": "Mnyamazaji wa Miili",
+    "totalPoints": "Pointi Jumla",
+    "points": "Pointi",
+    "skills": "Ujuzi",
+    "masteryPoints": "Pointi za Ujuzi wa Juu",
+    "you": "Wewe",
+    "skillsLabel": "{{count}} ujuzi",
+    "moveValueGuide": "Kielelezo cha Thamani ya Mchezo",
+    "pointsPerRep": "Pointi kwa kila rep kwa forma ya 100%",
+    "ptsRep": "pts/repi",
+    "ptsSec": "pts/s",
+    "moveValueDesc": "Kila rep iliyothibitishwa na AI (au sekunde iliyoshikiliwa) hupata uzito × reps × (forma% / 100) pointi. Rekodi za mikono huhesabu tu kwa XP ya Mti wa Ujuzi — si pointi kwenye orodha kuu.",
+    "exampleCalc": "Mfano: Reps 10 za Muscle-Up kwa 90% ya forma = 10 × 10.0 × 0.9 = Pointi 90",
+    "onlyVerified": "Reps zilizothibitishwa na AI pekee ndizo zinazopata pointi kwenye orodha kuu. Rekodi za mikono ni tu kwa XP ya Mti wa Ujuzi.",
+    "formula": "Mseto: ugumu × reps × (forma% / 100) · Kiwango kisicho na kikomo",
+    "signInToSeeFriends": "Ingia ili uone marafiki",
+    "compareRank": "Linganishwa chao cheo chako dhidi ya watu unaowazoea.",
+    "countryNotDetected": "Nchi haijatambuliwa",
+    "countryNotDetectedDesc": "Hatujaweza kugundua nchi yako. Weka nchi kwenyeMipangilio ili kufungua orodha ya kitaifa.",
+    "failedToLoad": "Imeshindwa kupakia orodha kuu. Jaribu tena hivi karibuni.",
+    "noFriendsEmpty": "Hakuna marafiki zako waliyojifunza bado — au haujasajili marafiki.",
+    "noAthletesRegion": "Hakuna wanamichezo katika eneo hili bado. kuwa wa kwanza!",
+    "noFriends": "Ongeza marafiki ili kuona orodha ya marafiki.",
+    "noNational": "Hakuna data ya kitaifa bado."
+  },
+  "friends": {
+    "title": "Marafiki",
+    "addFriend": "Ongeza Rafiki",
+    "searchPlaceholder": "Tafuta kwa jina la mtumiaji…",
+    "pendingRequests": "Maombi Yanayosaswa",
+    "sent": "Yametumwa",
+    "accept": "Kubali",
+    "decline": "Pingua",
+    "remove": "Ondoa",
+    "noFriends": "Hakuna marafiki bado. Tafuta wanamichezo kuungana nao.",
+    "noPending": "Hakuna maombi yanayakaswa.",
+    "viewProfile": "Tazama Wasifu",
+    "sendRequest": "Tuma Omeyu",
+    "requestSent": "Ombi Limewasili",
+    "signInTitle": "Ingia kutumia Marafiki",
+    "signInDesc": "Unda akaunti kuunganishwa na wanamichezo wengine.",
+    "profileSetupWarning": "Wasifu wako unaandaliwa — ikizidi inakubalika, tembeleaMipangilio kukamilisha.",
+    "findAthletes": "Tafuta Wanamichezo",
+    "searching": "Inatafuta…",
+    "noUsersFound": "Hakuna watumiaji waliopatikana kwa \"{{query}}\"",
+    "friendsBadge": "Marafiki",
+    "pending": "Yanayakaswa",
+    "add": "Ongeza",
+    "pendingRequestsCount": "Maombi Yanayokaswa ({{count}})",
+    "sentRequestsCount": "Maombi Yaliyopelekwa ({{count}})",
+    "myFriends": "Marafiki Zangu",
+    "noFriendsYet": "Bado huna marafiki. Tafuta hapo juu kumsaidia mtu!",
+    "view": "Tazama",
+    "removeFriend": "Ondoa Rafiki",
+    "requestSentTitle": "Ombi la Marafiki Limetumwa",
+    "friendAdded": "Rafiki Ameongezwa!",
+    "requestDeclined": "Ombi Limerudishwa nyuma",
+    "friendRemoved": "Rafiki Ametolewa!",
+    "somethingWentWrong": "Kimeenda vibaya"
+  },
+  "community": {
+    "title": "Jamii",
+    "feed": "Mipasho",
+    "post": "Chapisha",
+    "like": "Kipenda",
+    "comment": "Maoni",
+    "share": "Shiriki",
+    "noposts": "Hakuna machapisho bado — kuwa wa kwanza kushiriki mazoezi!",
+    "shareWorkout": "Shiriki Mazoezi",
+    "aiVerified": "Imethibitishwa na AI",
+    "selfReported": "Kujislilipia",
+    "justNow": "sasa hivi",
+    "minutesAgo": "{{n}}min iliyopita",
+    "hoursAgo": "{{n}}h zilizopita",
+    "daysAgo": "{{n}}d zilizopita",
+    "noClipAttached": "Hakuna kanda imeambatishwa",
+    "commentLabel": "Toa Maoni",
+    "noComments": "Hakuna maoni bado. kuwa wa kwanza!",
+    "addComment": "Ongeza maoni…",
+    "signInToComment": "Ingia kuandika maoni",
+    "startWorkout": "anza Mazoezi",
+    "communityTitle": "Jamii",
+    "communitySubtitle": "Mazoezi kutoka kwa wanamichezo duniani kote",
+    "searchAthletes": "Tafuta kwa jina, mazoezi au #hashtag…",
+    "filterAll": "Yote",
+    "filterPush": "Kushinikiza",
+    "filterPull": "Kuvuta",
+    "filterCore": "Katikati",
+    "filterLegs": "Mikono",
+    "emptyAll1": "Hakuna machapisho bado",
+    "emptyAll2": "Shiriki kipande baada ya mazoezi yako yajayo ili uwe wa kwanza!",
+    "emptyPush1": "Hakina vipande vya Siku ya Push bado!",
+    "emptyPush2": "Kuwa wa kwanza ku-post mazoezi ya push.",
+    "emptyPull1": "Hakina vipande vya Siku ya Pull bado!",
+    "emptyPull2": "Kuwa wa kwanza ku-post mazoezi ya pull.",
+    "emptyCore1": "Hakina vipande vya Core bado!",
+    "emptyCore2": "Kuwa wa kwanza ku-post mazoezi ya core.",
+    "emptyLegs1": "Hakina vipande vya Siku ya Miguu bado! Kuwa wa kwanza ku-post.",
+    "emptyLegs2": "Shika jumba la mafunzo naonyesha nguvu za mguu wako.",
+    "noEliteAchievements": "Hakuna mafanikio ya Elite bado.",
+    "masterEliteSkill": "Kamilisha ujuzi wa Elite ili kuonekana hapa!",
+    "you": "Wewe",
+    "justMastered": "just kumaliza",
+    "postClip": "Tuma Kipande",
+    "shareClip": "Shiriki Kipande",
+    "shareToCommunity": "Shiriki kwa Jamii",
+    "addCaption": "Ongeza maelezo… (chaguo la hiari)",
+    "uploadStarted": "Uwasilishaji umeanza — unaweza kuvinjari bure!",
+    "publishingPost": "Kuchapisha post…",
+    "postedToCommunity": "Imechapishwa kwa Jamii!",
+    "savedClipLabel": "Kipande kilichohifadhiwa"
+  },
+  "profile": {
+    "masteryPoints": "Pointi za Ufanisi",
+    "skillsMastered": "Ujuzi Uliokamilika",
+    "totalSessions": "Jumla ya Mafunzo",
+    "skillTree": "Mti wa Ujuzi",
+    "milestones": "Malengo Muhimu",
+    "mastery": "Ufanisi",
+    "badges": "Vibonzo",
+    "noMastery": "Bado huna ujuzi uliokamilika.",
+    "privateProfile": "Hii ni wasifu wa kibinafsi."
+  },
+  "privacy": {
+    "public": "Umma",
+    "publicDesc": "Whoever can see your profile, skill tree, and mastery badges.",
+    "friends": "Marafiki Tu",
+    "friendsDesc": "Marafiki waliokubaliana tu ndio wanaweza kuangalia wasifu wako.",
+    "private": "Binafsi",
+    "privateDesc": "Wasifu wako unafichwa — hata kwa marafiki."
+  },
+  "calibration": {
+    "title": "Kuhakikisha Mwili",
+    "subtitle": "Simama kwa sifaha ya T ili tuweze kupanga vipimo vya mwili wako",
+    "instructions": "Simama kwa sifaha ya T: mikono mikono imeelea kando, miguu ukubwani mwa bega.",
+    "scanning": "Inachanganua...",
+    "complete": "Urekebishaji umekamilika",
+    "retry": "Jaribu tena"
+  },
+  "daily": {
+    "title": "Uhamaji wa Kila Siku",
+    "streak": "Mfululizo",
+    "days": "siku",
+    "routine": "Ratiba ya Leo",
+    "complete": "Kamilisha",
+    "completed": "Imekamilika",
+    "questionnaire": {
+      "title": "Sasisha Malengo Yangu",
+      "subtitle": "Binafsisha majukumu yako ya uhamaji wa kila siku",
+      "goalQuestion": "Lengo lako kuu la calisthenics ni lipi?",
+      "areasQuestion": "Map Muscles na maqadi ambayo yanakutatiza ni yapi?",
+      "areasHint": "(chagua yote yanayohusika)",
+      "timeQuestion": "Unapata muda gani wa kujitolea kwa uhamaji wa kila siku?",
+      "save": "Hifadhi Mapendeleo Yangu",
+      "tapToChange": "Gusa chini kubadilisha",
+      "suggested": "Mapendekezo",
+      "searchGoal": "Tafuta harakati au ujuzi…",
+      "searchBodyPart": "Tafuta sehemu ya mwili…",
+      "minLabel": "{{n}} dakika",
+      "goalsUpdated": "Malengo yamesasishwa! Ratiba yako imebinafsishwa."
+    }
+  },
+  "errors": {
+    "notFound": "Ukurasa haupatikani",
+    "notFoundDesc": "Ukurasa uliyotafuta haupo.",
+    "unauthorized": "Tafadhali jiandikishe kuendelea",
+    "serverError": "Hitilafu ya seva — tafadhali jaribu tena",
+    "goHome": "Rudi nyumbani"
+  },
+  "coaching": {
+    "rep": "{{count}} reps",
+    "goodRep": "Rekodi nzuri!",
+    "formWarning": "Hifadhi muundo wako kwa ukali.",
+    "breathe": "Pumua kupitia hiyo.",
+    "almostDone": "Karibu kumaliza — anza kuwa imara.",
+    "setComplete": "Set imekamilika! Pumzika kidogo.",
+    "workoutComplete": "Maelezo yamekamilika! Jitahidi sana."
+  },
+  "exercises": {
+    "push_up": "Push-Up",
+    "diamond_push_up": "Push-Up ya Almasi",
+    "archer_push_up": "Push-Up ya Mlizi",
+    "pseudo_planche_push_up": "Push-Up ya Kulinganisha Kwa Kupanua",
+    "pike_push_up": "Push-Up ya Pike",
+    "elevated_pike_push_up": "Push-Up ya Pike ya Kupanda",
+    "handstand_push_up": "Push-Up ya Kila Mtu Anayejua Kugeuka Wima",
+    "handstand": "Kugeuka Wima Kwa Mstari",
+    "wall_handstand_push_up": "Push-Up ya Kugeuka Wima kwa Ukuta",
+    "planche_lean": "Kukurupuka kwa Planche",
+    "tuck_planche": "Planche ya Tuck",
+    "straddle_planche": "Planche ya Kubeba Miguu Izitoe",
+    "planche": "Planche",
+    "full_planche": "Planche Kamili",
+    "scapular_shrugs": "Kuinua Mabega",
+    "australian_rows": "Mashoka ya Australia",
+    "negative_pull_ups": "Pull-Ups Chini",
+    "negative_pull_up": "Pull-Up Chini",
+    "pull_up": "Pull-Up",
+    "tuck_front_lever": "Uondo wa Mbele wa Tuck",
+    "straddle_front_lever": "Uondo wa Mbele wa Miguu Izoe",
+    "full_front_lever": "Uondo Kamili wa Mbele",
+    "chest_to_bar_pull_up": "Pull-Up ya kifua kwa waya",
+    "muscle_up": "Muscle-Up",
+    "kipping_muscle_up": "Muscle-Up ya Kipping",
+    "strict_muscle_up": "Muscle-Up Mahiri",
+    "archer_pull_up": "Pull-Up ya Mlizi",
+    "typewriter_pull_up": "Usukaji wa Ziada wa Aina ya Typewriter",
+    "one_arm_active_hang": "Kuma kwa Mkono Mmoja wenye Nguvu",
+    "one_arm_pull_up": "Komeni la Mwisho wa Mkono Mmoja",
+    "plank": "Katikati ya Kazi",
+    "side_plank": "Katikati ya Kazi kwa Pande",
+    "dead_bug": "Sungura Mauaji",
+    "superman": "Superman",
+    "hollow_body_hold": "Kushikilia Miili Isiyozama",
+    "dragon_flag_negative": "Bendera la Joka kwa Kupunguza",
+    "dragon_flag": "Bendera la Joka",
+    "active_hang": "Kufunga kwa Nguvu",
+    "hanging_knee_tuck": "Kuficha Maguu Wakati wa Kukaa Mnyororo",
+    "hanging_knee_tucks": "Maguu Yanayoshikiliwa Mnyororo",
+    "hanging_leg_raise": "Kuinua Mipanda Mnyororo",
+    "hanging_leg_raises": "Mipanda ya Miguu Mnyororo",
+    "toes_to_bar": "Vidole hadi Bora",
+    "windshield_wiper": "Kusafisha Gari",
+    "windshield_wipers": "Viosha vya Gari",
+    "hanging_windshield_wipers": "Viosha vya Gari vinavyoshikiliwa Mnyororo",
+    "tucked_human_flag": "Bendera ya Binadamu Iliyofungwa",
+    "one_leg_human_flag": "Bendera ya Binadamu Mmoja kwa Mguu Mmoja",
+    "human_flag": "Bendera ya Binadamu",
+    "squat": "Kushuka Chini kwa Mikono",
+    "air_squat": "Kushuka Chini bila Uzito",
+    "shrimp_squat": "Squat ya Khuwa",
+    "bulgarian_split_squat": "Squat la Mgawanyo wa Bulgaria",
+    "nordic_curls": "Kunjika kwa Nordic",
+    "pike_stretch": "Kupinda kwa Pike",
+    "l_sit_compression": "Kushikilia L-Sit kwa Kubana",
+    "l_sit_compressions": "Kubaniza kwa L-Sit",
+    "tuck_l_sit": "Tuck L-Sit",
+    "l_sit": "L-Sit",
+    "full_l_sit": "L-Sit Kamili",
+    "step_up": "Kupanda Kitu",
+    "step_ups": "Vipande vya Kupanda",
+    "assisted_pistol_squat": "Squat ya Pistol kwa Msaada",
+    "close_stance_squat": "Squat na Nafasi Ndogo Mwilini",
+    "pistol_squat": "Squat ya Pistol",
+    "explosive_pull_up": "Komeni la Kifaru kwa Kombora",
+    "ring_support_hold": "Kushika Mzingo wa Pete",
+    "ring_pull_up": "Komeni la Pete",
+    "ring_muscle_up": "Ngumi za Mzingo wa Pete",
+    "ring_dip": "Kukanyagwa kwa Pete",
+    "weighted_pull_up": "Komeni la Uzito",
+    "weighted_muscle_up": "Ngumi za Uzito",
+    "weighted_dip": "Kukanyagwa kwa Uzito",
+    "weighted_plank": "Katikati ya Uzito",
+    "weighted_dragon_flag": "Bendera la Joka lenye Uzito",
+    "weighted_leg_raises": "Mipanda ya Miguu yenye Uzito",
+    "weighted_goblet_squat": "Goblet Squat yenye Uzito",
+    "weighted_bulgarian_split_squat": "Spliti la Bulgaria lenye Uzito",
+    "weighted_pistol_squat": "Squat ya Pistol yenye Uzito",
+    "weighted_shrimp_squat": "Shrimp Squat yenye Uzito",
+    "bar_volume_pull_up": "Komeni la Mwendo wa Heki",
+    "explosive_bar_pull_up": "Komeni la Bernuli la Heki",
+    "strict_bar_muscle_up": "Ngumi Dhahiri za Heki",
+    "weighted_volume": "Kiasi cha Uzito",
+    "ab_roller_rollout": "Utiririshe wa Rollout wa Tumbo",
+    "banded_pallof_press": "Press ya Pallof kwa Mstari wa Mshipa",
+    "banded_lateral_walks": "Kutembea kwa Mshipa kwa Upande",
+    "box_jumps": "Kuruka Katika Sanduku",
+    "slider_hamstring_curls": "Curls za Hamstring kwa Vodoro",
+    "ring_knee_raises": "Kuinua Maguu kwa Pete",
+    "ring_rollouts": "Kufafanua kwa Pete",
+    "lunge": "Kugonga kwa Mguu Mmoja",
+    "burpee": "Burpee",
+    "back_extensions": "Kupanua Mgongo"
+  },
+  "muscles": {
+    "wrist_flexors": "Vigugu vya Kunyoosha Mikono",
+    "forearms": "Mikono ya Mbele",
+    "wrist_extensors": "Vijimondo vya Mikono",
+    "shoulders": "Mikono ya Shoulders",
+    "chest": "Kifua",
+    "lats": "Lats",
+    "thoracic_spine": "Mgongo wa Thoracic",
+    "anterior_shoulders": "Mikono ya Anterior",
+    "biceps": "Biceps",
+    "hip_flexors": "Flexors wa Hips",
+    "quads": "Quadiceps",
+    "psoas": "Psoas",
+    "hamstrings": "Hamstrings",
+    "calves": "Mapaja",
+    "lower_back": "Sehemu ya Chini ya Mgongo",
+    "obliques": "Obliques",
+    "rotator_cuff": "Koronga la Kizunguzungu",
+    "hip_external_rotators": "Kizunguzungu cha Nyonga Kinje",
+    "glutes": "Misuli ya Makalio",
+    "it_band": "Banda la IT",
+    "triceps": "Triceps",
+    "posterior_shoulder": "Mikono ya Nyuma kwa Shoulder",
+    "lat": "Lat",
+    "hip_adductors": "Adductors za Nyonga",
+    "anterior_deltoid": "Deltoid wa Mbele",
+    "ankles": "Mipija",
+    "achilles": "Achilles",
+    "wrists": "Mikono ya Mikono",
+    "finger_flexors": "Flexors za Vidole",
+    "serratus": "Serratus",
+    "shoulder_extension": "Kupanua kwa Shoulder",
+    "scapular_stabilisers": "Vifuatilia vya Skapula",
+    "teres_major": "Teres Major",
+    "shoulder_protraction": "Kusukuma Kwa Mabega Yenye Nguvu!",
+    "wrist_tendons": "Nyundo za Kifundo cha Kiganja",
+    "ankle_dorsiflexors": "Vichocheo vya Utkumaji wa Kiuno",
+    "tibialis_anterior": "Tibialis Anterior",
+    "hip_adductors_": "Waambukaji wa Kifua na Kukaza Kiuno",
+    "serratus_anterior": "Serratus Anterior",
+    "lower_traps": "Trap Ndogo za Nyuma!",
+    "scapular_retractors": "Wakurudisha Kifundo cha Mguu",
+    "lower_trapezius": "Trap Ndogo Za Nyuma!",
+    "posterior_deltoid": "Deltoid wa Nyuma, Wakamua!",
+    "rhomboids": "Rhomboids Zenye Nguvu!",
+    "hip_extensors": "Waenyeshaji wa Kiuno!",
+    "anterior_deltoids": "Deltoid wa Kati, Nguvu Zake!",
+    "wrist_extensors_": "Wakandamizaji wa Kifundo cha Kiganja"
+  },
+  "mobility": {
+    "stretches": {
+      "wristExtension": {
+        "name": "Kukaza Kifundo cha Kiganja",
+        "muscles": "Flexors za Kiganja, Mikono ya Mbele!"
+      },
+      "wristFlexion": {
+        "name": "Kujikunja Kiganja",
+        "muscles": "Wakandamizaji wa Kiganja, Mikono ya Mbele!"
+      },
+      "shoulderDislocates": {
+        "name": "Kuondoa Kifua",
+        "muscles": "Mikono, Kifua, Lats!"
+      },
+      "latStretch": {
+        "name": "Kuinama Lats kutoka kwenye Kamba!",
+        "muscles": "Lats, Sehemu ya Nyuma ya Mashavu, Mguu wa Mbele!"
+      },
+      "chestOpener": {
+        "name": "Fungua Kifua na Dirisha la Mlango",
+        "muscles": "Kifua, Mabega ya Mbele, Biceps!"
+      },
+      "hipFlexorLunge": {
+        "name": "Njia ya Kujikunja Kiuno, Lunge!",
+        "muscles": "Waenyeshaji wa Kiuno, Quads, Psoas!"
+      },
+      "hamstring": {
+        "name": "Kupumzika Mstari wa Hamstring",
+        "muscles": "Hamstrings, Calves, Nyuma ya Mgongo!"
+      },
+      "thoracicRotation": {
+        "name": "Kuzunguka Sehemu ya Thoracic!",
+        "muscles": "Sehemu ya Nyuma ya Mgongo, Obliques, Rotator Cuff!"
+      },
+      "pigeonPose": {
+        "name": "Fungua Kiuno na Mguu wa Kufuata Pigeon!",
+        "muscles": "Kunyoosha Mikojo ya Kiuno, Glutes, IT Band!"
+      },
+      "tricepsStretch": {
+        "name": "Kupanua Triceps kwa Juu",
+        "muscles": "Triceps, Nyuma ya Mabega, Lats!"
+      },
+      "pancake": {
+        "name": "Kupanua Pancake",
+        "muscles": "Hamstrings, Hip Adductors, Nyuma ya Mgongo!"
+      },
+      "shoulderFlexion": {
+        "name": "Kurudi nyuma kupanua Mabega!",
+        "muscles": "Deltoid wa Mbele, Kifua, Biceps!"
+      },
+      "ankleCircles": {
+        "name": "Mizunguko ya Ankle!",
+        "muscles": "Ankles, Calves, Achilles!"
+      },
+      "calfStretch": {
+        "name": "Kupanua Calf kwenye Ukuta",
+        "muscles": "Calves, Achilles, Ankles!"
+      },
+      "wallPuppyPose": {
+        "name": "Fungua Miguuni Ukutani!",
+        "muscles": "Tee ya Mgongo, Mabega ya Kuhamisha, Lats!"
+      },
+      "firstKnuckleRaises": {
+        "name": "Inua Kidole cha Kwanza",
+        "muscles": "Flexors za Kiganja, Flexors za Vidole, Mikono ya Mbele!"
+      },
+      "butchersBlock": {
+        "name": "Fungua kwenye Jumba la Macheza!",
+        "muscles": "Triceps, Lats, Serratus!"
+      },
+      "germanHang": {
+        "name": "Kukaa wa Kijerumani (Kupumzika)",
+        "muscles": "Kuongeza Utegemezi wa Mabega, Mabega ya Mbele, Biceps!"
+      },
+      "skinTheCat": {
+        "name": "Kikamilifu Kuonyesha Paka (Partial)",
+        "muscles": "Mikono, Wakuludishaji wa Kifua, Lats!"
+      },
+      "deepLatStretch": {
+        "name": "Kupanua Kwa Chombo cha Pilabu mtoto",
+        "muscles": "Lats, Teres Major, Sehemu ya Mgongo wa Thoracic!"
+      },
+      "plancheLeans": {
+        "name": "Kujikaza kwa Planche!",
+        "muscles": "Viganja, Ushikaji wa Kifua, Serratus!"
+      },
+      "reverseTabletop": {
+        "name": "Kurudi nyuma, Kigawanyo cha Kunyosha!",
+        "muscles": "Deltoid wa Mbele, Kifua, Wakandamizaji wa Kifundo cha Kiganja!"
+      },
+      "fingerPulses": {
+        "name": "Kusonga kwa Vidole",
+        "muscles": "Flexors za Vidole, Tendons za Kiganja, Mikono ya Mbele!"
+      },
+      "ankleDorsiflexion": {
+        "name": "Kupanua Kukokota kwa Kiuno kwa Uzito",
+        "muscles": "Vishokono vya Utkumaji wa Kiuno, Achilles, Tibialis Anterior!"
+      },
+      "cossackSquats": {
+        "name": "Squats za Cossack",
+        "muscles": "Waambukaji wa Kiuno, Glutes, Miguuni!"
+      },
+      "scapularHangs": {
+        "name": "Kuinama Mabega ya Kazi",
+        "muscles": "Serratus Anterior, Trap Ndogo, Wakurudisha Kifundo cha Mguu!"
+      },
+      "proneYRaises": {
+        "name": "Y-Raises za Mgongo Msimamo wa Mtu!",
+        "muscles": "Trap Ndogo, Deltoid wa Nyuma, Rhomboids!"
+      },
+      "thoracicBridge": {
+        "name": "Kuingiza Mgongo wa Thoracic!",
+        "muscles": "Mgongo wa Thoracic, Glutes, Waenyeshaji wa Kiuno!"
+      }
+    }
+  }
+}

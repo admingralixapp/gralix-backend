@@ -103,7 +103,25 @@
     "recalibrateBodyDesc": "重新进行 T 型站姿扫描以更新身体参数",
     "mobilityDesc": "开启每日提醒，保持活跃",
     "communityPosts": "向所有人展示社区动态",
-    "setUpProfile": "设置个人资料以启用隐私控制。"
+    "setUpProfile": "设置个人资料以启用隐私控制。",
+    "membership": "会员资格",
+    "activeMembership": "激活的会员资格",
+    "cancelMembership": "取消会员资格",
+    "cancelMembershipDesc": "您可以在账单周期结束前继续访问内容。",
+    "cancelButton": "取消",
+    "retentionOfferBar": "专属优惠 —— 仅为您呈现",
+    "retentionHeadline": "等等！别走，还没完...",
+    "retentionBody": "升级为Pro版，享受下个月40%的折扣。继续与世界顶级AI教练一起突破极限。",
+    "claim40Discount": "领取40%折扣",
+    "noThanksCancel": "谢谢，不用了，继续取消 →",
+    "sorryToSeeYouGo": "很遗憾看到你离开。",
+    "loseAccessDesc": "在您的账单周期结束时，您将失去高级数据分析和Pro光环的访问权限。",
+    "goBack": "返回",
+    "cancelling": "正在取消…",
+    "discountApplied": "折扣已应用！",
+    "discountAppliedDesc": "您的40%折扣已应用到下一个账单周期。",
+    "subscriptionCancelled": "订阅已取消",
+    "subscriptionCancelledDesc": "您的订阅已取消。在{{date}}之前仍可访问内容。"
   },
   "shop": {
     "title": "CaliShop",
@@ -383,7 +401,21 @@
     "skillProgress": "技能进阶",
     "viewSession": "查看训练详情",
     "trainNext": "继续训练 →",
-    "continue": "坚持训练"
+    "continue": "坚持训练",
+    "backToHistory": "返回历史",
+    "totalReps": "总重复次数",
+    "avgFormScore": "平均动作标准得分",
+    "duration": "持续时间",
+    "savedClip": "已保存片段",
+    "expiresInDays_one": "将在{{count}}天后到期",
+    "expiresInDays_other": "将在{{count}}天后到期",
+    "loopInfo_one": "自动循环 · 轻触暂停/播放 · 1天到期",
+    "loopInfo_other": "自动循环 · 轻触暂停/播放 · {{count}}天到期",
+    "shareToCommunity": "分享至社区",
+    "noClipSaved": "本次训练无已保存片段。下一组完成后，使用“保存到历史”功能在POV回顾页面保存。",
+    "aiVerified": "AI验证",
+    "sessionNotFound": "未找到训练会话。",
+    "loadingSession": "加载中…"
   },
   "skillTree": {
     "title": "技能树",
@@ -409,7 +441,330 @@
     "whyTrain": "为什么要训练它？",
     "masterPrereq": "先精通先决技能以解锁此节点。",
     "practiceAgain": "再练一次 →",
-    "trainNowArrow": "现在训练 →"
+    "trainNowArrow": "现在训练 →",
+    "levelLabel": "等级 {{level}} · {{levelName}}",
+    "staticHold": "静态悬挂",
+    "explosive": "爆发力",
+    "whyTrainThis": "为何训练此项？",
+    "alsoRequires": "同时需要",
+    "masteryLabel": "掌握程度",
+    "completeLabel": "已完成",
+    "qualifyingSessions": "{{done}}/{{total}} 合格训练",
+    "bestHold": "最佳悬挂",
+    "bestRepsLabel": "最佳重复",
+    "formScoreLabel": "动作标准分",
+    "requiresLabel": "需要",
+    "coreStrengthHub": "核心力量",
+    "nodes": {
+      "push_1": {
+        "title": "首次俯卧撑",
+        "description": "完成干净的首次俯卧撑：身体保持直线，胸部触地，手臂完全伸展。"
+      },
+      "push_2": {
+        "title": "俯卧撑力量提升",
+        "description": "双倍提升俯卧撑能力，强化动作标准——稳定的组数开启过顶和支撑路径。"
+      },
+      "push_3": {
+        "title": "钻石俯卧撑",
+        "description": "双手形成钻石形状，肘部沿身体两侧轨迹，重点锻炼三头肌和内胸肌，打造极致推压密度。"
+      },
+      "push_4": {
+        "title": "弓箭手俯卧撑",
+        "description": "一臂弯曲，一臂伸展，非对称训练，培养单臂推压力量，向单臂突破迈进。"
+      },
+      "push_5": {
+        "title": "伪平衡支撑俯卧撑",
+        "description": "手掌放在髋部外侧，身体向前倾斜——模拟平衡支撑对手腕和肩部的负荷，同时进行推压。"
+      },
+      "push_oh_1": {
+        "title": "跳式俯卧撑",
+        "description": "髋部高抬、手宽与肩同宽，将头部压入双手之间，然后推回起始位置。提高肩部负荷，为过顶推压做准备。"
+      },
+      "push_oh_2": {
+        "title": "升高跳式俯卧撑",
+        "description": "脚放在盒子或凳子上，角度升高扩大肩部运动幅度和负荷，迈向倒立推压的关键步骤。"
+      },
+      "push_oh_3": {
+        "title": "靠墙倒立推压",
+        "description": "踢腿靠墙，推起全部体重到头顶——是倒立推压力量最直接的训练方式。"
+      },
+      "push_oh_4": {
+        "title": "倒立",
+        "description": "由手支撑，身体远离墙壁，保持平衡——控制倒立，要求肩部力量、手腕灵活度和空间感。"
+      },
+      "push_oh_5": {
+        "title": "倒立推压",
+        "description": "倒立状态下从地面推起，达到完全锁死——这是俯卧撑中的巅峰力量体现。"
+      },
+      "push_pp_1": {
+        "title": "平衡体前屈",
+        "description": "身体前倾，手腕支撑，手旋转外展——强化手腕和肩前束的承载能力，为平衡体做准备。"
+      },
+      "push_pp_2": {
+        "title": "提膝平衡体",
+        "description": "抬起双脚，身体前倾，膝藏于胸前——迈向真正的平衡体姿势。"
+      },
+      "push_pp_3": {
+        "title": "跨腿平衡体",
+        "description": "双腿张开成马步，保持平衡体姿势——远比提膝版本难度大，要求全身紧张。"
+      },
+      "push_pp_4": {
+        "title": "完整平衡体",
+        "description": "身体水平完全，用力收紧双腿——极限的平衡支撑展现力量之巅。"
+      },
+      "pull_1": {
+        "title": "首次引体向上",
+        "description": "从悬挂开始，完成干净的全范围引体向上。"
+      },
+      "pull_2": {
+        "title": "引体向上持续性",
+        "description": "培养稳定的引体向上能力，多个重复，无障碍开启前杠路径。"
+      },
+      "pull_3": {
+        "title": "负重引体向上",
+        "description": "从下巴越过横杆开始，缓慢下降。这种偏向离心的训练增强爆发拉力，为肌肉提升路径打基础。"
+      },
+      "pull_fl_1": {
+        "title": "藏式前杠",
+        "description": "悬挂于杆，膝盖弯曲贴近胸前，身体保持水平。锻炼肩胛骨下拉与背阔肌力量，为完整前杠打基础。"
+      },
+      "pull_fl_2": {
+        "title": "开腿式前杠",
+        "description": "双腿张开，身体水平，动态更难。强调全身紧绷，提高悬挂能力。"
+      },
+      "pull_fl_3": {
+        "title": "完整前杠",
+        "description": "身体完全水平，手臂伸直，双腿并拢锁紧——静态力量的巅峰。"
+      },
+      "pull_mu_1": {
+        "title": "胸触横杆",
+        "description": "用力跃过下巴线，直到胸部触及横杆。这远比普通引体向上要求更强的拉力。"
+      },
+      "pull_mu_2": {
+        "title": "摇晃肌肉向上",
+        "description": "利用控制臀部的节奏产生动力，通过横杆转换。掌握时机后，逐步消除摇晃。"
+      },
+      "pull_mu_3": {
+        "title": "严格肌肉向上",
+        "description": "完全无摆动，无摇晃，纯粹依靠上身力量推至横杆以上。这是拉力的终极标准。"
+      },
+      "pull_am_1": {
+        "title": "弓箭手引体",
+        "description": "一臂拉起，另一臂伸直——极具不对称的训练，锻炼单侧背阔肌力量，迈向单臂引体。 "
+      },
+      "pull_am_2": {
+        "title": "打字机引体",
+        "description": "拉到横杆后，横向移动双手——展现横向拉力和控制的卓越表现。"
+      },
+      "pull_oah_1": {
+        "title": "单臂主动悬挂",
+        "description": "用一臂悬挂横杆，肩部主动收紧、下沉，锻炼单侧肩部稳定性、握持耐力和侧链力量。"
+      },
+      "pull_oapu_1": {
+        "title": "单臂引体",
+        "description": "单臂进行完全引体， 没有助力，没有动力助推，是衡量单臂拉力的最高境界，也是所有俯卧撑中最稀有的壮举。"
+      },
+      "pull_rings_1": {
+        "title": "环支持悬停",
+        "description": "在环上保持主动支撑——手臂伸直，身体挺直。这个基础姿势要求在进行任何环上拉引训练前达到手腕、肘部和肩部的稳定性。"
+      },
+      "pull_rings_2": {
+        "title": "环上引体向上",
+        "description": "在体操环上完成全幅引体向上，需要 grip 稳定性和肩部控制，这些是固定横杆无法模拟的。环的摇晃使每一次重复都更具挑战性。"
+      },
+      "pull_rings_3": {
+        "title": "环上肌肉上升",
+        "description": "环上拉引的巅峰之作：严格的肌肉上升，要求极致的过渡力量、肩部稳定性和在不稳定环境下的手腕控制。"
+      },
+      "pull_weighted_1": {
+        "title": "负重引体向上",
+        "description": "佩戴背心或腰带，进行负重严格引体向上。负重重量从体重的10%到20%起步，增加阻力，促进力量突破纯自身体重训练的极限。"
+      },
+      "pull_weighted_2": {
+        "title": "负重引体向上多次重复",
+        "description": "进行高重复次数的负重引体向上。负重训练的多次重复累积提升原始引拉力量，为负重肌肉上升和更大重量训练打下基础。"
+      },
+      "pull_weighted_3": {
+        "title": "负重肌肉上升",
+        "description": "在负重下完成肌肉上升——这是徒手训练中最强大的一项技艺。需要爆发力拉升、精确控制过渡时机和全身紧张度。"
+      },
+      "core_1": {
+        "title": "核心桥型基础",
+        "description": "保持完美的桥式——身体从头到脚挺直，臀肌和腹肌紧绷。这是所有核心训练的起点。"
+      },
+      "core_2": {
+        "title": "侧桥",
+        "description": "用一只前臂支撑，抬起臀部——产生侧向核心刚性，直接推动人类旗形和悬垂腿部训练。"
+      },
+      "core_hh_1": {
+        "title": "死虫",
+        "description": "仰卧，手臂和腿抬起——同时放低对侧手臂和腿，保持紧绷。这是基础的抗伸展核心训练动作。"
+      },
+      "core_hh_2": {
+        "title": "反向伸展",
+        "description": "俯卧，抬起胸部和腿离开地面（超人姿势）。增强后链力量，配合空心体工作。"
+      },
+      "core_hh_3": {
+        "title": "空心体悬停",
+        "description": "仰卧，将身体变成空心弧线——肩膀离开地面，双腿伸直并略微抬高。这是每个徒手运动的基础全身紧绷技能。"
+      },
+      "core_hh_4": {
+        "title": "龙旗负向下放",
+        "description": "躺在长凳上，双手握后脑勺，缓慢将身体从垂直向水平放低。这是为完整的龙旗做准备的离心阶段。"
+      },
+      "core_hh_5": {
+        "title": "龙旗",
+        "description": "双手握杆，保持身体完全水平——只有肩部触及长凳。极限的抗伸展力量的巅峰表现。"
+      },
+      "core_bb_1": {
+        "title": "主动悬挂",
+        "description": "挂在单杠上，肩部主动下压和收紧——所有悬垂核心和拉引动作的基础。"
+      },
+      "core_bb_2": {
+        "title": "悬挂卷腿",
+        "description": "挂在单杠上，将膝盖驱向胸部。锻炼髋屈肌压缩和肩部稳定性，为更高难度的悬垂核心动作做准备。"
+      },
+      "core_bb_3": {
+        "title": "悬挂抬腿",
+        "description": "悬挂在单杠上，挺直双腿抬至水平线——对髋屈肌力量、握力耐力和脊椎完整控制要求极高。"
+      },
+      "core_bb_4": {
+        "title": "触脚杆",
+        "description": "悬挂，从悬挂状态折叠身体，触碰横杆——融合髋屈肌力量、握力和身体控制的全动作。"
+      },
+      "core_hf_1": {
+        "title": "悬挂雨刷",
+        "description": "悬挂于单杠上，将腿抬至水平，横扫左右——增强侧向核心力量和髋关节灵活性，为人类旗形打基础。"
+      },
+      "core_hf_2": {
+        "title": "收腿人旗",
+        "description": "握住竖杆，保持身体水平，膝盖收紧——真正的人旗姿势，需极致的侧向力量输出。"
+      },
+      "core_hf_3": {
+        "title": "单腿人旗",
+        "description": "一条腿伸展，一条腿弯曲——过渡性悬停姿势，减小杠杆作用，强化训练完整旗形的人体侧链力量。"
+      },
+      "core_hf_4": {
+        "title": "人类旗形",
+        "description": "握住竖杆，将全身保持水平——一项传奇的运动，要求极致的侧向核心和肩部力量。"
+      },
+      "core_weighted_1": {
+        "title": "负重桥型",
+        "description": "携带负重板或背心，保持桥式不动。额外负重放大抗伸展需求，是通往顶级核心稳定性的直通车。"
+      },
+      "core_weighted_2": {
+        "title": "负重抬腿",
+        "description": "带着踝重悬挂，抬腿至水平线。增加负重极大提升髋屈肌的要求以及握力耐力。"
+      },
+      "core_weighted_3": {
+        "title": "负重龙旗",
+        "description": "佩戴负重背心完成龙旗——史上最艰难的负重自身体重核心训练之一。极限抗伸展力量，在外部阻碍下实现。"
+      },
+      "core_rings_1": {
+        "title": "环上抬膝",
+        "description": "悬挂于环，驱动膝盖靠近胸部。环的不稳定性需要深层肩部包裹和优越的核心压缩效果，优于固定杆。"
+      },
+      "core_rings_2": {
+        "title": "环上滚轮",
+        "description": "跪姿抓握环，向前滚动至完全伸展。持续的摇晃要求深层稳定肌肉超负荷工作，比任何杠铃或滚轮动作都更难。"
+      },
+      "core_roller_1": {
+        "title": "腹部轮滑",
+        "description": "握紧腹轮，从跪姿滚到完全伸展，保持髋部锁定。爆发性抗伸展和全范围运动，使其成为最有效的负重核心训练之一。"
+      },
+      "core_band_1": {
+        "title": "弹力带Pallof压挺",
+        "description": "在胸高位置固定阻力带，用力向外推握把，同时抵抗旋转。抗旋转需求激活深层脊柱稳定肌，无任何卷腹动作能达到此效果。"
+      },
+      "legs_1": {
+        "title": "深蹲基础",
+        "description": "建立全深度的双腿深蹲模式，保持直立姿势。"
+      },
+      "legs_2": {
+        "title": "深蹲力量",
+        "description": "增加深蹲的总量，改善膝盖跟踪路径和深度。开启L-坐与单腿深蹲的训练路径。"
+      },
+      "legs_3": {
+        "title": "虾式深蹲",
+        "description": "单腿深蹲，后脚跟悬空——同时需求极佳的股四头肌力量、踝关节灵活性和良好的平衡能力。"
+      },
+      "legs_4": {
+        "title": "保加利亚分腿深蹲",
+        "description": "后脚抬高，前脚向前踩稳——直到后膝接近地面。最有效的单腿力量训练之一。"
+      },
+      "legs_ls_1": {
+        "title": "蝎子腿部拉伸",
+        "description": "坐直，双腿伸直，身体向前折叠——提升腿后肌柔韧性和髋屈肌激活，为完整L-座打基础。"
+      },
+      "legs_ls_2": {
+        "title": "L-座压缩",
+        "description": "坐姿，将脚后跟用力压地，尝试抬起——锻炼主动髋屈肌压缩，用力量取代柔韧性，达到L-座。"
+      },
+      "legs_ls_3": {
+        "title": "挤膝L-座",
+        "description": "在平行杠或地面用手推，抬起髋部——膝盖收向胸部，手臂锁定。通往完整L-座的入门姿势。"
+      },
+      "legs_ls_4": {
+        "title": "完整L-座",
+        "description": "双臂锁死，髋部抬起，双腿保持水平——展现髋屈肌力量、推动力和身体压缩的极致表现。"
+      },
+      "legs_ps_1": {
+        "title": "登阶",
+        "description": "控制性地登上高台——培养单腿稳定性和股四头肌激活，是迈向单腿深蹲的第一步。"
+      },
+      "legs_ps_2": {
+        "title": "辅助单腿深蹲",
+        "description": "完整深度地单腿深蹲，利用辅助或支撑——建立力量和灵活性，为去除辅助做准备。"
+      },
+      "legs_ps_3": {
+        "title": "宽站深蹲",
+        "description": "双脚并拢的双腿深蹲——模拟单腿深蹲的机械动作和踝关节需求，为完全单腿训练做准备。"
+      },
+      "legs_ps_4": {
+        "title": "单腿深蹲",
+        "description": "完全深度单腿深蹲，伸展自由腿——要求股四头肌力量、踝关节灵活性与全身平衡的顶级表现。"
+      },
+      "legs_weighted_1": {
+        "title": "负重壶铃深蹲",
+        "description": "双手持壶铃或哑铃于胸前，深蹲至极限。壶铃姿势有助保持垂直躯干和深膝动作，是负重腿部力量的理想入门。"
+      },
+      "legs_weighted_2": {
+        "title": "负重保加利亚分腿深蹲",
+        "description": "持哑铃进行后脚抬高的分腿深蹲。使用高强度髋屈肌拉伸的单腿负重，是非常有效的腿部力量训练。"
+      },
+      "legs_weighted_3": {
+        "title": "负重单腿深蹲",
+        "description": "佩戴负重壶铃或重量片完成完整单腿深蹲。增加负载极大挑战踝关节灵活性、单腿力量和身体平衡。"
+      },
+      "legs_weighted_4": {
+        "title": "负重虾式深蹲",
+        "description": "携带负重背心或哑铃进行虾式深蹲——最高级别的负重单腿动作，测试髋屈肌、股四头肌和全身平衡的极限。"
+      },
+      "legs_band_1": {
+        "title": "弹力带侧步",
+        "description": "在脚踝上绑上阻力带，采用四分之一深蹲姿势横向行走。主要锻炼中臀肌和髋外展肌，稳定每一个单腿动作。"
+      },
+      "legs_box_1": {
+        "title": "跳箱训练",
+        "description": "爆发跳上跳箱，柔和着陆，吸收冲击。引入力量发展速度和弹性能量储存的训练元素。"
+      },
+      "legs_sliders_1": {
+        "title": "滑板腘绳弯曲",
+        "description": "仰卧，将滑板置于脚后跟下，双腿弯曲向臀部卷起，同时保持髋部桥式。高离心负荷带来超越机器的训练刺激。"
+      },
+      "push_rings_1": {
+        "title": "环上俯卧撑",
+        "description": "在体操环上进行俯卧撑，控制RTO（环外旋）至顶格。环的不稳定性要求极致的三头肌、胸肌和肩部稳定控制。"
+      },
+      "push_rings_2": {
+        "title": "环上肌肉上升",
+        "description": "结合环上拉引和推压的爆发力，在环上实现单一的爆发动作。极限的环上技巧，需在整个动力链中保持稳定。"
+      },
+      "push_weighted_1": {
+        "title": "负重俯卧撑",
+        "description": "佩戴背心或腰带，负重进行俯卧撑。负重俯卧撑能更快建立顶级推压力量，超越其他任何自身体重复合动作。"
+      }
+    }
   },
   "history": {
     "title": "训练历史",
@@ -505,7 +860,49 @@
     "comment": "评论",
     "share": "分享",
     "noposts": "还没有动态 — 成为第一个分享训练的人！",
-    "shareWorkout": "分享训练"
+    "shareWorkout": "分享训练",
+    "aiVerified": "AI 认证",
+    "selfReported": "自我报告",
+    "justNow": "刚刚",
+    "minutesAgo": "{{n}}分钟前",
+    "hoursAgo": "{{n}}小时前",
+    "daysAgo": "{{n}}天前",
+    "noClipAttached": "暂无视频",
+    "commentLabel": "评论",
+    "noComments": "暂无评论。成为第一个！",
+    "addComment": "加入评论…",
+    "signInToComment": "登录以发表评论",
+    "startWorkout": "开始训练",
+    "communityTitle": "社区",
+    "communitySubtitle": "来自全球运动员的训练记录",
+    "searchAthletes": "搜索运动员、动作或#标签…",
+    "filterAll": "全部",
+    "filterPush": "推",
+    "filterPull": "拉",
+    "filterCore": "核心",
+    "filterLegs": "腿部",
+    "emptyAll1": "暂无动态",
+    "emptyAll2": "完成下个训练后分享你的精彩视频，成为第一个！",
+    "emptyPush1": "暂无推日视频！",
+    "emptyPush2": "成为第一个发布推日训练的人。",
+    "emptyPull1": "暂无拉日视频！",
+    "emptyPull2": "成为第一个发布拉日训练的人。",
+    "emptyCore1": "暂无核心训练视频！",
+    "emptyCore2": "成为第一个发布核心训练的人。",
+    "emptyLegs1": "暂无腿部训练视频！快来展示你的腿部力量。",
+    "emptyLegs2": "去健身房，展示你的腿部实力。",
+    "noEliteAchievements": "尚无精英成就。",
+    "masterEliteSkill": "掌握一项精英技能，即可在此亮相！",
+    "you": "你",
+    "justMastered": "刚刚掌握",
+    "postClip": "发布视频",
+    "shareClip": "分享视频",
+    "shareToCommunity": "分享至社区",
+    "addCaption": "添加说明…（可选）",
+    "uploadStarted": "上传开始 — 你可以自由浏览！",
+    "publishingPost": "发布中…",
+    "postedToCommunity": "已发布到社区！",
+    "savedClipLabel": "已保存视频"
   },
   "profile": {
     "masteryPoints": "精通点数",
@@ -540,7 +937,22 @@
     "days": "天",
     "routine": "今日训练",
     "complete": "完成",
-    "completed": "已完成"
+    "completed": "已完成",
+    "questionnaire": {
+      "title": "更新我的目标",
+      "subtitle": "个性化每日灵活性任务",
+      "goalQuestion": "你的主要特训目标是什么？",
+      "areasQuestion": "哪些肌肉群和关节限制了你？",
+      "areasHint": "（多选）",
+      "timeQuestion": "你每天能投入多少时间进行灵活性训练？",
+      "save": "保存我的偏好",
+      "tapToChange": "点击下方更改",
+      "suggested": "推荐",
+      "searchGoal": "搜索动作或技能…",
+      "searchBodyPart": "搜索身体部位…",
+      "minLabel": "{{n}} 分钟",
+      "goalsUpdated": "目标已更新！你的训练计划已个性化完成。"
+    }
   },
   "errors": {
     "notFound": "未找到页面",
@@ -557,5 +969,266 @@
     "almostDone": "快完成了 — 坚持住。",
     "setComplete": "本组完成！休息一下。",
     "workoutComplete": "训练完成！干得漂亮。"
+  },
+  "exercises": {
+    "push_up": "俯卧撑",
+    "diamond_push_up": "钻石俯卧撑",
+    "archer_push_up": "弓箭手俯卧撑",
+    "pseudo_planche_push_up": "伪平衡俯卧撑",
+    "pike_push_up": "箭头俯卧撑",
+    "elevated_pike_push_up": "抬高箭头俯卧撑",
+    "handstand_push_up": "倒立俯卧撑",
+    "handstand": "倒立",
+    "wall_handstand_push_up": "墙壁倒立俯卧撑",
+    "planche_lean": "平衡支撑倾斜",
+    "tuck_planche": "收腿平衡",
+    "straddle_planche": "开腿平衡",
+    "planche": "平衡支撑",
+    "full_planche": "完整平衡",
+    "scapular_shrugs": "肩胛耸肩",
+    "australian_rows": "澳式划船",
+    "negative_pull_ups": "负重引体向上",
+    "negative_pull_up": "负引体向上",
+    "pull_up": "引体向上",
+    "tuck_front_lever": "收腿前平衡",
+    "straddle_front_lever": "开腿前平衡",
+    "full_front_lever": "完整前平衡",
+    "chest_to_bar_pull_up": "胸触横杆引体",
+    "muscle_up": "肌力上升",
+    "kipping_muscle_up": "动力肌力上升",
+    "strict_muscle_up": "纯净肌力上升",
+    "archer_pull_up": "弓箭手引体",
+    "typewriter_pull_up": "打字机引体",
+    "one_arm_active_hang": "单臂悬挂",
+    "one_arm_pull_up": "单臂引体",
+    "plank": "平板支撑",
+    "side_plank": "侧平板",
+    "dead_bug": "死虫",
+    "superman": "超人式",
+    "hollow_body_hold": "空心体式",
+    "dragon_flag_negative": "龙旗负重",
+    "dragon_flag": "龙旗",
+    "active_hang": "主动悬挂",
+    "hanging_knee_tuck": "悬挂收膝",
+    "hanging_knee_tucks": "悬挂收膝（复数）",
+    "hanging_leg_raise": "悬挂抬腿",
+    "hanging_leg_raises": "悬挂抬腿（复数）",
+    "toes_to_bar": "脚趾触杆",
+    "windshield_wiper": "挡风玻璃擦拭者",
+    "windshield_wipers": "挡风玻璃擦拭者（复数）",
+    "hanging_windshield_wipers": "悬挂挡风擦拭者",
+    "tucked_human_flag": "收腿人旗",
+    "one_leg_human_flag": "单腿人旗",
+    "human_flag": "人旗",
+    "squat": "深蹲",
+    "air_squat": "空蹲",
+    "shrimp_squat": "虾蹲",
+    "bulgarian_split_squat": "保加利亚分腿蹲",
+    "nordic_curls": "北欧卷腿",
+    "pike_stretch": "翘臀伸展",
+    "l_sit_compression": "L型坐压缩",
+    "l_sit_compressions": "L型坐压缩训练",
+    "tuck_l_sit": "收腿L型坐",
+    "l_sit": "L型坐",
+    "full_l_sit": "完整L型坐",
+    "step_up": "登阶",
+    "step_ups": "登阶训练",
+    "assisted_pistol_squat": "辅助单腿深蹲",
+    "close_stance_squat": "窄距深蹲",
+    "pistol_squat": "单腿深蹲",
+    "explosive_pull_up": "爆发引体向上",
+    "ring_support_hold": "吊环支撑保持",
+    "ring_pull_up": "吊环引体向上",
+    "ring_muscle_up": "吊环肌肉向上",
+    "ring_dip": "吊环蝶泳",
+    "weighted_pull_up": "负重引体向上",
+    "weighted_muscle_up": "负重肌肉向上",
+    "weighted_dip": "负重双杠臂屈伸",
+    "weighted_plank": "负重平板支撑",
+    "weighted_dragon_flag": "负重飞龙旗",
+    "weighted_leg_raises": "负重抬腿",
+    "weighted_goblet_squat": "负重壶铃深蹲",
+    "weighted_bulgarian_split_squat": "负重保加利亚分腿蹲",
+    "weighted_pistol_squat": "负重单腿深蹲",
+    "weighted_shrimp_squat": "负重虾蹲",
+    "bar_volume_pull_up": "杆体重复引体训练",
+    "explosive_bar_pull_up": "爆发杆体引体向上",
+    "strict_bar_muscle_up": "严格杆体肌肉向上",
+    "weighted_volume": "负重训练总量",
+    "ab_roller_rollout": "腹轮滚动",
+    "banded_pallof_press": "弹力带庞洛夫推压",
+    "banded_lateral_walks": "弹力带侧步",
+    "box_jumps": "爆炸箱跳",
+    "slider_hamstring_curls": "滑动器股二头肌弯举",
+    "ring_knee_raises": "吊环膝盖抬升",
+    "ring_rollouts": "吊环滚轮",
+    "lunge": "弓步",
+    "burpee": "波比跳",
+    "back_extensions": "背部伸展"
+  },
+  "muscles": {
+    "wrist_flexors": "手腕屈肌",
+    "forearms": "前臂",
+    "wrist_extensors": "手腕伸肌",
+    "shoulders": "肩部",
+    "chest": "胸肌",
+    "lats": "背阔肌",
+    "thoracic_spine": "胸椎",
+    "anterior_shoulders": "前肩",
+    "biceps": "二头肌",
+    "hip_flexors": "髋屈肌",
+    "quads": "四头肌",
+    "psoas": "髂腰肌",
+    "hamstrings": "腿后肌群",
+    "calves": "小腿肌",
+    "lower_back": "下背部",
+    "obliques": "斜腹肌",
+    "rotator_cuff": "肩袖肌群",
+    "hip_external_rotators": "髋外旋肌",
+    "glutes": "臀大肌",
+    "it_band": "髂胫束",
+    "triceps": "三头肌",
+    "posterior_shoulder": "后肩肌",
+    "lat": "背阔肌",
+    "hip_adductors": "髋内收肌",
+    "anterior_deltoid": "前束三角肌",
+    "ankles": "踝关节",
+    "achilles": "跟腱",
+    "wrists": "手腕",
+    "finger_flexors": "手指屈肌",
+    "serratus": "锯齿肌",
+    "shoulder_extension": "肩部伸展",
+    "scapular_stabilisers": "肩胛骨稳定肌",
+    "teres_major": "肩胛大圆肌",
+    "shoulder_protraction": "肩胛前凸",
+    "wrist_tendons": "手腕腱",
+    "ankle_dorsiflexors": "足背屈肌",
+    "tibialis_anterior": "前胫肌",
+    "hip_adductors_": "髋内收肌",
+    "serratus_anterior": "前锯肌",
+    "lower_traps": "下斜方肌",
+    "scapular_retractors": "肩胛骨收缩肌",
+    "lower_trapezius": "下斜方肌",
+    "posterior_deltoid": "后束三角肌",
+    "rhomboids": "菱形肌",
+    "hip_extensors": "髋伸肌",
+    "anterior_deltoids": "前束三角肌",
+    "wrist_extensors_": "手腕伸肌"
+  },
+  "mobility": {
+    "stretches": {
+      "wristExtension": {
+        "name": "手腕背伸展",
+        "muscles": "手腕屈肌、前臂"
+      },
+      "wristFlexion": {
+        "name": "手腕屈曲伸展",
+        "muscles": "手腕伸肌、前臂"
+      },
+      "shoulderDislocates": {
+        "name": "肩关节外旋牵拉",
+        "muscles": "肩部、胸部、背阔肌"
+      },
+      "latStretch": {
+        "name": "悬挂背阔肌拉伸",
+        "muscles": "背阔肌、胸椎、肩部"
+      },
+      "chestOpener": {
+        "name": "门框胸部开阔",
+        "muscles": "胸部、前肩、肱二头肌"
+      },
+      "hipFlexorLunge": {
+        "name": "低弓步髋屈肌拉伸",
+        "muscles": "髋屈肌、股四头肌、腰端肌"
+      },
+      "hamstring": {
+        "name": "站立腿后腱拉伸",
+        "muscles": "腿后腱、小腿肌群、下背部"
+      },
+      "thoracicRotation": {
+        "name": "坐姿胸椎旋转",
+        "muscles": "胸椎、侧腹肌、肩袖"
+      },
+      "pigeonPose": {
+        "name": "鸽子式髋部打开",
+        "muscles": "髋外旋肌、臀肌、髂胫束"
+      },
+      "tricepsStretch": {
+        "name": "手臂后侧肱三头肌拉伸",
+        "muscles": "肱三头肌、后肩、背阔肌"
+      },
+      "pancake": {
+        "name": "劈叉拉伸",
+        "muscles": "腿后腱、内收肌、下背部"
+      },
+      "shoulderFlexion": {
+        "name": "反向肩部屈伸",
+        "muscles": "前束三角肌、胸部、肱二头肌"
+      },
+      "ankleCircles": {
+        "name": "踝关节旋转",
+        "muscles": "踝关节、小腿肌肉、跟腱"
+      },
+      "calfStretch": {
+        "name": "墙壁小腿肌拉伸",
+        "muscles": "小腿肌、跟腱、踝关节"
+      },
+      "wallPuppyPose": {
+        "name": "墙壁幼犬式",
+        "muscles": "胸椎、肩屈肌、背阔肌"
+      },
+      "firstKnuckleRaises": {
+        "name": "第一指关节提举",
+        "muscles": "手腕屈肌、指屈肌、前臂"
+      },
+      "butchersBlock": {
+        "name": "屠夫台式拉伸",
+        "muscles": "肱三头肌、背阔肌、前锯肌"
+      },
+      "germanHang": {
+        "name": "德式悬挂（被动）",
+        "muscles": "肩部伸展、前肩、肱二头肌"
+      },
+      "skinTheCat": {
+        "name": "猫一样拉伸（部分）",
+        "muscles": "肩部、肩胛骨稳定肌、背阔肌"
+      },
+      "deepLatStretch": {
+        "name": "深层背阔肌泡沫滚压",
+        "muscles": "背阔肌、大圆肌、胸椎"
+      },
+      "plancheLeans": {
+        "name": "平衡撑前倾",
+        "muscles": "手腕、肩前伸、前锯肌"
+      },
+      "reverseTabletop": {
+        "name": "反向桌状拉伸",
+        "muscles": "前束三角肌、胸部、手腕伸肌"
+      },
+      "fingerPulses": {
+        "name": "手指肌腱跳动",
+        "muscles": "指屈肌、手腕肌腱、前臂"
+      },
+      "ankleDorsiflexion": {
+        "name": "负重背屈踝关节",
+        "muscles": "背屈肌、跟腱、胫前肌"
+      },
+      "cossackSquats": {
+        "name": "卡萨克深蹲",
+        "muscles": "内收肌、臀肌、踝关节"
+      },
+      "scapularHangs": {
+        "name": "主动肩胛悬挂",
+        "muscles": "前锯肌、下陷肌、肩胛提肌"
+      },
+      "proneYRaises": {
+        "name": "俯卧Y字上举",
+        "muscles": "下部陷肌、后束三角肌、菱形肌"
+      },
+      "thoracicBridge": {
+        "name": "胸椎桥式",
+        "muscles": "胸椎、臀肌、髋伸肌"
+      }
+    }
   }
 }

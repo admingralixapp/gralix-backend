@@ -103,7 +103,25 @@
     "recalibrateBodyDesc": "Vücut ölçümlerini güncellemek için T-Poz taramanızı yeniden yapın",
     "mobilityDesc": "Hareket etmeye devam etmeniz için günlük hatırlatıcılar alın",
     "communityPosts": "Herkese Topluluk Gönderilerini Göster",
-    "setUpProfile": "Gizlilik ayarlarını etkinleştirmek için profilinizi kurun."
+    "setUpProfile": "Gizlilik ayarlarını etkinleştirmek için profilinizi kurun.",
+    "membership": "Üyelik",
+    "activeMembership": "Aktif üyelik",
+    "cancelMembership": "Üyeliği İptal Et",
+    "cancelMembershipDesc": "Fatura döngünüzün sonuna kadar erişiminiz devam eder.",
+    "cancelButton": "İptal Et",
+    "retentionOfferBar": "Özel teklif — sadece size özel",
+    "retentionHeadline": "Bekle! Hala gitme…",
+    "retentionBody": "Pro kalın ve bir sonraki ayınızda %40 İNDİRİM kazan. Dünyanın en iyi yapay zeka koçluğu ile yolculuğunu sürdür.",
+    "claim40Discount": "40% İndirim Talep Et",
+    "noThanksCancel": "Hayır teşekkürler, iptal etmeye devam et →",
+    "sorryToSeeYouGo": "Görmek üzücü, ayrılıyorsunuz.",
+    "loseAccessDesc": "Fatura döngünüzün sonunda İleri Analitikler ve Pro Auralar'a erişiminiz sonlanacak.",
+    "goBack": "Geri Dön",
+    "cancelling": "İptal ediliyor…",
+    "discountApplied": "İndirim uygulandı!",
+    "discountAppliedDesc": "Bir sonraki fatura döngünüzde %40 indirim uygulanmıştır.",
+    "subscriptionCancelled": "Üyelik iptal edildi",
+    "subscriptionCancelledDesc": "Üyeliğiniz iptal edildi. {{date}} tarihine kadar erişiminiz devam edecektir."
   },
   "shop": {
     "title": "CaliShop",
@@ -383,7 +401,21 @@
     "skillProgress": "Beceri Gelişimi",
     "viewSession": "Seansı Görüntüle",
     "trainNext": "Sonraki Antrenman →",
-    "continue": "Devam Et"
+    "continue": "Devam Et",
+    "backToHistory": "Geçmişe Dön",
+    "totalReps": "Toplam Tekrar",
+    "avgFormScore": "Ortalama Form Puanı",
+    "duration": "Süre",
+    "savedClip": "Kaydedilen Klip",
+    "expiresInDays_one": "{{count}} gün içinde sona erer",
+    "expiresInDays_other": "{{count}} gün içinde sona erer",
+    "loopInfo_one": "Otomatik Döngüler · dokunarak oynat/duraklat · {{count}} gün içinde sona erer",
+    "loopInfo_other": "Otomatik Döngüler · dokunarak oynat/duraklat · {{count}} gün içinde sona erer",
+    "shareToCommunity": "Toplulukla Paylaş",
+    "noClipSaved": "Bu oturum için kaydedilen klip yok. Bir sonraki sette POV inceleme ekranında \"Geçmişe Kaydet\" ile kaydedin.",
+    "aiVerified": "Yapay Zeka Onaylı",
+    "sessionNotFound": "Oturum bulunamadı.",
+    "loadingSession": "Yükleniyor…"
   },
   "skillTree": {
     "title": "Yetenek Ağacı",
@@ -409,7 +441,330 @@
     "whyTrain": "Neden bunu antrenman yapmalıyım?",
     "masterPrereq": "Bu düğüme erişmek için öncelikle gereksinim duyulan yeteneği ustalaşın.",
     "practiceAgain": "Tekrar Pratik Yap →",
-    "trainNowArrow": "Hemen Antrenman Yap →"
+    "trainNowArrow": "Hemen Antrenman Yap →",
+    "levelLabel": "Seviye {{level}} · {{levelName}}",
+    "staticHold": "Statik Tutuş",
+    "explosive": "Patlayıcı",
+    "whyTrainThis": "Neden bunu antrenman etmeliyim?",
+    "alsoRequires": "Ayrıca Gerektirir",
+    "masteryLabel": "Ustalık",
+    "completeLabel": "Tamamla",
+    "qualifyingSessions": "{{done}}/{{total}} uygun oturum",
+    "bestHold": "En İyi Tutuş",
+    "bestRepsLabel": "En İyi Tekrarlar",
+    "formScoreLabel": "Form Puanı",
+    "requiresLabel": "Gerektirir",
+    "coreStrengthHub": "ÇEKİRDEK GÜÇLÜK",
+    "nodes": {
+      "push_1": {
+        "title": "İlk Şınav",
+        "description": "Temiz ilk şınavını başar: düz vücut hattı, göğüs yerle temas ediyor, tam kol uzaması."
+      },
+      "push_2": {
+        "title": "Şınav Gücü",
+        "description": "Şınav kapasiteni ikiye katla ve formunu sıkılaştır — düzenli setler overhead ve planche yollarını açar."
+      },
+      "push_3": {
+        "title": "Elmas Şınav",
+        "description": "Ellerin göğsün altında elmas şeklinde, dirsekler arkada izler — triceps ve iç göğsü izole ederek elit pres yoğunluğu sağlar."
+      },
+      "push_4": {
+        "title": "Okçuluk Şınav",
+        "description": "Bir kol bükülür, diğeri genişçe uzar — asimetrik antrenman, tek kol çalışmalarına doğru güç inşa eder."
+      },
+      "push_5": {
+        "title": "Sahte Planche Şınav",
+        "description": "Elleri kalçalarınızın dışına çevrilmiş, vücut öne eğik — planche yüklemesini bilekler ve omuzlar üzerinde simüle eder."
+      },
+      "push_oh_1": {
+        "title": "Pike Şınav",
+        "description": "Kalçalar yüksek, eller omuz genişliğinde — başınızı ellerinizin arasına indirin ve tekrar itin. Omuzlara yük kaydırır, overhead pres'e geçiş sağlar."
+      },
+      "push_oh_2": {
+        "title": "Yükseltilmiş Pike Şınav",
+        "description": "Ayaklar kutuda veya bankta — yükseltilmiş açı omuz hareket alanını ve yükü artırır, kansız duruş şınavına doğru adım."
+      },
+      "push_oh_3": {
+        "title": "Duvar Denge Duruşu Şınavı",
+        "description": "Duvara tekme atın ve tüm vücut ağırlığınızı yukarı ittirin — en doğrudan yüklenme desenidir, denge şınav gücü için."
+      },
+      "push_oh_4": {
+        "title": "Denge Duruşu",
+        "description": "Duvar dışına denge kurarak el üzerinde durun — omuz gücü, bilek esnekliği ve mekansal farkındalık gerektiren kontrollü inversion."
+      },
+      "push_oh_5": {
+        "title": "Denge Duruşu Şınavı",
+        "description": "Yere iterek tam kilide ulaşın ve ters durumda üst gövde gücü ile itin — kalisteniklerin en yüksek overhead pres gücü."
+      },
+      "push_pp_1": {
+        "title": "Planche Eğilimi",
+        "description": "İtme pozisyonunda ellerinizi dışa çevirmiş, bileklerin üzerinde öne eğilin — bilekleri ve ön omuzları planche yüklemesine hazırlayın."
+      },
+      "push_pp_2": {
+        "title": "Tuck Planche",
+        "description": "Bacakları yerden kaldırırken bileklerin üzerinde eğilin, dizler içe doğru — ilk gerçek planche pozisyonu."
+      },
+      "push_pp_3": {
+        "title": "Kelebek Planche",
+        "description": "Bacaklar genişçe açık, planche pozisyonunda — tuck'tan çok daha zor, bütün vücut gerilimi gerektirir."
+      },
+      "push_pp_4": {
+        "title": "Tam Planche",
+        "description": "Vücut mükemmel yatay, bacaklar bir arada ve kilitli — kalisteniklerin efsanevi zirvesi, pres gücünün doruk noktası."
+      },
+      "pull_1": {
+        "title": "İlk Çekme",
+        "description": "Düz bir şekilde asılı kalmaktan temiz, tam aralıkta ilk çekmeyi başar."
+      },
+      "pull_2": {
+        "title": "Çekme Tutarlılığı",
+        "description": "Birden fazla tekrar ile güvenilir çekme gücü geliştir. Ön Panel yolu açar."
+      },
+      "pull_3": {
+        "title": "Negatif Çekişler",
+        "description": "Çene yüksekliğinde başlayın ve mümkün olan en yavaş şekilde kendinizi indirin. Bu eksantrik odaklı varyasyon, Muscle-Up yolunda patlayıcı çekme gücü inşa eder."
+      },
+      "pull_fl_1": {
+        "title": "Tuck Öndeki Denge Duruşu",
+        "description": "Bardan asılın, dizlerinizi göğsünüze doğru kıvırın ve yatay tutun. Full lever için gereken skapular depresyon ve lat gücü sağlar."
+      },
+      "pull_fl_2": {
+        "title": "Kelebek Öndeki Denge Duruşu",
+        "description": "Bacaklar genişçe açık tutularak yatay pozisyon alınır — tuck'tan çok daha zor, bütün vücut gerginliği gerektirir."
+      },
+      "pull_fl_3": {
+        "title": "Tam Öndeki Denge Duruşu",
+        "description": "Vücut mükemmel yatay, kollar düz, bacaklar bir arada kilitli — kalisteniklerin en çok arzulanan statik duruşlarından biri."
+      },
+      "pull_mu_1": {
+        "title": "Göğüs-Duvar Çekişi",
+        "description": "Çene yüksekliğini aşın — göğsünüz bar'a dokunana kadar kuvvetle çekin. Standart çekişten çok daha fazla güç gerektirir."
+      },
+      "pull_mu_2": {
+        "title": "Kipping Muscle-Up",
+        "description": "Kontrollü kalça sıçraması kullanarak bar geçişinde momentum oluşturun. Zamanlamayı ustalaştıktan sonra sıçramayı kaldırın."
+      },
+      "pull_mu_3": {
+        "title": "Sıkı Muscle-Up",
+        "description": "Sıfır salınım, sıfır sıçrama — barın üzerinde saf üst gövde gücü ile çekip iterek geçin. Çekme gücünün altın standardı."
+      },
+      "pull_am_1": {
+        "title": "Okçu Çekişi",
+        "description": "Bir kol çekerken diğeri düz uzanır — asimetrik oldukça zorlu bir antrenman, tek taraflı lat gücünü geliştirir."
+      },
+      "pull_am_2": {
+        "title": "Yazı Tahtası Çekişi",
+        "description": "Bar'a doğru çekin, sonra elden ele yanındaki kaydırma yapın — yatay çekme gücü ve kontrolünü gösteren olağanüstü bir hareket."
+      },
+      "pull_oah_1": {
+        "title": "Tek Kol Aktif Asılma",
+        "description": "Bardan tek kol ile asılın, omuz aktif halde sıkışmış ve aşağı çekili durumda. Tek taraflı omuz stabilitesi, tutuş dayanıklılığı ve yan zincir gücü sağlar."
+      },
+      "pull_oapu_1": {
+        "title": "Tek Kol Çekişi",
+        "description": "Unvanlı tek taraflı çekme testi — yardım olmadan, momentum kullanmadan, tek kol ile tam çekiş. Kalisteniklerin en nadir başarılarından biri."
+      },
+      "pull_rings_1": {
+        "title": "Halka Destek Tutusu",
+        "description": "Yüzükler üzerinde aktif destek tutun — kollar düzdür, vücut dik. Bu temel pozisyon, yüzük çekme öncesinde bilek, dirsek ve omuz stabilitesi gerektirir."
+      },
+      "pull_rings_2": {
+        "title": "Yüzük Çekiş",
+        "description": "Gymnastic yüzüklerde tam çekişler, herhangi bir sabit barın taklit edemediği tutuş stabilitesi ve omuz kontrolü gerektirir. Dengesizlik, her tekrarı daha zorlu hale getirir."
+      },
+      "pull_rings_3": {
+        "title": "Yüzük Muscle-Up",
+        "description": "Yüzük çekme ustalığının zirvesi: katı muscle-up, dengesizlik altında üst düzey geçiş gücü, omuz stabilitesi ve bilek kontrolü ister."
+      },
+      "pull_weighted_1": {
+        "title": "Ağırlıklı Çekiş",
+        "description": "Yelek veya kemer takıp, yük altında katı çekişler yapın. %10-20 vücut ağırlığından başlar; ek direnç, saf vücut ağırlığı antrenmanının ötesinde güç kazançlarını hızlandırır."
+      },
+      "pull_weighted_2": {
+        "title": "Ağırlıklı Çekiş Hacmi",
+        "description": "Yük ile yüksek tekrarlı çekiş setleri yapın. Yük altındaki hacim, ağırlıklı muscle-up ve daha ağır yükler için gereken ham çekiş gücünü inşa eder."
+      },
+      "pull_weighted_3": {
+        "title": "Ağırlıklı Muscle-Up",
+        "description": "Yüklü muscle-up — kalisteniklerde en güçlü hareketlerden biri. Patlayıcı çekiş, hassas geçiş zamanı ve tüm vücut gerilimi gerektirir."
+      },
+      "core_1": {
+        "title": "Karın Temeli",
+        "description": "Mükemmel plank tutun — vücut baştan ayağa düz, kalça ve karın kasları sıkılı. Tüm merkez çalışmalarının evrensel başlangıç noktası."
+      },
+      "core_2": {
+        "title": "Yan Plank",
+        "description": "Bir önkola dayanarak kalçaları kaldırın — yan merkez sertliği sağlar, insan bayrağı ve asılı bacak çalışmasına doğrudan aktarılır."
+      },
+      "core_hh_1": {
+        "title": "Sırtüstü Böcek",
+        "description": "Sırtüstü yatın, kollar ve bacaklar yukarıda olsun — zıt kol ve bacağı indirirken direnç gösterin. Temel anti-ekstansiyon merkez hareketi."
+      },
+      "core_hh_2": {
+        "title": "Sırt Uzantıları",
+        "description": "Yüzüstü yatın, göğsünüzü ve bacaklarınızı yerden kaldırın (Superman). Hollow gövde çalışmasını dengeleyecek arka zincir gücü inşa eder."
+      },
+      "core_hh_3": {
+        "title": "Hollow Body Tutucu",
+        "description": "Sırtüstü yatın ve hollow eğrisi yapın — omuzlar yerden kalkık, düz bacaklar yukarıda. Her kalistenik hareketin temel tüm vücut gerilim becerisi."
+      },
+      "core_hh_4": {
+        "title": "Dragon Bayrak Negatif",
+        "description": "Bankta yatın, başınızın arkasından tutun ve yavaşça vücut dikeyden yatay pozisyona indirin. Ekzentrik yükleme aşaması, tam dragon bayrak için sizi hazırlar."
+      },
+      "core_hh_5": {
+        "title": "Dragon Bayrak",
+        "description": "Başınızın arkasından tutun ve vücudunuzu tamamen yatay tutun — sadece omuzlar bankla temas eder. Z potentiyel güç ve merkez stabilitesi zirvesi."
+      },
+      "core_bb_1": {
+        "title": "Aktif Asılı Kalma",
+        "description": "Bardan tutunun, omuzlar aktif olarak aşağı itilmiş ve sıkıştırılmış olsun — tüm bar tabanlı merke ve çekiş çalışmalarının temelidir."
+      },
+      "core_bb_2": {
+        "title": "Dizleri Asılı Çekiş",
+        "description": "Bardan tutun, dizleri göğsünüze doğru çekin. Kalça fleksörlerini sıkıştırma ve omuz stabilitesi sağlar, daha zor asılı merkez çalışmaları için gereklidir."
+      },
+      "core_bb_3": {
+        "title": "Bacaklar Asılı Kaldırma",
+        "description": "Bardan tutun ve düz bacaklarınızı yatay konuma kaldırın — ciddi kalça fleksör gücü, tutuş dayanıklılığı ve tam omurga kontrolü gerektirir."
+      },
+      "core_bb_4": {
+        "title": "Ayak Parmakları Bar",
+        "description": "Asılı dururken, tüm vücudunuzu katlayın ve ayak parmaklarınızı barla temas ettirin — tek hareketle tam kalça fleksör gücü, tutuş ve beden kontrolü sağlar."
+      },
+      "core_hf_1": {
+        "title": "Asılı Silecekler",
+        "description": "Bardan asılın, bacaklar yatay hale getirip yanlara doğru sirkülasyon yapın. İnsan bayrağı için gereken yan merkez gücü ve kalça hareketliliği kazandırır."
+      },
+      "core_hf_2": {
+        "title": "Tıkalı İnsan Bayrağı",
+        "description": "Dikey direğe tutunun ve dizler içeri çekili, yatay vücut pozisyonu tutun — gerçek insan bayrağı pozisyonu, yüksek seviye yan kuvvet üretimi gerektirir."
+      },
+      "core_hf_3": {
+        "title": "Tek Bacak İnsan Bayrağı",
+        "description": "Bir bacak uzunca, diğeri bükülmüş — geçiş pozisyonu, kollar ve lever kuvvetini azaltarak tam bayrak için eğitimi sağlar."
+      },
+      "core_hf_4": {
+        "title": "İnsan Bayrağı",
+        "description": "Dikey direğe tutunun ve tüm vücudunuzu yatay tutun — efsanevi başarı, yüksek seviyede yan merkez ve omuz gücü gerektirir."
+      },
+      "core_weighted_1": {
+        "title": "Ağırlıklı Plank",
+        "description": "Ağırlık plakaları veya yelekle sert bir plank tutun. Ek yük, ekstansiyon karşıtı direnci artırır ve bu, elit merke sertliğinin en doğrudan yoludur."
+      },
+      "core_weighted_2": {
+        "title": "Ağırlıklı Bacak Kaldırma",
+        "description": "Baldır ağırlıkları takıp, barfiks altında düz bacaklarınızı yatay yapın. Ek yük, kalça fleksörleri ve tutuş dayanıklılığını önemli ölçüde artırır."
+      },
+      "core_weighted_3": {
+        "title": "Ağırlıklı Dragon Bayrak",
+        "description": "Ağırlık yeleğiyle Dragon Bayrak yapın — var olan en zorlu yüklemenin kalistenik merkez egzersizlerinden biri. Dış yük altında toplam anti-ekstansiyon gücü."
+      },
+      "core_rings_1": {
+        "title": "Yüzük Diz Kaldırma",
+        "description": "Gymnastic yüzüklerden asılın ve dizlerinizi göğsünüze doğru çekin. Dengesizlik, derin omuz durumu ve üstün merkez sıkıştırması sağlar, sabit barla kıyaslandığında."
+      },
+      "core_rings_2": {
+        "title": "Yüzük Rollouts",
+        "description": "Diz çökerek, gymnastic yüzüklere tutunun ve tamamen ileri uzayıncaya kadar yuvarlanın. Sürekli dengesizlik, derin stabilizatörlerin fazla çalışmasını sağlar — herhangi bir halter veya yuvarlak makineden daha zordur."
+      },
+      "core_roller_1": {
+        "title": "Karın Rulmanı Yuvarlama",
+        "description": "Karın rulmanını tutun ve diz çökerek tamamen uzayıncaya kadar yuvarlanın, kalçaları sabitleyin. Patlayıcı anti-ekstansiyon gereksinimi ve tam hareket alanı, en etkili yüklenmiş çekirdek hareketlerinden biri yapar."
+      },
+      "core_band_1": {
+        "title": "Band Pallof Press",
+        "description": "Göğüs yüksekliğinde direnç bandını sabitleyin ve sapı doğrudan vücudunuzdan uzaklaştırırken rotasyona direnç gösterin. Anti-rotasyon gücü, hiçbir crunch hareketinin erişemediği derin omurga stabilizatörlerini hedefler."
+      },
+      "legs_1": {
+        "title": "Çekirdek Çömelme",
+        "description": "Tam derinlik ve dik duruş ile çift taraflı çömelme paternini geliştirin."
+      },
+      "legs_2": {
+        "title": "Çömelme Gücü",
+        "description": "Çömelme hacmini artırın ve diz takip ve derinlik ayarını optimize edin. L-Sit ve Pistol çömelme yollarını açar."
+      },
+      "legs_3": {
+        "title": "Karides Çömelmesi",
+        "description": "Arka ayak geride tutularak yapılan tek bacaklı çömelme — olağanüstü quadriceps gücü, ayak bileği hareketliliği ve dengeyi aynı anda gerektirir."
+      },
+      "legs_4": {
+        "title": "Bulgar Split Çömelme",
+        "description": "Arka ayak yükseltilmiş, ön ayak önde — arka diz yere değene kadar çömelin. En etkili tek taraflı güç inşa edici hareketlerden biri."
+      },
+      "legs_ls_1": {
+        "title": "Pike Esneme",
+        "description": "Dik oturun, bacaklar düz ve öne doğru eğilin — hamstring esnekliği ve kalça fleksör aktivasyonu kazandırır, tam L-sit için gereklidir."
+      },
+      "legs_ls_2": {
+        "title": "L-Sit Sıkıştırmaları",
+        "description": "Oturun, topuklarınızı yere bastırın ve kaldırmaya çalışın — aktif kalça fleksör sıkıştırması, esneklik yerine güç kazandırır."
+      },
+      "legs_ls_3": {
+        "title": "Tıkalı L-Sit",
+        "description": "İki paralel çubuk veya zemine baskı yapın ve kalçaları kaldırın — dizler göğse yakın, kollar kilitli. Tam L-sit için giriş pozisyonu."
+      },
+      "legs_ls_4": {
+        "title": "Tam L-Sit",
+        "description": "Kollar kilitli, kalçalar yükselmiş, bacaklar düz ve yatay — kalça fleksörü gücü, pressing ve beden sıkıştırma gösterisi."
+      },
+      "legs_ps_1": {
+        "title": "Adım-Üzerine Çıkışlar",
+        "description": "Kontrollü şekilde yüksek bir yüzeye basılın — tek ayak stabilitesi ve quadriceps aktivasyonunu ilk aşamada geliştirin, pistol çömelmenin öncüleri."
+      },
+      "legs_ps_2": {
+        "title": "Destekli Pistol Çömelmesi",
+        "description": "Tam derinlikte, destek veya denge sağlayıcı tutarak tek bacak çömelme — bu hareketi güçlendirilmeden önce güç ve hareketlilik kazandırır."
+      },
+      "legs_ps_3": {
+        "title": "Yakın Ayak Çömelmesi",
+        "description": "İki ayak birlikte çömelme — pistol çömelme mekaniğine yakınlık ve ayak bileği hareketliliği gerektirir, tamamen tek taraflı olmadan önce."
+      },
+      "legs_ps_4": {
+        "title": "Pistol Çömelme",
+        "description": "Tam derinlikte, bir ayak önde olan tek bacak çömelme — quadriceps gücü, ayak bileği hareketliliği ve tüm vücut dengenizi bir arada sergiler."
+      },
+      "legs_weighted_1": {
+        "title": "Ağırlıklı Goblet Çömelme",
+        "description": "Göğüs yüksekliğinde kettlebell veya dambıl tutup, çömelin. Goblet pozisyonu, dik gövde ve derin diz takip sağlar, ideal yüklü bacak güçlendirme başlangıcıdır."
+      },
+      "legs_weighted_2": {
+        "title": "Ağırlıklı Bulgar Split Çömelme",
+        "description": "Dambıl tutup, arka ayak yükseltilmiş split çömelme yapın. Bu seviyedeki tek taraflı yük, kalça fleksörleri güçlendirmede en etkili hareketlerden biridir."
+      },
+      "legs_weighted_3": {
+        "title": "Ağırlıklı Pistol Çömelme",
+        "description": "Dambıl veya ağırlık levhası tutarak tam pistol çömelme yapın. Ek yük, yüksek seviye ayak bileği hareketliliği, tek ayak gücü ve dengeyi gerektirir."
+      },
+      "legs_weighted_4": {
+        "title": "Ağırlıklı Karides Çömelme",
+        "description": "Ağırlık yeleği veya dambıl ile karides çömelme yapın — en gelişmiş yüklenmiş tek taraflı hareketlerdendir. Yüksek seviye kalça fleksör, quadriceps ve denge gerektirir."
+      },
+      "legs_band_1": {
+        "title": "Band ile Yan Yürüyüş",
+        "description": "Ayak bileklerinize direnç bandı takın ve çeyrek çömelme pozisyonunda yana doğru yürüyün. Kalça abduktörleri ve yan merkezleri stabilize eden gluteus medius kaslarını hedefler."
+      },
+      "legs_box_1": {
+        "title": "Sıçrama Kutusu",
+        "description": "Yüzeyden patlayarak sıçrayın ve yumuşakça yumuşak inişle plyo kutusuna inin, etkisi yumuşak ve kontrollüdür. Kuvvet geliştirme hızı ve elastik enerji depolamayı öğretir."
+      },
+      "legs_sliders_1": {
+        "title": "Kaydırıcı Hamstring Curl",
+        "description": "Sırtüstü yatın, kaydırıcıları topuklarınız altına koyun ve kalçalarınızı kaldırmadan bacaklarınızı gluteal kaslara doğru kıvırın. Yüksek ekartik talep, makinaların taklit edemediği uyarı sağlar."
+      },
+      "push_rings_1": {
+        "title": "Yüzük Dips",
+        "description": "Gymnastic yüzüklerde kontrollü RTO (Yüzüklerin Dış Döndürülmesi) ile dip yapın. Dengesizlik, her tekrarda üstün triceps, göğüs ve omuz stabilizasyonu gerektirir."
+      },
+      "push_rings_2": {
+        "title": "Yüzük Muscle-Up",
+        "description": "Yüzük çekiş ve press gücünü tek patlayıcı hareket ile birleştirin. En zor yüzük becerisi, bütün kinetik zincir boyunca üstün stabiliteyi ister."
+      },
+      "push_weighted_1": {
+        "title": "Ağırlıklı Dips",
+        "description": "Yelek veya kemer takıp, yüklü şekilde dips yapın. Ağırlıklı dips, diğer tüm vücut ağırlığı hareketlerinden daha hızlı üst seviye press gücü inşa eder."
+      }
+    }
   },
   "history": {
     "title": "Antrenman Geçmişi",
@@ -505,7 +860,49 @@
     "comment": "Yorum",
     "share": "Paylaş",
     "noposts": "Henüz gönderi yok — ilk paylaşımı yap!",
-    "shareWorkout": "Antrenmanı Paylaş"
+    "shareWorkout": "Antrenmanı Paylaş",
+    "aiVerified": "Yapay Zeka Doğrulamalı",
+    "selfReported": "Kendinden Bildirildi",
+    "justNow": "şimdi",
+    "minutesAgo": "{{n}} dakika önce",
+    "hoursAgo": "{{n}} saat önce",
+    "daysAgo": "{{n}} gün önce",
+    "noClipAttached": "Klip ekli değil",
+    "commentLabel": "Yorum",
+    "noComments": "Henüz yorum yok. İlk sen ol!",
+    "addComment": "Yorum yap...",
+    "signInToComment": "Yorum yapmak için giriş yapın",
+    "startWorkout": "Antrenmana Başla",
+    "communityTitle": "Topluluk",
+    "communitySubtitle": "Dünyanın dört bir yanındaki sporculardan antrenmanlar",
+    "searchAthletes": "Sporcu, egzersiz veya #hashtags ile ara…",
+    "filterAll": "Hepsi",
+    "filterPush": "İtme",
+    "filterPull": "Çekme",
+    "filterCore": "Core",
+    "filterLegs": "Bacaklar",
+    "emptyAll1": "Henüz gönderi yok",
+    "emptyAll2": "Bir sonraki antrenmanın ardından klibini paylaş ve ilk ol!",
+    "emptyPush1": "Henüz Push Günü klibi yok!",
+    "emptyPush2": "İlk push antrenmanını paylaş!",
+    "emptyPull1": "Henüz Pull Günü klibi yok!",
+    "emptyPull2": "İlk pull antrenmanını paylaş!",
+    "emptyCore1": "Henüz Core klibi yok!",
+    "emptyCore2": "İlk core antrenmanını paylaş!",
+    "emptyLegs1": "Henüz Leg Günü klibi yok! İlk sen ol!",
+    "emptyLegs2": "Spor salonuna git ve bacak gücünü göster!",
+    "noEliteAchievements": "Henüz elita ulaşan başarı yok.",
+    "masterEliteSkill": "Bir Elit beceriye hakim ol ve burada görün!",
+    "you": "Sen",
+    "justMastered": "hemen ustalaştı",
+    "postClip": "Klip Paylaş",
+    "shareClip": "Klip Paylaş",
+    "shareToCommunity": "Toplulukla paylaş",
+    "addCaption": "Başlık ekle… (isteğe bağlı)",
+    "uploadStarted": "Yükleme başladı — serbestçe göz atabilirsin!",
+    "publishingPost": "Gönderi yayınlanıyor…",
+    "postedToCommunity": "Topluluğa gönderildi!",
+    "savedClipLabel": "Kaydedilen klip"
   },
   "profile": {
     "masteryPoints": "Uzmanlık Puanları",
@@ -540,7 +937,22 @@
     "days": "gün",
     "routine": "Bugünün Rutinleri",
     "complete": "Tamamla",
-    "completed": "Tamamlandı"
+    "completed": "Tamamlandı",
+    "questionnaire": {
+      "title": "Hedeflerimi Güncelle",
+      "subtitle": "Günlük hareketlilik görevlerini kişiselleştir",
+      "goalQuestion": "Birincil kalistenik hedefiniz nedir?",
+      "areasQuestion": "Hangi kaslar ve eklemler sizi engelliyor?",
+      "areasHint": "(hepsi uygun ise seç)",
+      "timeQuestion": "Günlük hareketlilik için ne kadar zaman ayırabilirsiniz?",
+      "save": "Tercihlerimi Kaydet",
+      "tapToChange": "Değiştirmek için aşağıya dokunun",
+      "suggested": "Önerilen",
+      "searchGoal": "Hareket ya da beceri ara…",
+      "searchBodyPart": "Vücut bölgesi ara…",
+      "minLabel": "{{n}} dakika",
+      "goalsUpdated": "Hedefler Güncellendi! Rutinin kişiselleştirildi."
+    }
   },
   "errors": {
     "notFound": "Sayfa bulunamadı",
@@ -557,5 +969,266 @@
     "almostDone": "Neredeyse bitti — güçlü kal.",
     "setComplete": "Set tamamlandı! Dinlen.",
     "workoutComplete": "Antrenman tamamlandı! Harika çaba."
+  },
+  "exercises": {
+    "push_up": "Şınav",
+    "diamond_push_up": "Elmas Şınav",
+    "archer_push_up": "Okçu Şınav",
+    "pseudo_planche_push_up": "Sözde Planche Şınav",
+    "pike_push_up": "Siper Şınav",
+    "elevated_pike_push_up": "Yüksek Siper Şınav",
+    "handstand_push_up": "DurdurmaŞınav",
+    "handstand": "Durdurma",
+    "wall_handstand_push_up": "Duvar DurdurmaŞınav",
+    "planche_lean": "Planche Eğilme",
+    "tuck_planche": "Kapanmış Planche",
+    "straddle_planche": "Açık Planche",
+    "planche": "Planche",
+    "full_planche": "Tam Planche",
+    "scapular_shrugs": "Scapula Çekmeleri",
+    "australian_rows": "Avustralya Sıraları",
+    "negative_pull_ups": "Negatif Çekiş",
+    "negative_pull_up": "Negatif Çekiş",
+    "pull_up": "Çekiş",
+    "tuck_front_lever": "Kapanmış Öne-Kelepçeli",
+    "straddle_front_lever": "Açık Öne-Kelepçeli",
+    "full_front_lever": "Tam Öne-Kelepçeli",
+    "chest_to_bar_pull_up": "Göğüs-Bar Çekiş",
+    "muscle_up": "Müskül Çekişi",
+    "kipping_muscle_up": "Sıçrayışlı Müskül Çekişi",
+    "strict_muscle_up": "Sıkı Müskül Çekişi",
+    "archer_pull_up": "Okçu Çekiş",
+    "typewriter_pull_up": "Daktilo Çekiş",
+    "one_arm_active_hang": "Tek Kolla Aktif Asılı Kalma",
+    "one_arm_pull_up": "Tek Kolla Çekiş",
+    "plank": "Plank",
+    "side_plank": "Yan Plank",
+    "dead_bug": "Ölü Böcek",
+    "superman": "Süpermen",
+    "hollow_body_hold": "Boş Gövde Durağı",
+    "dragon_flag_negative": "Ejderha Bayrağı Negatif",
+    "dragon_flag": "Ejderha Bayrağı",
+    "active_hang": "Aktif Asılı Kalma",
+    "hanging_knee_tuck": "Asılı Dizcek",
+    "hanging_knee_tucks": "Asılı Dizcekler",
+    "hanging_leg_raise": "Asılı Bacak Kaldırma",
+    "hanging_leg_raises": "Asılı Bacak Kaldırmalar",
+    "toes_to_bar": "_TOES_Bar'a Dokun",
+    "windshield_wiper": "Cam Sileceği Hareketleri",
+    "windshield_wipers": "Cam Sileceği Hareketleri",
+    "hanging_windshield_wipers": "Asılı Silecek Hareketleri",
+    "tucked_human_flag": "Kapanmış İnsan Bayrağı",
+    "one_leg_human_flag": "Tek Bacak İnsan Bayrağı",
+    "human_flag": "İnsan Bayrağı",
+    "squat": "Çömelme",
+    "air_squat": "Hava Çömelmesi",
+    "shrimp_squat": "Karides Çömelmesi",
+    "bulgarian_split_squat": "Bulgar Split Çömelmesi",
+    "nordic_curls": "Nordic Curl",
+    "pike_stretch": "İp Sürme",
+    "l_sit_compression": "L-Şekli Oturma Kasılma",
+    "l_sit_compressions": "L-Şekli Oturma Kasılmaları",
+    "tuck_l_sit": "Kapanmış L-Şekli Oturma",
+    "l_sit": "L-Şekli Oturma",
+    "full_l_sit": "Tam L-Şekli Oturma",
+    "step_up": "Basamak Çıkma",
+    "step_ups": "Basamak Çıkmalar",
+    "assisted_pistol_squat": "Yardımlı Tabanca Çömelmesi",
+    "close_stance_squat": "Kısa Durmalı Çömelme",
+    "pistol_squat": "Tabanca Çömelmesi",
+    "explosive_pull_up": "Patlayıcı Çekiş Iskelesi",
+    "ring_support_hold": "Halka Destek Pozisyonu",
+    "ring_pull_up": "Halka Çekiş",
+    "ring_muscle_up": "Halka Kas Kaldırma",
+    "ring_dip": "Halka Dipleri",
+    "weighted_pull_up": "Ağırlıklı Çekiş Iskelesi",
+    "weighted_muscle_up": "Ağırlıklı Kas Kaldırma",
+    "weighted_dip": "Ağırlıklı Dip",
+    "weighted_plank": "Ağırlıklı Plank",
+    "weighted_dragon_flag": "Ağırlıklı Ejderha Bayrağı",
+    "weighted_leg_raises": "Ağırlıklı Bacak Kaldırma",
+    "weighted_goblet_squat": "Ağırlıklı Kupalı Çömelme",
+    "weighted_bulgarian_split_squat": "Ağırlıklı Bulgar Split Çömelmesi",
+    "weighted_pistol_squat": "Ağırlıklı Tabanca Çömelmesi",
+    "weighted_shrimp_squat": "Ağırlıklı Karides Çömelmesi",
+    "bar_volume_pull_up": "Bar Hacimli Çekiş",
+    "explosive_bar_pull_up": "Patlayıcı Bar Çekişi",
+    "strict_bar_muscle_up": "Sıkı Bar Kas Kaldırma",
+    "weighted_volume": "Ağırlıklı Hacim",
+    "ab_roller_rollout": "Karın Rulo İleri Kaydırma",
+    "banded_pallof_press": "Bandlı Pallof Basıncı",
+    "banded_lateral_walks": "Bandlı Yan Yürüyüşler",
+    "box_jumps": "Kutu Atlama",
+    "slider_hamstring_curls": "Kaydırıcı Hamstring Curl",
+    "ring_knee_raises": "Halka Diz Kaldırma",
+    "ring_rollouts": "Halka Rulo Kaydırma",
+    "lunge": "Hamle",
+    "burpee": "Burpee",
+    "back_extensions": "Sırt Genişletmeleri"
+  },
+  "muscles": {
+    "wrist_flexors": "Bilek Bükücüler",
+    "forearms": "Ön Kol",
+    "wrist_extensors": "Bilek Düzleştiriciler",
+    "shoulders": "Omuzlar",
+    "chest": "Göğüs",
+    "lats": "Lats Kasları",
+    "thoracic_spine": "Torakal Omurga",
+    "anterior_shoulders": "Ön Omuzlar",
+    "biceps": "Biseps",
+    "hip_flexors": "Kalça Fleksörleri",
+    "quads": "Üç Başlı Kaslar",
+    "psoas": "Psoas Kas",
+    "hamstrings": "Hamstring Kaslar",
+    "calves": "Baldırlar",
+    "lower_back": "Alt Sırt",
+    "obliques": "Oblik Kaslar",
+    "rotator_cuff": "Rotator Manşet",
+    "hip_external_rotators": "Kalça Ekstern Rotatörleri",
+    "glutes": "Kalça Kasları",
+    "it_band": "IT Bandı",
+    "triceps": "Triceps",
+    "posterior_shoulder": "Arka Omuz",
+    "lat": "Lat",
+    "hip_adductors": "Kalça Adduktorleri",
+    "anterior_deltoid": "Ön Deltoid",
+    "ankles": "Ayak Bilekleri",
+    "achilles": "Achilles Tendonu",
+    "wrists": "Bilekler",
+    "finger_flexors": "Parmak Bükücüler",
+    "serratus": "Serratus",
+    "shoulder_extension": "Omuz Genişletme",
+    "scapular_stabilisers": "Omuz Kemiği Stabilizatörleri",
+    "teres_major": "Teres Major",
+    "shoulder_protraction": "Omuz İleri Hareket",
+    "wrist_tendons": "Bilek Tendonları",
+    "ankle_dorsiflexors": "Ayak Bileği Dorsifleksörleri",
+    "tibialis_anterior": "Tibialis Anterior",
+    "hip_adductors_": "Kalça Adduktorleri",
+    "serratus_anterior": "Serratus Anterior",
+    "lower_traps": "Alt Trapez Kasları",
+    "scapular_retractors": "Omuz Kemiği Çekicileri",
+    "lower_trapezius": "Alt Trapez Kasları",
+    "posterior_deltoid": "Arka Deltoid",
+    "rhomboids": "Rhomboidler",
+    "hip_extensors": "Kalça Ekstansörleri",
+    "anterior_deltoids": "Ön Deltoidler",
+    "wrist_extensors_": "Bilek Ekstansörleri"
+  },
+  "mobility": {
+    "stretches": {
+      "wristExtension": {
+        "name": "Bilek Uzatma Germe",
+        "muscles": "Bilek Bükücüler, Ön Kollar"
+      },
+      "wristFlexion": {
+        "name": "Bilek Bükme Germe",
+        "muscles": "Bilek Düzleştiriciler, Ön Kollar"
+      },
+      "shoulderDislocates": {
+        "name": "Omuz Çözme",
+        "muscles": "Omuzlar, Göğüs, Lats"
+      },
+      "latStretch": {
+        "name": "Asılı Lat Germe",
+        "muscles": "Lats, Toraks Omurgası, Omuzlar"
+      },
+      "chestOpener": {
+        "name": "Kapı Çerçevesi Göğüs Açıcı",
+        "muscles": "Göğüs, Ön Omuzlar, Biceps"
+      },
+      "hipFlexorLunge": {
+        "name": "Alçak Lungedeki Kalça Flexörü Açma",
+        "muscles": "Kalça Flexörleri, Quadriceps, Psoas"
+      },
+      "hamstring": {
+        "name": "Ayakta Hamstring Germe",
+        "muscles": "Hamstringler, Baldırlar, Alt Sırt"
+      },
+      "thoracicRotation": {
+        "name": "Oturarak Torasik Rotasyon",
+        "muscles": "Torasik Omurga, Obliques, Rotator Kapağı"
+      },
+      "pigeonPose": {
+        "name": " Güvercin Pozisyonu Kalça Açıcı",
+        "muscles": "Kalça Dış Rotatörleri, Kalça Kasları, IT Band"
+      },
+      "tricepsStretch": {
+        "name": "Overhead Triceps Germe",
+        "muscles": "Triceps, Arkadan Omuz, Lat"
+      },
+      "pancake": {
+        "name": "Pankek Germe",
+        "muscles": "Hamstringler, Kalça İç Rotatörleri, Alt Sırt"
+      },
+      "shoulderFlexion": {
+        "name": "Ters Omuz Flexionu",
+        "muscles": "Ön Deltoid, Göğüs, Biceps"
+      },
+      "ankleCircles": {
+        "name": "Ayak Bileği Mobilite Daireleri",
+        "muscles": "Ayak bilekleri, Baldırlar, Aşılar"
+      },
+      "calfStretch": {
+        "name": "Duvar Baldır Germe",
+        "muscles": "Baldırlar, Aşılar, Ayak Bilekleri"
+      },
+      "wallPuppyPose": {
+        "name": "Duvar Köpek Pozu",
+        "muscles": "Torasik Omurga, Omuz Fleksörleri, Lats"
+      },
+      "firstKnuckleRaises": {
+        "name": "Birinci Parmak Eklem Yükselmeleri",
+        "muscles": "Bilek Fleksörleri, Parmak Fleksörleri, Ön Kol Kasları"
+      },
+      "butchersBlock": {
+        "name": "Kasap Blok Germe",
+        "muscles": "Triceps, Lats, Serratus"
+      },
+      "germanHang": {
+        "name": "Alman Asılı Pozisyon (Pasif)",
+        "muscles": "Omuz Uzatması, Ön Omuz, Biceps"
+      },
+      "skinTheCat": {
+        "name": "Kedi Derisi (Kısmi)",
+        "muscles": "Omuzlar, Skapular Stabilizatörler, Lats"
+      },
+      "deepLatStretch": {
+        "name": "Derin Lat Köpük Rulo",
+        "muscles": "Lats, Tere Major, Torasik Omurga"
+      },
+      "plancheLeans": {
+        "name": "Planche Eğilmeleri",
+        "muscles": "Bilekler, Omuz Protraction, Serratus"
+      },
+      "reverseTabletop": {
+        "name": "Ters Masanın Gerilmesi",
+        "muscles": "Ön Deltoid, Göğüs, Bilek Extansörleri"
+      },
+      "fingerPulses": {
+        "name": "Parmak Tendon Nabızları",
+        "muscles": "Parmak Fleksörleri, Bilek Tendonları, Ön Kol Kasları"
+      },
+      "ankleDorsiflexion": {
+        "name": "Ağırlıklı Ayak Bileği Dorsifleksiyonu",
+        "muscles": "Ayak Bileği Dorsifleksörleri, Aşılar, Tibialis Anterior"
+      },
+      "cossackSquats": {
+        "name": "Cossack Çömelmeleri",
+        "muscles": "Kalça Adduktörleri, Glutes, Ayak Bilekleri"
+      },
+      "scapularHangs": {
+        "name": "Aktif Skapular Asılı Kalma",
+        "muscles": "Serratus Anterior, Alt Traps, Skapular Retraktörleri"
+      },
+      "proneYRaises": {
+        "name": "Y Pozisyonu Kaldırışları",
+        "muscles": "Alt Trapez, Arkadan Deltoid, Romboidler"
+      },
+      "thoracicBridge": {
+        "name": "Torasik Köprü",
+        "muscles": "Torasik Omurga, Glutes, Kalça Ekstansörleri"
+      }
+    }
   }
 }

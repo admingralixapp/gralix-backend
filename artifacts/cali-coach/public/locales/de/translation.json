@@ -103,7 +103,25 @@
     "recalibrateBodyDesc": "Wiederholen Sie Ihren T-Pose-Scan, um Körpermaße zu aktualisieren",
     "mobilityDesc": "Erhalte tägliche Erinnerungen, um in Bewegung zu bleiben",
     "communityPosts": "Gemeinschaftsbeiträge für alle anzeigen",
-    "setUpProfile": "Richte dein Profil ein, um Datenschutzeinstellungen zu aktivieren."
+    "setUpProfile": "Richte dein Profil ein, um Datenschutzeinstellungen zu aktivieren.",
+    "membership": "Mitgliedschaft",
+    "activeMembership": "Aktive Mitgliedschaft",
+    "cancelMembership": "Mitgliedschaft kündigen",
+    "cancelMembershipDesc": "Du behältst den Zugriff bis zum Ende deines Abrechnungszyklus.",
+    "cancelButton": "Kündigen",
+    "retentionOfferBar": "Spezialangebot – exklusiv für dich",
+    "retentionHeadline": "Warte! Geh noch nicht…",
+    "retentionBody": "Bleib Pro und sichere dir 40 % RABATT auf deinen nächsten Monat. Mach weiter auf dem Weg zum besten AI-Coaching der Welt.",
+    "claim40Discount": "40 % Rabatt sichern",
+    "noThanksCancel": "Nein danke, weiter kündigen →",
+    "sorryToSeeYouGo": "Es tut uns leid, dich gehen zu sehen.",
+    "loseAccessDesc": "Am Ende deines Abrechnungszyklus verlierst du Zugriff auf Advanced Analytics und Pro Auren.",
+    "goBack": "Zurück",
+    "cancelling": "Werde gekündigt…",
+    "discountApplied": "Rabatt angewendet!",
+    "discountAppliedDesc": "40 % Rabatt wurden auf deinen nächsten Abrechnungszeitraum gewährt.",
+    "subscriptionCancelled": "Mitgliedschaft gekündigt",
+    "subscriptionCancelledDesc": "Deine Mitgliedschaft wurde gekündigt. Du hast noch Zugriff bis {{date}}."
   },
   "shop": {
     "title": "CaliShop",
@@ -383,7 +401,21 @@
     "skillProgress": "Fähigkeitsfortschritt",
     "viewSession": "Sitzung Anzeigen",
     "trainNext": "Weiter Trainieren →",
-    "continue": "Fortsetzen"
+    "continue": "Fortsetzen",
+    "backToHistory": "Zurück zur Historie",
+    "totalReps": "Gesamtwiederholungen",
+    "avgFormScore": "Durchschnittliche Technikbewertung",
+    "duration": "Dauer",
+    "savedClip": "Gespeicherter Clip",
+    "expiresInDays_one": "Läuft in {{count}} Tag ab",
+    "expiresInDays_other": "Läuft in {{count}} Tagen ab",
+    "loopInfo_one": "Schleife automatisch · tippe zum Abspielen/Pausieren · läuft in {{count}} Tag",
+    "loopInfo_other": "Schleife automatisch · tippe zum Abspielen/Pausieren · läuft in {{count}} Tagen",
+    "shareToCommunity": "In Gemeinschaft teilen",
+    "noClipSaved": "Kein Clip für diese Sitzung gespeichert. Nutze \"Zur Historie hinzufügen\" auf dem POV-Review-Bildschirm nach deinem nächsten Satz.",
+    "aiVerified": "AI-verifiziert",
+    "sessionNotFound": "Sitzung nicht gefunden.",
+    "loadingSession": "Lädt…"
   },
   "skillTree": {
     "title": "Fähigkeitenbaum",
@@ -409,7 +441,330 @@
     "whyTrain": "Warum trainieren?",
     "masterPrereq": "Meistere die Voraussetzung, um diesen Knoten freizuschalten.",
     "practiceAgain": "Wiederholen →",
-    "trainNowArrow": "Jetzt trainieren →"
+    "trainNowArrow": "Jetzt trainieren →",
+    "levelLabel": "Stufe {{level}} · {{levelName}}",
+    "staticHold": "Statischer Halt",
+    "explosive": "Explosiv",
+    "whyTrainThis": "Warum das trainieren?",
+    "alsoRequires": "Erfordert auch",
+    "masteryLabel": "Meisterschaft",
+    "completeLabel": "Abgeschlossen",
+    "qualifyingSessions": "{{done}}/{{total}} qualifizierende Sitzungen",
+    "bestHold": "Bester Halt",
+    "bestRepsLabel": "Beste Wiederholungen",
+    "formScoreLabel": "Technikwertung",
+    "requiresLabel": "Benötigt",
+    "coreStrengthHub": "KERNKRAFT",
+    "nodes": {
+      "push_1": {
+        "title": "Erster Liegestütz",
+        "description": "Erreiche deinen ersten sauber ausgeführten Liegestütz: gerader Körper, Brust berührt den Boden, vollständige Armstreckung."
+      },
+      "push_2": {
+        "title": "Liegestütz-Kraft",
+        "description": "Verdopple deine Liegestützleistung und verbessere deine Technik – konsequente Sets öffnen die Wege zu Overhead- und Planche-Übungen."
+      },
+      "push_3": {
+        "title": "Diamant-Liegestütz",
+        "description": "Hände formen eine Raute unter der Brust, Ellenbogen nach hinten – isoliert die Trizeps und die innere Brust für maximale Drückdichte."
+      },
+      "push_4": {
+        "title": "Bogen-Liegestütz",
+        "description": "Ein Arm beugt sich, während der andere breit gestreckt wird – asymmetrisches Training für unilaterale Drückstärke in Richtung Einarm-Workouts."
+      },
+      "push_5": {
+        "title": "Pseudo-Planche-Liegestütz",
+        "description": "Hände außerhalb deiner Hüften rotieren lassen, Körper nach vorne lehnen – simuliert Planche-Belastung auf Handgelenken und Schultern beim Drücken."
+      },
+      "push_oh_1": {
+        "title": "Pike-Liegestütz",
+        "description": "Hüften hoch, Hände schulterbreit – Kopf zwischen den Händen senken und zurückdrücken. Belastung auf Schultern verschieben, Brücke zur Überkopfdrückkraft."
+      },
+      "push_oh_2": {
+        "title": "Erhöhter Pike-Liegestütz",
+        "description": "Füße auf einer Kiste oder Bank – der erhöhte Winkel erhöht den Bewegungsumfang der Schultern und die Belastung, ein direkter Schritt zum Handstand-Liegestütz."
+      },
+      "push_oh_3": {
+        "title": "Wand-Handstand-Liegestütz",
+        "description": "Gegen die Wand treten und das volle Körpergewicht über Kopf drücken – die direkteste Belastungsart für Handstand-Drücken."
+      },
+      "push_oh_4": {
+        "title": "Handstand",
+        "description": "Balance auf den Händen fern vom Wall – kontrollierte Umkehrhaltung, die Schulterkraft, Handgelenksflexibilität und Raumwahrnehmung fordert."
+      },
+      "push_oh_5": {
+        "title": "Handstand-Liegestütz",
+        "description": "Vom Boden bis zur vollen Streckung drücken, während du umgekehrte Haltung einnimmst – der Höhepunkt der calisthenics-Überkopfdrückkraft."
+      },
+      "push_pp_1": {
+        "title": "Planche-Neigung",
+        "description": "Nach vorne über die Handgelenke im Liegestütz-Stand neigen, Hände rotieren lassen – konditioniert die Handgelenke und die vordere Schulter für Planche-Belastung."
+      },
+      "push_pp_2": {
+        "title": "Tuck-Planche",
+        "description": "Beide Füße vom Boden heben, während du über den Handgelenken nach vorne lehnst und die Knie anziehst – die erste echte Planche-Position."
+      },
+      "push_pp_3": {
+        "title": "Straddle-Planche",
+        "description": "Beine weit auseinander in der Straddle-Position, während du die Planche hältst – deutlich schwieriger als Tuck, erfordert totale Spannung im Körper."
+      },
+      "push_pp_4": {
+        "title": "Vollständige Planche",
+        "description": "Körper perfekt horizontal, Beine zusammen und durchgestreckt – der legendäre Höhepunkt der calisthenics-Drückkraft."
+      },
+      "pull_1": {
+        "title": "Erster Klimmzug",
+        "description": "Führe deinen ersten sauberen, vollständigen Klimmzug aus dem Dead Hang aus."
+      },
+      "pull_2": {
+        "title": "Klimmzug-Kontinuität",
+        "description": "Entwickle zuverlässige Klimmzug-Kraft über mehrere Wiederholungen. Öffnet den Weg zum Frontlever."
+      },
+      "pull_3": {
+        "title": "Negative Klimmzüge",
+        "description": "Beginne mit Kinn über der Stange und senke dich so langsam wie möglich ab. Diese exzentrische Variante baut die explosive Zugkraft für den Muscle-Up auf."
+      },
+      "pull_fl_1": {
+        "title": "Tuck-Frontlever",
+        "description": "Hänge an der Stange, ziehe die Knie zur Brust und halte deinen Körper horizontal. Baut das Schulterblattabsenkung- und Lat-Kraft auf für den vollständigen Lever."
+      },
+      "pull_fl_2": {
+        "title": "Straddle-Frontlever",
+        "description": "Beine weit in der Straddle-Position ausstrecken und horizontal halten. Deutlich anspruchsvoller als Tuck – erfordert totale Körperspannung."
+      },
+      "pull_fl_3": {
+        "title": "Vollständiger Front Lever",
+        "description": "Körper perfekt horizontal, Arme gestreckt, Beine zusammen – eine der begehrtesten statischen Haltungen im Calisthenics."
+      },
+      "pull_mu_1": {
+        "title": "Körper-zu-Stange-Klimmzug",
+        "description": "Explodiere über das Kinn über der Stange – bis die Brust die Stange berührt. Erfordert deutlich mehr Zugkraft als ein Standard-Klimmzug."
+      },
+      "pull_mu_2": {
+        "title": "Kipping Muscle-Up",
+        "description": "Nutze einen kontrollierten Hüft-Kip, um Momentum durch den Übergang an der Stange zu erzeugen. Meistern Sie das Timing, bevor das Kip eliminiert wird."
+      },
+      "pull_mu_3": {
+        "title": "Strenger Muscle-Up",
+        "description": "Kein Schwung, kein Kip – zieh durch und drück mit reiner Oberkörperkraft über die Stange. Das Gold-Standard-Drückkraft-Training."
+      },
+      "pull_am_1": {
+        "title": "Bogen-Klimmzug",
+        "description": "Ein Arm zieht, während der andere gerade ausstreckt – ein brutal asymmetrisches Drill, das die unilaterale Lat-Kraft für den Einarm-Klimmzug fördert."
+      },
+      "pull_am_2": {
+        "title": "Typewriter-Klimmzug",
+        "description": "Ziehe bis zur Stange, dann gleite seitlich von Hand zu Hand am oberen Ende – beeindruckende Demonstration horizontaler Zugkraft und Kontrolle."
+      },
+      "pull_oah_1": {
+        "title": "Einarmiges aktives Hängen",
+        "description": "Hänge an der Stange mit einem Arm, Schulter aktiv fixiert und abgesenkt. Entwickelt unilaterale Schulterstabilität, Griff-Ausdauer und seitliche Kettenkraft."
+      },
+      "pull_oapu_1": {
+        "title": "Einarmiger Klimmzug",
+        "description": "Der ultimative Test unilateraler Zugkraft – vollständiger Klimmzug mit einem Arm, ohne Unterstützung, ohne Schwung. Einer der seltensten Rekorde im Calisthenics."
+      },
+      "pull_rings_1": {
+        "title": "Ringe Support-Halten",
+        "description": "Halte eine aktive Unterstützung an den Ringen — Arme gestreckt, Körper aufrecht. Diese grundlegende Position erfordert Stabilität im Handgelenk, Ellenbogen und Schulter, bevor mit dem Ringenziehen begonnen wird."
+      },
+      "pull_rings_2": {
+        "title": "Ring Klimmzug",
+        "description": "Volle Klimmzüge an den Turnringen fordern Griffstabilität und Schulterkontrolle, die keine feste Stange nachahmen kann. Die Instabilität macht jede Wiederholung anspruchsvoller."
+      },
+      "pull_rings_3": {
+        "title": "Ring Muscle-Up",
+        "description": "Der Höhepunkt des Ring-Ziehens: Ein sauberer Muscle-Up an den Turnringen erfordert elite Übergangskraft, Schulterstabilität und Handgelenkskontrolle unter Instabilität."
+      },
+      "pull_weighted_1": {
+        "title": "Belasteter Klimmzug",
+        "description": "Füge eine Weste oder einen Gürtel hinzu und führe strenge Klimmzüge unter Last aus. Mit 10–20 % des Körpergewichts erhöht die zusätzliche Resistance die Kraftentwicklung über reines Eigengewichtstraining hinaus."
+      },
+      "pull_weighted_2": {
+        "title": "Volumen mit belasteten Klimmzügen",
+        "description": "Hohere Wiederholungszahlen bei belasteten Klimmzügen aufrechterhalten. Das Volumen unter Belastung baut die rohe Zugkraft für den belasteten Muscle-Up und schwerere Lasten auf."
+      },
+      "pull_weighted_3": {
+        "title": "Belasteter Muscle-Up",
+        "description": "Ein Muscle-Up mit zusätzlicher Last — eine der kraftvollsten Leistungen im Calisthenics. Erfordert explosive Zugkraft, präzises Übergangszeitpunkt-Timing und Körperspannung."
+      },
+      "core_1": {
+        "title": "Plank-Grundlage",
+        "description": "Halte eine perfekte Planke — Körper gerade von Kopf bis Fuß, Gesäß und Bauch anspannt. Der universelle Einstieg für alle Core-Übungen."
+      },
+      "core_2": {
+        "title": "Seitliche Planke",
+        "description": "Stütze auf einem Unterarm und hebe die Hüfte — erzeugt laterale Rumpfstabilität, die direkt in Human Flag und Hängebein-Training transferiert wird."
+      },
+      "core_hh_1": {
+        "title": "Dead Bug",
+        "description": "Lege dich auf den Rücken, Arme und Beine anheben — bewege den gegenüberliegenden Arm und Bein, während du dich anspannst. Das grundlegende Anti-Extension Core-Training."
+      },
+      "core_hh_2": {
+        "title": "Back Extensions",
+        "description": "Lege dich auf den Bauch und hebe Brust und Beine vom Boden an (Superman). Entwickelt die Kraft der hinteren Muskelkette, die das Hollow-Body-Training ausbalanciert."
+      },
+      "core_hh_3": {
+        "title": "Hollow Body Hold",
+        "description": "Lege dich auf den Rücken und bilde eine hohle Kurve — Schulterblätter vom Boden abheben, Beine gestreckt und niedrig angehoben. Die grundlegende Ganzkörper-Spannungstechnik, die jede Calisthenics-Bewegung untermauert."
+      },
+      "core_hh_4": {
+        "title": "Dragon Flag Negative",
+        "description": "Lege dich auf eine Bank, greife hinter den Kopf und senke den Körper langsam von Vertikal zu Horizontal ab. Die exzentrische Belastungsphase, die dich auf den vollständigen Dragon Flag vorbereitet."
+      },
+      "core_hh_5": {
+        "title": "Dragon Flag",
+        "description": "Greife hinter den Kopf und halte oder senke den Körper perfekt horizontal — nur die Schultern berühren die Bank. Maximale Kraft gegen Überstreckung auf dem Höhepunkt."
+      },
+      "core_bb_1": {
+        "title": "Aktives Hängen",
+        "description": "Hänge an der Stange, Schultern aktiv nach unten gezogen und zusammengespannter Rumpf — die Grundlage für alle Core- und Zugübungen an der Stange."
+      },
+      "core_bb_2": {
+        "title": "Hängende Kniezugs",
+        "description": "Hänge an der Stange und ziehe die Knie zur Brust. Fördert die Hüftbeugermuskulatur und Schulterstabilität, die für anspruchsvolleres Hängen-Training notwendig sind."
+      },
+      "core_bb_3": {
+        "title": "Hängende Beinheben",
+        "description": "Hänge an der Stange und hebe die gestreckten Beine zur Horizontalen — erfordert starke Hüftbeuger, Griff-Ausdauer und vollständige Wirbelsäulensteuerung."
+      },
+      "core_bb_4": {
+        "title": "Toes to Bar",
+        "description": "Aus dem Hängen, den ganzen Körper nach vorne beugen und die Zehen an die Stange tippen — vollumfängliche Hüftbeuger-Kraft, Griffkraft und Körperspannung in einer Bewegung."
+      },
+      "core_hf_1": {
+        "title": "Hängende Windschutzscheibenwischer",
+        "description": "Hänge an der Stange, hebe die Beine zur Horizontalen und schwenke sie seitlich. Entwickelt laterale Rumpfstärke und Hüftmobilität für die Human Flag."
+      },
+      "core_hf_2": {
+        "title": "Gefaltete Human Flag",
+        "description": "Greife eine vertikale Stange, halte den Körper horizontal mit gekämmten Knien — erste echte Human Flag-Position, die Elite-Lateral-Kraft erfordert."
+      },
+      "core_hf_3": {
+        "title": "Einbeinige Human Flag",
+        "description": "Ein Bein gestreckt, das andere gebeugt — eine Übergangsposition, die den Hebelarm deutlich reduziert und die seitliche Muskelkette auf die volle Flag vorbereitet."
+      },
+      "core_hf_4": {
+        "title": "Human Flag",
+        "description": "Greife eine vertikale Stange und halte den ganzen Körper horizontal — eine legendäre Leistung, die Elite-Lateral-Rumpf- und Schulterkraft erfordert."
+      },
+      "core_weighted_1": {
+        "title": "Belastete Planke",
+        "description": "Halte eine starre Planke mit Gewichtsscheiben oder Weste am Rücken. Die zusätzliche Last erhöht die Anti-Extension-Anforderung und ist der direkteste Weg zu elite Rumpfsteifigkeit unter Last."
+      },
+      "core_weighted_2": {
+        "title": "Belastete Beinheben",
+        "description": "Hänge an der Stange mit Fußgewichten und hebe die gestreckten Beine zur Horizontalen. Die zusätzliche Belastung steigert die Anforderungen an die Hüftbeuger und Griffausdauer erheblich."
+      },
+      "core_weighted_3": {
+        "title": "Belasteter Dragon Flag",
+        "description": "Führe den Dragon Flag mit einer Gewichtsweste aus — eine der härtesten geladenen Eigengewicht-Kernübungen. Vollkommene Kraft gegen Überstreckung bei externer Last."
+      },
+      "core_rings_1": {
+        "title": "Ring-Knieheben",
+        "description": "Hänge an den Turnringen und ziehe die Knie zur Brust. Die Instabilität aktiviert tiefgehende Schulterstabilisierung und überlegene Rumpfkompression im Vergleich zu einer festen Stange."
+      },
+      "core_rings_2": {
+        "title": "Ring Rollouts",
+        "description": "Aus kniende Position, Griff an die Turnringe und ausrollen bis volle Streckung. Die kontinuierliche Instabilität zwingt die tiefen Stabilisatoren zu Höchstleistungen — anspruchsvoller als an einer Hackenschmidt- oder Rollen-Variante."
+      },
+      "core_roller_1": {
+        "title": "Ab-Rollen",
+        "description": "Halten Sie den Bauchroller und rollen Sie aus kniender Position bis zur vollständigen Streckung, während die Hüften fixiert bleiben. Die explosive Anti-Extension-Anforderung und der volle Bewegungsumfang machen diese Übung zu einer der wirksamsten geladenen Rumpfbewegungen."
+      },
+      "core_band_1": {
+        "title": "Pallof-Press mit Widerstandsband",
+        "description": "Banchiere ein Widerstandsband auf Brusthöhe und drücke den Griff direkt von deinem Körper weg, während du Drehbewegungen widerstehst. Die Anti-Rotations-Anforderung aktiviert tiefliegende Wirbelsäulenstabilisatoren, die kein Crunchen erreichen kann."
+      },
+      "legs_1": {
+        "title": "Kniebeuge-Grundlage",
+        "description": "Baue das bilaterale Bewegungsmuster der Kniebeuge mit voller Tiefe und aufrechter Haltung auf."
+      },
+      "legs_2": {
+        "title": "Kniebeugen-Kraft",
+        "description": "Steigere das Volumen der Kniebeugen und verbessere die Knieverfolgung sowie die Tiefe. Eröffnet die Wege für L-Sit und Pistol Squat."
+      },
+      "legs_3": {
+        "title": "Shrimp Squat",
+        "description": "Einbeiniges Kniebeugen mit hinterem Fuß hinter dir — erfordert überragende Quadrizepskraft, Knöchelbeweglichkeit und Gleichgewicht gleichzeitig."
+      },
+      "legs_4": {
+        "title": "Bulgarian Split Squat",
+        "description": "Hinterer Fuß erhöht, vorderer Fuß nach vorne — in die Knie eintauchen, bis das hintere Knie den Boden berührt. Einer der effektivsten einseitigen Kraftaufbau-Übungen."
+      },
+      "legs_ls_1": {
+        "title": "Pike-Dehnung",
+        "description": "Sitze aufrecht mit gestreckten Beinen und beuge dich nach vorne — fördert die Flexibilität der Oberschenkelrückseite und aktiviert die Hüftbeuger für den vollständigen L-Sitz."
+      },
+      "legs_ls_2": {
+        "title": "L-Sitz-Kompressionen",
+        "description": "Sitzend, drücke die Fersen in den Boden und versuche, sie anzuheben — fördert die aktive Hüftbeuger-Kompression, die Flexibilität durch Kraft ersetzt."
+      },
+      "legs_ls_3": {
+        "title": "Tuck L-Sitz",
+        "description": "Drücke auf parallelen Barren oder dem Boden und hebe die Hüfte an — Knie an die Brust, Arme durchgestreckt. Die Einstiegshaltung für den vollständigen L-Sitz."
+      },
+      "legs_ls_4": {
+        "title": "Voller L-Sitz",
+        "description": "Arme durchgestreckt, Hüften angehoben, Beine gestreckt und horizontal — zeigt volle Hüftbeuger-Kraft, Druckpower und Körperspannung."
+      },
+      "legs_ps_1": {
+        "title": "Step-Ups",
+        "description": "Schritt kontrolliert auf eine erhöhte Oberfläche — fördert Einzelbein-Stabilität und Quadrizeps-Aktivierung auf dem Weg zum Pistol Squat."
+      },
+      "legs_ps_2": {
+        "title": "Geführter Pistol Squat",
+        "description": "Vollständiger einbeiniger Squat mit Unterstützung oder Gegengewicht — baut Kraft und Mobilität auf, bevor die Unterstützung entfernt wird."
+      },
+      "legs_ps_3": {
+        "title": "Close-Stance Squat",
+        "description": "Bilateraler Squat mit Füßen zusammen — ähnelt der Pistol Squat-Bewegung und fordert die Knöchelbeweglichkeit, bevor auf ein Bein umgestellt wird."
+      },
+      "legs_ps_4": {
+        "title": "Pistol Squat",
+        "description": "Vollständiger einbeiniger Squat mit gestrecktem freiem Bein — erfordert Quadrizeps-Kraft, Knöchelbeweglichkeit und Körperspannung in einer Elite-Bewegung."
+      },
+      "legs_weighted_1": {
+        "title": "Belasteter Goblet Squat",
+        "description": "Halten Sie eine Kettlebell oder Hantel auf Brusthöhe und führen Sie eine Tiefe Kniebeuge aus. Die Goblet-Position fördert vertikale Rumpfhaltung und tiefes Knie-Tracking, ideal für legestärkendes Laden."
+      },
+      "legs_weighted_2": {
+        "title": "Belasteter Bulgarian Split Squat",
+        "description": "Halten Sie Kurzhanteln und führen Sie einen hinten erhöhten Split Squat durch. Einseitiges Laden mit intensivem Hüftbeuger-Stretch ist eines der wirksamsten Kraftübungen für die Beine."
+      },
+      "legs_weighted_3": {
+        "title": "Belasteter Pistol Squat",
+        "description": "Führen Sie den vollständigen Pistol Squat mit einer Kettlebell oder Gewichtsplatte aus. Das Hinzufügen von Last erfordert außergewöhnliche Knöchelmobilität, Einbeinig-Kraft und Balance."
+      },
+      "legs_weighted_4": {
+        "title": "Belasteter Shrimp Squat",
+        "description": "Ausführung des Shrimp Squats mit Gewichtsweste oder Kurzhanteln — eine der fortgeschrittensten geladenen einseitigen Bewegungen. Erfordert Elite-Hüftbeuger, Quadrizepskraft und Körperbalance bei externer Resistance."
+      },
+      "legs_band_1": {
+        "title": "Banded Laterale Schritte",
+        "description": "Platziere ein Widerstandsband um die Knöchel und gehe seitlich in einer halben Kniebeuge-Position. Aktiviert den Gluteus medius und die Hüftabduktoren, die jede Einbein-Bewegung stabilisieren."
+      },
+      "legs_box_1": {
+        "title": "Box-Jumps",
+        "description": "Explodiere vom Boden und lande sanft auf einer Plyo-Box, um den Aufprall durch kontrollierte, gedämpfte Landung zu absorbieren. Fördert die Kraftentwicklung und elastische Energieeinspeicherung."
+      },
+      "legs_sliders_1": {
+        "title": "Slider-Hamstring-Curls",
+        "description": "Lege dich auf den Rücken, platziere Slider unter den Fersen und ziehe die Beine zu den Gesäßmuskeln, während die Hüften gehoben bleiben. Die hohe exzentrische Belastung stimuliert Muskelzuwachs, den Maschinen nicht nachahmen können."
+      },
+      "push_rings_1": {
+        "title": "Ring Dips",
+        "description": "Dips an den Turnringen mit kontrolliertem RTO (Rings Turned Out) bei der Endposition. Die Instabilität fordert höchste Trizeps-, Brust- und Schulterstabilisierung bei jeder Wiederholung."
+      },
+      "push_rings_2": {
+        "title": "Ring Muscle-Up",
+        "description": "Kombiniere Ring-Ziehen und Drücken in einer explosiven Bewegung über den Ringen. Die ultimative Ring-Performance erfordert elite Stabilität entlang der gesamten kinetischen Kette."
+      },
+      "push_weighted_1": {
+        "title": "Belasteter Dip",
+        "description": "Füge eine Weste oder Gürtel hinzu und dorthin unter Last. Belastete Dips fördern die Elite-Drückkraft schneller als jede andere Eigengewicht-Mehrgelenkübung."
+      }
+    }
   },
   "history": {
     "title": "Trainingsverlauf",
@@ -505,7 +860,49 @@
     "comment": "Kommentar",
     "share": "Teilen",
     "noposts": "Noch keine Beiträge — sei der Erste, der ein Workout teilt!",
-    "shareWorkout": "Workout teilen"
+    "shareWorkout": "Workout teilen",
+    "aiVerified": "AI Verified",
+    "selfReported": "Selbstberichtigt",
+    "justNow": "gerade jetzt",
+    "minutesAgo": "vor {{n}} Minuten",
+    "hoursAgo": "vor {{n}} Stunden",
+    "daysAgo": "vor {{n}} Tagen",
+    "noClipAttached": "Kein Clip angehängt",
+    "commentLabel": "Kommentar",
+    "noComments": "Noch keine Kommentare. Sei der Erste!",
+    "addComment": "Einen Kommentar hinzufügen…",
+    "signInToComment": "Einloggen, um einen Kommentar zu hinterlassen",
+    "startWorkout": "Workout starten",
+    "communityTitle": "Gemeinschaft",
+    "communitySubtitle": "Trainings von Athleten rund um die Welt",
+    "searchAthletes": "Suche nach Athlet, Übung oder #Hashtag…",
+    "filterAll": "Alle",
+    "filterPush": "Push",
+    "filterPull": "Pull",
+    "filterCore": "Kern",
+    "filterLegs": "Beine",
+    "emptyAll1": "Noch keine Beiträge",
+    "emptyAll2": "Teile einen Clip nach deinem nächsten Workout, um der Erste zu sein!",
+    "emptyPush1": "Noch keine Push-Tag Clips!",
+    "emptyPush2": "Werde der Erste, der ein Push-Workout postet.",
+    "emptyPull1": "Noch keine Pull-Tag Clips!",
+    "emptyPull2": "Sei der Erste, der ein Pull-Workout teilt.",
+    "emptyCore1": "Noch keine Core-Clips!",
+    "emptyCore2": "Sei der Erste, der ein Core-Workout postet.",
+    "emptyLegs1": "Noch keine Bein-Tag Clips! Sei der Erste!",
+    "emptyLegs2": "Geh ins Gym und zeige deine Bein-Stärke.",
+    "noEliteAchievements": "Noch keine Elite-Errungenschaften.",
+    "masterEliteSkill": "Meistere eine Elite-Fähigkeit, um hier zu erscheinen!",
+    "you": "Du",
+    "justMastered": "gerade gemeistert",
+    "postClip": "Clip posten",
+    "shareClip": "Clip teilen",
+    "shareToCommunity": "In die Gemeinschaft teilen",
+    "addCaption": "Bildbeschreibung hinzufügen… (optional)",
+    "uploadStarted": "Upload gestartet — du kannst frei durchsuchen!",
+    "publishingPost": "Veröffentlichung läuft…",
+    "postedToCommunity": "In der Gemeinschaft veröffentlicht!",
+    "savedClipLabel": "Gespeicherter Clip"
   },
   "profile": {
     "masteryPoints": "Meisterschaftspunkte",
@@ -540,7 +937,22 @@
     "days": "Tage",
     "routine": "Heutige Routine",
     "complete": "Abgeschlossen",
-    "completed": "Abgeschlossen"
+    "completed": "Abgeschlossen",
+    "questionnaire": {
+      "title": "Meine Ziele aktualisieren",
+      "subtitle": "Deine täglichen Mobilitätsaufgaben personalisieren",
+      "goalQuestion": "Was ist dein primäres Ziel im Calisthenics?",
+      "areasQuestion": "Welche Muskeln und Gelenke bremsen dich?",
+      "areasHint": "(alle zutreffenden auswählen)",
+      "timeQuestion": "Wie viel Zeit kannst du täglich für Mobilität aufbringen?",
+      "save": "Meine Einstellungen speichern",
+      "tapToChange": "Tippe unten, um zu ändern",
+      "suggested": "Vorgeschlagen",
+      "searchGoal": "Suche nach einer Bewegung oder Fähigkeit…",
+      "searchBodyPart": "Suche nach einem Körperteil…",
+      "minLabel": "{{n}} Min",
+      "goalsUpdated": "Ziele aktualisiert! Deine Routine wurde personalisiert."
+    }
   },
   "errors": {
     "notFound": "Seite nicht gefunden",
@@ -557,5 +969,266 @@
     "almostDone": "Fast fertig — bleib stark.",
     "setComplete": "Set abgeschlossen! Ruh dich aus.",
     "workoutComplete": "Training beendet! Toller Einsatz."
+  },
+  "exercises": {
+    "push_up": "Liegestütz",
+    "diamond_push_up": "Diamant-Liegestütz",
+    "archer_push_up": "Bogenschütze-Liegestütz",
+    "pseudo_planche_push_up": "Pseudo-Planche-Liegestütz",
+    "pike_push_up": "Pike-Liegestütz",
+    "elevated_pike_push_up": "Hebe-Pike-Liegestütz",
+    "handstand_push_up": "Handstand-Liegestütz",
+    "handstand": "Handstand",
+    "wall_handstand_push_up": "Wand-Handstand-Liegestütz",
+    "planche_lean": "Planche neigen",
+    "tuck_planche": "Tuck-Planche",
+    "straddle_planche": "Scissor-Planche",
+    "planche": "Planche",
+    "full_planche": "Vollständige Planche",
+    "scapular_shrugs": "Schulterzucken",
+    "australian_rows": "Australische Ruderzüge",
+    "negative_pull_ups": "Negative Klimmzüge",
+    "negative_pull_up": "Negative Klimmzug",
+    "pull_up": "Klimmzug",
+    "tuck_front_lever": "Tuck-Frontstütz",
+    "straddle_front_lever": "Straddle-Frontstütz",
+    "full_front_lever": "Vollständiger Frontstütz",
+    "chest_to_bar_pull_up": "Brust-zu-Stangen-Klimmzug",
+    "muscle_up": "Muscle-Up",
+    "kipping_muscle_up": "Kipping-Muscle-Up",
+    "strict_muscle_up": "Strenger Muscle-Up",
+    "archer_pull_up": "Bogenschütze-Klimmzug",
+    "typewriter_pull_up": "Schreibmaschinen-Klimmzug",
+    "one_arm_active_hang": "Einarmiger aktiver Hänge",
+    "one_arm_pull_up": "Einarmiger Klimmzug",
+    "plank": "Unterarmstütz",
+    "side_plank": "Seitstütz",
+    "dead_bug": "Totenkopf",
+    "superman": "Supermann",
+    "hollow_body_hold": "Hohlkörper-Halten",
+    "dragon_flag_negative": "Drachenfahne negative",
+    "dragon_flag": "Drachenfahne",
+    "active_hang": "Aktives Hängen",
+    "hanging_knee_tuck": "Hängende Kniekürzung",
+    "hanging_knee_tucks": "Hängende Kniekürzungen",
+    "hanging_leg_raise": "Hängende Beinhebung",
+    "hanging_leg_raises": "Hängende Beinheben",
+    "toes_to_bar": "Zehen zur Stange",
+    "windshield_wiper": "Scheibenwischer",
+    "windshield_wipers": "Scheibenwischer",
+    "hanging_windshield_wipers": "Hängende Scheibenwischer",
+    "tucked_human_flag": "Eingerollter Menschenfahne",
+    "one_leg_human_flag": "Einbeinige Menschenfahne",
+    "human_flag": "Menschenfahne",
+    "squat": "Kniebeuge",
+    "air_squat": "Kniebeuge ohne Gewicht",
+    "shrimp_squat": "Shrimp-Kniebeuge",
+    "bulgarian_split_squat": "Bulgarische Ausfallschritte",
+    "nordic_curls": "Nordische Beinbeugen",
+    "pike_stretch": "Pike-Dehnung",
+    "l_sit_compression": "L-Sitz Kompression",
+    "l_sit_compressions": "L-Sitz Kompressionsserie",
+    "tuck_l_sit": "Eingeklemmter L-Sitz",
+    "l_sit": "L-Sitz",
+    "full_l_sit": "Volle L-Sitz Stellung",
+    "step_up": "Step-Up",
+    "step_ups": "Step-Ups",
+    "assisted_pistol_squat": "Geführte Pistolenkniebeuge",
+    "close_stance_squat": "Enge Kniebeuge",
+    "pistol_squat": "Pistol-Kniebeuge",
+    "explosive_pull_up": "Explosives Klimmzug-Training",
+    "ring_support_hold": "Rings 스upport-Halten",
+    "ring_pull_up": "Ring-Klimmzug",
+    "ring_muscle_up": "Ring-Muscle-Up",
+    "ring_dip": "Ring-Dip",
+    "weighted_pull_up": "Geführter Klimmzug mit Zusatzgewicht",
+    "weighted_muscle_up": "Gewichteter Muscle-Up",
+    "weighted_dip": "Gewichteter Ring-Dip",
+    "weighted_plank": "Gewichtete Planke",
+    "weighted_dragon_flag": "Gewichtete Dragon Flag",
+    "weighted_leg_raises": "Gewichtete Beinhebungen",
+    "weighted_goblet_squat": "Gewichtete Goblet-Kniebeuge",
+    "weighted_bulgarian_split_squat": "Gewichtete Bulgarian Split Squat",
+    "weighted_pistol_squat": "Gewichtete Pistol-Kniebeuge",
+    "weighted_shrimp_squat": "Gewichtete Shrimp-Kniebeuge",
+    "bar_volume_pull_up": "Bar Volumen Klimmzug",
+    "explosive_bar_pull_up": "Explosiver Bar-Klimmzug",
+    "strict_bar_muscle_up": "Strenger Bar-Muscle-Up",
+    "weighted_volume": "Gewichtetes Volumen",
+    "ab_roller_rollout": "Bauchrollout mit Ab-Roller",
+    "banded_pallof_press": "Gummiband Pallof-Press",
+    "banded_lateral_walks": "Gummiband seitliche Schritte",
+    "box_jumps": "Kastensprünge",
+    "slider_hamstring_curls": "Slider-Hamstring-Curls",
+    "ring_knee_raises": "Ring-Kniehebungen",
+    "ring_rollouts": "Ring-Rollouts",
+    "lunge": "Ausfallschritt",
+    "burpee": "Burpee",
+    "back_extensions": "Rückenstrecker"
+  },
+  "muscles": {
+    "wrist_flexors": "Handgelenkbeuger",
+    "forearms": "Unterarme",
+    "wrist_extensors": "Handgelenkstrecker",
+    "shoulders": "Schultern",
+    "chest": "Brust",
+    "lats": "Latissimus",
+    "thoracic_spine": "Brustwirbelsäule",
+    "anterior_shoulders": "Vordere Schultermuskeln",
+    "biceps": "Bizeps",
+    "hip_flexors": "Hüftbeuger",
+    "quads": "Quads",
+    "psoas": "Psoasmuskel",
+    "hamstrings": "Hamstrings",
+    "calves": "Waden",
+    "lower_back": "unterer Rücken",
+    "obliques": "Schräge Bauchmuskeln",
+    "rotator_cuff": "Rotatorenmanschette",
+    "hip_external_rotators": "Hüftaußenrotatoren",
+    "glutes": "Gesäßmuskeln",
+    "it_band": "IT-Band",
+    "triceps": "Trizeps",
+    "posterior_shoulder": "Hintere Schulter",
+    "lat": "Lats",
+    "hip_adductors": "Hüftadduktoren",
+    "anterior_deltoid": "Vorderer Deltamuskel",
+    "ankles": "Knöchel",
+    "achilles": "Achillessehne",
+    "wrists": "Handgelenke",
+    "finger_flexors": "Fingerbeuger",
+    "serratus": "Seratus",
+    "shoulder_extension": "Schulterstreckung",
+    "scapular_stabilisers": "Schulterblatt-Stabilisatoren",
+    "teres_major": "Teres Major",
+    "shoulder_protraction": "Schulterprotraktion",
+    "wrist_tendons": "Handgelenksehnen",
+    "ankle_dorsiflexors": "Fußgelenk-Dorsalflexoren",
+    "tibialis_anterior": "Schienbeinnervator",
+    "hip_adductors_": "Hüftadduktoren",
+    "serratus_anterior": "Serratus anterior",
+    "lower_traps": "untere Trapzmuskel",
+    "scapular_retractors": "Schulterblatt-Retraktoren",
+    "lower_trapezius": "Untere Trapezmuskeln",
+    "posterior_deltoid": "Hinterer Deltamuskel",
+    "rhomboids": "Rautenmuskel",
+    "hip_extensors": "Hüftbeuger",
+    "anterior_deltoids": "Vordere Deltamuskeln",
+    "wrist_extensors_": "Handgelenkstrecker"
+  },
+  "mobility": {
+    "stretches": {
+      "wristExtension": {
+        "name": "Handgelenkstreckung dehnen",
+        "muscles": "Handgelenkbeuger, Unterarme"
+      },
+      "wristFlexion": {
+        "name": "Handgelenkbeugen dehnen",
+        "muscles": "Handgelenkstrecker, Unterarme"
+      },
+      "shoulderDislocates": {
+        "name": "Schulter-Dislozierung",
+        "muscles": "Schultern, Brust, Latissimus dorsi"
+      },
+      "latStretch": {
+        "name": "Hängende Latissimus-Dehnung",
+        "muscles": "Latissimus dorsi, Brustwirbelsäule, Schultern"
+      },
+      "chestOpener": {
+        "name": "Türrahmen-Brustöffner",
+        "muscles": "Brust, vordere Schultern, Bizeps"
+      },
+      "hipFlexorLunge": {
+        "name": "Tiefe Ausfallschritt-Hüftbeuger-Dehnung",
+        "muscles": "Hüftbeuger, Quadrizeps, Psoas"
+      },
+      "hamstring": {
+        "name": "Stehende Oberschenkelrückseite-Dehnung",
+        "muscles": "Oberschenkelrückseite, Waden, Rückenstrecker"
+      },
+      "thoracicRotation": {
+        "name": "Sitzende Brustwirbelsäulenrotation",
+        "muscles": "Brustwirbelsäule, seitliche Bauchmuskeln, Rotatorenmanschette"
+      },
+      "pigeonPose": {
+        "name": "Taubenhaltung Hüftöffner",
+        "muscles": "Hüftaußenrotatoren, Gesäßmuskulatur, IT-Band"
+      },
+      "tricepsStretch": {
+        "name": "Überkopf-Trizepsdehnung",
+        "muscles": "Trizeps, hintere Schultern, Latissimus dorsi"
+      },
+      "pancake": {
+        "name": "Pancake-Dehnung",
+        "muscles": "Oberschenkelrückseite, Adduktoren, Rücken"
+      },
+      "shoulderFlexion": {
+        "name": "Umgekehrte Schulterflexion",
+        "muscles": "Vorderer Deltamuskel, Brust, Bizeps"
+      },
+      "ankleCircles": {
+        "name": "Sprunggelenkskreise",
+        "muscles": "Sprunggelenke, Waden, Achillessehne"
+      },
+      "calfStretch": {
+        "name": "Wadendehnung an der Wand",
+        "muscles": "Waden, Achillessehne, Sprunggelenke"
+      },
+      "wallPuppyPose": {
+        "name": "Wand-Hundehaltung",
+        "muscles": "Brustwirbelsäule, Schulterbeuger, Latissimus dorsi"
+      },
+      "firstKnuckleRaises": {
+        "name": "Erste Fingerknöchelhebung",
+        "muscles": "Handgelenk-Beuger, Fingerbeuger, Unterarmmuskulatur"
+      },
+      "butchersBlock": {
+        "name": "Schneidersitz-Dehnung",
+        "muscles": "Trizeps, Latissimus dorsi, Serratus anterior"
+      },
+      "germanHang": {
+        "name": "Deutscher Hang (passiv)",
+        "muscles": "SchulterExtension, vorderer Schultermuskel, Bizeps"
+      },
+      "skinTheCat": {
+        "name": "Haut-das-Katze-Übung (teilweise)",
+        "muscles": "Schultern, Skapulastabilisatoren, Latissimus dorsi"
+      },
+      "deepLatStretch": {
+        "name": "Deep Lat Foam Rolling",
+        "muscles": "Latissimus dorsi, Teres major, Brustwirbelsäule"
+      },
+      "plancheLeans": {
+        "name": "Planche-Leans",
+        "muscles": "Handgelenke, Schultern, Serratus anterior"
+      },
+      "reverseTabletop": {
+        "name": "Umgekehrte Tischhaltung",
+        "muscles": "Vorderer Deltamuskel, Brust, Handgelenkstrecker"
+      },
+      "fingerPulses": {
+        "name": "Fingersehnentonkungen",
+        "muscles": "Fingerbeuger, Handgelenksehnen, Unterarm"
+      },
+      "ankleDorsiflexion": {
+        "name": "Gewichtete Sprunggelenks-Dorsalflexion",
+        "muscles": "Sprunggelenks-Dorsalflexoren, Achillessehne, Tibialis anterior"
+      },
+      "cossackSquats": {
+        "name": "Kossack-Kniebeugen",
+        "muscles": "Hüftadduktoren, Gesäßmuskulatur, Sprunggelenke"
+      },
+      "scapularHangs": {
+        "name": "Aktive Skapular-Hängeübungen",
+        "muscles": "Serratus anterior, untere Trapezmuskeln, Skapularretraktoren"
+      },
+      "proneYRaises": {
+        "name": "Vordere Y-Übungen",
+        "muscles": "Untere Trapezmuskulatur, hinterer Deltamuskel, Rhomboideus"
+      },
+      "thoracicBridge": {
+        "name": "Brustwirbelbrücke",
+        "muscles": "Brustwirbelsäule, Gesäßmuskeln, Hüftstrecker"
+      }
+    }
   }
 }

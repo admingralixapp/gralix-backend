@@ -1,0 +1,1234 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "workout": "Horon motsa jiki",
+    "daily": "Kowane rana",
+    "community": "Al'umma",
+    "history": "Tarihi",
+    "progress": "Ci gaba",
+    "skillTree": "Itacen Fasaha",
+    "leaderboard": "Jerin Farko",
+    "friends": "Abokai",
+    "shop": "Kasuwa",
+    "settings": "Saituna"
+  },
+  "common": {
+    "save": "Ajiye",
+    "cancel": "Soke",
+    "confirm": "Tabbatarwa",
+    "close": "Rufe",
+    "loading": "Ana ɗaukewa...",
+    "error": "An yi wani kuskure",
+    "signIn": "Shiga",
+    "signOut": "Fita",
+    "getStarted": "Fara aiki",
+    "learnMore": "Kara sani",
+    "back": "Komawa",
+    "next": "Gaba",
+    "done": "An kammala",
+    "active": "Mai aiki",
+    "activate": "Kaddamarwa",
+    "buy": "Saya",
+    "free": "Kyauta",
+    "pro": "Masanin fasaha",
+    "locked": "An kulle",
+    "search": "Bincike",
+    "noResults": "Ba a sami sakamakon da ya dace ba",
+    "or": "ko",
+    "view": "Duba"
+  },
+  "settings": {
+    "title": "Saituna",
+    "account": "Asusun",
+    "editFromProfile": "Gyara hoton da sunan ka daga shafin Profile ɗinka.",
+    "viewProfile": "Duba Profile",
+    "language": "Harshe",
+    "languageDesc": "Zaɓi harshen da kake so a nuna",
+    "searchLanguages": "Bincika harsuna 29...",
+    "noLanguagesFound": "Ba a samu harsuna ba",
+    "videoStorage": "Ajiye Bidiyo",
+    "videoStorageDesc": "Sarrafa kwamfutarka da ke dauke da ƙa'idar horo",
+    "noClipsStored": "Babu clips da aka adana",
+    "clipsOnDevice": "{{count}} clip a wannan na'ura",
+    "clipsOnDevice_other": "{{count}} clips a wannan na'ura",
+    "videoFilesOnly": "Fayilolin bidiyo kawai — an ajiye bayanan horo koyaushe",
+    "autoDeleteAfter": "Goge Clips ta atomatik Bayan",
+    "clipsOlderRemoved": "An cire clips masu shekaru fiye da wannan lokacin da aka bude manhaja",
+    "clearAllClips": "Goge Duk Clips",
+    "freeUpSpace": "Saki sarari nan da nan. Rep, sets, da scores na form ba za su kasance da canjawa ba.",
+    "deleteConfirm": "Wannan zai goge {{count}} clip daga wannan na'ura. Tabbatar kana so?",
+    "deleteConfirm_other": "Wannan zai goge {{count}} clips daga wannan na'ura. Tabbatar kana so?",
+    "yesClearAll": "Ee, Goge Dukkan",
+    "workout": "Horon motsa jiki",
+    "restDuration": "Lokacin Hutu",
+    "restDurationDesc": "Lokaci tsakanin sets yayin horo mai yawa.",
+    "cameraAudio": "Kamarar Horo & Sauti",
+    "aiVoiceCoaching": "Koyarwar Murya na AI",
+    "spokenCues": "Shawara na magana yayin horo",
+    "defaultCamera": "Kamarar Tsara",
+    "defaultCameraDesc": "Kamarar da ke bude lokacin da ka fara horo",
+    "cameraFacingFront": "Gaba",
+    "cameraFacingBack": "Baya",
+    "mirrorCameraPreview": "Madubi Kallon Kamarar",
+    "flipCamera": "Dfitar da hoton kamara kamar madubi",
+    "bodyCalibration": "Calibration na Jiki",
+    "recalibrateDesc": "Sake gudanar da firam ɗin T-Pose na jiki guda daya kawai",
+    "recalibrate": "Sake daidaita",
+    "mobility": "Tunatarwar Motsa Jiki Ta Kullum",
+    "enableDailyReminders": " kunna tunatarwa kullum",
+    "browserNotification": "Samu sanarwa ta burauzar a lokacin da ka zaɓa kowace rana.",
+    "notificationsBlocked": "Sanarwaranta a ƙofar burauzar. Da fatan za a ba su izini a saitunan burauzar/OS ɗinka sannan a sake loda shafin.",
+    "reminderTime": "Lokacin tunatarwa",
+    "mobilityGoal": "Manufar Motsa Jiki",
+    "mobilityGoalDesc": "Tsarin a shafin motsa jiki na iya kasancewa daidai da wannan manufa.",
+    "saving": "Ana ajiye...",
+    "profilePrivacy": "Sirrin Profile",
+    "showCommunityPosts": "Nuna Sakonnin Al'umma ga Kowa",
+    "communityPostsDesc": "Lokacin kashewa, abokanka kawai ne za su iya ganin sakonninka a shafin Al'umma.",
+    "session": "Zama",
+    "signedInAs": "An shiga a matsayin",
+    "signOut": "Fita",
+    "clipAutoDelete": "Goge Clips ta atomatik bayan",
+    "clearAll": "Goge Duk Clips",
+    "confirmClear": "Danna kuma don tabbatarwa",
+    "clipsStored": "{{count}} clip ajiye",
+    "clipsStored_other": "{{count}} clips ajiye",
+    "voiceCues": "Shawara na Murya",
+    "voiceCuesDesc": "Ra'ayin ƙwararren AI yayin horo",
+    "cameraFacing": "Fuskantar Kamarar",
+    "mirrorVideo": "Madubi Bidiyo",
+    "mirrorVideoDesc": "Vare hoton kamara kaɗai daidai da yadda yake a madubi",
+    "calibration": "Calibration na Jiki",
+    "recalibrateBody": "Sake gudanar da firam ɗin T-Pose",
+    "recalibrateBodyDesc": "Sake gudanar da firam ɗin T-Pose ɗinka don sabunta auna jiki",
+    "mobilityDesc": "Samu tunatarwa kullum don ci gaba da motsi",
+    "communityPosts": "Nuna Sakonnin Al'umma ga Kowa",
+    "setUpProfile": "Saita profile ɗinka don kunna ikon sirri.",
+    "membership": "Tsarin Memba",
+    "activeMembership": "Memba Mai aiki",
+    "cancelMembership": " Dakatar da Memba",
+    "cancelMembershipDesc": "Za ka ci gaba da samun dama har zuwa ƙarshen zangon biyan kuɗinka.",
+    "cancelButton": "Dakatar",
+    "retentionOfferBar": "Tayayin Musamman — na gare ka ne kawai",
+    "retentionHeadline": "Jira! Kada kayi tafiya sai yanzu...",
+    "retentionBody": "Ci gaba da Pro kuma samu RIBAB 40% na watan mai zuwa. Gina tafiyarka tare da mafi kyawun horo na AI na duniya.",
+    "claim40Discount": "Karɓi RIBAB 40%",
+    "noThanksCancel": "A'a, na gode, ci gaba da dakatarwa →",
+    "sorryToSeeYouGo": "Muna yi wa zaɓinka uzuri.",
+    "loseAccessDesc": "Za ku rasa dama zuwa Advanced Analytics da Pro Auras a ƙarshen zangon biyan kuɗi.",
+    "goBack": "Komawa baya",
+    "cancelling": "Ana dakatarwa…",
+    "discountApplied": "Riba ta samu nasara!",
+    "discountAppliedDesc": "An yi wa zangon ku na gaba RIBAB 40%",
+    "subscriptionCancelled": "An soke rajista",
+    "subscriptionCancelledDesc": "An soke rajistarku. Za ku sami dama har zuwa {{date}}."
+  },
+  "shop": {
+    "title": "CaliShop",
+    "subtitle": "Rajista, Kayan Aura, da Haɓaka na Musamman",
+    "signInPrompt": "Shiga don yin rajista, duba Kayan Aura, da kuma amfani da Lambobin talla.",
+    "proTitle": "CaliCoach Pro",
+    "proSubtitle": "Saki cikakken kwarewa",
+    "proActive": "✓ Aiki",
+    "whyPro": "Me yasa Zabi Pro?",
+    "whyProItems": {
+      "coaching": "Horarwa ta Kamera AI ta lokaci-gaskiya",
+      "badge": "Tambarin Tabbuwa Mai Kyalli Mai Launin Violet",
+      "bonus": "1x Ƙarin Sa hannu na Kayan Aura Kyauta"
+    },
+    "monthly": "Kowane Wata",
+    "yearly": "Kowane Shekara",
+    "save20": "Ajiye 20%",
+    "perMonth": "/kowane wata",
+    "perYear": "/kowane shekara",
+    "perMonthFull": "/ wata",
+    "perYearFull": "/ shekara",
+    "trialNote": "Babu buƙatar hannu. Dakatar da lokaci kowane lokaci.",
+    "startTrial": "Fara Gwajin Kyauta na kwanaki 3",
+    "manageSubscription": "Gudanar da Rajista",
+    "signingBonus": "Ƙarin Sa Hannun Pro",
+    "signingBonusDesc": "Ka buɗe ƙarin Aura Kyauta! Karɓi shi a ƙasa.",
+    "claimBonus": "Karɓi Kayan Ka na Kyauta",
+    "auraPacks": "Kayan Aura",
+    "auraPacksDesc": "Saita sautinka na horo da avatar na ruhu",
+    "buyFor": "Saya don {{price}}",
+    "promoCode": "Lambar Talla",
+    "promoPlaceholder": "Shigar da lambar talla",
+    "redeem": "Mayar da Lamba",
+    "claimTitle": "Karɓi Aura ɗinka na Kyauta",
+    "claimSubtitle": "Maraba zuwa Pro! Zabi kowane kaya — naka ne kyauta.",
+    "voice": "Murya",
+    "ghost": "Ruhu",
+    "claimVoiceTitle": "Karɓi Murya ɗinka na Kyauta",
+    "claimVoiceSubtitle": "Maraba zuwa Pro! Zabi kowane murya na AI — naka ne kyauta.",
+    "claiming": "Ana karɓa…",
+    "claimVoice": "Karɓi {{name}}",
+    "selectVoice": "Zaɓi murya don ci gaba",
+    "trialStarted": "Gwajin Kyauta na kwanaki 3 ya fara! 🎉",
+    "trialStartedDesc": "Yanzu kana da cikakken dama zuwa CaliCoach Pro.",
+    "signInToPurchase": "Shiga don saya",
+    "signInToPurchaseDesc": "Ƙirƙiri asusu don siyan muryoyin AI.",
+    "purchaseFailed": "Sayi ya kasa",
+    "claimFailed": "Karɓa ya kasa",
+    "invalidCode": "Lambobin ba daidai bane",
+    "unlocked": "{{name}} ta buɗe! 🎉",
+    "unlockedDesc": "Zabi shi daga jerin don sa shi ya zama mai horarwa mai aiki.",
+    "codeRedeemed": "Lamba ta samu nasara! 🎉",
+    "elevenLabsError": "Kuskuren haɗin ElevenLabs",
+    "elevenLabsErrorDesc": "Ba za a iya sauke sauti na {{name}} ba. Duba haɗin.",
+    "proActiveManage": "Pro mai aiki —",
+    "claimBonusTitle": "Karɓi Kayan Aura na Kyauta",
+    "claimBonusDesc": "Maraba zuwa Pro! Zabi kowanne kayan da aka biya kyauta.",
+    "claim": "Karɓa",
+    "voicesTitle": "Muryoyin Koyarwar AI",
+    "voicesDesc": "Zabi halayen mai horo. Muryoyin kyauta suna amfani da injin magana na na'urar ku. Muryoyin Pro suna amfani da AI na ElevenLabs + ƙara halin GPT-4o.",
+    "starterVoices": "Muryoyin Fara",
+    "customAuras": "Auras na Musamman",
+    "premiumVoices": "Muryoyi na Premium & Skin na Ruhu",
+    "redeemCodeSection": "Mayar da Lamba",
+    "redeemCodeDesc": "Lambobi suna buɗe kayan aiki, dama zuwa Pro, ko ƙarin lokaci na musamman.",
+    "test": "Gwaji",
+    "select": "Zaɓi",
+    "equip": "Sanya",
+    "owned": "Mallaka",
+    "activeLabel": "✓ Mai aiki",
+    "signInToClaim": "Shiga don mayar da lambobi",
+    "whyProItem1Label": "Horarwa ta Kamera AI ta lokaci-gaskiya",
+    "whyProItem1Desc": "Samu ra'ayi kai tsaye game da tsarin ku da matsayin ku a kowane lokaci na horo.",
+    "whyProItem2Label": "Tambarin Tabbuwa Mai Kyalli Mai Launin Violet",
+    "whyProItem2Desc": "Zama fitaccen mutum a cikin al'umma da kuma kan kundin shugabanci da tambarin ƙira na musamman na Pro.",
+    "whyProItem3Label": "1x Ƙarin Sa hannu na Kayan Aura Kyauta",
+    "whyProItem3Desc": "Fara horo tare da kowanne Aurar Premium da kuka zaɓa, wanda aka buɗe har abada.",
+    "whyProItem4Label": "Fasahar Binciken Ci gaba",
+    "whyProItem4Desc": "Zama cikin zurfin yanayin tsarin ku, ƙarfin ku, da ƙididdigar ayyuka.",
+    "packClaimed": "{{name}} ta samu! 🎁",
+    "packClaimedDesc": "Ƙarin Sa hannu na Pro ɗinka ya yi nasara.",
+    "somethingWentWrong": "Wani abu ya faru"
+  },
+  "progress": {
+    "title": "Ci gaba",
+    "subtitle": "Hasken haske da zurfin nazarin aiki na jiki.",
+    "premiumAnalytics": "Fasahar Bincike Ta Musamman",
+    "unlockTitle": "Bude Bayanai na Ayyukanka",
+    "unlockDesc": "Sama daidaiton kusurwar haɗin gwiwa, daidaiton yanayi, da kuma ranakun cimma ƙwarewa da Pro.",
+    "featureForm": "Matakan ƙimomin yanayin haɗin gwiwa cikin lokaci",
+    "featureVolume": "Nazarin yanayi vs. yawan repetitions",
+    "featureMastery": "Ranar cimma ƙwarewa da aka hasashe a kowace ƙwarewa",
+    "featureTimeline": "Jadawalin buɗe ƙwarewa & radar ganyen farfesa",
+    "startTrial": "Fara Gwajin Kyauta na Kwanaki 3",
+    "trialNote": "Babu buƙatar ƙin amincewa. Canja ra'ayi a kowane lokaci.",
+    "formScore": "Matakin Yanayi",
+    "totalSessions": "Jimlar Zaman",
+    "totalReps": "Jimlar Reps",
+    "streak": "Jerin Rana",
+    "avgFormScore": " Matsakaicin Matakin Yanayi",
+    "bestFormScore": "Mafi Girman Matakin Yanayi",
+    "verifiedReps": "Reps da aka tabbatar",
+    "formImprovement": "Ingantacciyar Yanayi",
+    "formVsVolume": "Matakin Yanayi vs. Yawan aiki",
+    "formVsVolumeDesc": "Duba ko yanayinka yana da karko yayin da kake ƙara ƙarfi — cikin kwanaki 90 na ƙarshe",
+    "notEnoughData": "Babu isasshen bayanai tukuna. Kammala wasu zaman don ganin cigabarka.",
+    "formLabel": "Yanayi",
+    "repsLabel": "Reps",
+    "formScoreLabel": "Matakin Yanayi",
+    "totalRepsLabel": "Jimlar Reps",
+    "aiVerified": "Tabbacin AI",
+    "selfReported": "Kai tsaye da kanka",
+    "volumeByCategory": "Yawan aiki ta Sashin",
+    "volumeByCategoryDesc": "Gano wuraren da ke da rauni — jimlar reps a kowace reshe na motsa jiki",
+    "noSessionData": "Babu bayanan zama tukuna.",
+    "verificationRatio": "Kason Tabbatarwa",
+    "verificationRatioDesc": "Reps da AI ta tabbatar da su vs. wadanda kai ka ke kai — kawai reps da aka tabbatar ne ke ƙididdiga a matsayi",
+    "verified": "ta tabbata",
+    "noSessionsYet": "Babu zaman da aka yi tukuna.",
+    "repsByExercise": "Reps ta Gwaji",
+    "repsByExerciseDesc": "Jimlar yawan aiki daga motsi zuwa motsi",
+    "notEnoughDataChart": "Babu isasshen bayanai don nuna jadawali.",
+    "skillUnlockTimeline": "Jadawalin Buɗe Ƙwarewa",
+    "skillUnlockTimelineDesc": "Kowane mataki a cikin itacen ƙwarewa — daga farko rep zuwa ƙwarewar gwaninta",
+    "noSkillsYet": "Babu ƙwarewar da aka koya tukuna. Kammala zaman don buɗe ƙwarewar farko!"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcomeBack": "Maraba da dawowa. Shirye-shiryen horo?",
+    "startWorkout": "Fara Horon Hali",
+    "workoutStreak": "Jerin Horo",
+    "daysInARow": "kwanaki cikin jere",
+    "avgForm": "Matsakaicin Yanayi",
+    "outOf100": "daga cikin 100",
+    "totalReps": "Jimlar Reps",
+    "allTime": "daga duk zamani",
+    "sessions": "Zaman",
+    "completed": "an kammala",
+    "mobilityStreak": "Jerin Sauyin Salo",
+    "stretchDays": "kwanaki na shimfiɗa jiki",
+    "dailyMobility": "Yauɗa Yauɗan Rayuwa",
+    "done": "An gama",
+    "stretchInfo": "Shimfiɗa 5 · kusan minti 5",
+    "dayStreak": "{{count}}-kwanaki jere",
+    "startStreak": "Fara jeren yau",
+    "repeat": "Maimaita",
+    "begin": "Fara",
+    "skillMap": "Taswirar Ƙwarewa",
+    "fullTree": "Cikakken itace →",
+    "recentSessions": "Zaman Boxi na Baya",
+    "viewAll": "Duba Dukkan",
+    "noSessionsYet": "Babu zaman da aka yi tukuna.",
+    "startFirstWorkout": "Fara horo na farko",
+    "reps": "reps",
+    "manual": "Kyakkyawan Hannu",
+    "avgFormLabel": "avg yanayi",
+    "friendsActivity": "Ayyukan Abokai",
+    "loadingMobility": "Ana loda...",
+    "welcome": "Maraba da dawowa",
+    "welcomeName": "Maraba da dawowa, {{name}}",
+    "totalSessions": "Jimlar Zaman",
+    "streak": "Jerin Rana",
+    "noSessions": "Babu zaman tukuna",
+    "startFirst": "Fara horo na farko don ganin kididdiganka a nan.",
+    "recentActivity": "Ayyukan Baya",
+    "quickStart": "Fara Da Sauri"
+  },
+  "workout": {
+    "title": "Horo",
+    "startWorkout": "Fara Horo",
+    "endWorkout": "Kammala Horo",
+    "endSet": "Kammala Saita",
+    "nextSet": "Saita Na Gaba",
+    "reps": "reps",
+    "sets": "saita",
+    "set": "Saita",
+    "of": "na",
+    "formScore": "Matakin Yanayi",
+    "repCount": "Yawan reps",
+    "rest": "Hutu",
+    "restTimer": "Agogon Hutu",
+    "listening": "Sauraro...",
+    "goodForm": "Yadda yanayi yayi kyau! Ci gaba da haka.",
+    "watchForm": "Kalli yanayinka.",
+    "lastRep": "Na ƙarshe — ka tabbatar yana da ƙima!",
+    "pushHarder": "Ka ƙara ƙarfi — kana da kyau!",
+    "almostThere": "Kusa da gama — gama da ƙarfi.",
+    "selectExercise": "Zaɓi Ayyuka",
+    "manualLog": "Rubuta Hannu",
+    "camera": "Kamarar",
+    "sets_label": "Saita",
+    "repsTarget": "Burinka na Reps",
+    "searchPlaceholder": "Nema ko da rangwame ko zaɓi motsa jiki…",
+    "searchEquipmentPlaceholder": "Nema kayan aiki da za a nemi ko zaɓi…",
+    "noExercisesFound": "Babu motsa jiki da aka samu don \"{{query}}\"",
+    "loadingModel": "Ana ɗora…",
+    "readyToTrain": "Shirye don fara horo?",
+    "ghostSkeletonDesc": "Ghost Skeleton yana nuna cikakken yanayi na jiki — daidaita jikin ka da shi don samun reps da hold time.",
+    "gearCheck": "Duba Kayan Horo",
+    "push": "Tura",
+    "pull": "Jawo",
+    "addOn": "Kari",
+    "proTip": "Gurɓutataccen Shawara",
+    "saving": "Ana adanawa…",
+    "logIt": "Shigar da Rikodi",
+    "manualLogNoAI": "Rikodin Hannu (Babu AI)",
+    "start": "Fara",
+    "testMode": "Gamma Horo (Yanayin Gwaji)",
+    "testModeDesc": "Yana adana bayanin horo na ƙwaƙwalwa kai tsaye zuwa cikin database — ba dashi kamara. Yi amfani da wannan don cike jadawali da tarihin horo.",
+    "savingTest": "Ana adanawa…",
+    "saveTest": "Ajiye Horo na Gwaji",
+    "trainNow": "Horawa Yanzu",
+    "holdTime": "Lokacin riƙewa",
+    "repsLabel": "Reps",
+    "ghostSync": "Haɗin Ghost",
+    "formLabel": "Yanayi",
+    "syncedHoldIt": "● Haɗi — riƙe shi",
+    "matchGhost": "○ Daidaita yanayi na ghost",
+    "lockedIn": "● An kulle",
+    "adjust": "○ Daidaita",
+    "cameraInitializing": "Ana fara kamara…",
+    "voicePacing": "Gudanar da Murya",
+    "minimalist": "Matsakaici",
+    "fullSkeleton": "Cikakken Tsoka",
+    "listeningLabel": "Sauraro",
+    "ghostMode": "Yanayi Ghost",
+    "setOfTotal": "Saita {{current}} / {{total}}",
+    "restLabel": "Saurin Gida",
+    "nextSetOf": "Na gaba: Saita {{next}} na {{total}}",
+    "startNow": "Fara Yanzu",
+    "endWorkoutEarly": "Kare Horo Da Wuri",
+    "endSetN": "KARE SAITA {{set}}",
+    "bodyweight": "Nauyin Jiki",
+    "equipmentLabel": "Kayan Aiki",
+    "setsLabel": "Saita",
+    "voiceCommands": "Umurnin Murya",
+    "manualLogTitle": "Rikodin Hannu",
+    "repsCompleted": "Reps da aka kammala",
+    "rpeLabel": "RPE — Yaya Ƙarfi Ne?",
+    "rpeHint": "1 = sosai sauƙi · 10 = ƙoƙari mai ƙarfi · zaɓi",
+    "workoutTitle": "Horo",
+    "workoutSubtitle": "Tarihin yanayi na AI da Ghost Mode",
+    "exerciseLocked": "Motsa jiki An Kulle",
+    "exerciseLockedPrereq": "Kammala Lv.{{level}} {{title}} a jikin Kakakin Fasaha don buɗe wannan motsa jiki.",
+    "exerciseLockedGeneric": "Kammala ƙwarewar da ke gaba a cikin Kakakin Fasaha don buɗe wannan motsa jiki.",
+    "viewSkillTree": "Duba a cikin Kakakin Fasaha",
+    "trainExercise": "Horo {{name}}",
+    "lockedCompleteFirst": "An kulle — kammala ƙwarewar da ta gabata da farko",
+    "poseTrackingUnavailable": "Bai samu damar bin yanayi ba",
+    "poseTrackingDesc": "Ba a iya ɗora tsarin hangen nesa ba. Duba haɗin intanet ɗinka.",
+    "milestoneUnlocked": "🏅 Maƙasudin Kammala: {{name}}",
+    "milestoneDesc": "{{icon}} Ka samu takardar badges na {{tier}} don yawan {{category}}!",
+    "newTitle": "{{icon}} Sabon Take: \"{{title}}\"",
+    "newTitleDesc": "{{exercise}} · {{tier}} cikakkiyar ikon kammala!",
+    "selectExerciseFirst": "Zaɓi motsa jiki",
+    "pickExerciseFirst": "Zaɓi motsa jiki kafin fara.",
+    "targetMuscles": "Muscles na Manufa",
+    "criticalJoints": "Gamaye masu mahimmanci",
+    "barSpecialist": "Mai Sana'a Na Tsani",
+    "rings": "Hula",
+    "weighted": "Nauyi mai nauyi"
+  },
+  "session": {
+    "manualLog": "Rikodin Hannu",
+    "formMastery": "Kwarewa a Yanayi",
+    "sessions": "lokuta",
+    "skillComplete": "Kwarewa ta ƙare — mataki na gaba ya buɗe!",
+    "progressThisSet": "+{{pct}}% ci gaba a wannan saiti",
+    "skillUnlocked": "Kwarewa ta buɗe!",
+    "setComplete": "An gama Saita",
+    "bestGhostSync": "Kwarewa ta Ghost mafi kyau",
+    "elite": "Fasaha ta Musamman",
+    "perfectSet": "Saita Mai Kyau!",
+    "perfectSetDesc": "{{reps}} reps · {{form}}% yanayi — aiwatar da cikakken aiki",
+    "mastered": "— Kwarewa",
+    "next": "Na gaba:",
+    "skillProgress": "Ci gaba na Kwarewa",
+    "viewSession": "Duba Lokaci",
+    "trainNext": "Horowa Na Gaba →",
+    "continue": "Ci gaba",
+    "backToHistory": "Komawa Tarihi",
+    "totalReps": "Jimlar Reps",
+    "avgFormScore": "Matsakaicin Yanayi",
+    "duration": "Lokaci",
+    "savedClip": "An adana Clip",
+    "expiresInDays_one": "Yana ƙarewa a cikin {{count}} rana",
+    "expiresInDays_other": "Yana ƙarewa a cikin {{count}} kwanaki",
+    "loopInfo_one": "Yana kunnawa da kansa · danna don kunna / tsaya · zai ƙare a cikin {{count}} rana",
+    "loopInfo_other": "Yana kunnawa da kansa · danna don kunna / tsaya · zai ƙare a cikin {{count}} kwanaki",
+    "shareToCommunity": "Raba wa Ƙungiya",
+    "noClipSaved": "Babu clip da aka ajiye don wannan zaman. Yi amfani da \"Ajiye zuwa Tarihi\" a kan allon Binciken POV bayan saiti na gaba.",
+    "aiVerified": "AI ya tabbatar",
+    "sessionNotFound": "Ba a samu lokacin horo ba.",
+    "loadingSession": "Ana ɗora…"
+  },
+  "skillTree": {
+    "title": "Itacen Fasaha",
+    "subtitle": "Rassa guda hudu suna fitowa daga cibiyar ƙarfin Core ɗinka. Danna kowanne nod · ja don bincike · kurkusa don shimfida.",
+    "skillsMastered": "Fasahohin Da Ka Kammala",
+    "push": "Burawa",
+    "pull": " Janwo",
+    "core": "Core",
+    "legs": "Hasu",
+    "mastered": "An Kammala",
+    "inProgress": "Aiki A Ciki",
+    "locked": "An Kulle",
+    "equipmentOverlay": "Bayyanar Kayan Aiki",
+    "barOverlay": "Bar",
+    "ringsOverlay": "Jingina",
+    "weightedOverlay": "Matsin Almasi",
+    "trainNow": "Kara Horaswa Yanzu",
+    "hideEquipmentPaths": " ɓoye hanyoyin ƙwararru na kayan aiki",
+    "showEquipmentPaths": "Nuna hanyoyin ƙwararru na kayan aiki a cikin itacen",
+    "zoomInToSeeLabels": "Kara tsanani don ganin lakabi",
+    "tapToSnapToActive": "Danna ✛ don yin kwanciya zuwa fasahar aiki",
+    "lockedNode": "🔒 An Kulle",
+    "whyTrain": "Me Yasa Aka Yi Wannan Horaswa?",
+    "masterPrereq": "Kware a fasahar da ta gabata domin buɗe wannan node.",
+    "practiceAgain": "Aikin Sake →",
+    "trainNowArrow": "Horowa Yanzu →",
+    "levelLabel": "Matsayi {{level}} · {{levelName}}",
+    "staticHold": "Kare Tsayawa",
+    "explosive": "Kasala Kasala",
+    "whyTrainThis": "Me Yasa A Yi Wannan Horaswa?",
+    "alsoRequires": "Hakanan Kuma Yana Bukata",
+    "masteryLabel": "Kwarewa",
+    "completeLabel": "Gama",
+    "qualifyingSessions": "{{done}}/{{total}} zaman horo na cancantarwa",
+    "bestHold": "Mafi Kyawun Hana",
+    "bestRepsLabel": "Mafi Kyawun Numfashi",
+    "formScoreLabel": "Kimanta Tsari",
+    "requiresLabel": "Yana Bukata",
+    "coreStrengthHub": "CIBIYAR KARFI",
+    "nodes": {
+      "push_1": {
+        "title": "Farko Push-Up",
+        "description": "Samun push-up mai tsabta na farko: jikin kai tsaye, kirji na taɓa ƙasa, cikakken faɗaɗa hannu."
+      },
+      "push_2": {
+        "title": "Ƙarfi na Push-Up",
+        "description": "Kara ƙarfin push-up ɗinka sau biyu kuma ƙara ingancin tsarin - saitin aiki masu haɗin kai suna buɗe hanyar sama da planche."
+      },
+      "push_3": {
+        "title": "Diamond Push-Up",
+        "description": "Hannaye suna ƙirƙirar luƙewa a ƙarƙashin kirji, ƙafafu suna bin bayan - yana ƙara ƙarfin triceps da cikin kirji don ƙarfi mafi girma wajen matsawa."
+      },
+      "push_4": {
+        "title": "Archer Push-Up",
+        "description": "Hannun guda zai lanƙwasa yayin da ɗayan yake faɗaɗa — horo mai rashin daidaito wanda ke gina ƙarfi na ɓangare ɗaya na matsawa zuwa aiki da hannu ɗaya."
+      },
+      "push_5": {
+        "title": "Pseudo Planche Push-Up",
+        "description": "Hannaye sun juyawa wajen thenka, jikin yakai ƙasa - yana kwaikwayon ɗora planche akan sawu da kafaɗa yayin matsawa."
+      },
+      "push_oh_1": {
+        "title": "Pike Push-Up",
+        "description": "Fata mata da ƙafafu a rubuce, hannaye a faɗin kafaɗa — rage kai tsakanin hannaye kuma dawo da matsawa daga baya. Yana juyar da nauyi zuwa kafaɗa, yana ƙara makoma zuwa matsa ƙafa zuwa sama."
+      },
+      "push_oh_2": {
+        "title": "Elevated Pike Push-Up",
+        "description": "ƙafafu a kan akwati ko kujera — kusurwar ya ƙara yawan motsin kafaɗa da nauyi, mataki kai tsaye zuwa handstand push-up."
+      },
+      "push_oh_3": {
+        "title": "Wall Handstand Push-Up",
+        "description": "salo ƙungiya da bango kuma matsa nauyin jikin kai tsaye sama — mafi shi ne mabuɗin ƙarfi na handstand push-up."
+      },
+      "push_oh_4": {
+        "title": "Handstand",
+        "description": "daidaita a hannuwanku daga bango — juyawa mai sarrafawa da ke buƙatar ƙarfi na kafada, sassauƙan gyare-gyare na wuya da fahimtar sarari."
+      },
+      "push_oh_5": {
+        "title": "Handstand Push-Up",
+        "description": "matsawa daga kasa zuwa cikakken kulle yayin da juyawa — mafi girman mataki na ƙarfi na calisthenics na matsa ƙafa sama."
+      },
+      "push_pp_1": {
+        "title": "Leaning Planche",
+        "description": "fito gaba akan sawu a cikin matsaƙi tare da hannaye juyawa wajen — yana horar da sawu da gaba na kafaɗa domin ɗorawa planche."
+      },
+      "push_pp_2": {
+        "title": "Tuck Planche",
+        "description": "haɗa ƙafafu biyu daga ƙasa yayin da juyawa akan sawu tare da gurnani cikin turtushi — matsayin planche na gaskiya na farko."
+      },
+      "push_pp_3": {
+        "title": "Straddle Planche",
+        "description": "ɗaga ƙafafunku a faɗin wuri cikin ɗan siffar straddle yayin riƙe matsayi na planche — ƙalubale sosai fiye da tuck, yana buƙatar cikakkun ƙarfafa jiki."
+      },
+      "push_pp_4": {
+        "title": "Full Planche",
+        "description": "jiki cikakke a kwance gaba ɗaya, ƙafafu haɗe da kulle — shahararren firgitar matsa stein na calisthenics."
+      },
+      "pull_1": {
+        "title": "Farko Pull-Up",
+        "description": "samun cikakken pull-up na farko daga hau ƙyalli mai mutunci."
+      },
+      "pull_2": {
+        "title": "Daidaiton Pull-Up",
+        "description": "haɓaka ƙarfin pull-up mai dogon lokaci a cikin saitin da dama. Yana buɗe hanyar Front Lever."
+      },
+      "pull_3": {
+        "title": "Negative Pull-Ups",
+        "description": "fara daga ƙasan jikin kai a bar sai ka sauka da hankali sosai. Wannan nau’in eccentric yana gina ƙarfin jan da ake buƙata don Muscle-Up."
+      },
+      "pull_fl_1": {
+        "title": "Tuck Front Lever",
+        "description": "daka daga bar, ɗaure gwiwowi zuwa cikin kirji ka riƙe jikin a layi. Yana ginawa ƙarfin scapula da lat don cikakken lever."
+      },
+      "pull_fl_2": {
+        "title": "Straddle Front Lever",
+        "description": "faɗaɗa ƙafafunka cikin faɗin straddle ka riƙe cikin layi. Yana tambaya sosai fiye da tuck — yana buƙatar cikakken ƙarfin jiki."
+      },
+      "pull_fl_3": {
+        "title": "Full Front Lever",
+        "description": "jiki a ƙasa daidai, hannayen kai tsaye, ƙafafu haɗe da kulle — ɗaya daga cikin mafi ƙaunataccen tsayawar static na calisthenics."
+      },
+      "pull_mu_1": {
+        "title": "Pull-Up Daga Kirji Zuwa Bar",
+        "description": "yankewar gaske daga ƙasan jikin kai zuwa bar — tuki har sai kirjinka ya taɓa bar ɗin. Yana buƙatar ƙarfin jan fiye da na al'ada."
+      },
+      "pull_mu_2": {
+        "title": "Kipping Muscle-Up",
+        "description": "yi amfani da hop na kafada da kula da lokaci don haifar da kuzari ta hanyar canjin bar. Koyi tsayi kafin cire hop din."
+      },
+      "pull_mu_3": {
+        "title": "Strict Muscle-Up",
+        "description": "ba tare da wuyar motsi ko hop ba — jawo tare da tsayayyen ƙarfi daga sama zuwa ƙasa da ƙarfi na jiki mai tsarki. Ginshikin ƙarfin jawo."
+      },
+      "pull_am_1": {
+        "title": "Archer Pull-Up",
+        "description": "ɗaure hannu ɗaya yayin da ɗayan yake faɗaɗa — horo mai hatsari wanda ke gina ƙarfin lat ɗaya na jiki zuwa pull-up ɗaya na hannu ɗaya."
+      },
+      "pull_am_2": {
+        "title": "Typewriter Pull-Up",
+        "description": "daga bar sai ka kwashe daga hannu zuwa hannu a saman — abin koyi mai ban mamaki na ƙarfin jan taimako tsaye da iko."
+      },
+      "pull_oah_1": {
+        "title": "Hang ɗin Hannu Guda Daya na Aiki",
+        "description": "hang daga bar da hannu guda daya, kafaɗa na cikin aiki da saukewa. Yana ginawa ɗaya daga cikin ƙarfi na kafaɗa na ɓangare ɗaya, juriya ta riƙe, da ƙarfafa ƙashin haɗin gefe."
+      },
+      "pull_oapu_1": {
+        "title": "Pull-Up Hannu Guda Daya",
+        "description": "gwajin ƙarshe na ƙarfin jawo na ɓangare guda — cikakken pull-up na hannu ɗaya ba tare da taimako ba, ba tare da kuzari ba. Daya daga cikin abubuwan da suka fi wuya a calisthenics baki ɗaya."
+      },
+      "pull_rings_1": {
+        "title": "Tsaya Tsayayyen Gyaran Rings",
+        "description": "riƙe tallafi mai aiki a kan rings — hannaye kai tsaye, jiki tsaye. Wannan matsayi na asali yana buƙatar ƙarfi na hannu, kira da kafaɗa kafin yin aikin ja na rings."
+      },
+      "pull_rings_2": {
+        "title": "Pull-Up Rings",
+        "description": "Cikakken pull-ups a kan rings na gymnastic na ƙarfi na riƙe da iko na kafaɗa wadanda ba a iya yi da bar ɗin ta kulle. Rashin kwanciyar hankali yana sa kowanne rep ya fi wahala."
+      },
+      "pull_rings_3": {
+        "title": "Muscle-Up Ring",
+        "description": "Mafi girman ƙarfi na ja da rings: kai tsaye muscle-up a kan rings na gymnastic yana buƙatar ƙwarewar canjin kai, ƙarfi na kafaɗa, da iko na wuyar hannu a ƙarƙashin rashin kwanciyar hankali."
+      },
+      "pull_weighted_1": {
+        "title": "Weighted Pull-Up",
+        "description": "ƙara jakar nauyi ko bel kuma yi pull-ups masu tsauri a ƙarƙashin nauyi. Farawa da 10–20% na nauyinka, ƙarin ƙarfin yana hanzarta samun nasara fiye da horar da jiki kawai."
+      },
+      "pull_weighted_2": {
+        "title": "Ƙarfin Volume na Pull-Up na Nauyi",
+        "description": "Kyakkyawan yin boxen pull-up masu nauyi da manyan repetitions. Yawan ayyukan ƙarƙashin nauyi na ƙarfafa ƙarfin juya jiki da ake buƙata don muscle-up mai nauyi da kuma ɗaukar nauyi mai yawan nauyi."
+      },
+      "pull_weighted_3": {
+        "title": "Muscle-Up Mai Nauyi",
+        "description": "Muscle-up tare da ƙarin nauyi — ɗaya daga cikin ayyukan ƙarfi mafi girma a calisthenics. Yana buƙatar tasiri mai ƙamshi, daidaitaccen lokacin canzawa, da cikakken ƙarfi na jiki gabaɗaya."
+      },
+      "core_1": {
+        "title": "Tubalin Plank",
+        "description": "Riƙe plank mai kyau — jiki madaidaici daga kai zuwa ƙarshen ƙafafu, kodin da ciki na tsare. Tsarin farawa na kowa da kowa don duk aikin core."
+      },
+      "core_2": {
+        "title": "Side Plank",
+        "description": "Taimakawa a kan ɗayan gwiwar hannu kuma ɗaga hips ɗinka — yana ƙirƙirar ƙirar core na gefe wanda ke canza kai tsaye zuwa aikin taswirar mutum da kuma ɗagawa da ƙafa suna rataye."
+      },
+      "core_hh_1": {
+        "title": "Dead Bug",
+        "description": "Ka yalli a baya tare da hannunka da ƙafafunka a cikin sama — rage hannunka da ƙafarka a daidai lokacin tsarkakewa. Mu Assasa bangaren anti-extension na core."
+      },
+      "core_hh_2": {
+        "title": "Fadada Bayyanar Bayyanar",
+        "description": "A yalli da fuska ƙasa da ɗaga kirjin ka da ƙafafunka daga ƙasa (Superman). Yana ƙara ƙarfin sashen bayanta wanda ke daidaita aikin jikin hollow."
+      },
+      "core_hh_3": {
+        "title": "Riƙe Jikin Hollow",
+        "description": "Yalli a baya kuma ka tashi cikin wani lanƙwasa na hollow — kafada daga ƙasa, ƙafafu tsare kaɗan. Mafita na asali na ƙarfin cikakken jiki da ke goyon bayan kowanne motsi na calisthenics."
+      },
+      "core_hh_4": {
+        "title": "Dragon Flag Negative",
+        "description": "Yalli a kan wani tabarma, riƙe bayan kai, sannan a hankali rage jikin daga tsaye zuwa kwance. Matakin na eccentric loading wanda ke shirya ka don cikakken dragon flag."
+      },
+      "core_hh_5": {
+        "title": "Dragon Flag",
+        "description": "Hujja a bayan kai kuma ka riƙe ko rage jikin ka cikin murshe — kawai kafadunka ne ke taɓa tabarmu. Ƙarfin anti-extension na gaba shine mafi girma."
+      },
+      "core_bb_1": {
+        "title": "Hookɗen Rigakafi",
+        "description": "Yar da kan rigakafi tare da ƙafafu da aka kwantar suna da kyau — tsarin asali na duk aikin core da jawo jiki da aka yi a kan sanduna."
+      },
+      "core_bb_2": {
+        "title": "Hanging Knee Tucks",
+        "description": "Yar daga kan sandar kaɗa da gwiwoyinka ga kirji. Yana ƙirƙirar matsa jikin hip-flexor da daidaiton kafada da ke buƙatar don samun aikin core mai wuya."
+      },
+      "core_bb_3": {
+        "title": "Hanging Leg Raises",
+        "description": "Yar daga sandar da ka ɗaga ƙafafunka madaidaici zuwa kwance — yana buƙatar ƙarfi mai girma a hip-flexor, jurewar kama, da cikakken iko na kashin baya."
+      },
+      "core_bb_4": {
+        "title": "Toes to Bar",
+        "description": "Daga gurɓa, lanƙwasa jikin gaba ɗaya ka taɓa sandar da ƙafafunka — cikakken ƙarfin hip-flexor, da tuƙi na kama, da iko na jiki duka a motsi guda ɗaya."
+      },
+      "core_hf_1": {
+        "title": "Hanging Windshield Wipers",
+        "description": "Yar a kan sandar, ɗaga ƙafafunka zuwa matsayi na kwance, sannan ka sare su gefe zuwa gefe. Yana ƙarfafa ƙarfin gefe na core da motsi na hips da ke da muhimmanci don taswirar mutum da wuya da ƙafa."
+      },
+      "core_hf_2": {
+        "title": "Human Flag Tucked",
+        "description": "Hui da sanda mai tsaye kuma ka riƙe jikin ka madaidaici tare da gwiwoyinka cikin ciki — matsayi na gaskiya na taswirar mutum wanda ke buƙatar ƙananan ƙarfin gefe mai ƙarfi."
+      },
+      "core_hf_3": {
+        "title": "Human Flag Guda-ƙafa",
+        "description": "Guda ɗaya na kafa na tsawo, guda ɗaya na lanƙwasa — matsayi na wucewa wanda ke rage daidai na leverage sosai yayin da kake koyon ɗaurin gefe don cikakken taswirar mutum."
+      },
+      "core_hf_4": {
+        "title": "Human Flag",
+        "description": "Hui da sanda mai tsaye kuma ka riƙe dukan jikin ka madaidaici — ayyukan daukan tarihi da ke buƙatar ƙwarewar gefe da ƙarfi na kafada mai ƙarfi."
+      },
+      "core_weighted_1": {
+        "title": "Weighted Plank",
+        "description": "Riƙe plank mai ƙarfi tare da faranti masu nauyi ko kayan yadi a baya. Nauyin ƙari na ƙara buƙatar anti-extension, yana mai da wannan hanya mafi inganci don samun ƙarfi na core mai ƙarfi a ƙarƙashin nauyi."
+      },
+      "core_weighted_2": {
+        "title": "Weighted Leg Raises",
+        "description": "Yar daga sandar tare da na'urar nauyi a ƙafafunka da kuma ɗaga ƙafafunka zuwa kwance. Yawan nauyin ƙara buƙatar hip-flexor da ƙarfin kama sosai."
+      },
+      "core_weighted_3": {
+        "title": "Weighted Dragon Flag",
+        "description": "Yi Dragon Flag tare da ƙari na kayan nauyi — ɗaya daga cikin ayyukan jiki mai nauyi mai saurin rugujewa. Cikakken ƙarfin anti-extension ƙarƙashin nauyi na waje."
+      },
+      "core_rings_1": {
+        "title": "Ring Knee Raises",
+        "description": "Yar daga kan kayan wasan kwaikwayo na girka kuma ka ɗaga gwiwoyinka zuwa kirji. Rashin kwanciyar hankali yana buƙatar tsawatar mai zurfi na kafada da ƙara ƙarfi na core fiye da sandar ɗin da aka gyara"
+      },
+      "core_rings_2": {
+        "title": "Ring Rollouts",
+        "description": "Daga cikin tsayawa a tsaye, rike kayan girka na wasan kwaikwayo ka yi zamewa zuwa cikakken faɗin fiɗa. Lalacewar rashin kwanciyar hankali na tsufa na buƙatar aiki mai ƙarfi na juriya — fiye da kowanne na wani sandar ko na’ura mai zamewa."
+      },
+      "core_roller_1": {
+        "title": "Ab Roller Rollout",
+        "description": "Rike ab roller kuma ka zame daga tsayawa a ƙasa zuwa cikakken faɗin, yayin da ka tsare makogwaro. Buƙatar tasiri mai ƙarfi na anti-extension da cikakken motsi ya sa wannan daga cikin ayyukan core masu tasiri sosai masu ɗora nauyi."
+      },
+      "core_band_1": {
+        "title": "Banded Pallof Press",
+        "description": "ajiye bande na juriya a matsayi na kirji ka turawa hannu a cikin kaucewa daga jikin ka yayin da kake yaki da juyawa. Buƙatar anti-rotation na nufin ƙara ƙarfin tsayuwar cinyoyi waɗanda babu wani motsi mai raɗaɗi da zai iya kaiwa."
+      },
+      "legs_1": {
+        "title": "Tubalin Kwakwadan dari-dari",
+        "description": "Gina tsarin squat na doble na musamman da zurfi da tsayuwar madaidaici."
+      },
+      "legs_2": {
+        "title": "Ikon Squat",
+        "description": "Kara yawan reps na squat da ke daidaita bin dakin gwiwa da zurfi. Yana buɗe hanyar L-Sit da Pistol Squat."
+      },
+      "legs_3": {
+        "title": "Shrimp Squat",
+        "description": "Squat guda ɗaya da kafar bayanan na tsaye a bayan ka — yana buƙatar ƙarfi mai girma na quads, motsin mahaifa da daidaito a lokaci guda."
+      },
+      "legs_4": {
+        "title": "Bulgarian Split Squat",
+        "description": "Kafafun baya a tsaye, kafa na gaba a gaba — sankowa har sai gwiwar baya ta kai kasa. Daya daga cikin mafi tasiri wajen gina ƙarfin gefe na daban-daban.\n"
+      },
+      "legs_ls_1": {
+        "title": "Fadada Pike",
+        "description": "Zauna da kyau da ƙafafunku madaidaici, sannan ka lanƙwasa gaba da su — yana ƙara sassauci na hamstring da ƙarfafa hip-flexor da ake buƙata don cikakken L-sit."
+      },
+      "legs_ls_2": {
+        "title": "L-Sit Compressions",
+        "description": "Zauna, ka turawa ƙafafunka ƙasa ka yi ƙoƙarin ɗaga su — yana ƙara ƙarfin adhancin hip-flexor wanda ke maye gurbin sassauci da ƙarfi a cikin L-sit."
+      },
+      "legs_ls_3": {
+        "title": "Tuck L-Sit",
+        "description": "Danna akan sanduna masu daidaito ko ƙasa, ka ɗaga hips ka yafe — gwiwoyinka cikin ciki, hannunka a lanƙwasa. Matsayi na kofa zuwa cikakken L-sit."
+      },
+      "legs_ls_4": {
+        "title": "Cikakken L-Sit",
+        "description": "Hannaye a rufe, hips a sama, ƙafafu madaidaici da suka forɗo — cikakken nuna ƙarfin hip-flexor, ƙarfin matsa lamba, da ɗawainiya na jiki."
+      },
+      "legs_ps_1": {
+        "title": "Mataki-mataki",
+        "description": "Mataki a saman wani jigo mai santsi da iko — yana haɓaka ɗaurewar guda na kafa ɗaya da ƙarfafa quads a matsayin mataki na farko zuwa Pistol Squat."
+      },
+      "legs_ps_2": {
+        "title": "Pistol Squat Taimako",
+        "description": "Squat guda ɗaya cikin zurfi da ɗaurewa tare da taimako ko goyon baya — yana gina ƙarfin da sassauci kafin a cire taimako."
+      },
+      "legs_ps_3": {
+        "title": "Ƙarƙashin Jikin Squat",
+        "description": "Squat mai haɗin kai da kafa haɗe — yana kusantar yadda Pistol Squat ke aiki da bukatar motsin mahaifa kafin a yi gabaɗaya guda ɗaya."
+      },
+      "legs_ps_4": {
+        "title": "Pistol Squat",
+        "description": "Squat guda ɗaya cikin zurfi tare da kafa mai 'yanci da a lanƙwasa — yana buƙatar ƙarfin quads, sassauci na mahaifa da daidaiton jiki gaba ɗaya a cikin motsi mafi inganci."
+      },
+      "legs_weighted_1": {
+        "title": "Weighted Goblet Squat",
+        "description": "Riƙe kettlebell ko dumbbell a matsayi na kirji sannan ka squat zuwa zurfi. Matsayin goblet na inganta ƙirar torso madaidaici da bin migar gwiwa mai zurfi, yana mai da shi hanya mafi kyau don ƙarfi na ƙafafu masu ɗora nauyi."
+      },
+      "legs_weighted_2": {
+        "title": "Weighted Bulgarian Split Squat",
+        "description": "Riƙe dumbbells ka yi split squat na baya mai ɗaurewa ƙafa na baya a sama. Munaɗin load guda ɗaya karkashin wannan matakin stretch na hip-flexor na daga cikin mafi tasiri na gina ƙarfi na ƙafa."
+      },
+      "legs_weighted_3": {
+        "title": "Weighted Pistol Squat",
+        "description": "Yi Pistol Squat cikakke tare da kayan nauyi kamar kettlebell ko faranti — ƙara nauyi a cikin wannan motsi mai buƙata ya buƙatar ƙarfi mai yawa na mahaifa, ƙarfin ɗaya-naƙasa, da daidaiton jiki."
+      },
+      "legs_weighted_4": {
+        "title": "Weighted Shrimp Squat",
+        "description": "Yi shrimp squat da kayan nauyi ko zobe na yadi — ɗaya daga cikin motsin ɗora nauyi na musamman. Yana buƙatar ƙarfi na hips mai ƙarfi, quads, da daidaito a ƙarƙashin juriya na waje."
+      },
+      "legs_band_1": {
+        "title": "Hanyar gefe na bandi",
+        "description": "Sanya bande na juriya a kan ƙafafu kuma yi tafiya gefe a cikin matsayin squat na kashi ɗaki. Yana mai da hankali kan gluteus medius da abduction na hips da ke daidaita kowane motsi na guda ɗaya na ƙafa."
+      },
+      "legs_box_1": {
+        "title": "Jumps na akwatin",
+        "description": "Fito daga ƙasa kuma ka sauka shiryen akan akwatin plyo, ka sha bamban da matsawar tashi mai taushi da daidaita. Yana gabatar da saurin haɓakar ƙarfi da adana makamashi elastic."
+      },
+      "legs_sliders_1": {
+        "title": "Hamstring Curls na sliders",
+        "description": "Yar a baya, ka sanya sliders ƙasan ƙafafunka, ka lanƙwasa ƙafafunka zuwa ga jikin, yayin da ka haɗa hips. Buƙatar eccentric mai ƙarfi na haifar da stimulus wanda injuna ba za su iya yin kwatankwacinsa ba."
+      },
+      "push_rings_1": {
+        "title": "Ring Dip",
+        "description": "Yi dip na kayan girkawa na wasan kwaikwayo tare da kontrol ɗin RTO (Rings Turned Out) a lokacin kulle. Rashin kwanciyar hankali na buƙatar ƙwarewar tricep, kirji, da kafada na ƙwarai a kowane reps."
+      },
+      "push_rings_2": {
+        "title": "Ring Muscle-Up",
+        "description": "Hada ƙarfin jawo da raunuka a kan kayan zamewa a cikin motsi guda mai ƙarfi sama da kayan. Ƙarfin ring mai ƙarfi na buƙatar daidaiton ƙwarai a duk ƙungiyar matakan motsi."
+      },
+      "push_weighted_1": {
+        "title": "Weighted Dip",
+        "description": "Ƙara kaya ko bel kuma yi dip a ƙarƙashin nauyi. Weighted dips suna gina ƙarfi mai ƙarfi na matsa lamba da sauri fiye da kowane motsi na jiki masu haɗin kai na ɗaya."
+      }
+    }
+  },
+  "history": {
+    "title": "Tarihin Ayyuka",
+    "subtitle": "Duba aikin da ka yi a baya.",
+    "noSessions": "Babu zaman aiki da aka rubuta tukuna.",
+    "startWorkout": "Fara aiki don farawa gina tarihi naka.",
+    "session": "Zama",
+    "duration": "Lokaci",
+    "verified": "An tabbatar",
+    "unverified": "Ba a tabbatar ba",
+    "formScore": "Ƙimar Tsari",
+    "reps": "Reps",
+    "viewDetail": "Duba Cikakkun Bayani",
+    "avgForm": "Matsakaicin Tsari",
+    "aiVerified": "Tabbatar da AI",
+    "selfReported": "Kai-Ka Kyautatawa",
+    "viewClip": "Duba Sassaƙa",
+    "clipPolicy": "Ana adana sassaƙan \"Duba Sassaƙa\" a gida na kwanaki 7, daga baya ana sharewa ta atomatik don samun wurin ajiya."
+  },
+  "leaderboard": {
+    "title": "Matsayi na Manyan Matasan Ta Gaske",
+    "subtitle": "Jimlar Makircin da Aka Samu · Kawai reps da AI suka tabbatar",
+    "global": "Duniya",
+    "national": "Kasa",
+    "friends": "Abokai",
+    "rank": "Matsayi",
+    "yourRank": "Matsayin Ka",
+    "athlete": "Jirgin Motsa Jiki",
+    "totalPoints": "Jimlar Makircin",
+    "points": "Makircin",
+    "skills": "Kwarewa",
+    "masteryPoints": "Makircin Kwarewa",
+    "you": "Kai",
+    "skillsLabel": "{{count}} Kwarewa",
+    "moveValueGuide": "Jagorar Ƙimar Gudunmawa",
+    "pointsPerRep": "Makircin kowanne reps a 100% tsari",
+    "ptsRep": "mak/r",
+    "ptsSec": "mak/s",
+    "moveValueDesc": "Kowane reps da AI ta tabbatar (ko tsayin lokaci) ya samu nauyi × reps × (tsari% / 100) maki. Gisga na hannu kawai suna ƙara ƙwarewar Mashin tsire-tsire — ba masu daraja ba.",
+    "exampleCalc": "Misali: 10 Muscle-Up reps a 90% tsari = 10 × 10.0 × 0.9 = 90 maki",
+    "onlyVerified": "Kawai reps da AI suka tabbatar ne ke samun maki. Gisga na hannu kawai suna ƙara ƙwarewar Mashin tsire-tsire.",
+    "formula": "Tsari: wuya × reps × (tsari% / 100) · Ba da iyaka",
+    "signInToSeeFriends": "Shiga don ganin abokai",
+    "compareRank": "Kwatanta matsayinka da mutanen da kake horo tare da su.",
+    "countryNotDetected": "Ba a gane ƙasar ba",
+    "countryNotDetectedDesc": "Ba mu gano ƙasarka ba. Saita shi a cikin Saituna don buɗe matsayi na ƙasa.",
+    "failedToLoad": "Kuskuren ɗora matsayi na manyan matasan. Sake ƙoƙari nan gaba.",
+    "noFriendsEmpty": "Babu aboki da ya horo tukuna — ko kuma ba ka ƙara abokai ba.",
+    "noAthletesRegion": "Babu masu motsa jiki a wannan yankin tukuna. Ka kasance na farko!",
+    "noFriends": "ƙara abokai don ganin matsayi na abokai.",
+    "noNational": "Babu bayanai na ƙasa yanzu."
+  },
+  "friends": {
+    "title": "Abokai",
+    "addFriend": "Ƙara Aboki",
+    "searchPlaceholder": "Nema ta sunan mai amfani…",
+    "pendingRequests": "Bukatu Masu Jira",
+    "sent": "An Aika",
+    "accept": "Yarda",
+    "decline": "Karya",
+    "remove": "Cire",
+    "noFriends": "Har yanzu ba a da aboki. Nema masu motsa jiki don haɗuwa da su.",
+    "noPending": "Babu bukatun jira.",
+    "viewProfile": "Duba Bayanin Kai",
+    "sendRequest": "Aika Bukata",
+    "requestSent": "An Aika Bukata",
+    "signInTitle": "Shiga don amfani da Abokai",
+    "signInDesc": "Create asusu don haɗuwa da sauran masu motsa jiki.",
+    "profileSetupWarning": "Ana shirya bayaninka — idan wannan ya ci gaba, ziyarci Saituna don kammala shi.",
+    "findAthletes": "Nema Masu Motsa Jiki",
+    "searching": "Nema…",
+    "noUsersFound": "Babu masu amfani da \"{{query}}\"",
+    "friendsBadge": "Abokai",
+    "pending": "Jira",
+    "add": "Ƙara",
+    "pendingRequestsCount": "Bukatun jira ({{count}})",
+    "sentRequestsCount": "Bukatu da aka aiko ({{count}})",
+    "myFriends": "Abokaina",
+    "noFriendsYet": "Babu aboki tukuna. Nema a sama don ƙara wani!",
+    "view": "Duba",
+    "removeFriend": "Cire aboki",
+    "requestSentTitle": "An aiko da bukatar aboki",
+    "friendAdded": "An ƙara aboki!",
+    "requestDeclined": "An ƙi yiwa bukata",
+    "friendRemoved": "An cire aboki",
+    "somethingWentWrong": "Wani abu ya faru ba daidai ba"
+  },
+  "community": {
+    "title": "Al'umma",
+    "feed": "Hanyoyin Sako",
+    "post": "Saka",
+    "like": "Kara sha'awa",
+    "comment": "Sharhi",
+    "share": "Raba",
+    "noposts": "Babu sakonni tukuna — kasance na farko wajen rabawa da motsa jiki!",
+    "shareWorkout": "Raba Motsa Jiki",
+    "aiVerified": "Tabbatar da AI",
+    "selfReported": "Kai-Ka Kyautatawa",
+    "justNow": "yanzu nan",
+    "minutesAgo": "m {{n}} da suka wuce",
+    "hoursAgo": "h {{n}} da suka wuce",
+    "daysAgo": "d {{n}} da suka wuce",
+    "noClipAttached": "Babu sassaƙa da aka haɗa",
+    "commentLabel": "Sharhi",
+    "noComments": "Babu sharhi tukuna. Ka kasance na farko!",
+    "addComment": "Ƙara sharhi…",
+    "signInToComment": "Shiga don yin sharhi",
+    "startWorkout": "Fara Motsa Jiki",
+    "communityTitle": "Al'umma",
+    "communitySubtitle": "Motsa jiki daga masu motsa jiki a duniya baki ɗaya",
+    "searchAthletes": "Nema ta mai motsa jiki, atisaye ko #hashtag…",
+    "filterAll": "Duka",
+    "filterPush": "Tura",
+    "filterPull": " Ja",
+    "filterCore": "Tsakiya",
+    "filterLegs": "ƙafa",
+    "emptyAll1": "Babu sakonni tukuna",
+    "emptyAll2": "Share a clip after your next workout to be the first!",
+    "emptyPush1": "No Push Day clips yet!",
+    "emptyPush2": "Be the first to post a push workout.",
+    "emptyPull1": "No Pull Day clips yet!",
+    "emptyPull2": "Be the first to post a pull workout.",
+    "emptyCore1": "No Core clips yet!",
+    "emptyCore2": "Be the first to post a core workout.",
+    "emptyLegs1": "No Leg Day clips yet! Be the first to post.",
+    "emptyLegs2": "Hit the gym and show your leg strength.",
+    "noEliteAchievements": "No Elite achievements yet.",
+    "masterEliteSkill": "Master an Elite skill to appear here!",
+    "you": "You",
+    "justMastered": "just mastered",
+    "postClip": "Post Clip",
+    "shareClip": "Share Clip",
+    "shareToCommunity": "Share to Community",
+    "addCaption": "Add a caption… (optional)",
+    "uploadStarted": "Upload started — you can browse freely!",
+    "publishingPost": "Publishing post…",
+    "postedToCommunity": "Posted to Community!",
+    "savedClipLabel": "Saved clip"
+  },
+  "profile": {
+    "masteryPoints": "Mastery Points",
+    "skillsMastered": "Skills Mastered",
+    "totalSessions": "Total Sessions",
+    "skillTree": "Skill Tree",
+    "milestones": "Milestones",
+    "mastery": "Mastery",
+    "badges": "Badges",
+    "noMastery": "No mastered skills yet.",
+    "privateProfile": "This profile is private."
+  },
+  "privacy": {
+    "public": "Public",
+    "publicDesc": "Anyone can view your profile, skill tree, and mastery badges.",
+    "friends": "Friends Only",
+    "friendsDesc": "Only accepted friends can view your profile.",
+    "private": "Private",
+    "privateDesc": "Your profile is hidden — even from friends."
+  },
+  "calibration": {
+    "title": "Body Calibration",
+    "subtitle": "Stand in a T-Pose so we can calibrate your body measurements",
+    "instructions": "Stand in a T-Pose: arms out to the sides, feet shoulder-width apart.",
+    "scanning": "Scanning...",
+    "complete": "Calibration Complete",
+    "retry": "Retry"
+  },
+  "daily": {
+    "title": "Daily Mobility",
+    "streak": "Streak",
+    "days": "days",
+    "routine": "Today's Routine",
+    "complete": "Complete",
+    "completed": "Completed",
+    "questionnaire": {
+      "title": "Update My Goals",
+      "subtitle": "Personalise your daily mobility tasks",
+      "goalQuestion": "What is your primary calisthenics goal?",
+      "areasQuestion": "What muscles and joints are holding you back?",
+      "areasHint": "(pick all that apply)",
+      "timeQuestion": "How much time can you commit to daily mobility?",
+      "save": "Save My Preferences",
+      "tapToChange": "Tap below to change",
+      "suggested": "Suggested",
+      "searchGoal": "Search a movement or skill…",
+      "searchBodyPart": "Search a body part…",
+      "minLabel": "{{n}} min",
+      "goalsUpdated": "Goals Updated! Your routine has been personalized."
+    }
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "notFoundDesc": "The page you're looking for doesn't exist.",
+    "unauthorized": "Please sign in to continue",
+    "serverError": "Server error — please try again",
+    "goHome": "Go Home"
+  },
+  "coaching": {
+    "rep": "Rep {{count}}",
+    "goodRep": "Good rep!",
+    "formWarning": "Keep your form tight.",
+    "breathe": "Breathe through it.",
+    "almostDone": "Almost done — stay strong.",
+    "setComplete": "Set complete! Rest up.",
+    "workoutComplete": "Workout complete! Great effort."
+  },
+  "exercises": {
+    "push_up": "Push-Up",
+    "diamond_push_up": "Diamond Push-Up",
+    "archer_push_up": "Archer Push-Up",
+    "pseudo_planche_push_up": "Pseudo Planche Push-Up",
+    "pike_push_up": "Pike Push-Up",
+    "elevated_pike_push_up": "Elevated Pike Push-Up",
+    "handstand_push_up": "Handstand Push-Up",
+    "handstand": "Handstand",
+    "wall_handstand_push_up": "Wall Handstand Push-Up",
+    "planche_lean": "Planche Lean",
+    "tuck_planche": "Tuck Planche",
+    "straddle_planche": "Straddle Planche",
+    "planche": "Planche",
+    "full_planche": "Planche",
+    "scapular_shrugs": "Scapular Shrugs",
+    "australian_rows": "Australian Rows",
+    "negative_pull_ups": "Negative Pull-Ups",
+    "negative_pull_up": "Negative Pull-Up",
+    "pull_up": "Pull-Up",
+    "tuck_front_lever": "Tuck Front Lever",
+    "straddle_front_lever": "Straddle Front Lever",
+    "full_front_lever": "Full Front Lever",
+    "chest_to_bar_pull_up": "Chest-to-Bar Pull-Up",
+    "muscle_up": "Muscle-Up",
+    "kipping_muscle_up": "Kipping Muscle-Up",
+    "strict_muscle_up": "Strict Muscle-Up",
+    "archer_pull_up": "Archer Pull-Up",
+    "typewriter_pull_up": "Typewriter Pull-Up: Ƙarfafa Tsoka na Musamman",
+    "one_arm_active_hang": "Hangen Hannu Mai Aiki da Ɗaya Hannu",
+    "one_arm_pull_up": "Juyawar Hannu ɗaya na Ƙarfi",
+    "plank": "Tsayuwa Mai Ƙarfi",
+    "side_plank": "Tsayuwa Mai Ƙarfi a Ƙoƙo",
+    "dead_bug": "Kusurarren Kadi",
+    "superman": "Superman: Ƙarfafa Makamai da Kasusuwa",
+    "hollow_body_hold": "Riƙe Jikin Hollow",
+    "dragon_flag_negative": "Harbin Drake Flag Mai Sauka",
+    "dragon_flag": "Harbin Drake Flag",
+    "active_hang": "Rikewa a Ƙarfafa Hannu",
+    "hanging_knee_tuck": "Matsawa Matatus a Hangen Hannu",
+    "hanging_knee_tucks": "Matsawa Matatus a Hangen Hannu (Manyan)",
+    "hanging_leg_raise": "Hangen Ƙafa Ke Daga ƙasa",
+    "hanging_leg_raises": "Hangen Ƙafa Ke Daga ƙasa (Yawa)",
+    "toes_to_bar": "Kurawa Ido zuwa Bar",
+    "windshield_wiper": "Juyawa na Windshield Wiper",
+    "windshield_wipers": "Juyawa na Windshield Wipers",
+    "hanging_windshield_wipers": "Juyawa Mai Hangen Hannu na Windshield Wipers",
+    "tucked_human_flag": "Flag ɗin Mutum Mai Tucked",
+    "one_leg_human_flag": "Flag ɗin Mutum mai Ɗaya Ƙafa",
+    "human_flag": "Flag ɗin Mutum",
+    "squat": "Zango Mai Ƙarfi (Squat)",
+    "air_squat": "Squat na Iska",
+    "shrimp_squat": "Squat na Shrimp",
+    "bulgarian_split_squat": "Bulgarian Split Squat",
+    "nordic_curls": "Nordic Curls",
+    "pike_stretch": "Matsuguni na Pike",
+    "l_sit_compression": "Matsakaicin L-Sit",
+    "l_sit_compressions": "Matsakaicin L-Sit (Yawa)",
+    "tuck_l_sit": "Tuck L-Sit",
+    "l_sit": "L-Sit",
+    "full_l_sit": "Cikakken L-Sit",
+    "step_up": "Tsalle Sama",
+    "step_ups": "Tsalle Sama (Yawa)",
+    "assisted_pistol_squat": "Taimako Pistol Squat",
+    "close_stance_squat": "Squat da Ƙimar Kafa ta kusa",
+    "pistol_squat": "Pistol Squat",
+    "explosive_pull_up": "Juyawar Ƙarfi Mai Ƙtira",
+    "ring_support_hold": "Riƙewa a Cikin Sugu",
+    "ring_pull_up": "Juyawar Sugu",
+    "ring_muscle_up": "Juyawar Ƙarfin Jiki na Sugu",
+    "ring_dip": "Dip na Sugu",
+    "weighted_pull_up": "Juyawar Ƙarfi da Nauyi",
+    "weighted_muscle_up": "Juyawar Ƙarfi Mai Nauyi",
+    "weighted_dip": "Dip na Nauyi",
+    "weighted_plank": "Tsayuwa Mai Nauyi",
+    "weighted_dragon_flag": "Flag ɗin Drake Mai Nauyi",
+    "weighted_leg_raises": "Hangen Ƙafa Mai Nauyi",
+    "weighted_goblet_squat": "Goblet Squat Mai Nauyi",
+    "weighted_bulgarian_split_squat": "Bulgarian Split Squat Mai Nauyi",
+    "weighted_pistol_squat": "Pistol Squat Mai Nauyi",
+    "weighted_shrimp_squat": "Shrimp Squat Mai Nauyi",
+    "bar_volume_pull_up": "Juyawar Bar da Yawan Kaya",
+    "explosive_bar_pull_up": "Juyawar Bar Mai Ƙtarƙashin Ƙarfi",
+    "strict_bar_muscle_up": "Muscle-Up na Bar Mai Tsauri",
+    "weighted_volume": "Yawan Nauyi",
+    "ab_roller_rollout": "Fitar da Roller Ab",
+    "banded_pallof_press": "Matsin Pallof da Bel",
+    "banded_lateral_walks": "Hanyoyin Biyayya na Bel na Ƙaure",
+    "box_jumps": "Tsalle Akan Akwa",
+    "slider_hamstring_curls": "Juyawar Hamstring na Slider",
+    "ring_knee_raises": "Hangen Gwiwa na Sugu",
+    "ring_rollouts": "Fita na Sugu",
+    "lunge": "Zamewa Mai Ƙarfi",
+    "burpee": "Burpee: Ƙarfin Gina Jiki",
+    "back_extensions": "Faɗaɗa Bayansa"
+  },
+  "muscles": {
+    "wrist_flexors": "Ƙarfafa Hannun Kafa",
+    "forearms": "Farin Hannu",
+    "wrist_extensors": "Ƙarfafa Wuyan Hannu",
+    "shoulders": "Kusa-kusa",
+    "chest": "Kirji",
+    "lats": "Lats",
+    "thoracic_spine": "Kashin Kwijinƙan Bayan Kashi",
+    "anterior_shoulders": "Kangon Kusa na Gaba",
+    "biceps": "Biceps",
+    "hip_flexors": "Ƙarfafa Ɓangaren Kwankwasa",
+    "quads": "Quadruplets (Quads)",
+    "psoas": "Psoas",
+    "hamstrings": "Hamstrings",
+    "calves": "Kafafu na Ƙasa",
+    "lower_back": "Kashin Bayyanai na Ƙasa",
+    "obliques": "Obliques",
+    "rotator_cuff": "Raɗaɗɗen Strapi",
+    "hip_external_rotators": "Ƙarfafa Hip na Waje",
+    "glutes": "Guutes",
+    "it_band": "Band ɗin IT",
+    "triceps": "Triceps",
+    "posterior_shoulder": "Ganin Bayan Kusa",
+    "lat": "Lat",
+    "hip_adductors": "Ƙarfafa Hip na Ƙorini",
+    "anterior_deltoid": "Deltoid na Gaba",
+    "ankles": "Tafafu",
+    "achilles": "Achilles",
+    "wrists": "Hannun Kafa",
+    "finger_flexors": "Ƙarfafa Yatsu",
+    "serratus": "Serratus",
+    "shoulder_extension": "Faɗaɗa Hudu",
+    "scapular_stabilisers": "Kulawa da Çaɓaɓɓen Corrugation",
+    "teres_major": "Teres Major",
+    "shoulder_protraction": "Faduwar Kuncin Rauɗi",
+    "wrist_tendons": "Hannayen Kwanƙwasa Hannu",
+    "ankle_dorsiflexors": "Hannayen Muryar Tajaƙon Cirje",
+    "tibialis_anterior": "Tibialis Anterior",
+    "hip_adductors_": "Hannayen Ƙarƙashin Ƙafa na Ƙoshi",
+    "serratus_anterior": "Serratus Anterior",
+    "lower_traps": "Ƙananan Traps",
+    "scapular_retractors": "Mai Taimakawa Gwiwar Kujeru",
+    "lower_trapezius": "Ƙananan Trapezius",
+    "posterior_deltoid": "Posterior Deltoid",
+    "rhomboids": "Rhomboids",
+    "hip_extensors": "Ƙara Juyawa na Hungu",
+    "anterior_deltoids": "Gabaɗaya Deltoids",
+    "wrist_extensors_": "Madaidaicin Hannu na Hannu"
+  },
+  "mobility": {
+    "stretches": {
+      "wristExtension": {
+        "name": "Yawaita Ƙara Hannu",
+        "muscles": "Flexors na Hannu, Hannoyin Hannu"
+      },
+      "wristFlexion": {
+        "name": "Yawaita Lean Hannu",
+        "muscles": "Extensors na Hannu, Hannoyin Hannu"
+      },
+      "shoulderDislocates": {
+        "name": "Raba Ƙirƙirar Kuncin Rauɗi",
+        "muscles": "Kuncin Rauɗi, Kwalwa, Lats"
+      },
+      "latStretch": {
+        "name": "Hanging Lat Stretch",
+        "muscles": "Lats, Ƙashin Gwiwar Ciki, Kuncin Rauɗi"
+      },
+      "chestOpener": {
+        "name": "Bude Kofa na Bargo",
+        "muscles": "Kwalwa, Gabaɗaya Kuncin Rauɗi, Biceps"
+      },
+      "hipFlexorLunge": {
+        "name": "Low Lunge Hip Flexor",
+        "muscles": "Hip Flexors, Quads, Psoas"
+      },
+      "hamstring": {
+        "name": "Daga Jikin Hamstring",
+        "muscles": "Hamstrings, Calves, Ƙasan Bayi"
+      },
+      "thoracicRotation": {
+        "name": "Juyawar Thoracic Sitting",
+        "muscles": "Thoracic Spine, Obliques, Rotator Cuff"
+      },
+      "pigeonPose": {
+        "name": "Dabara Pigeon na Bargo",
+        "muscles": "Hip External Rotators, Glutes, IT Band"
+      },
+      "tricepsStretch": {
+        "name": "Yawaita Triceps na Sama da Kai",
+        "muscles": "Triceps, Posterior Shoulder, Lat"
+      },
+      "pancake": {
+        "name": "Stretch na Pancake",
+        "muscles": "Hamstrings, Hip Adductors, Ƙasa Bayi"
+      },
+      "shoulderFlexion": {
+        "name": "Maimakon Flexion na Kuncin Rauɗi",
+        "muscles": "Anterior Deltoid, Kwalwa, Biceps"
+      },
+      "ankleCircles": {
+        "name": "Dandalin Juyawar Kunjin Cirje",
+        "muscles": "Kunjin Cirje, Calves, Achilles"
+      },
+      "calfStretch": {
+        "name": "Stretch na Calf a Katanga",
+        "muscles": "Calves, Achilles, Ankles"
+      },
+      "wallPuppyPose": {
+        "name": "Dabara Gari na Ƙarewa",
+        "muscles": "Thoracic Spine, Ƙarfin Jiki na Kuncin Rauɗi, Lats"
+      },
+      "firstKnuckleRaises": {
+        "name": "Tashin Farko na Kakannin Hanu",
+        "muscles": "Flexors na Hannu, Flexors na Yatsu, Hannu"
+      },
+      "butchersBlock": {
+        "name": "Dabara Butcher's Block",
+        "muscles": "Triceps, Lats, Serratus"
+      },
+      "germanHang": {
+        "name": "German Hang (Motsa Sha'awa)",
+        "muscles": "Ƙara Juyawar Kuncin Rauɗi, Gabaɗaya Kuncin Rauɗi, Biceps"
+      },
+      "skinTheCat": {
+        "name": "Murƙushe Kwatancen Katako (Sashe)",
+        "muscles": "Kuncin Rauɗi, Mai Taimakawa Gwiwar Kujeru, Lats"
+      },
+      "deepLatStretch": {
+        "name": "Dippaa Lat da Kayayyakin Foam",
+        "muscles": "Lats, Teres Major, Thoracic Spine"
+      },
+      "plancheLeans": {
+        "name": "Shan Ƙaƙƙarfan Planche",
+        "muscles": "Hannun, Faduwar Kuncin Rauɗi, Serratus"
+      },
+      "reverseTabletop": {
+        "name": "Ƙarƙashin Dabara ta Tabletop",
+        "muscles": "Anterior Deltoids, Kwalwa, Wrist Extensors"
+      },
+      "fingerPulses": {
+        "name": "Ƙarar Hannun Yatsu na Yatsu",
+        "muscles": "Flexors na Yatsu, Hannun Tendons, Hannu"
+      },
+      "ankleDorsiflexion": {
+        "name": "Maimakon Dorsiflexion na Kunjin Cirje",
+        "muscles": "Hannayen Dorsiflexors na Kunjin Cirje, Achilles, Tibialis Anterior"
+      },
+      "cossackSquats": {
+        "name": "Cossack Squats",
+        "muscles": "Hip Adductors, Glutes, Ankles"
+      },
+      "scapularHangs": {
+        "name": "Hannayen Gani na Scapular",
+        "muscles": "Serratus Anterior, Ƙananan Traps, Mai Amsa Gwiwar Kujeru"
+      },
+      "proneYRaises": {
+        "name": "Y-Raises na Zama Bisa Hanji",
+        "muscles": "Ƙananan Trapezius, Posterior Deltoid, Rhomboids"
+      },
+      "thoracicBridge": {
+        "name": "Gado na Thoracic",
+        "muscles": "Thoracic Spine, Glutes, Ƙara Juyawar Hungu"
+      }
+    }
+  }
+}
