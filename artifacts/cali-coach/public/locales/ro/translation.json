@@ -559,7 +559,22 @@
     "searchPlaceholder": "Caută după sportiv, exercițiu sau #hashtag…",
     "failedToLoad": "Încărcarea fluxului a eșuat. Încearcă din nou.",
     "categoryAll": "Toate",
-    "startWorkout": "Începe Antrenamentul"
+    "startWorkout": "Începe Antrenamentul",
+    "filterAll": "Toate",
+    "filterPush": "Împinsare",
+    "filterPull": "Tractare",
+    "filterCore": "Centru",
+    "filterLegs": "Picioare",
+    "emptyAllLine1": "Încă nu există postări",
+    "emptyAllLine2": "Distribuie un clip după următorul tău antrenament pentru a fi primul!",
+    "emptyPushLine1": "Nu există încă clipuri din ziua de Push!",
+    "emptyPushLine2": "Fii primul care postează un antrenament de împinsare.",
+    "emptyPullLine1": "Nu există încă clipuri din ziua de Tracțiune!",
+    "emptyPullLine2": "Fii primul care postează un antrenament de tractare.",
+    "emptyCoreeLine1": "Nu există încă clipuri pentru centrul corpului!",
+    "emptyCoreeLine2": "Fii primul care postează un antrenament pentru centru.",
+    "emptyLegsLine1": "Nu există clipuri pentru ziua de Picioare încă! Fii primul care postează.",
+    "emptyLegsLine2": "Du-te la sală și arată-ți forța picioarelor."
   },
   "profile": {
     "masteryPoints": "Puncte de Maestrie",

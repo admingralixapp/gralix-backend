@@ -559,7 +559,22 @@
     "searchPlaceholder": "Keresés sportoló, gyakorlat vagy #hashtag szerint…",
     "failedToLoad": "Nem töltődött be a hírfolyam. Kérlek, próbáld újra.",
     "categoryAll": "Mind",
-    "startWorkout": "Edzés indítása"
+    "startWorkout": "Edzés indítása",
+    "filterAll": "Összes",
+    "filterPush": "Nyomás",
+    "filterPull": "Húzás",
+    "filterCore": "Mag/Fő",
+    "filterLegs": "Láberedmények",
+    "emptyAllLine1": "Még nincs bejegyzés",
+    "emptyAllLine2": "Oszd meg következő edzésed videóját, és légy az első!",
+    "emptyPushLine1": "Még nincsenek Push Nap videók!",
+    "emptyPushLine2": "Légy te az első, aki nyomásedzést posztol.",
+    "emptyPullLine1": "Még nincsenek Pull Nap videók!",
+    "emptyPullLine2": "Légy te az első, aki húzás edzést oszt meg.",
+    "emptyCoreeLine1": "Még nincsenek Főizom videók!",
+    "emptyCoreeLine2": "Légy te az első, aki core tréninget posztol.",
+    "emptyLegsLine1": "Még nincsenek Lábnap videók! Légy te az első, aki megoszt.",
+    "emptyLegsLine2": "Menj edzőterembe és mutasd meg lábizmaid erősségét."
   },
   "profile": {
     "masteryPoints": "Mesterpontok",

@@ -559,7 +559,22 @@
     "searchPlaceholder": "Sök på idrottare, övning eller #hashtag…",
     "failedToLoad": "Misslyckades med att ladda flödet. Försök igen.",
     "categoryAll": "Allt",
-    "startWorkout": "Börja Träning"
+    "startWorkout": "Börja Träning",
+    "filterAll": "Alla",
+    "filterPush": "Push",
+    "filterPull": "Pull",
+    "filterCore": "Kärnmuskulatur",
+    "filterLegs": "Ben",
+    "emptyAllLine1": "Inlägg saknas ännu",
+    "emptyAllLine2": "Dela en video efter din nästa workout för att bli först!",
+    "emptyPushLine1": "Inga Push-dag klipp än!",
+    "emptyPushLine2": "Var den första att posta en push-workout.",
+    "emptyPullLine1": "Inga Pull-dag klipp än!",
+    "emptyPullLine2": "Var den första att posta en pull-workout.",
+    "emptyCoreeLine1": "Inga kärnmuskelklipp ännu!",
+    "emptyCoreeLine2": "Var den första att posta en core-träning.",
+    "emptyLegsLine1": "Inga benpass-klipp ännu! Bli först att lägga upp.",
+    "emptyLegsLine2": "Gå till gymmet och visa upp din benstyrka."
   },
   "profile": {
     "masteryPoints": "Mästerskapspoäng",

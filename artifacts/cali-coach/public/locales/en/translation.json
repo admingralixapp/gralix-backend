@@ -559,7 +559,22 @@
     "searchPlaceholder": "Search by athlete, exercise or #hashtag…",
     "failedToLoad": "Failed to load feed. Please try again.",
     "categoryAll": "All",
-    "startWorkout": "Start Workout"
+    "startWorkout": "Start Workout",
+    "filterAll": "All",
+    "filterPush": "Push",
+    "filterPull": "Pull",
+    "filterCore": "Core",
+    "filterLegs": "Legs",
+    "emptyAllLine1": "No posts yet",
+    "emptyAllLine2": "Share a clip after your next workout to be the first!",
+    "emptyPushLine1": "No Push Day clips yet!",
+    "emptyPushLine2": "Be the first to post a push workout.",
+    "emptyPullLine1": "No Pull Day clips yet!",
+    "emptyPullLine2": "Be the first to post a pull workout.",
+    "emptyCoreeLine1": "No Core clips yet!",
+    "emptyCoreeLine2": "Be the first to post a core workout.",
+    "emptyLegsLine1": "No Leg Day clips yet! Be the first to post.",
+    "emptyLegsLine2": "Hit the gym and show your leg strength."
   },
   "profile": {
     "masteryPoints": "Mastery Points",

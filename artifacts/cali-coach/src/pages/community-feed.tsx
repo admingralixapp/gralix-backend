@@ -429,8 +429,8 @@ function EmptyFeed({ category }: { category: CategoryFilter }) {
       </div>
 
       <div>
-        <p className="font-bold text-base text-white/70">{category.emptyLine1}</p>
-        <p className="text-sm text-white/35 mt-1 max-w-[260px] mx-auto">{category.emptyLine2}</p>
+        <p className="font-bold text-base text-white/70">{t(`community.empty${category.key.charAt(0).toUpperCase()}${category.key.slice(1)}Line1`)}</p>
+        <p className="text-sm text-white/35 mt-1 max-w-[260px] mx-auto">{t(`community.empty${category.key.charAt(0).toUpperCase()}${category.key.slice(1)}Line2`)}</p>
       </div>
 
       {/* Start Workout shortcut */}
@@ -460,6 +460,7 @@ function CategoryFilterBar({
   active: CategoryKey;
   onChange: (key: CategoryKey) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center gap-2 flex-wrap">
       {CATEGORY_FILTERS.map((cat) => {
@@ -493,7 +494,7 @@ function CategoryFilterBar({
                 style={{ backgroundColor: cat.color, boxShadow: `0 0 4px ${cat.color}` }}
               />
             )}
-            {cat.label}
+            {t(`community.filter${cat.key.charAt(0).toUpperCase()}${cat.key.slice(1)}`)}
           </button>
         );
       })}

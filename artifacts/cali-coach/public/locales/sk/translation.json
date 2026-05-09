@@ -559,7 +559,22 @@
     "searchPlaceholder": "Hľadať podľa atlétov,cvikov alebo #hashtagov…",
     "failedToLoad": "Nepodarilo sa načítať príspevok. Skúste znova.",
     "categoryAll": "Všetko",
-    "startWorkout": "Začať tréning"
+    "startWorkout": "Začať tréning",
+    "filterAll": "Všetko",
+    "filterPush": "1. deň (Push)",
+    "filterPull": "2. deň (Pull)",
+    "filterCore": "Jadro",
+    "filterLegs": "Nohy",
+    "emptyAllLine1": "Ešte žiadne príspevky",
+    "emptyAllLine2": "Zdieľaj klip po ďalšom tréningu a buď prvý!",
+    "emptyPushLine1": "Ešte žiadne klipy Push dňa!",
+    "emptyPushLine2": "Buď prvý, kto zverejní tréning push cvičení.",
+    "emptyPullLine1": "Ešte žiadne klipy Pull dňa!",
+    "emptyPullLine2": "Buď prvý, kto zverejní tréning pull cvičení.",
+    "emptyCoreeLine1": "Ešte žiadne klipy jadra!",
+    "emptyCoreeLine2": "Buď prvý, kto zverejní tréning jadra.",
+    "emptyLegsLine1": "Ešte žiadne klipy na Nohy!",
+    "emptyLegsLine2": "Daj do práce nohy a ukáž svoju silu."
   },
   "profile": {
     "masteryPoints": "Bodové majstrovstvo",

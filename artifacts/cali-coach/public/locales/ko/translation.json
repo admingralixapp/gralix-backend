@@ -559,7 +559,22 @@
     "searchPlaceholder": "운동선수, 운동 또는 #해시태그 검색…",
     "failedToLoad": "피드를 불러오지 못했습니다. 다시 시도하세요.",
     "categoryAll": "전체",
-    "startWorkout": "운동 시작하기"
+    "startWorkout": "운동 시작하기",
+    "filterAll": "전체",
+    "filterPush": "푸쉬 운동",
+    "filterPull": "풀 운동",
+    "filterCore": "코어 강화",
+    "filterLegs": "다리 운동",
+    "emptyAllLine1": "게시글이 아직 없습니다",
+    "emptyAllLine2": "다음 운동 후 클립을 공유하여 선두를 달리세요!",
+    "emptyPushLine1": "푸쉬 데이 클립이 아직 없어요!",
+    "emptyPushLine2": "푸쉬 운동을 처음으로 공유하세요!",
+    "emptyPullLine1": "풀 데이 클립이 아직 없어요!",
+    "emptyPullLine2": "풀 운동을 최초로 올리세요!",
+    "emptyCoreeLine1": "코어 운동 클립이 아직 없어요!",
+    "emptyCoreeLine2": "최초로 코어 운동 영상을 공유하세요!",
+    "emptyLegsLine1": "다리 데이 클립이 아직 없어요! 최초로 공유하세요.",
+    "emptyLegsLine2": "헬스장에 가서 다리 힘을 뽐내보세요!"
   },
   "profile": {
     "masteryPoints": "숙련도 포인트",

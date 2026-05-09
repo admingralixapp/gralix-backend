@@ -559,7 +559,22 @@
     "searchPlaceholder": "Søk etter idrettsutøver, øvelse eller #hashtag…",
     "failedToLoad": "Kunne ikke laste inn feeden. Vennligst prøv igjen.",
     "categoryAll": "Alle",
-    "startWorkout": "Start Treningsøkt"
+    "startWorkout": "Start Treningsøkt",
+    "filterAll": "Alle",
+    "filterPush": "Push",
+    "filterPull": "Pull",
+    "filterCore": "Kjerne",
+    "filterLegs": "Bein",
+    "emptyAllLine1": "Ingen innlegg ennå",
+    "emptyAllLine2": "Del en video etter neste treningsøkt for å bli den første!",
+    "emptyPushLine1": "Ingen Push-dag videoer ennå!",
+    "emptyPushLine2": "Vær den første til å legge ut en push-trening.",
+    "emptyPullLine1": "Ingen Pull-dag videoer ennå!",
+    "emptyPullLine2": "Vær den første til å legge ut en pull-trening.",
+    "emptyCoreeLine1": "Ingen kjernemuskulatur-videoer ennå!",
+    "emptyCoreeLine2": "Vær den første til å poste en kjernestyrkeøkt.",
+    "emptyLegsLine1": "Ingen Beindager videoer ennå! Vær den første til å legge ut.",
+    "emptyLegsLine2": "Gå på treningssenteret og vis din beinstyrke."
   },
   "profile": {
     "masteryPoints": "Mestringspoeng",

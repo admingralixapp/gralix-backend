@@ -559,7 +559,22 @@
     "searchPlaceholder": "Atlet, egzersiz veya #etiketle ara…",
     "failedToLoad": "Akış yüklenemedi. Lütfen tekrar deneyin.",
     "categoryAll": "Tümü",
-    "startWorkout": "Antrenmanı Başlat"
+    "startWorkout": "Antrenmanı Başlat",
+    "filterAll": "Hepsi",
+    "filterPush": "İtme",
+    "filterPull": "Çekme",
+    "filterCore": "Gövde Gücü",
+    "filterLegs": "Bacaklar",
+    "emptyAllLine1": "Henüz paylaşım yok",
+    "emptyAllLine2": "Bir sonraki antrenmanın sonrası kısa klip paylaş ve ilk sen ol!",
+    "emptyPushLine1": "Henüz İtme Gününe ait klipler yok!",
+    "emptyPushLine2": "İlk push antrenmanı paylaşan sen ol.",
+    "emptyPullLine1": "Henüz Çekme Gününe ait klipler yok!",
+    "emptyPullLine2": "İlk pull antrenmanı paylaşan sen ol.",
+    "emptyCoreeLine1": "Henüz Gövde Gücü klipleri yok!",
+    "emptyCoreeLine2": "İlk core antrenmanı paylaşan sen ol.",
+    "emptyLegsLine1": "Henüz Bacak Günü klipleri yok! İlk paylaşımı sen yap.",
+    "emptyLegsLine2": "Spor salonuna git ve bacak gücünü göster!"
   },
   "profile": {
     "masteryPoints": "Uzmanlık Puanları",

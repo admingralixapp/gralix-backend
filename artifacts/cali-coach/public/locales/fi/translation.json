@@ -559,7 +559,22 @@
     "searchPlaceholder": "Hae urheilijasta, liikkeestä tai #hashtagista…",
     "failedToLoad": "Syötteen lataaminen epäonnistui. Yritä uudelleen.",
     "categoryAll": "Kaikki",
-    "startWorkout": "Aloita treeni"
+    "startWorkout": "Aloita treeni",
+    "filterAll": "Kaikki",
+    "filterPush": "Työntö",
+    "filterPull": "Vetäisy",
+    "filterCore": "-Tuora",
+    "filterLegs": "Jalat",
+    "emptyAllLine1": "Ei vielä julkaisuja",
+    "emptyAllLine2": "Jaa pätkä seuraavasta treenistäsi ja ole ensimmäinen!",
+    "emptyPushLine1": "Ei vielä Push-pätkiä!",
+    "emptyPushLine2": "Ole ensimmäinen jakamaan push-treeni.",
+    "emptyPullLine1": "Ei vielä Pull-pätkiä!",
+    "emptyPullLine2": "Ole ensimmäinen jakamaan pull-treeni.",
+    "emptyCoreeLine1": "Ei vielä keskivartalopätkiä!",
+    "emptyCoreeLine2": "Ole ensimmäinen jakamaan keskivartalotreenisi.",
+    "emptyLegsLine1": "Ei vielä Jalkapäivän pätkiä! Ole ensimmäinen jakamaan.",
+    "emptyLegsLine2": "Lähde salille ja näytä jalkojen voimasi."
   },
   "profile": {
     "masteryPoints": "Hallinnan Pisteet",

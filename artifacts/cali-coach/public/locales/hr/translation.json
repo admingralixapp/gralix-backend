@@ -559,7 +559,22 @@
     "searchPlaceholder": "Pretraži po sportašu, vježbi ili #hashtagu…",
     "failedToLoad": "Učitavanje sadržaja nije uspjelo. Molim pokušaj ponovno.",
     "categoryAll": "Sve",
-    "startWorkout": "Započni trening"
+    "startWorkout": "Započni trening",
+    "filterAll": "Svi",
+    "filterPush": "Pritisak",
+    "filterPull": "Povlačenje",
+    "filterCore": "Jezgra",
+    "filterLegs": "Noge",
+    "emptyAllLine1": "Još nema objava",
+    "emptyAllLine2": "Podijeli snimku nakon sljedećeg treninga i budi prvi!",
+    "emptyPushLine1": "Još nema snimaka za Push dan!",
+    "emptyPushLine2": "Budi prvi koji će objaviti push trening.",
+    "emptyPullLine1": "Još nema snimaka za Pull dan!",
+    "emptyPullLine2": "Budi prvi koji će objaviti pull trening.",
+    "emptyCoreeLine1": "Još nema snimaka za Core!",
+    "emptyCoreeLine2": "Budi prvi koji će objaviti trening jezgre.",
+    "emptyLegsLine1": "Još nema snimaka za dan nogu! Budi prvi i pokaži snagu nogu.",
+    "emptyLegsLine2": "Otvori teretanu i pokaži svoju snagu nogu."
   },
   "profile": {
     "masteryPoints": "Bodovi majstorstva",

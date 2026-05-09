@@ -559,7 +559,22 @@
     "searchPlaceholder": "Zoek op sporter, oefening of #hashtag…",
     "failedToLoad": "Feed laden mislukt. Probeer het opnieuw.",
     "categoryAll": "Alles",
-    "startWorkout": "Begin Workout"
+    "startWorkout": "Begin Workout",
+    "filterAll": "Alles",
+    "filterPush": "Fuallen",
+    "filterPull": "Trekken",
+    "filterCore": "Core",
+    "filterLegs": "Benedenlichaam",
+    "emptyAllLine1": "Nog geen berichten",
+    "emptyAllLine2": "Deel een clip na je volgende workout om de eerste te zijn!",
+    "emptyPushLine1": "Nog geen Push Day clips!",
+    "emptyPushLine2": "Wees de eerste om een push oefening te plaatsen.",
+    "emptyPullLine1": "Nog geen Pull Day clips!",
+    "emptyPullLine2": "Wees de eerste om een pull workout te posten.",
+    "emptyCoreeLine1": "Nog geen core clips!",
+    "emptyCoreeLine2": "Deel als eerste een core workout.",
+    "emptyLegsLine1": "Nog geen Leg Day clips! Wees de eerste om te plaatsen.",
+    "emptyLegsLine2": "Ga naar de fitness en toon je beenspierkracht."
   },
   "profile": {
     "masteryPoints": "Meesterschapspunten",

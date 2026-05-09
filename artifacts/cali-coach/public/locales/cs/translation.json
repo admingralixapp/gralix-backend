@@ -559,7 +559,22 @@
     "searchPlaceholder": "Hledat podle sportovce, cviku nebo #hashtagu…",
     "failedToLoad": "Nepodařilo se načíst zpravodajství. Zkuste to znovu.",
     "categoryAll": "Všechno",
-    "startWorkout": "Začít trénink"
+    "startWorkout": "Začít trénink",
+    "filterAll": "Všechno",
+    "filterPush": "Pressy",
+    "filterPull": " Přítahy",
+    "filterCore": "Střed těla",
+    "filterLegs": "Nohy",
+    "emptyAllLine1": "Žádné příspěvky zatím",
+    "emptyAllLine2": "Sdílej klip po svém dalším tréninku a staň se průkopníkem!",
+    "emptyPushLine1": "Ještě žádné klipy dne na tlačení!",
+    "emptyPushLine2": "Buď první, kdo zveřejní trénink tlačení.",
+    "emptyPullLine1": "Ještě žádné klipy dne na přítahy!",
+    "emptyPullLine2": "Staň se prvním, kdo zveřejní trénink přítahů.",
+    "emptyCoreeLine1": "Ještě žádné klipy středu těla!",
+    "emptyCoreeLine2": "Přidej svůj core workout jako první.",
+    "emptyLegsLine1": "Ještě žádné klipy dne na nohy! Buď první a ukaž svou sílu nohou.",
+    "emptyLegsLine2": "Vojna na posilovně a ukaž svou nohou sílu!"
   },
   "profile": {
     "masteryPoints": "Body Mistrovství",

@@ -559,7 +559,22 @@
     "searchPlaceholder": "Søg efter atleter, øvelser eller #hashtags…",
     "failedToLoad": "Kunne ikke indlæse feed. Prøv igen.",
     "categoryAll": "Alle",
-    "startWorkout": "Start Træning"
+    "startWorkout": "Start Træning",
+    "filterAll": "Alle",
+    "filterPush": "Push",
+    "filterPull": "Pull",
+    "filterCore": "Core",
+    "filterLegs": "Ben",
+    "emptyAllLine1": "Ingen opslag endnu",
+    "emptyAllLine2": "Del en video efter din næste træning for at blive den første!",
+    "emptyPushLine1": "Ingen Push Day clips endnu!",
+    "emptyPushLine2": "Vær den første til at poste en push-øvelse.",
+    "emptyPullLine1": "Ingen Pull Day clips endnu!",
+    "emptyPullLine2": "Vær den første til at poste en pull-øvelse.",
+    "emptyCoreeLine1": "Ingen Core clips endnu!",
+    "emptyCoreeLine2": "Vær den første til at poste en core-øvelse.",
+    "emptyLegsLine1": "Ingen Leg Day clips endnu! Vær den første til at poste.",
+    "emptyLegsLine2": "Gå i centeret og vis din benstyrke."
   },
   "profile": {
     "masteryPoints": "Mestringspoeng",

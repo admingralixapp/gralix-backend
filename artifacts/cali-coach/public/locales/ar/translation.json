@@ -559,7 +559,22 @@
     "searchPlaceholder": "ابحث عن رياضي، تمرين أو #هاشتاغ…",
     "failedToLoad": "فشل في تحميل الخلاصة. يرجى المحاولة مرة أخرى.",
     "categoryAll": "الكل",
-    "startWorkout": "ابدأ التمرين"
+    "startWorkout": "ابدأ التمرين",
+    "filterAll": "الجميع",
+    "filterPush": "دفع",
+    "filterPull": "سحب",
+    "filterCore": "جوهر الجسم",
+    "filterLegs": "الساقين",
+    "emptyAllLine1": "لا توجد منشورات حتى الآن",
+    "emptyAllLine2": "شارك مقطعًا بعد تمرينك القادم لتكون الأول!",
+    "emptyPushLine1": "لا توجد مقاطع يوم الدفع حتى الآن!",
+    "emptyPushLine2": "كن أول من ينشر تمرين دفع.",
+    "emptyPullLine1": "لا توجد مقاطع يوم السحب حتى الآن!",
+    "emptyPullLine2": "كن أول من ينشر تمرين سحب.",
+    "emptyCoreeLine1": "لا توجد مقاطع جوهر الجسم حتى الآن!",
+    "emptyCoreeLine2": "كن أول من ينشر تمرين لجوهر الجسم.",
+    "emptyLegsLine1": "لا توجد مقاطع يوم الساقين حتى الآن! كن الأول في النشر.",
+    "emptyLegsLine2": "ادخل إلى النادي الرياضي واظهر قوتك في الساقين."
   },
   "profile": {
     "masteryPoints": "نقاط الإتقان",

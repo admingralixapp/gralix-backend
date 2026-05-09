@@ -559,7 +559,22 @@
     "searchPlaceholder": "アスリート、エクササイズ、#ハッシュタグで検索…",
     "failedToLoad": "フィードの読み込みに失敗しました。再試行してください。",
     "categoryAll": "すべて",
-    "startWorkout": "ワークアウト開始"
+    "startWorkout": "ワークアウト開始",
+    "filterAll": "すべて",
+    "filterPush": "プッシュトレーニング",
+    "filterPull": "プルトレーニング",
+    "filterCore": "コア",
+    "filterLegs": "脚部",
+    "emptyAllLine1": "投稿はまだありません",
+    "emptyAllLine2": "次のワークアウト後にクリップをシェアして最初になろう！",
+    "emptyPushLine1": "プッシュデーのクリップはまだありません！",
+    "emptyPushLine2": "最初にプッシュワークアウトを投稿しよう！",
+    "emptyPullLine1": "プルデーのクリップはまだありません！",
+    "emptyPullLine2": "最初にプルワークアウトを投稿しよう！",
+    "emptyCoreeLine1": "コアのクリップはまだありません！",
+    "emptyCoreeLine2": "最初にコアワークアウトを投稿しよう！",
+    "emptyLegsLine1": "レッグデーのクリップはまだありません！最初に投稿しよう！",
+    "emptyLegsLine2": "ジムに行って脚力を披露しよう！"
   },
   "profile": {
     "masteryPoints": "マスタリーポイント",

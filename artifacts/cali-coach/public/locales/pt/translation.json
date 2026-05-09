@@ -559,7 +559,22 @@
     "searchPlaceholder": "Buscar por atleta, exercício ou #hashtag…",
     "failedToLoad": "Falha ao carregar o feed. Tente novamente.",
     "categoryAll": "Tudo",
-    "startWorkout": "Iniciar Treino"
+    "startWorkout": "Iniciar Treino",
+    "filterAll": "Todos",
+    "filterPush": "Empurrar",
+    "filterPull": "Puxar",
+    "filterCore": "Core",
+    "filterLegs": "Pernas",
+    "emptyAllLine1": "Ainda não há publicações",
+    "emptyAllLine2": "Compartilhe um vídeo após seu próximo treino e seja o primeiro!",
+    "emptyPushLine1": "Ainda não há vídeos do Dia de Empurrar!",
+    "emptyPushLine2": "Seja o primeiro a postar um treino de empurrar.",
+    "emptyPullLine1": "Ainda não há vídeos do Dia de Puxar!",
+    "emptyPullLine2": "Seja o primeiro a postar um treino de puxar.",
+    "emptyCoreeLine1": "Ainda não há vídeos de Core!",
+    "emptyCoreeLine2": "Seja o primeiro a postar um treino de core.",
+    "emptyLegsLine1": "Ainda não há vídeos de Dia de Pernas! Seja o primeiro a publicar.",
+    "emptyLegsLine2": "Vá até a academia e mostre sua força nas pernas."
   },
   "profile": {
     "masteryPoints": "Pontos de Maestria",

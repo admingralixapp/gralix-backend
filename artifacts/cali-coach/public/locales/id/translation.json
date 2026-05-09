@@ -559,7 +559,22 @@
     "searchPlaceholder": "Cari berdasarkan atlet, latihan, atau #tag…",
     "failedToLoad": "Gagal memuat feed. Silakan coba lagi.",
     "categoryAll": "Semua",
-    "startWorkout": "Mulai Latihan"
+    "startWorkout": "Mulai Latihan",
+    "filterAll": "Semua",
+    "filterPush": "Dorongan",
+    "filterPull": "Tarikan",
+    "filterCore": "Inti",
+    "filterLegs": "Kaki",
+    "emptyAllLine1": "Belum ada kiriman apa pun",
+    "emptyAllLine2": "Bagikan rekaman setelah latihan berikutnya untuk menjadi yang pertama!",
+    "emptyPushLine1": "Belum ada rekaman Hari Dorongan!",
+    "emptyPushLine2": "Jadilah yang pertama memposting latihan dorongan.",
+    "emptyPullLine1": "Belum ada rekaman Hari Tarikan!",
+    "emptyPullLine2": "Jadilah yang pertama memposting latihan tarik.",
+    "emptyCoreeLine1": "Belum ada rekaman Inti!",
+    "emptyCoreeLine2": "Jadilah yang pertama memposting latihan inti.",
+    "emptyLegsLine1": "Belum ada rekaman Hari Kaki! Jadilah yang pertama memposting.",
+    "emptyLegsLine2": "Training di gym dan tunjukkan kekuatan kakimu."
   },
   "profile": {
     "masteryPoints": "Poin Penguasaan",

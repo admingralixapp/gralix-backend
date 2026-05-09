@@ -20,19 +20,33 @@ const openai = new OpenAI({
 });
 
 const TARGETS: Array<{ code: string; name: string }> = [
+  { code: "ar", name: "Arabic" },
   { code: "bg", name: "Bulgarian" },
   { code: "cs", name: "Czech" },
   { code: "da", name: "Danish" },
+  { code: "de", name: "German" },
   { code: "el", name: "Greek" },
+  { code: "es", name: "Spanish" },
   { code: "fi", name: "Finnish" },
+  { code: "fr", name: "French" },
   { code: "hr", name: "Croatian" },
   { code: "hu", name: "Hungarian" },
+  { code: "id", name: "Indonesian" },
+  { code: "it", name: "Italian" },
+  { code: "ja", name: "Japanese" },
+  { code: "ko", name: "Korean" },
   { code: "ms", name: "Malay" },
   { code: "nl", name: "Dutch" },
   { code: "no", name: "Norwegian" },
+  { code: "pt", name: "Portuguese" },
   { code: "ro", name: "Romanian" },
+  { code: "ru", name: "Russian" },
   { code: "sk", name: "Slovak" },
   { code: "sv", name: "Swedish" },
+  { code: "ta", name: "Tamil" },
+  { code: "tr", name: "Turkish" },
+  { code: "uk", name: "Ukrainian" },
+  { code: "zh", name: "Mandarin Chinese" },
 ];
 
 function sleep(ms: number): Promise<void> {

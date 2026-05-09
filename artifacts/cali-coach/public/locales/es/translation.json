@@ -559,7 +559,22 @@
     "searchPlaceholder": "Buscar por atleta, ejercicio o #hashtag…",
     "failedToLoad": "Error al cargar la actividad. Por favor, intenta de nuevo.",
     "categoryAll": "Todos",
-    "startWorkout": "Comenzar Entrenamiento"
+    "startWorkout": "Comenzar Entrenamiento",
+    "filterAll": "Todos",
+    "filterPush": "Empeine",
+    "filterPull": "Jalón",
+    "filterCore": "Core",
+    "filterLegs": "Piernas",
+    "emptyAllLine1": "¡Aún no hay publicaciones!",
+    "emptyAllLine2": "¡Comparte un clip después de tu próxima sesión para ser el primero!",
+    "emptyPushLine1": "¡Aún no hay clips de Día de Empeine!",
+    "emptyPushLine2": "Sé el primero en publicar un entrenamiento de empuje.",
+    "emptyPullLine1": "¡Aún no hay clips de Día de Jalón!",
+    "emptyPullLine2": "Sé el primero en publicar un entrenamiento de jalón.",
+    "emptyCoreeLine1": "¡Aún no hay clips de Core!",
+    "emptyCoreeLine2": "Sé el primero en publicar un entrenamiento de core.",
+    "emptyLegsLine1": "¡Aún no hay clips de Día de Piernas! Sé el primero en publicar.",
+    "emptyLegsLine2": "Ve al gimnasio y demuestra tu fuerza en las piernas."
   },
   "profile": {
     "masteryPoints": "Mastery Points",

@@ -559,7 +559,22 @@
     "searchPlaceholder": "搜索运动员、动作或#标签…",
     "failedToLoad": "加载动态失败，请重试。",
     "categoryAll": "全部",
-    "startWorkout": "开始训练"
+    "startWorkout": "开始训练",
+    "filterAll": "全部",
+    "filterPush": "推",
+    "filterPull": "拉",
+    "filterCore": "核心",
+    "filterLegs": "腿部",
+    "emptyAllLine1": "还没有动态",
+    "emptyAllLine2": "下一次训练后分享一段精彩片段，成为首发！",
+    "emptyPushLine1": "还没有推日训练剪辑！",
+    "emptyPushLine2": "成为第一个发布推训练的勇士吧。",
+    "emptyPullLine1": "还没有拉日训练剪辑！",
+    "emptyPullLine2": "成为第一个发布拉训练的勇士吧。",
+    "emptyCoreeLine1": "还没有核心训练剪辑！",
+    "emptyCoreeLine2": "成为第一个发布核心训练的勇士吧。",
+    "emptyLegsLine1": "还没有腿日训练剪辑！快成为首发者吧。",
+    "emptyLegsLine2": "走进健身房，展示你的腿部力量！"
   },
   "profile": {
     "masteryPoints": "精通点数",

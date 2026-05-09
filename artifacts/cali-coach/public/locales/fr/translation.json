@@ -559,7 +559,22 @@
     "searchPlaceholder": "Chercher par athlète, exercice ou #hashtag…",
     "failedToLoad": "Échec du chargement du fil d'actualités. Veuillez réessayer.",
     "categoryAll": "Tous",
-    "startWorkout": "Commencer l'entraînement"
+    "startWorkout": "Commencer l'entraînement",
+    "filterAll": "Tous",
+    "filterPush": "Poussée",
+    "filterPull": "Tirage",
+    "filterCore": "Centre",
+    "filterLegs": "Jambes",
+    "emptyAllLine1": "Aucun post pour l'instant",
+    "emptyAllLine2": "Partagez un clip après votre prochaine séance pour être le premier !",
+    "emptyPushLine1": "Aucun clip de journée push pour l'instant !",
+    "emptyPushLine2": "Soyez le premier à poster une séance de poussée.",
+    "emptyPullLine1": "Aucun clip de journée pull pour l'instant !",
+    "emptyPullLine2": "Soyez le premier à poster une séance de tirage.",
+    "emptyCoreeLine1": "Aucun clip de centre pour l'instant !",
+    "emptyCoreeLine2": "Soyez le premier à poster une séance de renforcement du centre.",
+    "emptyLegsLine1": "Aucun clip de journée jambes pour l'instant ! Soyez le premier à poster.",
+    "emptyLegsLine2": "Allez à la salle et montrez votre puissance de jambes."
   },
   "profile": {
     "masteryPoints": "Points de maîtrise",

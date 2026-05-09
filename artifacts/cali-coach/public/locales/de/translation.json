@@ -559,7 +559,22 @@
     "searchPlaceholder": "Suche nach Athlet, Übung oder #Hashtag…",
     "failedToLoad": "Feed konnte nicht geladen werden. Bitte versuche es erneut.",
     "categoryAll": "Alle",
-    "startWorkout": "Workout starten"
+    "startWorkout": "Workout starten",
+    "filterAll": "Alle",
+    "filterPush": "Push",
+    "filterPull": "Pull",
+    "filterCore": "Kernkraft",
+    "filterLegs": "Beine",
+    "emptyAllLine1": "Noch keine Beiträge",
+    "emptyAllLine2": "Teile einen Clip nach deinem nächsten Training und sei der Erste!",
+    "emptyPushLine1": "Noch keine Push-Tag-Clips!",
+    "emptyPushLine2": "Sei der Erste, der ein Push-Workout postet.",
+    "emptyPullLine1": "Noch keine Pull-Tag-Clips!",
+    "emptyPullLine2": "Sei der Erste, der ein Pull-Workout teilt.",
+    "emptyCoreeLine1": "Noch keine Kernkraft-Clips!",
+    "emptyCoreeLine2": "Sei der Erste, der ein Core-Workout postet.",
+    "emptyLegsLine1": "Noch keine Beintag-Clips! Sei der Erste, der postet.",
+    "emptyLegsLine2": "Fahr ins Gym und zeig deine Bein-Kraft."
   },
   "profile": {
     "masteryPoints": "Meisterschaftspunkte",

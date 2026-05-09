@@ -559,7 +559,22 @@
     "searchPlaceholder": "Cerca atleta, esercizio o #hashtag…",
     "failedToLoad": "Caricamento feed fallito. Riprova.",
     "categoryAll": "Tutti",
-    "startWorkout": "Inizia Allenamento"
+    "startWorkout": "Inizia Allenamento",
+    "filterAll": "Tutti",
+    "filterPush": "Spinta",
+    "filterPull": "Trazione",
+    "filterCore": "Core",
+    "filterLegs": "Gambe",
+    "emptyAllLine1": "Ancora nessun post",
+    "emptyAllLine2": "Condividi un video dopo il tuo prossimo workout e sii il primo!",
+    "emptyPushLine1": "Ancora nessun clip di Push Day!",
+    "emptyPushLine2": "Sii il primo a pubblicare un allenamento di spinta.",
+    "emptyPullLine1": "Ancora nessun clip di Pull Day!",
+    "emptyPullLine2": "Sii il primo a condividere un allenamento di trazione.",
+    "emptyCoreeLine1": "Ancora nessun video di Core!",
+    "emptyCoreeLine2": "Sii il primo a postare un allenamento di core.",
+    "emptyLegsLine1": "Ancora nessun clip di Leg Day! Sii il primo a condividere.",
+    "emptyLegsLine2": "Entra in palestra e mostra la tua forza nelle gambe."
   },
   "profile": {
     "masteryPoints": "Punti di Maestria",
