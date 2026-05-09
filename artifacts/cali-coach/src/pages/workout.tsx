@@ -10,6 +10,7 @@ import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Ch
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile, getAudioContext } from "@/lib/voice-service";
+import { getWorkoutPhrase } from "@/lib/cue-translations";
 import { useTranslation } from "react-i18next";
 import { getRestDuration, type RestDuration, REST_DURATION_OPTIONS } from "@/lib/workout-settings";
 import { getVoiceCues, getCameraFacing, getMirrorVideo, getVoiceProfile } from "@/lib/workout-preferences";
@@ -781,7 +782,7 @@ export function Workout() {
     const now = Date.now();
     if (now - lastSyncVoiceRef.current < 5000) return;
     lastSyncVoiceRef.current = now;
-    voiceSpeak("Get back into position to continue.", "neutral");
+    voiceSpeak(getWorkoutPhrase("Get back into position to continue.", i18n.language), "neutral");
   }, []);
 
   /**
@@ -983,11 +984,11 @@ export function Workout() {
       if (jitter < RINGS_JITTER_THRESHOLD) {
         equipBonus = RINGS_STABILITY_BONUS;
       } else if (jitter > RINGS_JITTER_THRESHOLD * 2) {
-        equipCue = "Steady the rings — control the swing.";
+        equipCue = getWorkoutPhrase("Steady the rings — control the swing.", i18n.language);
       }
     }
     if (isPushExercise(exercise.name) && equipment.pushGear === "floor" && equipModRef.current.wristOverextended) {
-      equipCue = "Neutral wrists — don't let them bend back.";
+      equipCue = getWorkoutPhrase("Neutral wrists — don't let them bend back.", i18n.language);
     }
 
     const adjustedFormScore = Math.min(100, output.formScore + equipBonus);
@@ -1027,17 +1028,18 @@ export function Workout() {
 
         if (isDescending) {
           DESCEND_PACER_CUES.forEach(cue => {
-            const t = setTimeout(() => { voiceSpeak(cue.text, cue.tone); }, cue.delayMs);
+            const translated = getWorkoutPhrase(cue.text, i18n.language);
+            const t = setTimeout(() => { voiceSpeak(translated, cue.tone); }, cue.delayMs);
             pacerTimeoutsRef.current.push(t);
           });
         } else if (isAscending) {
-          voiceSpeak(ASCEND_PACER_CUE.text, ASCEND_PACER_CUE.tone);
+          voiceSpeak(getWorkoutPhrase(ASCEND_PACER_CUE.text, i18n.language), ASCEND_PACER_CUE.tone);
         }
       } else {
         // ── Standard phase-transition cue ─────────────────────────────────
         const phaseCue = getPhaseTransitionCue(exercise.name, prevPhase, output.newPhase);
         if (phaseCue) {
-          speakPhase(phaseCue.text, phaseCue.tone);
+          speakPhase(getWorkoutPhrase(phaseCue.text, i18n.language), phaseCue.tone);
         }
       }
     }
@@ -1057,15 +1059,15 @@ export function Workout() {
           totalSec !== stateRef.current.lastHoldSpeakSec
         ) {
           stateRef.current.lastHoldSpeakSec = totalSec;
-          speak(`${totalSec} seconds. Stay strong.`, tone);
+          speak(getWorkoutPhrase("{n} seconds. Stay strong.", i18n.language).replace("{n}", String(totalSec)), tone);
         }
       }
 
       if (holdNow && !stateRef.current.holdActive) {
-        speak("Perfect sync — hold it.", "encouraging");
+        speak(getWorkoutPhrase("Perfect sync — hold it.", i18n.language), "encouraging");
       } else if (!holdNow && stateRef.current.holdActive) {
         if (synced) {
-          speak(output.audioCue ?? "Adjust your position.", tone);
+          speak(output.audioCue ?? getWorkoutPhrase("Adjust your position.", i18n.language), tone);
         }
       }
 
@@ -1125,17 +1127,17 @@ export function Workout() {
           newRepCount >= 3;
 
         if (repQuality === "incomplete") {
-          speak("Incomplete rep — go deeper next time", "firm");
+          speak(getWorkoutPhrase("Incomplete rep — go deeper next time", i18n.language), "firm");
         } else if (isFatiguing) {
           const milestone = getMilestoneCue();
-          speak(milestone.text, milestone.tone);
+          speak(getWorkoutPhrase(milestone.text, i18n.language), milestone.tone);
         } else if (newRepCount % 5 === 0) {
-          speak(`${newRepCount} reps. Keep it up!`, "encouraging");
+          speak(getWorkoutPhrase("{n} reps. Keep it up!", i18n.language).replace("{n}", String(newRepCount)), "encouraging");
         } else {
-          speak("Good rep", "neutral");
+          speak(getWorkoutPhrase("Good rep", i18n.language), "neutral");
         }
       } else if (repCounted && !synced) {
-        speak("Match the ghost to earn that rep.", "neutral");
+        speak(getWorkoutPhrase("Match the ghost to earn that rep.", i18n.language), "neutral");
       } else if (equipCue) {
         speak(equipCue, tone);
       } else if (audioCue) {
@@ -1305,12 +1307,12 @@ export function Workout() {
           if (lowVisCount >= 4 && nowMs - lastInFrameCueMsRef.current > 8000) {
             lastInFrameCueMsRef.current = nowMs;
             const inFrameCues = [
-              "Try to stay in frame.",
-              "Step back so your full body is visible.",
-              "Check your lighting — I'm losing track.",
+              getWorkoutPhrase("Try to stay in frame.", i18n.language),
+              getWorkoutPhrase("Step back so your full body is visible.", i18n.language),
+              getWorkoutPhrase("Check your lighting — I'm losing track.", i18n.language),
             ];
             voiceSpeak(
-              inFrameCues[Math.floor(Math.random() * inFrameCues.length)],
+              inFrameCues[Math.floor(Math.random() * inFrameCues.length)]!,
               "neutral",
             );
           }
@@ -1605,7 +1607,7 @@ export function Workout() {
 
     setIsWorkoutActive(false);
     setIsCameraInitializing(false);
-    voiceSpeak("Workout complete.");
+    voiceSpeak(getWorkoutPhrase("Workout complete.", i18n.language));
 
     // Grab and detach the recorder before any awaits so it stops capturing immediately
     const recorder = recorderRef.current;
@@ -1849,11 +1851,11 @@ export function Workout() {
 
     if (currentSet >= totalSets) {
       // Last set — finish the workout
-      voiceSpeak(`Set ${currentSet} done. Workout complete!`);
+      voiceSpeak(getWorkoutPhrase("Set {n} done. Workout complete!", i18n.language).replace("{n}", String(currentSet)));
       await handleStop();
     } else {
       // More sets to go — start rest timer
-      voiceSpeak(`Set ${currentSet} done. Rest up.`, "encouraging");
+      voiceSpeak(getWorkoutPhrase("Set {n} done. Rest up.", i18n.language).replace("{n}", String(currentSet)), "encouraging");
       const restDur = getRestDuration();
       setRestSeconds(restDur);
       setIsResting(true);
@@ -2083,7 +2085,7 @@ export function Workout() {
           restIntervalRef.current = null;
           playDing();
           try { navigator.vibrate([200, 100, 200, 100, 200]); } catch {}
-          voiceSpeak("Rest over. Get ready for the next set.");
+          voiceSpeak(getWorkoutPhrase("Rest over. Get ready for the next set.", i18n.language));
           handleStartNextSetRef.current();
           return 0;
         }
