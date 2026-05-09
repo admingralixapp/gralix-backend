@@ -5,9 +5,8 @@ import { ArrowLeft, CheckCircle2, Flame, Pause, Play, SkipForward, X } from "luc
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
-import { speak, setCoachLang } from "@/lib/voice-service";
+import { speak } from "@/lib/voice-service";
 import { getVoiceCues } from "@/lib/workout-preferences";
-import { getCoachLanguage } from "@/lib/coach-language";
 import {
   getTasksForPreferences,
   routineDurationMinutes,
@@ -119,11 +118,6 @@ function ActiveWorkoutPlayer({
   const currentStretch = routine[stretchIndex];
   const nextStretch = routine[stretchIndex + 1];
   const isLast = stretchIndex + 1 >= routine.length;
-
-  // ── Initialise coach language on player mount ─────────────────────────────
-  useEffect(() => {
-    setCoachLang(getCoachLanguage());
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Voice cues at 30 s remaining and at 0 s (stretch complete) ───────────
   const spokenRef = useRef<Record<string, boolean>>({});

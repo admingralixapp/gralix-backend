@@ -130,22 +130,31 @@ function stopCurrentAudio(): void {
   }
 }
 
-// ─── Locale for browser TTS ───────────────────────────────────────────────────
+// ─── Locale helpers ───────────────────────────────────────────────────────────
+
+import { resolveElevenLabsLang } from "./coach-language.js";
 
 let _speechLang = "en-US";
 
+// ISO 639-1 code for ElevenLabs — derived from the global UI language.
+// Initialised from the stored i18n key so it's correct even before the user
+// visits Settings in this session.
+let _coachLang: string = (() => {
+  try {
+    const stored = localStorage.getItem("calicoach_lang");
+    return resolveElevenLabsLang(stored ?? "en");
+  } catch {
+    return "en";
+  }
+})();
+
+/**
+ * Called by Settings whenever the user changes the UI language.
+ * Updates both the browser TTS locale and the ElevenLabs coach language.
+ */
 export function setVoiceLanguage(bcp47: string): void {
   _speechLang = bcp47;
-}
-
-// ─── Coach language (ElevenLabs Multilingual v2) ──────────────────────────────
-// ISO 639-1 code sent as ?language= to /api/tts/stream so the LLM generates
-// the coaching cue in the correct language.
-
-let _coachLang = "en";
-
-export function setCoachLang(code: string): void {
-  _coachLang = code;
+  _coachLang  = resolveElevenLabsLang(bcp47);
 }
 
 // ─── Browser TTS (FREE profiles ONLY: classic, classic_female) ───────────────
