@@ -316,19 +316,15 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
   const isLast = stretchIndex + 1 >= routine.length;
 
   return (
-    // position:fixed + inset:0 = physically impossible to be offset by parent scroll
+    // The parent motion.div in daily-tasks owns position:fixed.
+    // This div just fills 100% of that fixed shell — no extra fixed/absolute needed.
     <div
-      id="workout-shell"
       style={{
-        position: "fixed",
-        inset: 0,
-        width: "100vw",
-        height: "100dvh",
-        maxWidth: "100vw",
+        width: "100%",
+        height: "100%",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        boxSizing: "border-box",
       }}
       className="bg-background"
     >
@@ -471,37 +467,6 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
         @keyframes ghostPulse {
           0%, 100% { opacity: 0.72; }
           50%       { opacity: 1;    }
-        }
-
-        /* ── Total scrollbar elimination while workout is active ── */
-        html.workout-active,
-        html.workout-active body {
-          overflow: hidden !important;
-          height: 100% !important;
-          max-width: 100vw !important;
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-        }
-        html.workout-active::-webkit-scrollbar,
-        html.workout-active body::-webkit-scrollbar {
-          display: none !important;
-          width: 0 !important;
-          height: 0 !important;
-        }
-
-        /* ── Workout shell + all its descendants ── */
-        #workout-shell,
-        #workout-shell * {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-          max-width: 100vw;
-          box-sizing: border-box;
-        }
-        #workout-shell::-webkit-scrollbar,
-        #workout-shell *::-webkit-scrollbar {
-          display: none;
-          width: 0;
-          height: 0;
         }
       `}</style>
     </div>

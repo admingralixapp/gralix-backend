@@ -984,6 +984,7 @@ export function DailyTasksPage() {
       <AnimatePresence>
         {showSession && (
           <motion.div
+            className="workout-overlay"
             style={{
               position: "fixed",
               top: 0,
@@ -992,6 +993,8 @@ export function DailyTasksPage() {
               height: "100dvh",
               zIndex: 50,
               overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
             }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
