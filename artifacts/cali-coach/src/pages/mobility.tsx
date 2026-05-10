@@ -166,21 +166,27 @@ function ActiveWorkoutPlayer({
     window.scrollTo(0, 0);
 
     document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
     document.body.style.overflow = "hidden";
     document.body.style.position = "fixed";
     document.body.style.top = "0";
     document.body.style.left = "0";
     document.body.style.width = "100vw";
     document.body.style.height = "100vh";
+    document.body.style.overscrollBehavior = "none";
+    document.body.style.touchAction = "none";
 
     return () => {
       document.documentElement.style.overflow = "auto";
+      document.documentElement.style.overscrollBehavior = "";
       document.body.style.overflow = "auto";
       document.body.style.position = "static";
       document.body.style.top = "";
       document.body.style.left = "";
       document.body.style.width = "auto";
       document.body.style.height = "auto";
+      document.body.style.overscrollBehavior = "";
+      document.body.style.touchAction = "";
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -204,6 +210,10 @@ function ActiveWorkoutPlayer({
         display: "flex",
         flexDirection: "column",
         boxSizing: "border-box",
+        touchAction: "none",
+        overscrollBehavior: "none",
+        userSelect: "none",
+        WebkitUserSelect: "none",
       }}
       className="bg-background"
     >
@@ -318,9 +328,15 @@ function ActiveWorkoutPlayer({
         #workout-shell, #workout-shell * {
           scrollbar-width: none; -ms-overflow-style: none;
           max-width: 100vw; box-sizing: border-box;
+          touch-action: none;
+          overscroll-behavior: none;
+          -webkit-tap-highlight-color: transparent;
         }
         #workout-shell::-webkit-scrollbar, #workout-shell *::-webkit-scrollbar {
           display: none; width: 0; height: 0;
+        }
+        #workout-shell button, #workout-shell [role="button"] {
+          touch-action: manipulation;
         }
       `}</style>
     </div>
