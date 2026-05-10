@@ -5,6 +5,7 @@ import { ArrowLeft, CheckCircle2, Flame, Pause, Play, SkipForward, X } from "luc
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
+import { getPoseSet, getExerciseIntensity, type PoseData } from "@/lib/exercise-poses";
 import { useTranslation } from "react-i18next";
 import { speak, setActiveVoiceProfile } from "@/lib/voice-service";
 import { getVoiceCues, getVoiceProfile } from "@/lib/workout-preferences";
@@ -94,9 +95,201 @@ function ProgressDots({
   );
 }
 
+// ─── Inline StickFigure (hero-only, not exported) ────────────────────────────
+
+function HeroStickFigure({ pose, color, sw = 6 }: { pose: PoseData; color: string; sw?: number }) {
+  const { head, lines, muscleGlow } = pose;
+  const jointR = sw * 0.52;
+  const joints: [number, number][] = [];
+  for (const pts of lines) {
+    for (let i = 1; i < pts.length - 1; i++) joints.push(pts[i]);
+  }
+  return (
+    <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">
+      {muscleGlow && (
+        <ellipse
+          cx={muscleGlow.cx} cy={muscleGlow.cy} rx={muscleGlow.rx} ry={muscleGlow.ry}
+          fill={color} opacity={0} style={{ animation: "heroMuscleGlow 1.8s ease-in-out infinite" }}
+        />
+      )}
+      {lines.map((pts, i) => (
+        <polyline key={i} points={pts.map(([x, y]) => `${x},${y}`).join(" ")}
+          fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
+      ))}
+      {joints.map(([x, y], i) => <circle key={i} cx={x} cy={y} r={jointR} fill={color} />)}
+      <circle cx={head.cx} cy={head.cy} r={head.r ?? 8} fill={color} />
+    </svg>
+  );
+}
+
+// ─── Hero Skeleton — large animated figure cycling Start → Mid → End ─────────
+
+const POSE_SEQ = [0, 1, 2, 1] as const;
+const FRAME_LABELS = ["Start", "Mid", "End"] as const;
+
+function HeroSkeleton({
+  exerciseName, paused, color = "#22c55e",
+}: {
+  exerciseName: string; paused: boolean; color?: string;
+}) {
+  const poseSet = getPoseSet(exerciseName);
+  const intensity = getExerciseIntensity(exerciseName);
+  const intervalMs = intensity === "strenuous" ? 750 : intensity === "relaxed" ? 1900 : 1250;
+  const sw = intensity === "relaxed" ? 5.5 : intensity === "strenuous" ? 7 : 6.2;
+
+  const [seqIdx, setSeqIdx] = useState(0);
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => setSeqIdx((s) => (s + 1) % POSE_SEQ.length), intervalMs);
+    return () => clearInterval(id);
+  }, [paused, intervalMs]);
+
+  const frameIdx = POSE_SEQ[seqIdx];
+  const frameLabel = FRAME_LABELS[frameIdx];
+
+  // Thumbnail height is fixed; hero fills the rest
+  const THUMB_H = 76;
+
+  return (
+    <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+      {/* ── Large hero frame — fixed pixel height so SVG can resolve 100% ── */}
+      <div style={{ width: "100%", maxWidth: 280, height: 230, position: "relative", flexShrink: 0 }}>
+        {/* Frame badge */}
+        <div style={{
+          position: "absolute", top: 8, left: "50%", transform: "translateX(-50%)",
+          fontSize: 9, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase",
+          color: "rgba(34,197,94,0.75)",
+          background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
+          borderRadius: 99, padding: "2px 10px", zIndex: 2, pointerEvents: "none", whiteSpace: "nowrap",
+        }}>
+          {frameLabel}
+        </div>
+        {/* Render all 3 frames, only the active one is visible — avoids AnimatePresence height issues */}
+        {poseSet.map((p, i) => (
+          <div key={i} style={{
+            position: "absolute", inset: 0,
+            opacity: frameIdx === i ? (paused ? 0.3 : 1) : 0,
+            transition: "opacity 0.28s ease-in-out",
+          }}>
+            <HeroStickFigure pose={p} color={color} sw={sw} />
+          </div>
+        ))}
+      </div>
+
+      {/* ── 3 reference thumbnails ── */}
+      <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 300, flexShrink: 0 }}>
+        {poseSet.map((thumbPose, i) => {
+          const active = frameIdx === i;
+          const thumbSide = THUMB_H - 18; // square side, leaving room for label below
+          return (
+            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+              <div style={{
+                width: thumbSide, height: thumbSide, borderRadius: 10, overflow: "hidden", padding: 4,
+                border: `1px solid ${active ? "rgba(34,197,94,0.55)" : "rgba(255,255,255,0.06)"}`,
+                background: active ? "rgba(34,197,94,0.07)" : "rgba(255,255,255,0.02)",
+                boxShadow: active ? "0 0 14px rgba(34,197,94,0.22)" : "none",
+                transition: "border-color 0.3s, box-shadow 0.3s",
+              }}>
+                <HeroStickFigure pose={thumbPose} color={active ? color : "rgba(148,163,184,0.35)"} sw={4} />
+              </div>
+              <span style={{
+                fontSize: 8, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase",
+                color: active ? "rgba(34,197,94,0.85)" : "rgba(100,116,139,0.6)",
+                transition: "color 0.3s",
+              }}>
+                {FRAME_LABELS[i]}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Muscle Silhouette — body map with highlighted regions ────────────────────
+
+const MUSCLE_REGION_MAP: Record<string, string[]> = {
+  "wrist":              ["forearm-l", "forearm-r"],
+  "forearm":            ["forearm-l", "forearm-r"],
+  "shoulder":           ["shoulder-l", "shoulder-r"],
+  "anterior shoulder":  ["shoulder-l", "shoulder-r", "chest"],
+  "chest":              ["chest"],
+  "lat":                ["lat-l", "lat-r"],
+  "upper back":         ["lat-l", "lat-r"],
+  "thoracic":           ["mid-back"],
+  "oblique":            ["oblique-l", "oblique-r"],
+  "core":               ["core"],
+  "hip":                ["hip-l", "hip-r"],
+  "quad":               ["quad-l", "quad-r"],
+  "hamstring":          ["quad-l", "quad-r"],
+  "glute":              ["hip-l", "hip-r"],
+  "calf":               ["calf-l", "calf-r"],
+  "ankle":              ["calf-l", "calf-r"],
+  "tricep":             ["uarm-l", "uarm-r"],
+  "bicep":              ["uarm-l", "uarm-r"],
+};
+
+function getActiveRegions(muscles: string[]): Set<string> {
+  const s = new Set<string>();
+  for (const m of muscles) {
+    const lower = m.toLowerCase();
+    for (const [key, regions] of Object.entries(MUSCLE_REGION_MAP)) {
+      if (lower.includes(key)) regions.forEach((r) => s.add(r));
+    }
+  }
+  return s;
+}
+
+function MuscleSilhouette({ muscles }: { muscles: string[] }) {
+  const active = getActiveRegions(muscles);
+  const C = "#22c55e";
+  const dim = "rgba(255,255,255,0.07)";
+  const f = (id: string) => active.has(id) ? C : dim;
+  const g = (id: string) => active.has(id) ? `drop-shadow(0 0 5px rgba(34,197,94,0.7))` : "none";
+  const s = (id: string): React.CSSProperties => ({ fill: f(id), filter: g(id), transition: "fill 0.4s, filter 0.4s" });
+
+  return (
+    <svg viewBox="0 0 60 122" width={44} height={88} aria-hidden="true" style={{ flexShrink: 0 }}>
+      {/* Head */}
+      <circle cx={30} cy={7} r={6.5} fill="rgba(255,255,255,0.12)" />
+      {/* Neck */}
+      <rect x={27} y={13.5} width={6} height={5} rx={2} fill="rgba(255,255,255,0.08)" />
+      {/* Shoulders */}
+      <ellipse cx={15} cy={21} rx={6} ry={3.5} style={s("shoulder-l")} />
+      <ellipse cx={45} cy={21} rx={6} ry={3.5} style={s("shoulder-r")} />
+      {/* Upper arms */}
+      <rect x={8.5} y={24.5} width={8} height={15} rx={4} style={s("uarm-l")} />
+      <rect x={43.5} y={24.5} width={8} height={15} rx={4} style={s("uarm-r")} />
+      {/* Forearms */}
+      <rect x={9} y={41} width={7} height={14} rx={3.5} style={s("forearm-l")} />
+      <rect x={44} y={41} width={7} height={14} rx={3.5} style={s("forearm-r")} />
+      {/* Chest */}
+      <ellipse cx={30} cy={25} rx={9} ry={5.5} style={s("chest")} />
+      {/* Lats */}
+      <ellipse cx={20} cy={32} rx={4.5} ry={7} style={s("lat-l")} />
+      <ellipse cx={40} cy={32} rx={4.5} ry={7} style={s("lat-r")} />
+      {/* Core */}
+      <ellipse cx={30} cy={38} rx={7} ry={6} style={s("core")} />
+      {/* Mid-back */}
+      <ellipse cx={30} cy={32} rx={5} ry={4.5} style={s("mid-back")} />
+      {/* Obliques */}
+      <ellipse cx={19} cy={42} rx={4} ry={5.5} style={s("oblique-l")} />
+      <ellipse cx={41} cy={42} rx={4} ry={5.5} style={s("oblique-r")} />
+      {/* Hips */}
+      <ellipse cx={24} cy={52} rx={7} ry={5} style={s("hip-l")} />
+      <ellipse cx={36} cy={52} rx={7} ry={5} style={s("hip-r")} />
+      {/* Quads */}
+      <rect x={19.5} y={57} width={10} height={22} rx={5} style={s("quad-l")} />
+      <rect x={30.5} y={57} width={10} height={22} rx={5} style={s("quad-r")} />
+      {/* Calves */}
+      <rect x={20.5} y={81} width={8} height={17} rx={4} style={s("calf-l")} />
+      <rect x={31.5} y={81} width={8} height={17} rx={4} style={s("calf-r")} />
+    </svg>
+  );
+}
+
 // ─── Active Workout Player ────────────────────────────────────────────────────
-// Extracted into its own component so that useEffect(fn,[]) fires exactly on
-// mount (scroll lock) and unmount (scroll unlock) — not on pageState changes.
 
 interface ActiveWorkoutPlayerProps {
   routine: Stretch[];
@@ -184,261 +377,287 @@ function ActiveWorkoutPlayer({
 
   if (!currentStretch) return null;
 
-  // Progress arc for the timer ring
-  const r = 44;
-  const circ = 2 * Math.PI * r;
-  const progress = secondsLeft / currentStretch.durationSeconds;
-  const offset = circ * (1 - progress);
+  // Timer arc maths
+  const timerR = 38;
+  const timerCirc = 2 * Math.PI * timerR;
+  const timerOffset = timerCirc * (1 - secondsLeft / currentStretch.durationSeconds);
 
   return (
     <>
-      {/* ─── Scoped CSS — injected once, never causes reflow ──────────────── */}
       <style>{`
-        @keyframes ghostPulse  { 0%,100%{opacity:.68} 50%{opacity:1} }
-        @keyframes skeletonFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes heroMuscleGlow { 0%,100%{opacity:.06} 50%{opacity:.38} }
+        @keyframes cockpitFadeIn  { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+        /* ── Shell: solid dark full-screen grid ── */
         #ms-shell {
           position: fixed; inset: 0;
           width: 100vw; height: 100dvh;
-          background: var(--background);
+          background: #080d12;
           display: grid;
-          grid-template-rows: 56px 60px 1fr 220px;
+          grid-template-rows: 52px 68px 1fr 172px;
           overflow: hidden;
-          touch-action: none;
-          overscroll-behavior: none;
-          user-select: none;
-          -webkit-user-select: none;
+          touch-action: none; overscroll-behavior: none;
+          user-select: none; -webkit-user-select: none;
           -webkit-tap-highlight-color: transparent;
           box-sizing: border-box;
         }
         #ms-shell *, #ms-shell *::before, #ms-shell *::after {
-          box-sizing: border-box;
-          touch-action: none;
-          overscroll-behavior: none;
-          -webkit-tap-highlight-color: transparent;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
+          box-sizing: border-box; touch-action: none;
+          overscroll-behavior: none; -webkit-tap-highlight-color: transparent;
+          scrollbar-width: none; -ms-overflow-style: none;
         }
         #ms-shell *::-webkit-scrollbar { display: none; }
         #ms-shell button { touch-action: manipulation; cursor: pointer; }
 
-        /* ── Row 1: header ── */
-        #ms-header {
-          display: flex; align-items: center;
-          justify-content: space-between;
+        /* ── ROW 1: Header bar ── */
+        #ms-hdr {
+          display: flex; align-items: center; justify-content: space-between;
           padding: 0 20px;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
-          flex-shrink: 0;
+          border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        #ms-header button {
+        #ms-hdr .exit-btn {
           display: flex; align-items: center; gap: 6px;
           background: none; border: none;
-          color: var(--muted-foreground);
-          font-size: 13px; font-weight: 500;
+          color: rgba(100,116,139,0.9); font-size: 13px; font-weight: 500;
+          padding: 6px 0;
         }
-        #ms-controls { display: flex; align-items: center; gap: 18px; }
+        #ms-hdr .ctrl-row { display: flex; align-items: center; gap: 16px; }
+        #ms-hdr .ctrl-btn {
+          background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 8px; padding: 6px 10px;
+          display: flex; align-items: center; gap: 5px;
+          color: rgba(148,163,184,0.9); font-size: 11px; font-weight: 600;
+        }
 
-        /* ── Row 2: title band ── */
-        #ms-title {
+        /* ── ROW 2: Title band ── */
+        #ms-ttl {
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          padding: 0 24px;
+          padding: 0 28px; gap: 4px; overflow: hidden;
           border-bottom: 1px solid rgba(255,255,255,0.04);
-          overflow: hidden;
-          flex-shrink: 0;
         }
-        #ms-title .counter {
-          font-size: 10px; font-weight: 700;
-          letter-spacing: 0.12em; text-transform: uppercase;
-          color: var(--primary); line-height: 1;
-          margin-bottom: 3px;
+        #ms-ttl .chip {
+          font-size: 9px; font-weight: 800;
+          letter-spacing: 0.16em; text-transform: uppercase;
+          color: #22c55e;
+          background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.22);
+          border-radius: 99px; padding: 2px 10px; line-height: 1.6;
         }
-        #ms-title h2 {
-          font-size: 17px; font-weight: 800;
-          margin: 0; line-height: 1.2;
-          text-align: center;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 100%;
+        #ms-ttl h2 {
+          font-size: 21px; font-weight: 900; letter-spacing: -0.02em;
+          margin: 0; line-height: 1.15; text-align: center;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          max-width: 100%; color: #f1f5f9;
         }
 
-        /* ── Row 3: skeleton stage ── */
+        /* ── ROW 3: Hero stage ── */
         #ms-stage {
           display: flex; align-items: center; justify-content: center;
-          padding: 12px 20px;
-          overflow: hidden;
-          min-height: 0;
+          padding: 8px 24px 6px; overflow: hidden; min-height: 0;
+          position: relative;
         }
-        #ms-stage .skeleton-wrap {
-          width: 100%; height: 100%;
-          max-width: 380px;
-          animation: skeletonFadeIn 0.22s ease-out both;
+        /* Subtle green vignette behind the skeleton */
+        #ms-stage::before {
+          content: "";
+          position: absolute; inset: 0; pointer-events: none;
+          background: radial-gradient(ellipse 60% 55% at 50% 40%, rgba(34,197,94,0.07) 0%, transparent 75%);
         }
-        #ms-stage .skeleton-wrap.pulsing {
-          animation: skeletonFadeIn 0.22s ease-out both,
-                     ghostPulse 2.6s ease-in-out 0.22s infinite;
+        #ms-stage .hero-inner {
+          width: 100%; max-width: 320px;
+          animation: cockpitFadeIn 0.22s ease-out both;
         }
-        #ms-stage .skeleton-wrap.paused { opacity: 0.38; }
 
-        /* ── Row 4: info dock ── */
+        /* ── ROW 4: Pro cockpit dock ── */
         #ms-dock {
-          display: flex; flex-direction: column;
+          display: grid;
+          grid-template-columns: 104px 1fr 96px;
           align-items: center;
-          padding: 14px 20px 20px;
-          border-top: 1px solid rgba(255,255,255,0.06);
-          gap: 10px;
-          overflow: hidden;
-          flex-shrink: 0;
+          gap: 0;
+          background: rgba(8,13,18,0.92);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border-top: 1px solid rgba(34,197,94,0.14);
+          overflow: hidden; flex-shrink: 0;
         }
-        #ms-dock .cue {
-          font-size: 12px; line-height: 1.55;
-          color: var(--muted-foreground);
+
+        /* Left cell: timer */
+        #ms-dock .dock-timer {
+          display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          padding: 12px 4px 14px 14px; gap: 3px;
+          border-right: 1px solid rgba(255,255,255,0.05);
+        }
+        #ms-dock .dock-timer .timer-label {
+          font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+          text-transform: uppercase; color: rgba(100,116,139,0.8);
+          margin-top: 2px;
+        }
+
+        /* Center cell: cue + muscles */
+        #ms-dock .dock-center {
+          display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          padding: 12px 12px 14px; gap: 8px; overflow: hidden;
+        }
+        #ms-dock .dock-cue {
+          font-size: 11.5px; line-height: 1.55;
+          color: rgba(148,163,184,0.9);
           text-align: center;
-          max-width: 300px;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
+          display: -webkit-box; -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical; overflow: hidden;
+          max-width: 240px;
         }
-        #ms-dock .timer-row {
-          display: flex; align-items: center; gap: 16px;
-        }
-        #ms-dock .timer-svg { flex-shrink: 0; }
-        #ms-dock .timer-info { display: flex; flex-direction: column; gap: 6px; }
-        #ms-dock .muscles {
-          display: flex; flex-wrap: wrap; gap: 5px;
+        #ms-dock .dock-muscles {
+          display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;
+          align-items: center;
         }
         #ms-dock .muscle-pill {
-          font-size: 10px; font-weight: 600;
-          padding: 2px 9px;
-          border-radius: 999px;
-          background: rgba(255,255,255,0.06);
-          color: var(--muted-foreground);
-          border: 1px solid rgba(255,255,255,0.08);
+          font-size: 9.5px; font-weight: 700; padding: 2px 8px;
+          border-radius: 99px;
+          background: rgba(34,197,94,0.08);
+          color: rgba(34,197,94,0.85);
+          border: 1px solid rgba(34,197,94,0.2);
         }
-        #ms-dock .next-label {
-          font-size: 11px; color: var(--muted-foreground);
-          text-align: center;
+
+        /* Right cell: silhouette + next */
+        #ms-dock .dock-right {
+          display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          padding: 10px 14px 12px 4px; gap: 5px;
+          border-left: 1px solid rgba(255,255,255,0.05);
+          overflow: hidden;
         }
-        #ms-dock .next-label strong { color: var(--foreground); }
-        #ms-dock .last-label {
-          font-size: 11px; font-weight: 700;
-          color: var(--primary);
+        #ms-dock .next-header {
+          font-size: 8px; font-weight: 800; letter-spacing: 0.14em;
+          text-transform: uppercase; color: rgba(100,116,139,0.7);
+        }
+        #ms-dock .next-name {
+          font-size: 9.5px; font-weight: 700; text-align: center;
+          color: rgba(226,232,240,0.9); line-height: 1.3;
+          overflow: hidden; text-overflow: ellipsis;
+          display: -webkit-box; -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical; max-width: 80px;
+        }
+        #ms-dock .last-strong {
+          font-size: 9px; font-weight: 800;
+          color: #22c55e; text-align: center; letter-spacing: 0.02em;
         }
       `}</style>
 
       <div id="ms-shell">
 
-        {/* ── ROW 1: Header ──────────────────────────────────────────────── */}
-        <div id="ms-header">
-          <button onClick={onExit}>
-            <ArrowLeft size={15} /> Exit
+        {/* ── ROW 1: Header ────────────────────────────────────────────── */}
+        <div id="ms-hdr">
+          <button className="exit-btn" onClick={onExit}>
+            <ArrowLeft size={14} /> Exit
           </button>
 
           <ProgressDots total={routine.length} current={stretchIndex} done={secondsLeft === 0} />
 
-          <div id="ms-controls">
-            <button onClick={onPauseToggle} aria-label={paused ? "Resume" : "Pause"}>
-              {paused ? <Play size={15} /> : <Pause size={15} />}
+          <div className="ctrl-row">
+            <button className="ctrl-btn" onClick={onPauseToggle} aria-label={paused ? "Resume" : "Pause"}>
+              {paused ? <><Play size={12} /> Resume</> : <><Pause size={12} /> Pause</>}
             </button>
-            <button onClick={onSkip}>
-              <SkipForward size={15} />
+            <button className="ctrl-btn" onClick={onSkip}>
+              <SkipForward size={12} /> Skip
             </button>
           </div>
         </div>
 
-        {/* ── ROW 2: Title band — animates per stretch ──────────────────── */}
+        {/* ── ROW 2: Title band ─────────────────────────────────────── */}
         <AnimatePresence mode="wait">
-          <motion.div
-            id="ms-title"
-            key={`title-${stretchIndex}`}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.16, ease: "easeOut" }}
-          >
-            <div className="counter">Stretch {stretchIndex + 1} of {routine.length}</div>
+          <motion.div id="ms-ttl" key={`ttl-${stretchIndex}`}
+            initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: "easeOut" }}>
+            <div className="chip">Stretch {stretchIndex + 1} of {routine.length}</div>
             <h2>{currentStretch.name}</h2>
           </motion.div>
         </AnimatePresence>
 
-        {/* ── ROW 3: Skeleton stage ─────────────────────────────────────── */}
+        {/* ── ROW 3: Hero stage — animated skeleton ─────────────────── */}
         <div id="ms-stage">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={`skeleton-${stretchIndex}`}
-              className={cn(
-                "skeleton-wrap",
-                paused ? "paused" : secondsLeft > 0 ? "pulsing" : "",
-              )}
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-            >
-              <ExerciseMotionSnapshot
-                exerciseName={currentStretch.name}
-                color="#22c55e"
-                glow={!paused}
-                className="w-full h-full"
-              />
+            <motion.div key={`hero-${stretchIndex}`} className="hero-inner"
+              initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }} transition={{ duration: 0.22, ease: "easeOut" }}>
+              <HeroSkeleton exerciseName={currentStretch.name} paused={paused} />
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* ── ROW 4: Info dock — always visible, never moves ────────────── */}
+        {/* ── ROW 4: Pro cockpit info dock ──────────────────────────── */}
         <div id="ms-dock">
 
-          {/* Coaching cue — clamped to 2 lines, never pushes timer */}
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={`cue-${stretchIndex}`}
-              className="cue"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              {currentStretch.coachingCue}
-            </motion.p>
-          </AnimatePresence>
-
-          {/* Timer + muscle tags side-by-side */}
-          <div className="timer-row">
-            {/* Arc timer */}
-            <svg className="timer-svg" width={100} height={100} viewBox="0 0 100 100">
-              <circle cx={50} cy={50} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={7} />
-              <circle
-                cx={50} cy={50} r={r}
-                fill="none"
+          {/* LEFT — Arc timer */}
+          <div className="dock-timer">
+            <svg width={80} height={80} viewBox="0 0 80 80">
+              {/* Outer ring glow */}
+              <circle cx={40} cy={40} r={timerR} fill="none"
+                stroke="rgba(34,197,94,0.06)" strokeWidth={9} />
+              {/* Track */}
+              <circle cx={40} cy={40} r={timerR} fill="none"
+                stroke="rgba(255,255,255,0.05)" strokeWidth={7} />
+              {/* Progress arc */}
+              <circle cx={40} cy={40} r={timerR} fill="none"
                 stroke={paused ? "#475569" : "#22c55e"}
-                strokeWidth={7}
-                strokeLinecap="round"
-                strokeDasharray={circ}
-                strokeDashoffset={offset}
-                transform="rotate(-90 50 50)"
-                style={{ transition: "stroke-dashoffset 0.9s linear, stroke 0.3s ease" }}
+                strokeWidth={7} strokeLinecap="round"
+                strokeDasharray={timerCirc} strokeDashoffset={timerOffset}
+                transform="rotate(-90 40 40)"
+                style={{ transition: "stroke-dashoffset 0.9s linear, stroke 0.35s ease" }}
               />
-              <text x={50} y={46} textAnchor="middle" fill="#f8fafc" fontSize={24} fontWeight="800" fontFamily="monospace">
+              <text x={40} y={37} textAnchor="middle" fill="#f1f5f9"
+                fontSize={22} fontWeight="900" fontFamily="monospace">
                 {secondsLeft}
               </text>
-              <text x={50} y={62} textAnchor="middle" fill={paused ? "#475569" : "#64748b"} fontSize={10}>
-                {paused ? "paused" : "sec"}
+              <text x={40} y={52} textAnchor="middle"
+                fill={paused ? "#475569" : "#64748b"} fontSize={9}>
+                {paused ? "paused" : "seconds"}
               </text>
             </svg>
+            <div className="timer-label">Timer</div>
+          </div>
 
-            {/* Muscle pills + next label */}
-            <div className="timer-info">
-              <div className="muscles">
+          {/* CENTER — Coaching cue + muscle pills with silhouette */}
+          <div className="dock-center">
+            <AnimatePresence mode="wait">
+              <motion.p key={`cue-${stretchIndex}`} className="dock-cue"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.22 }}>
+                {currentStretch.coachingCue}
+              </motion.p>
+            </AnimatePresence>
+            <div className="dock-muscles">
+              <MuscleSilhouette muscles={currentStretch.targetMuscles} />
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                 {currentStretch.targetMuscles.slice(0, 3).map((m) => (
                   <span key={m} className="muscle-pill">{m}</span>
                 ))}
               </div>
-              {isLast || !nextStretch
-                ? <span className="last-label">Last stretch — finish strong!</span>
-                : <span className="next-label">Next: <strong>{nextStretch.name}</strong></span>
-              }
             </div>
+          </div>
+
+          {/* RIGHT — Next exercise preview (single mid-pose thumbnail) */}
+          <div className="dock-right">
+            {isLast || !nextStretch ? (
+              <span className="last-strong">Last one — finish strong!</span>
+            ) : (
+              <>
+                <span className="next-header">Up Next</span>
+                {/* Single thumbnail — mid pose of next exercise */}
+                <div style={{
+                  width: 60, height: 60, borderRadius: 10, overflow: "hidden",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.03)", padding: 4, flexShrink: 0,
+                }}>
+                  <HeroStickFigure
+                    pose={getPoseSet(nextStretch.name)[0]}
+                    color="rgba(148,163,184,0.45)"
+                    sw={4}
+                  />
+                </div>
+                <span className="next-name">{nextStretch.name}</span>
+              </>
+            )}
           </div>
 
         </div>
