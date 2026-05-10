@@ -123,29 +123,23 @@ function ActiveWorkoutPlayer({
 
   const { i18n } = useTranslation();
 
-  // ── Sync the equipped voice profile so ElevenLabs uses Sensei/Sergeant/etc ─
+  // ── Sync the equipped voice profile ─────────────────────────────────────
   useEffect(() => {
     setActiveVoiceProfile(getVoiceProfile());
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Speak the exercise coaching cue at the START of each stretch ─────────
-  // Pre-translated text (same pattern as Shop Test buttons) is sent directly
-  // to ElevenLabs in the active language. Paid profiles get LLM character
-  // rephrasing on the backend; free profiles get the translated browser TTS.
   useEffect(() => {
     if (!getVoiceCues()) return;
     if (!currentStretch) return;
     const cue = getStretchCue(currentStretch.id, i18n.language) || currentStretch.coachingCue;
     const t = setTimeout(() => {
-      console.log(`[CaliCoach Mobility] speak → lang="${i18n.language}" stretch="${currentStretch.id}" cue="${cue.slice(0, 60)}"`);
       speak(cue, "encouraging");
     }, 600);
     return () => clearTimeout(t);
   }, [stretchIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Voice cues at 30 s remaining and at 0 s (stretch complete) ───────────
-  // These use pre-translated text from cue-translations.ts so ElevenLabs
-  // receives the correct language directly — no LLM dependency.
+  // ── Voice cues at 30 s remaining and at 0 s ───────────────────────────────
   const spokenRef = useRef<Record<string, boolean>>({});
   useEffect(() => {
     if (!getVoiceCues()) return;
@@ -161,10 +155,9 @@ function ActiveWorkoutPlayer({
     }
   }, [secondsLeft, stretchIndex, i18n.language]);
 
-  // ── SCROLL LOCK — fires exactly on mount, unlocks exactly on unmount ─────
+  // ── Viewport + scroll lock ────────────────────────────────────────────────
   useEffect(() => {
     window.scrollTo(0, 0);
-
     document.documentElement.style.overflow = "hidden";
     document.documentElement.style.overscrollBehavior = "none";
     document.body.style.overflow = "hidden";
@@ -175,7 +168,6 @@ function ActiveWorkoutPlayer({
     document.body.style.height = "100vh";
     document.body.style.overscrollBehavior = "none";
     document.body.style.touchAction = "none";
-
     return () => {
       document.documentElement.style.overflow = "auto";
       document.documentElement.style.overscrollBehavior = "";
@@ -192,104 +184,197 @@ function ActiveWorkoutPlayer({
 
   if (!currentStretch) return null;
 
+  // Progress arc for the timer ring
+  const r = 44;
+  const circ = 2 * Math.PI * r;
+  const progress = secondsLeft / currentStretch.durationSeconds;
+  const offset = circ * (1 - progress);
+
   return (
-    <div
-      id="workout-shell"
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: "100vw",
-        height: "100vh",
-        maxWidth: "100vw",
-        margin: 0,
-        padding: 0,
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        boxSizing: "border-box",
-        touchAction: "none",
-        overscrollBehavior: "none",
-        userSelect: "none",
-        WebkitUserSelect: "none",
-      }}
-      className="bg-background"
-    >
-      {/* ── TOP: Exit · ProgressDots · Pause · Skip ───────────────────────── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-        <button
-          onClick={onExit}
-          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer" }}
-        >
-          <ArrowLeft size={16} />
-          Exit
-        </button>
+    <>
+      {/* ─── Scoped CSS — injected once, never causes reflow ──────────────── */}
+      <style>{`
+        @keyframes ghostPulse  { 0%,100%{opacity:.68} 50%{opacity:1} }
+        @keyframes skeletonFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        #ms-shell {
+          position: fixed; inset: 0;
+          width: 100vw; height: 100dvh;
+          background: var(--background);
+          display: grid;
+          grid-template-rows: 56px 60px 1fr 220px;
+          overflow: hidden;
+          touch-action: none;
+          overscroll-behavior: none;
+          user-select: none;
+          -webkit-user-select: none;
+          -webkit-tap-highlight-color: transparent;
+          box-sizing: border-box;
+        }
+        #ms-shell *, #ms-shell *::before, #ms-shell *::after {
+          box-sizing: border-box;
+          touch-action: none;
+          overscroll-behavior: none;
+          -webkit-tap-highlight-color: transparent;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        #ms-shell *::-webkit-scrollbar { display: none; }
+        #ms-shell button { touch-action: manipulation; cursor: pointer; }
 
-        <ProgressDots
-          total={routine.length}
-          current={stretchIndex}
-          done={secondsLeft === 0}
-        />
+        /* ── Row 1: header ── */
+        #ms-header {
+          display: flex; align-items: center;
+          justify-content: space-between;
+          padding: 0 20px;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          flex-shrink: 0;
+        }
+        #ms-header button {
+          display: flex; align-items: center; gap: 6px;
+          background: none; border: none;
+          color: var(--muted-foreground);
+          font-size: 13px; font-weight: 500;
+        }
+        #ms-controls { display: flex; align-items: center; gap: 18px; }
 
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <button
-            onClick={onPauseToggle}
-            aria-label={paused ? "Resume" : "Pause"}
-            style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer" }}
-          >
-            {paused ? <Play size={14} /> : <Pause size={14} />}
+        /* ── Row 2: title band ── */
+        #ms-title {
+          display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          padding: 0 24px;
+          border-bottom: 1px solid rgba(255,255,255,0.04);
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+        #ms-title .counter {
+          font-size: 10px; font-weight: 700;
+          letter-spacing: 0.12em; text-transform: uppercase;
+          color: var(--primary); line-height: 1;
+          margin-bottom: 3px;
+        }
+        #ms-title h2 {
+          font-size: 17px; font-weight: 800;
+          margin: 0; line-height: 1.2;
+          text-align: center;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+        }
+
+        /* ── Row 3: skeleton stage ── */
+        #ms-stage {
+          display: flex; align-items: center; justify-content: center;
+          padding: 12px 20px;
+          overflow: hidden;
+          min-height: 0;
+        }
+        #ms-stage .skeleton-wrap {
+          width: 100%; height: 100%;
+          max-width: 380px;
+          animation: skeletonFadeIn 0.22s ease-out both;
+        }
+        #ms-stage .skeleton-wrap.pulsing {
+          animation: skeletonFadeIn 0.22s ease-out both,
+                     ghostPulse 2.6s ease-in-out 0.22s infinite;
+        }
+        #ms-stage .skeleton-wrap.paused { opacity: 0.38; }
+
+        /* ── Row 4: info dock ── */
+        #ms-dock {
+          display: flex; flex-direction: column;
+          align-items: center;
+          padding: 14px 20px 20px;
+          border-top: 1px solid rgba(255,255,255,0.06);
+          gap: 10px;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+        #ms-dock .cue {
+          font-size: 12px; line-height: 1.55;
+          color: var(--muted-foreground);
+          text-align: center;
+          max-width: 300px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        #ms-dock .timer-row {
+          display: flex; align-items: center; gap: 16px;
+        }
+        #ms-dock .timer-svg { flex-shrink: 0; }
+        #ms-dock .timer-info { display: flex; flex-direction: column; gap: 6px; }
+        #ms-dock .muscles {
+          display: flex; flex-wrap: wrap; gap: 5px;
+        }
+        #ms-dock .muscle-pill {
+          font-size: 10px; font-weight: 600;
+          padding: 2px 9px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.06);
+          color: var(--muted-foreground);
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+        #ms-dock .next-label {
+          font-size: 11px; color: var(--muted-foreground);
+          text-align: center;
+        }
+        #ms-dock .next-label strong { color: var(--foreground); }
+        #ms-dock .last-label {
+          font-size: 11px; font-weight: 700;
+          color: var(--primary);
+        }
+      `}</style>
+
+      <div id="ms-shell">
+
+        {/* ── ROW 1: Header ──────────────────────────────────────────────── */}
+        <div id="ms-header">
+          <button onClick={onExit}>
+            <ArrowLeft size={15} /> Exit
           </button>
-          <button
-            onClick={onSkip}
-            style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer" }}
-          >
-            Skip <SkipForward size={14} />
-          </button>
+
+          <ProgressDots total={routine.length} current={stretchIndex} done={secondsLeft === 0} />
+
+          <div id="ms-controls">
+            <button onClick={onPauseToggle} aria-label={paused ? "Resume" : "Pause"}>
+              {paused ? <Play size={15} /> : <Pause size={15} />}
+            </button>
+            <button onClick={onSkip}>
+              <SkipForward size={15} />
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* ── BODY: 3 zones, space-between ──────────────────────────────────── */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          alignItems: "center",
-          overflow: "hidden",
-          padding: "12px 16px 16px",
-          maxWidth: 448,
-          width: "100%",
-          margin: "0 auto",
-          boxSizing: "border-box",
-        }}
-      >
+        {/* ── ROW 2: Title band — animates per stretch ──────────────────── */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={stretchIndex}
-            initial={{ opacity: 0, y: 12 }}
+            id="ms-title"
+            key={`title-${stretchIndex}`}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center", flex: 1, width: "100%", minHeight: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
           >
-            {/* ZONE 1 — label */}
-            <div style={{ textAlign: "center", width: "100%", flexShrink: 0 }}>
-              <div style={{ fontSize: 10, color: "var(--primary)", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 2 }}>
-                Stretch {stretchIndex + 1} of {routine.length}
-              </div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.3, margin: 0 }}>{currentStretch.name}</h2>
-            </div>
+            <div className="counter">Stretch {stretchIndex + 1} of {routine.length}</div>
+            <h2>{currentStretch.name}</h2>
+          </motion.div>
+        </AnimatePresence>
 
-            {/* ZONE 2 — 3-panel snapshot */}
-            <div
+        {/* ── ROW 3: Skeleton stage ─────────────────────────────────────── */}
+        <div id="ms-stage">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`skeleton-${stretchIndex}`}
               className={cn(
-                "w-full",
-                paused ? "opacity-50" : secondsLeft === 0 ? "opacity-100" : "[animation:ghostPulse_2.5s_ease-in-out_infinite]",
+                "skeleton-wrap",
+                paused ? "paused" : secondsLeft > 0 ? "pulsing" : "",
               )}
-              style={{ flex: "1 1 0", minHeight: 0, maxHeight: 240, display: "flex", alignItems: "center", width: "100%", overflow: "hidden" }}
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
             >
               <ExerciseMotionSnapshot
                 exerciseName={currentStretch.name}
@@ -297,49 +382,68 @@ function ActiveWorkoutPlayer({
                 glow={!paused}
                 className="w-full h-full"
               />
-            </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-            {/* ZONE 3 — timer + info */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: "100%", flexShrink: 0 }}>
-              <p style={{ fontSize: 12, color: "var(--muted-foreground)", textAlign: "center", maxWidth: 280, lineHeight: 1.5, margin: 0, padding: "0 8px" }}>
-                {currentStretch.coachingCue}
-              </p>
+        {/* ── ROW 4: Info dock — always visible, never moves ────────────── */}
+        <div id="ms-dock">
 
-              <CircularTimer secondsLeft={secondsLeft} total={currentStretch.durationSeconds} paused={paused} />
+          {/* Coaching cue — clamped to 2 lines, never pushes timer */}
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={`cue-${stretchIndex}`}
+              className="cue"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {currentStretch.coachingCue}
+            </motion.p>
+          </AnimatePresence>
 
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
-                {currentStretch.targetMuscles.map((m) => (
-                  <span key={m} className="px-2.5 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">{m}</span>
+          {/* Timer + muscle tags side-by-side */}
+          <div className="timer-row">
+            {/* Arc timer */}
+            <svg className="timer-svg" width={100} height={100} viewBox="0 0 100 100">
+              <circle cx={50} cy={50} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={7} />
+              <circle
+                cx={50} cy={50} r={r}
+                fill="none"
+                stroke={paused ? "#475569" : "#22c55e"}
+                strokeWidth={7}
+                strokeLinecap="round"
+                strokeDasharray={circ}
+                strokeDashoffset={offset}
+                transform="rotate(-90 50 50)"
+                style={{ transition: "stroke-dashoffset 0.9s linear, stroke 0.3s ease" }}
+              />
+              <text x={50} y={46} textAnchor="middle" fill="#f8fafc" fontSize={24} fontWeight="800" fontFamily="monospace">
+                {secondsLeft}
+              </text>
+              <text x={50} y={62} textAnchor="middle" fill={paused ? "#475569" : "#64748b"} fontSize={10}>
+                {paused ? "paused" : "sec"}
+              </text>
+            </svg>
+
+            {/* Muscle pills + next label */}
+            <div className="timer-info">
+              <div className="muscles">
+                {currentStretch.targetMuscles.slice(0, 3).map((m) => (
+                  <span key={m} className="muscle-pill">{m}</span>
                 ))}
               </div>
-
-              <div style={{ fontSize: 12, textAlign: "center" }}>
-                {!isLast && nextStretch
-                  ? <span style={{ color: "var(--muted-foreground)" }}>Next: <strong>{nextStretch.name}</strong></span>
-                  : <span style={{ color: "var(--primary)", fontWeight: 600 }}>Last stretch — finish strong!</span>}
-              </div>
+              {isLast || !nextStretch
+                ? <span className="last-label">Last stretch — finish strong!</span>
+                : <span className="next-label">Next: <strong>{nextStretch.name}</strong></span>
+              }
             </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+          </div>
 
-      <style>{`
-        @keyframes ghostPulse { 0%,100%{opacity:.72} 50%{opacity:1} }
-        #workout-shell, #workout-shell * {
-          scrollbar-width: none; -ms-overflow-style: none;
-          max-width: 100vw; box-sizing: border-box;
-          touch-action: none;
-          overscroll-behavior: none;
-          -webkit-tap-highlight-color: transparent;
-        }
-        #workout-shell::-webkit-scrollbar, #workout-shell *::-webkit-scrollbar {
-          display: none; width: 0; height: 0;
-        }
-        #workout-shell button, #workout-shell [role="button"] {
-          touch-action: manipulation;
-        }
-      `}</style>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
 
