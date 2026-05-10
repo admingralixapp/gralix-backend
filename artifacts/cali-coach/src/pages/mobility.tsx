@@ -5,7 +5,7 @@ import { ArrowLeft, CheckCircle2, Flame, Pause, Play, SkipForward, X } from "luc
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
-import { getPoseSet, getExerciseIntensity, type PoseData } from "@/lib/exercise-poses";
+import { getPoseSet, getMobilityEnv, getExerciseIntensity, type PoseData, type EnvAnchor } from "@/lib/exercise-poses";
 import { useTranslation } from "react-i18next";
 import { speak, setActiveVoiceProfile } from "@/lib/voice-service";
 import { getVoiceCues, getVoiceProfile } from "@/lib/workout-preferences";
@@ -115,15 +115,173 @@ function extractAllPoints(lines: [number, number][][]): [number, number][] {
   return out;
 }
 
+// ─── Environmental Anchor Layer ───────────────────────────────────────────────
+// Renders behind the skeleton. Static (not animated) — the anchor never moves.
+// The "locked joint" illusion comes from identical endpoint coords across frames.
+
+function EnvLayer({ env }: { env: EnvAnchor }) {
+  if (env.type === "floor") {
+    const ticks = 12;
+    const step = (env.x2 - env.x1) / ticks;
+    return (
+      <g>
+        {/* Hatching below the floor line — gives a ground-plane texture */}
+        {Array.from({ length: ticks }).map((_, i) => {
+          const x = env.x1 + 2 + i * step;
+          return (
+            <line
+              key={i}
+              x1={x} y1={env.y1}
+              x2={x - 4} y2={env.y1 + 6}
+              stroke="#475569" strokeWidth={0.7} opacity={0.3}
+              strokeLinecap="round"
+            />
+          );
+        })}
+        {/* Shadow under floor line */}
+        <line
+          x1={env.x1} y1={env.y1 + 1.2} x2={env.x2} y2={env.y2 + 1.2}
+          stroke="#0f172a" strokeWidth={2} opacity={0.25}
+          strokeLinecap="round"
+        />
+        {/* Main floor line */}
+        <line
+          x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
+          stroke="#64748b" strokeWidth={1.8} strokeLinecap="round"
+          opacity={0.6}
+        />
+      </g>
+    );
+  }
+
+  if (env.type === "wall") {
+    const ticks = 8;
+    const step = (env.y2 - env.y1) / ticks;
+    const onRight = env.x1 > 50;
+    return (
+      <g opacity={0.5}>
+        {/* Shadow beside wall */}
+        <line
+          x1={env.x1 + (onRight ? 1.2 : -1.2)} y1={env.y1}
+          x2={env.x2 + (onRight ? 1.2 : -1.2)} y2={env.y2}
+          stroke="#0f172a" strokeWidth={2.5} opacity={0.2}
+        />
+        {/* Main wall line */}
+        <line
+          x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
+          stroke="#64748b" strokeWidth={2} strokeLinecap="round"
+        />
+        {/* Brick-style tick marks */}
+        {Array.from({ length: ticks - 1 }).map((_, i) => {
+          const y = env.y1 + (i + 1) * step;
+          return (
+            <line
+              key={i}
+              x1={env.x1} y1={y}
+              x2={env.x1 + (onRight ? -6 : 6)} y2={y}
+              stroke="#64748b" strokeWidth={0.8} opacity={0.35}
+            />
+          );
+        })}
+      </g>
+    );
+  }
+
+  if (env.type === "bar") {
+    const ticks = 9;
+    const step = (env.x2 - env.x1 - 8) / (ticks - 1);
+    return (
+      <g>
+        {/* Thick bar body */}
+        <line
+          x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
+          stroke="#94a3b8" strokeWidth={3.5} strokeLinecap="round"
+          opacity={0.55}
+        />
+        {/* Knurling marks */}
+        {Array.from({ length: ticks }).map((_, i) => {
+          const x = env.x1 + 4 + i * step;
+          return (
+            <line
+              key={i}
+              x1={x} y1={env.y1 - 2.5} x2={x} y2={env.y1 + 2.5}
+              stroke="#475569" strokeWidth={1} opacity={0.4}
+            />
+          );
+        })}
+        {/* End caps */}
+        <line x1={env.x1} y1={env.y1 - 4} x2={env.x1} y2={env.y1 + 4}
+          stroke="#64748b" strokeWidth={2} opacity={0.45} />
+        <line x1={env.x2} y1={env.y1 - 4} x2={env.x2} y2={env.y1 + 4}
+          stroke="#64748b" strokeWidth={2} opacity={0.45} />
+      </g>
+    );
+  }
+
+  if (env.type === "box") {
+    const w = env.x2 - env.x1;
+    const h = env.y2 - env.y1;
+    return (
+      <g opacity={0.5}>
+        {/* Box fill */}
+        <rect x={env.x1} y={env.y1} width={w} height={h}
+          fill="rgba(71,85,105,0.15)" stroke="#64748b" strokeWidth={1.5} rx={1} />
+        {/* Top face highlight */}
+        <line x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y1}
+          stroke="#94a3b8" strokeWidth={1.5} opacity={0.5} />
+      </g>
+    );
+  }
+
+  return null;
+}
+
+// ─── Thumbnail Env Layer (static, no hatching for small size) ─────────────────
+function EnvLayerThumb({ env }: { env: EnvAnchor }) {
+  if (env.type === "floor") {
+    return (
+      <line
+        x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
+        stroke="#64748b" strokeWidth={1.5} strokeLinecap="round" opacity={0.5}
+      />
+    );
+  }
+  if (env.type === "wall") {
+    return (
+      <line
+        x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
+        stroke="#64748b" strokeWidth={1.5} strokeLinecap="round" opacity={0.45}
+      />
+    );
+  }
+  if (env.type === "bar") {
+    return (
+      <line
+        x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
+        stroke="#94a3b8" strokeWidth={2.5} strokeLinecap="round" opacity={0.5}
+      />
+    );
+  }
+  if (env.type === "box") {
+    return (
+      <rect
+        x={env.x1} y={env.y1} width={env.x2 - env.x1} height={env.y2 - env.y1}
+        fill="rgba(71,85,105,0.12)" stroke="#64748b" strokeWidth={1} rx={1} opacity={0.45}
+      />
+    );
+  }
+  return null;
+}
+
 // ─── BioSkeletonSVG — spring-morphing bio-mechanical hero figure ──────────────
 // Receives poseSet + frameIdx. When frameIdx changes, every motion.line and
 // motion.circle spring-animates from the old coordinates to the new ones,
 // creating a fluid "limbs slide into position" effect.
 
 function BioSkeletonSVG({
-  poseSet, frameIdx, paused, color = "#22c55e",
+  poseSet, frameIdx, paused, color = "#22c55e", env,
 }: {
-  poseSet: PoseData[]; frameIdx: 0 | 1 | 2; paused: boolean; color?: string;
+  poseSet: PoseData[]; frameIdx: 0 | 1 | 2; paused: boolean; color?: string; env?: EnvAnchor;
 }) {
   // Pre-compute segments + points for all 3 poses.
   // pose[0] values are used as `initial` so motion elements are never undefined on mount.
@@ -165,6 +323,9 @@ function BioSkeletonSVG({
           </feMerge>
         </filter>
       </defs>
+
+      {/* ── Environmental anchor — rendered BEHIND skeleton ── */}
+      {env && <EnvLayer env={env} />}
 
       {/* ── Capsule limbs — thick rounded segments that spring into position ── */}
       {targetSegs.map((seg, i) => {
@@ -223,7 +384,7 @@ function BioSkeletonSVG({
 
 // ─── BioThumbnailSVG — static capsule-style figure for reference strips ───────
 
-function BioThumbnailSVG({ pose, color }: { pose: PoseData; color: string }) {
+function BioThumbnailSVG({ pose, color, env }: { pose: PoseData; color: string; env?: EnvAnchor }) {
   const segs = extractSegments(pose.lines);
   const pts  = extractAllPoints(pose.lines);
   const isGreen = color === "#22c55e" || color.startsWith("rgba(34,197,94");
@@ -238,6 +399,8 @@ function BioThumbnailSVG({ pose, color }: { pose: PoseData; color: string }) {
         filter: isGreen ? "drop-shadow(0 0 4px rgba(34,197,94,0.5))" : "none",
       }}
     >
+      {/* ── Environmental anchor behind skeleton ── */}
+      {env && <EnvLayerThumb env={env} />}
       {segs.map((s, i) => (
         <line key={i} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2}
           stroke={color} strokeWidth={5} strokeLinecap="round" fill="none" />
@@ -264,6 +427,7 @@ function HeroSkeleton({
   exerciseName: string; paused: boolean; color?: string;
 }) {
   const poseSet = getPoseSet(exerciseName);
+  const env     = getMobilityEnv(exerciseName);
   const intensity = getExerciseIntensity(exerciseName);
   const intervalMs = intensity === "strenuous" ? 800 : intensity === "relaxed" ? 1900 : 1300;
 
@@ -299,6 +463,7 @@ function HeroSkeleton({
           frameIdx={frameIdx}
           paused={paused}
           color={color}
+          env={env}
         />
       </div>
 
@@ -318,6 +483,7 @@ function HeroSkeleton({
                 <BioThumbnailSVG
                   pose={thumbPose}
                   color={active ? color : "rgba(100,116,139,0.4)"}
+                  env={env}
                 />
               </div>
               <span style={{

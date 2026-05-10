@@ -17,6 +17,22 @@ export interface PoseData {
 
 export type PoseSet = [PoseData, PoseData, PoseData]; // [start, mid, end]
 
+// ─── Environmental Anchor ─────────────────────────────────────────────────────
+// Describes a static prop drawn in the SVG behind the skeleton.
+// All coordinates are in the 100×100 viewBox space.
+// • floor  — horizontal ground line          (y1 = y2, span x1→x2)
+// • wall   — vertical surface behind figure  (x1 = x2, span y1→y2)
+// • bar    — overhead horizontal bar         (y1 = y2, span x1→x2)
+// • box    — solid rectangular block         (x1,y1 top-left → x2,y2 bottom-right)
+export type AnchorType = "floor" | "wall" | "bar" | "box";
+export interface EnvAnchor {
+  type: AnchorType;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
 export type ExerciseIntensity = "strenuous" | "relaxed" | "neutral";
 
 export type PoseType =
@@ -1045,35 +1061,35 @@ const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
   // Side view. Kneeling, palms flat on floor with fingers pointing back toward
   // knees. Leaning progressively forward increases wrist extension.
   "Wrist Extension Stretch": [
-    { // START — kneeling upright, hands resting at sides
-      head: { cx: 68, cy: 12, r: 6 },
+    { // START — kneeling upright; hands hovering ABOVE the floor line (y=67)
+      head: { cx: 66, cy: 12, r: 6 },
       lines: [
-        [[64, 18], [52, 44]],                              // spine
-        [[58, 26], [64, 40], [66, 54]],                    // R-arm (hanging)
-        [[58, 26], [48, 38], [42, 52]],                    // L-arm (hanging)
-        [[52, 44], [44, 62], [30, 64]],                    // R-leg (thigh + shin back = kneeling)
-        [[52, 44], [50, 62], [36, 64]],                    // L-leg
+        [[62, 18], [50, 44]],                              // spine (upright)
+        [[56, 26], [62, 40], [64, 56]],                    // R-arm — hand at y=56 (above floor)
+        [[56, 26], [50, 36], [46, 50]],                    // L-arm — hand at y=50 (above floor)
+        [[50, 44], [44, 60], [28, 67]],                    // R-leg — shin ends ON floor y=67
+        [[50, 44], [50, 60], [34, 67]],                    // L-leg — shin ends ON floor y=67
       ],
     },
-    { // MID — hands on floor, fingers pointing back, torso leaning forward
-      head: { cx: 82, cy: 20, r: 6 },
+    { // MID — body leans forward; hands TOUCH floor line (both locked at y=67)
+      head: { cx: 80, cy: 22, r: 6 },
       lines: [
-        [[78, 24], [62, 30], [44, 38]],                    // spine (forward tilt)
-        [[62, 30], [46, 36], [24, 44]],                    // R-arm → hand on floor (fingers pointing left/back)
-        [[62, 30], [54, 36], [34, 44]],                    // L-arm → hand on floor
-        [[44, 38], [38, 56], [22, 58]],                    // R-leg (kneeling)
-        [[44, 38], [44, 56], [28, 58]],                    // L-leg (kneeling)
+        [[76, 26], [60, 34], [42, 44]],                    // spine (forward tilt)
+        [[60, 34], [60, 50], [60, 67]],                    // L-arm — hand LOCKED to floor y=67
+        [[60, 34], [68, 50], [68, 67]],                    // R-arm — hand LOCKED to floor y=67
+        [[42, 44], [36, 60], [20, 67]],                    // R-leg — still on floor
+        [[42, 44], [42, 60], [26, 67]],                    // L-leg
       ],
-      muscleGlow: { cx: 36, cy: 40, rx: 18, ry: 7 },
+      muscleGlow: { cx: 64, cy: 55, rx: 16, ry: 10 },
     },
-    { // END — deeper forward lean, maximum wrist extension
-      head: { cx: 86, cy: 24, r: 6 },
+    { // END — hips shift BACK; hands remain at EXACT same floor coords as MID
+      head: { cx: 84, cy: 28, r: 6 },
       lines: [
-        [[82, 28], [64, 34], [44, 42]],
-        [[64, 34], [46, 40], [20, 48]],
-        [[64, 34], [54, 40], [30, 48]],
-        [[44, 42], [38, 60], [20, 62]],
-        [[44, 42], [44, 60], [26, 62]],
+        [[80, 32], [64, 38], [40, 52]],                    // spine (hips back — y=52 vs y=44 in MID)
+        [[64, 38], [62, 52], [60, 67]],                    // L-arm — endpoint [60,67] IDENTICAL to MID
+        [[64, 38], [70, 52], [68, 67]],                    // R-arm — endpoint [68,67] IDENTICAL to MID
+        [[40, 52], [32, 64], [14, 67]],                    // R-leg — adjusted for hip shift
+        [[40, 52], [38, 64], [20, 67]],                    // L-leg
       ],
     },
   ],
@@ -2223,6 +2239,56 @@ export function getPoseSet(exerciseName: string): PoseSet {
   if (MOBILITY_POSE_LIBRARY[exerciseName]) return MOBILITY_POSE_LIBRARY[exerciseName];
   const poseType = EXERCISE_POSE_MAP[exerciseName] ?? "default";
   return POSE_LIBRARY[poseType];
+}
+
+// ─── Environment Engine ───────────────────────────────────────────────────────
+// Maps exercise names → their static environment anchor.
+// Only exercises with a defined anchor appear here; all others render no env.
+// Anchor coordinates are in the 100×100 SVG viewBox.
+//
+// LOCKED-JOINT CONTRACT: for any joint that must stay touching an anchor across
+// frames, ensure its [x, y] endpoint is identical in every relevant PoseData
+// entry inside MOBILITY_POSE_LIBRARY.  The spring animator will then produce
+// zero movement on that point while the rest of the skeleton morphs naturally.
+
+const MOBILITY_ENV_MAP: Record<string, EnvAnchor> = {
+  // ── Wrist Extension — kneeling on floor, hands flat on ground ────────────
+  "Wrist Extension Stretch": { type: "floor", x1: 4, y1: 67, x2: 96, y2: 67 },
+
+  // ── First Knuckle Raises — same kneeling floor position ──────────────────
+  "First Knuckle Raises": { type: "floor", x1: 4, y1: 67, x2: 96, y2: 67 },
+
+  // ── Planche Leans — hands on floor, body in push-up lean ─────────────────
+  "Planche Leans": { type: "floor", x1: 4, y1: 67, x2: 96, y2: 67 },
+
+  // ── Hanging exercises — overhead bar ─────────────────────────────────────
+  "Hanging Lat Stretch":       { type: "bar", x1: 20, y1: 8, x2: 80, y2: 8 },
+  "German Hang (Passive)":     { type: "bar", x1: 20, y1: 8, x2: 80, y2: 8 },
+  "Skin the Cat (Partial)":    { type: "bar", x1: 20, y1: 8, x2: 80, y2: 8 },
+  "Active Scapular Hangs":     { type: "bar", x1: 20, y1: 8, x2: 80, y2: 8 },
+
+  // ── Wall-based exercises ──────────────────────────────────────────────────
+  "Wall Puppy Pose":    { type: "wall", x1: 94, y1: 4, x2: 94, y2: 96 },
+  "Wall Calf Stretch":  { type: "wall", x1: 94, y1: 4, x2: 94, y2: 96 },
+  "Doorframe Chest Opener": { type: "wall", x1: 94, y1: 4, x2: 94, y2: 96 },
+
+  // ── Box/bench exercises ───────────────────────────────────────────────────
+  "Butcher's Block Stretch": { type: "box", x1: 56, y1: 44, x2: 96, y2: 58 },
+  "Reverse Tabletop Stretch": { type: "box", x1: 4,  y1: 52, x2: 44, y2: 66 },
+
+  // ── Floor-based non-kneeling exercises ───────────────────────────────────
+  "Standing Hamstring Stretch": { type: "floor", x1: 4, y1: 86, x2: 96, y2: 86 },
+  "Pancake Stretch":            { type: "floor", x1: 4, y1: 86, x2: 96, y2: 86 },
+  "Pigeon Pose Hip Opener":     { type: "floor", x1: 4, y1: 82, x2: 96, y2: 82 },
+  "Thoracic Bridge":            { type: "floor", x1: 4, y1: 82, x2: 96, y2: 82 },
+  "Prone Y-Raises":             { type: "floor", x1: 4, y1: 82, x2: 96, y2: 82 },
+  "Deep Lat Foam Roll":         { type: "floor", x1: 4, y1: 82, x2: 96, y2: 82 },
+  "Cossack Squats":             { type: "floor", x1: 4, y1: 86, x2: 96, y2: 86 },
+};
+
+/** Returns the environmental anchor for a named mobility exercise, or undefined. */
+export function getMobilityEnv(exerciseName: string): EnvAnchor | undefined {
+  return MOBILITY_ENV_MAP[exerciseName];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
