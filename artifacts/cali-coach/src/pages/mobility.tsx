@@ -95,34 +95,165 @@ function ProgressDots({
   );
 }
 
-// ─── Inline StickFigure (hero-only, not exported) ────────────────────────────
+// ─── Bio-Mechanical Skeleton helpers ─────────────────────────────────────────
 
-function HeroStickFigure({ pose, color, sw = 6 }: { pose: PoseData; color: string; sw?: number }) {
-  const { head, lines, muscleGlow } = pose;
-  const jointR = sw * 0.52;
-  const joints: [number, number][] = [];
+type BioSeg = { x1: number; y1: number; x2: number; y2: number };
+
+function extractSegments(lines: [number, number][][]): BioSeg[] {
+  const segs: BioSeg[] = [];
   for (const pts of lines) {
-    for (let i = 1; i < pts.length - 1; i++) joints.push(pts[i]);
+    for (let i = 0; i < pts.length - 1; i++) {
+      segs.push({ x1: pts[i][0], y1: pts[i][1], x2: pts[i + 1][0], y2: pts[i + 1][1] });
+    }
   }
+  return segs;
+}
+
+function extractAllPoints(lines: [number, number][][]): [number, number][] {
+  const out: [number, number][] = [];
+  for (const pts of lines) for (const p of pts) out.push(p);
+  return out;
+}
+
+// ─── BioSkeletonSVG — spring-morphing bio-mechanical hero figure ──────────────
+// Receives poseSet + frameIdx. When frameIdx changes, every motion.line and
+// motion.circle spring-animates from the old coordinates to the new ones,
+// creating a fluid "limbs slide into position" effect.
+
+function BioSkeletonSVG({
+  poseSet, frameIdx, paused, color = "#22c55e",
+}: {
+  poseSet: PoseData[]; frameIdx: 0 | 1 | 2; paused: boolean; color?: string;
+}) {
+  // Pre-compute segments + points for all 3 poses.
+  // pose[0] values are used as `initial` so motion elements are never undefined on mount.
+  const allSegs = poseSet.map(p => extractSegments(p.lines));
+  const allPts  = poseSet.map(p => extractAllPoints(p.lines));
+
+  const targetSegs = allSegs[frameIdx];
+  const targetPts  = allPts[frameIdx];
+  const initSegs   = allSegs[0];
+  const initPts    = allPts[0];
+  const initHead   = poseSet[0].head;
+  const currHead   = poseSet[frameIdx].head;
+
+  // Soft spring — feels organic, not mechanical
+  const spring = { type: "spring" as const, stiffness: 130, damping: 17, mass: 0.85 };
+
   return (
-    <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">
-      {muscleGlow && (
-        <ellipse
-          cx={muscleGlow.cx} cy={muscleGlow.cy} rx={muscleGlow.rx} ry={muscleGlow.ry}
-          fill={color} opacity={0} style={{ animation: "heroMuscleGlow 1.8s ease-in-out infinite" }}
-        />
-      )}
-      {lines.map((pts, i) => (
-        <polyline key={i} points={pts.map(([x, y]) => `${x},${y}`).join(" ")}
-          fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" />
-      ))}
-      {joints.map(([x, y], i) => <circle key={i} cx={x} cy={y} r={jointR} fill={color} />)}
-      <circle cx={head.cx} cy={head.cy} r={head.r ?? 8} fill={color} />
+    <svg
+      viewBox="0 0 100 100"
+      width="100%"
+      height="100%"
+      aria-hidden="true"
+      style={{
+        overflow: "visible",
+        filter: paused
+          ? "drop-shadow(0 0 3px rgba(34,197,94,0.2))"
+          : "drop-shadow(0 0 10px rgba(34,197,94,0.7)) drop-shadow(0 0 24px rgba(34,197,94,0.18))",
+        opacity: paused ? 0.32 : 1,
+        animation: !paused ? "bioGhostPulse 2.5s ease-in-out infinite" : "none",
+        transition: "opacity 0.4s ease",
+      }}
+    >
+      <defs>
+        <filter id="bio-joint-glow" x="-250%" y="-250%" width="600%" height="600%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      {/* ── Capsule limbs — thick rounded segments that spring into position ── */}
+      {targetSegs.map((seg, i) => {
+        const init = initSegs[i] ?? seg;
+        return (
+          <motion.line
+            key={i}
+            initial={{ x1: init.x1, y1: init.y1, x2: init.x2, y2: init.y2 }}
+            animate={{ x1: seg.x1, y1: seg.y1, x2: seg.x2, y2: seg.y2 }}
+            transition={spring}
+            stroke={color}
+            strokeWidth={7}
+            strokeLinecap="round"
+            fill="none"
+          />
+        );
+      })}
+
+      {/* ── Glowing joint nodes at every skeleton point ── */}
+      {targetPts.map(([x, y], i) => {
+        const init = initPts[i] ?? [x, y];
+        return (
+          <motion.circle
+            key={i}
+            initial={{ cx: init[0], cy: init[1] }}
+            animate={{ cx: x, cy: y }}
+            transition={spring}
+            r={3.2}
+            fill={color}
+            filter="url(#bio-joint-glow)"
+          />
+        );
+      })}
+
+      {/* ── Head — hollow halo ring + inner core dot ── */}
+      <motion.circle
+        initial={{ cx: initHead.cx, cy: initHead.cy }}
+        animate={{ cx: currHead.cx, cy: currHead.cy }}
+        transition={spring}
+        r={(currHead.r ?? 7) + 2}
+        fill="rgba(34,197,94,0.08)"
+        stroke={color}
+        strokeWidth={2.5}
+      />
+      <motion.circle
+        initial={{ cx: initHead.cx, cy: initHead.cy }}
+        animate={{ cx: currHead.cx, cy: currHead.cy }}
+        transition={spring}
+        r={2.8}
+        fill={color}
+        opacity={0.5}
+      />
     </svg>
   );
 }
 
-// ─── Hero Skeleton — large animated figure cycling Start → Mid → End ─────────
+// ─── BioThumbnailSVG — static capsule-style figure for reference strips ───────
+
+function BioThumbnailSVG({ pose, color }: { pose: PoseData; color: string }) {
+  const segs = extractSegments(pose.lines);
+  const pts  = extractAllPoints(pose.lines);
+  const isGreen = color === "#22c55e" || color.startsWith("rgba(34,197,94");
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      width="100%"
+      height="100%"
+      aria-hidden="true"
+      style={{
+        overflow: "visible",
+        filter: isGreen ? "drop-shadow(0 0 4px rgba(34,197,94,0.5))" : "none",
+      }}
+    >
+      {segs.map((s, i) => (
+        <line key={i} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2}
+          stroke={color} strokeWidth={5} strokeLinecap="round" fill="none" />
+      ))}
+      {pts.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={2.5} fill={color} />
+      ))}
+      <circle
+        cx={pose.head.cx} cy={pose.head.cy} r={(pose.head.r ?? 7) + 1.5}
+        fill="none" stroke={color} strokeWidth={2}
+      />
+    </svg>
+  );
+}
+
+// ─── Hero Skeleton — bio-mechanical figure cycling Start → Mid → End ──────────
 
 const POSE_SEQ = [0, 1, 2, 1] as const;
 const FRAME_LABELS = ["Start", "Mid", "End"] as const;
@@ -134,8 +265,7 @@ function HeroSkeleton({
 }) {
   const poseSet = getPoseSet(exerciseName);
   const intensity = getExerciseIntensity(exerciseName);
-  const intervalMs = intensity === "strenuous" ? 750 : intensity === "relaxed" ? 1900 : 1250;
-  const sw = intensity === "relaxed" ? 5.5 : intensity === "strenuous" ? 7 : 6.2;
+  const intervalMs = intensity === "strenuous" ? 800 : intensity === "relaxed" ? 1900 : 1300;
 
   const [seqIdx, setSeqIdx] = useState(0);
   useEffect(() => {
@@ -147,55 +277,53 @@ function HeroSkeleton({
   const frameIdx = POSE_SEQ[seqIdx];
   const frameLabel = FRAME_LABELS[frameIdx];
 
-  // Thumbnail height is fixed; hero fills the rest
-  const THUMB_H = 76;
-
   return (
-    <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-      {/* ── Large hero frame — fixed pixel height so SVG can resolve 100% ── */}
-      <div style={{ width: "100%", maxWidth: 280, height: 230, position: "relative", flexShrink: 0 }}>
+    <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+
+      {/* ── Large bio-skeleton hero ── */}
+      <div style={{ width: "100%", maxWidth: 300, height: 240, position: "relative", flexShrink: 0 }}>
         {/* Frame badge */}
         <div style={{
-          position: "absolute", top: 8, left: "50%", transform: "translateX(-50%)",
+          position: "absolute", top: 6, left: "50%", transform: "translateX(-50%)",
           fontSize: 9, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase",
-          color: "rgba(34,197,94,0.75)",
-          background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)",
-          borderRadius: 99, padding: "2px 10px", zIndex: 2, pointerEvents: "none", whiteSpace: "nowrap",
+          color: "rgba(34,197,94,0.8)",
+          background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.22)",
+          borderRadius: 99, padding: "2px 11px", zIndex: 2, pointerEvents: "none", whiteSpace: "nowrap",
+          backdropFilter: "blur(6px)",
         }}>
           {frameLabel}
         </div>
-        {/* Render all 3 frames, only the active one is visible — avoids AnimatePresence height issues */}
-        {poseSet.map((p, i) => (
-          <div key={i} style={{
-            position: "absolute", inset: 0,
-            opacity: frameIdx === i ? (paused ? 0.3 : 1) : 0,
-            transition: "opacity 0.28s ease-in-out",
-          }}>
-            <HeroStickFigure pose={p} color={color} sw={sw} />
-          </div>
-        ))}
+        {/* Bio-mechanical skeleton with spring morphing */}
+        <BioSkeletonSVG
+          poseSet={poseSet}
+          frameIdx={frameIdx}
+          paused={paused}
+          color={color}
+        />
       </div>
 
       {/* ── 3 reference thumbnails ── */}
       <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 300, flexShrink: 0 }}>
         {poseSet.map((thumbPose, i) => {
           const active = frameIdx === i;
-          const thumbSide = THUMB_H - 18; // square side, leaving room for label below
           return (
             <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
               <div style={{
-                width: thumbSide, height: thumbSide, borderRadius: 10, overflow: "hidden", padding: 4,
-                border: `1px solid ${active ? "rgba(34,197,94,0.55)" : "rgba(255,255,255,0.06)"}`,
-                background: active ? "rgba(34,197,94,0.07)" : "rgba(255,255,255,0.02)",
-                boxShadow: active ? "0 0 14px rgba(34,197,94,0.22)" : "none",
-                transition: "border-color 0.3s, box-shadow 0.3s",
+                width: "100%", aspectRatio: "1/1", borderRadius: 10, overflow: "visible", padding: 6,
+                border: `1px solid ${active ? "rgba(34,197,94,0.6)" : "rgba(255,255,255,0.06)"}`,
+                background: active ? "rgba(34,197,94,0.06)" : "rgba(255,255,255,0.02)",
+                boxShadow: active ? "0 0 16px rgba(34,197,94,0.2), inset 0 0 12px rgba(34,197,94,0.05)" : "none",
+                transition: "border-color 0.35s, box-shadow 0.35s, background 0.35s",
               }}>
-                <HeroStickFigure pose={thumbPose} color={active ? color : "rgba(148,163,184,0.35)"} sw={4} />
+                <BioThumbnailSVG
+                  pose={thumbPose}
+                  color={active ? color : "rgba(100,116,139,0.4)"}
+                />
               </div>
               <span style={{
                 fontSize: 8, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase",
-                color: active ? "rgba(34,197,94,0.85)" : "rgba(100,116,139,0.6)",
-                transition: "color 0.3s",
+                color: active ? "rgba(34,197,94,0.9)" : "rgba(71,85,105,0.7)",
+                transition: "color 0.35s",
               }}>
                 {FRAME_LABELS[i]}
               </span>
@@ -385,8 +513,9 @@ function ActiveWorkoutPlayer({
   return (
     <>
       <style>{`
-        @keyframes heroMuscleGlow { 0%,100%{opacity:.06} 50%{opacity:.38} }
-        @keyframes cockpitFadeIn  { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes heroMuscleGlow  { 0%,100%{opacity:.06} 50%{opacity:.38} }
+        @keyframes cockpitFadeIn   { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes bioGhostPulse   { 0%,100%{opacity:.78} 50%{opacity:1} }
 
         /* ── Shell: solid dark full-screen grid ── */
         #ms-shell {
@@ -645,14 +774,13 @@ function ActiveWorkoutPlayer({
                 <span className="next-header">Up Next</span>
                 {/* Single thumbnail — mid pose of next exercise */}
                 <div style={{
-                  width: 60, height: 60, borderRadius: 10, overflow: "hidden",
+                  width: 60, height: 60, borderRadius: 10, overflow: "visible",
                   border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(255,255,255,0.03)", padding: 4, flexShrink: 0,
+                  background: "rgba(255,255,255,0.03)", padding: 5, flexShrink: 0,
                 }}>
-                  <HeroStickFigure
+                  <BioThumbnailSVG
                     pose={getPoseSet(nextStretch.name)[0]}
-                    color="rgba(148,163,184,0.45)"
-                    sw={4}
+                    color="rgba(100,116,139,0.5)"
                   />
                 </div>
                 <span className="next-name">{nextStretch.name}</span>
