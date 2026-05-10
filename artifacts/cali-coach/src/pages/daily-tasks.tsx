@@ -643,7 +643,6 @@ export function DailyTasksPage() {
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [showSavedBadge,    setShowSavedBadge]    = useState(false);
   const [showSession,       setShowSession]       = useState(false);
-  const [autoStart,         setAutoStart]         = useState(false);
 
   // ── Total scroll lockdown while session overlay is open ──────────────────
   useEffect(() => {
@@ -942,11 +941,7 @@ export function DailyTasksPage() {
         <Button
           size="lg"
           className="w-full font-bold"
-          onClick={() => {
-            const repeat = !!status?.completedToday;
-            setAutoStart(repeat);
-            setShowSession(true);
-          }}
+          onClick={() => setShowSession(true)}
         >
           <Play className="w-5 h-5 mr-2" />
           {status?.completedToday ? t("mobility.repeatSession") : t("mobility.startSession")}
@@ -1004,7 +999,7 @@ export function DailyTasksPage() {
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 32, stiffness: 320 }}
           >
-            <MobilityPage onDismiss={() => setShowSession(false)} autoStart={autoStart} />
+            <MobilityPage onDismiss={() => setShowSession(false)} autoStart={true} />
           </motion.div>
         )}
       </AnimatePresence>
