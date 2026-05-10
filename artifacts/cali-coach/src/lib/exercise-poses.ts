@@ -1029,6 +1029,1058 @@ export const POSE_LIBRARY: Record<PoseType, PoseSet> = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Per-exercise Daily Mobility pose sets
+// Keyed by the EXACT exercise name from mobility-service.ts.
+// getPoseSet() checks this map FIRST before falling back to POSE_LIBRARY.
+//
+// Coordinate conventions (100×100 viewBox, y ↓ increases downward):
+//   Side view  — person faces RIGHT  (head on right side of canvas)
+//   Front view — person faces viewer (head centred at top)
+//   Prone view — person lies face-down, head on right
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
+
+  // ── WRIST EXTENSION STRETCH ───────────────────────────────────────────────
+  // Side view. Kneeling, palms flat on floor with fingers pointing back toward
+  // knees. Leaning progressively forward increases wrist extension.
+  "Wrist Extension Stretch": [
+    { // START — kneeling upright, hands resting at sides
+      head: { cx: 68, cy: 12, r: 6 },
+      lines: [
+        [[64, 18], [52, 44]],                              // spine
+        [[58, 26], [64, 40], [66, 54]],                    // R-arm (hanging)
+        [[58, 26], [48, 38], [42, 52]],                    // L-arm (hanging)
+        [[52, 44], [44, 62], [30, 64]],                    // R-leg (thigh + shin back = kneeling)
+        [[52, 44], [50, 62], [36, 64]],                    // L-leg
+      ],
+    },
+    { // MID — hands on floor, fingers pointing back, torso leaning forward
+      head: { cx: 82, cy: 20, r: 6 },
+      lines: [
+        [[78, 24], [62, 30], [44, 38]],                    // spine (forward tilt)
+        [[62, 30], [46, 36], [24, 44]],                    // R-arm → hand on floor (fingers pointing left/back)
+        [[62, 30], [54, 36], [34, 44]],                    // L-arm → hand on floor
+        [[44, 38], [38, 56], [22, 58]],                    // R-leg (kneeling)
+        [[44, 38], [44, 56], [28, 58]],                    // L-leg (kneeling)
+      ],
+      muscleGlow: { cx: 36, cy: 40, rx: 18, ry: 7 },
+    },
+    { // END — deeper forward lean, maximum wrist extension
+      head: { cx: 86, cy: 24, r: 6 },
+      lines: [
+        [[82, 28], [64, 34], [44, 42]],
+        [[64, 34], [46, 40], [20, 48]],
+        [[64, 34], [54, 40], [30, 48]],
+        [[44, 42], [38, 60], [20, 62]],
+        [[44, 42], [44, 60], [26, 62]],
+      ],
+    },
+  ],
+
+  // ── WRIST FLEXION STRETCH ─────────────────────────────────────────────────
+  // Side view. Standing. One arm extended forward palm-down; the other hand
+  // gently pulls the fingers upward into wrist flexion.
+  "Wrist Flexion Stretch": [
+    { // START — standing, arms relaxed at sides
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [62, 32], [70, 44]],
+        [[50, 22], [38, 32], [30, 44]],
+        [[50, 48], [44, 66], [42, 86]],
+        [[50, 48], [56, 66], [58, 86]],
+      ],
+    },
+    { // MID — R-arm extended forward at shoulder height; L-hand bends fingers up
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [64, 22], [80, 22]],                    // R-arm horizontal forward
+        [[50, 22], [62, 20], [78, 20], [82, 12]],          // L-hand at R-wrist, pulls fingers up
+        [[50, 48], [44, 66], [42, 86]],
+        [[50, 48], [56, 66], [58, 86]],
+      ],
+      muscleGlow: { cx: 80, cy: 18, rx: 8, ry: 12 },
+    },
+    { // END — deeper pull, wrist more fully flexed (fingers nearer to forearm)
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [64, 22], [80, 22]],
+        [[50, 22], [62, 20], [78, 20], [84, 8]],           // fingers bent further
+        [[50, 48], [44, 66], [42, 86]],
+        [[50, 48], [56, 66], [58, 86]],
+      ],
+    },
+  ],
+
+  // ── SHOULDER DISLOCATES ───────────────────────────────────────────────────
+  // Side view. Standing. The band/towel arcs from waist-front → straight
+  // overhead → lower-back-rear, showing the full shoulder circle.
+  "Shoulder Dislocates": [
+    { // START — arms in FRONT at hip level, holding band (12→6 o'clock front)
+      head: { cx: 50, cy: 10, r: 7 },
+      lines: [
+        [[50, 17], [50, 50]],
+        [[50, 23], [60, 32], [66, 46], [64, 56]],          // leading arm forward-down
+        [[50, 23], [58, 30], [62, 44], [60, 54]],          // trailing arm (overlapping, same direction)
+        [[50, 50], [44, 68], [42, 88]],
+        [[50, 50], [56, 68], [58, 88]],
+      ],
+    },
+    { // MID — arms STRAIGHT OVERHEAD at 12 o'clock (arms fully extended up)
+      head: { cx: 50, cy: 10, r: 7 },
+      lines: [
+        [[50, 17], [50, 50]],
+        [[50, 22], [54, 10], [56, 0]],                     // leading arm straight overhead
+        [[50, 22], [46, 10], [44, 0]],                     // trailing arm overhead (slight spread)
+        [[50, 50], [44, 68], [42, 88]],
+        [[50, 50], [56, 68], [58, 88]],
+      ],
+      muscleGlow: { cx: 50, cy: 20, rx: 20, ry: 8 },
+    },
+    { // END — arms BEHIND BACK at hip level (band passed all the way through)
+      head: { cx: 50, cy: 10, r: 7 },
+      lines: [
+        [[50, 17], [50, 50]],
+        [[50, 23], [40, 32], [34, 46], [32, 58]],          // leading arm now behind-down
+        [[50, 23], [42, 30], [36, 44], [34, 56]],          // trailing arm behind-down
+        [[50, 50], [44, 68], [42, 88]],
+        [[50, 50], [56, 68], [58, 88]],
+      ],
+    },
+  ],
+
+  // ── HANGING LAT STRETCH ───────────────────────────────────────────────────
+  // Front view. Hanging from a bar. Scapulae progressively depress; the final
+  // frame adds a gentle lateral lean to open one lat at a time.
+  "Hanging Lat Stretch": [
+    { // START — passive dead hang, shoulders shrugged up (elevated/passive)
+      head: { cx: 50, cy: 30, r: 6 },
+      lines: [
+        [[50, 24], [36, 24], [28, 10]],                    // L-arm to bar
+        [[50, 24], [64, 24], [72, 10]],                    // R-arm to bar
+        [[50, 24], [50, 58]],                              // torso
+        [[50, 58], [44, 76], [42, 94]],
+        [[50, 58], [56, 76], [58, 94]],
+      ],
+    },
+    { // MID — scapulae actively DEPRESSED; body drops in the shoulder socket
+      head: { cx: 50, cy: 38, r: 6 },
+      lines: [
+        [[50, 32], [36, 20], [28, 8]],                     // L-arm (shoulder now lower)
+        [[50, 32], [64, 20], [72, 8]],                     // R-arm
+        [[50, 32], [50, 66]],                              // torso elongated
+        [[50, 66], [44, 82], [42, 96]],
+        [[50, 66], [56, 82], [58, 96]],
+      ],
+      muscleGlow: { cx: 50, cy: 46, rx: 18, ry: 14 },
+    },
+    { // END — slight lateral lean left to emphasise one lat
+      head: { cx: 44, cy: 36, r: 6 },
+      lines: [
+        [[50, 30], [36, 20], [28, 8]],                     // L-arm (bar stays fixed)
+        [[50, 30], [64, 20], [72, 8]],                     // R-arm
+        [[46, 30], [38, 62]],                              // torso leans left
+        [[38, 62], [30, 78], [28, 94]],
+        [[38, 62], [52, 76], [58, 90]],
+      ],
+    },
+  ],
+
+  // ── DOORFRAME CHEST OPENER ────────────────────────────────────────────────
+  // Front view. Forearms planted on vertical door-frame at 90°; body leans
+  // progressively forward to open chest and anterior shoulders.
+  "Doorframe Chest Opener": [
+    { // START — standing, arms at sides (about to step into doorway)
+      head: { cx: 50, cy: 10, r: 7 },
+      lines: [
+        [[50, 17], [50, 50]],
+        [[50, 23], [36, 32], [28, 46]],
+        [[50, 23], [64, 32], [72, 46]],
+        [[50, 50], [44, 68], [42, 88]],
+        [[50, 50], [56, 68], [58, 88]],
+      ],
+    },
+    { // MID — arms wide at 90°, forearms on frame, chest starting to lean through
+      head: { cx: 50, cy: 12, r: 7 },
+      lines: [
+        [[50, 19], [50, 52]],
+        [[50, 24], [28, 24], [14, 24], [14, 40]],          // L-arm out to frame, forearm down
+        [[50, 24], [72, 24], [86, 24], [86, 40]],          // R-arm out to frame, forearm down
+        [[50, 52], [44, 70], [42, 90]],
+        [[50, 52], [56, 70], [58, 90]],
+      ],
+      muscleGlow: { cx: 50, cy: 28, rx: 26, ry: 10 },
+    },
+    { // END — body leaning further forward through the frame (deeper chest stretch)
+      head: { cx: 52, cy: 14, r: 7 },
+      lines: [
+        [[52, 21], [52, 54]],
+        [[52, 26], [28, 26], [12, 26], [12, 44]],
+        [[52, 26], [76, 26], [92, 26], [92, 44]],
+        [[52, 54], [46, 72], [44, 92]],
+        [[52, 54], [58, 72], [60, 92]],
+      ],
+    },
+  ],
+
+  // ── LOW LUNGE HIP FLEXOR ──────────────────────────────────────────────────
+  // Side view. Deep low lunge — back knee on ground, front knee at 90°, hips
+  // pushed forward and down to stretch the hip flexors.
+  "Low Lunge Hip Flexor": [
+    { // START — standing, feet together (about to step into lunge)
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [36, 30], [28, 44]],
+        [[50, 22], [64, 30], [72, 44]],
+        [[50, 48], [44, 66], [42, 86]],
+        [[50, 48], [56, 66], [58, 86]],
+      ],
+    },
+    { // MID — low lunge: front (R) knee at 90°, back (L) knee on ground, torso upright
+      head: { cx: 58, cy: 12, r: 6 },
+      lines: [
+        [[58, 18], [56, 50]],                              // torso upright, hips forward
+        [[56, 26], [66, 26], [76, 26]],                    // arms resting on front knee
+        [[56, 26], [44, 28], [34, 28]],                    // L-arm at hip
+        [[56, 50], [70, 64], [74, 82], [66, 94]],          // front (R) leg: hip→knee 90°→ankle→foot
+        [[56, 50], [46, 64], [30, 70], [14, 70]],          // back (L) leg: hip→knee on ground→shin flat
+      ],
+      muscleGlow: { cx: 42, cy: 64, rx: 16, ry: 14 },
+    },
+    { // END — hips pushed further forward, front knee past ankle (deeper stretch)
+      head: { cx: 62, cy: 12, r: 6 },
+      lines: [
+        [[62, 18], [58, 50]],
+        [[58, 26], [72, 24], [82, 22]],
+        [[58, 26], [44, 26], [32, 24]],
+        [[58, 50], [74, 64], [78, 82], [70, 94]],
+        [[58, 50], [44, 64], [26, 70], [10, 70]],
+      ],
+    },
+  ],
+
+  // ── STANDING HAMSTRING STRETCH ────────────────────────────────────────────
+  // Side view. Hip hinge with flat back; hands drop progressively toward the
+  // floor to lengthen the posterior chain.
+  "Standing Hamstring Stretch": [
+    { // START — standing upright, neutral spine
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [36, 30], [28, 44]],
+        [[50, 22], [64, 30], [72, 44]],
+        [[50, 48], [44, 66], [42, 88]],
+        [[50, 48], [56, 66], [58, 88]],
+      ],
+    },
+    { // MID — hinging from hips, back flat, hands toward mid-shin (side view)
+      head: { cx: 22, cy: 50, r: 6 },
+      lines: [
+        [[22, 44], [40, 40], [56, 38]],                    // neck/spine flat (hip hinge)
+        [[56, 38], [52, 62], [48, 88]],                    // front leg (straight)
+        [[56, 38], [60, 62], [64, 88]],                    // back leg (straight)
+        [[36, 40], [22, 56], [12, 72]],                    // arms hanging toward floor
+        [[36, 40], [50, 54], [58, 68]],                    // other arm
+      ],
+      muscleGlow: { cx: 54, cy: 62, rx: 8, ry: 20 },
+    },
+    { // END — deeper fold, hands near ankles, head hanging down
+      head: { cx: 18, cy: 56, r: 6 },
+      lines: [
+        [[18, 50], [38, 44], [56, 40]],
+        [[56, 40], [52, 64], [48, 90]],
+        [[56, 40], [60, 64], [64, 90]],
+        [[34, 44], [18, 62], [8, 78]],
+        [[34, 44], [50, 58], [60, 72]],
+      ],
+    },
+  ],
+
+  // ── SEATED THORACIC ROTATION ──────────────────────────────────────────────
+  // Front view. Sitting cross-legged. HIPS AND LEGS ARE IDENTICAL IN ALL 3
+  // FRAMES (they do not rotate). Only the upper spine, shoulders, and head
+  // rotate ~90° to the right.
+  "Seated Thoracic Rotation": [
+    { // START — cross-legged, whole torso facing forward
+      head: { cx: 50, cy: 16, r: 6 },
+      lines: [
+        [[50, 22], [50, 52]],                              // spine (vertical, facing viewer)
+        [[50, 30], [32, 40], [22, 54]],                    // L-arm (neutral)
+        [[50, 30], [68, 40], [78, 54]],                    // R-arm (neutral)
+        [[50, 52], [28, 60], [16, 74]],                    // L-leg (cross-legged — FIXED)
+        [[50, 52], [72, 60], [84, 74]],                    // R-leg (cross-legged — FIXED)
+      ],
+    },
+    { // MID — upper body rotated RIGHT ~90°; hips/legs completely unchanged
+      head: { cx: 64, cy: 16, r: 6 },                     // head turns with upper torso
+      lines: [
+        [[58, 22], [50, 52]],                              // upper spine tilted R; hip anchor fixed
+        [[50, 30], [14, 26], [4, 28]],                     // L-arm sweeps wide open to the right
+        [[50, 30], [74, 36], [88, 50]],                    // R-arm drives toward R knee
+        [[50, 52], [28, 60], [16, 74]],                    // L-leg — UNCHANGED
+        [[50, 52], [72, 60], [84, 74]],                    // R-leg — UNCHANGED
+      ],
+      muscleGlow: { cx: 52, cy: 36, rx: 14, ry: 20 },
+    },
+    { // END — deeper rotation (looking further over R shoulder); hips still fixed
+      head: { cx: 72, cy: 16, r: 6 },
+      lines: [
+        [[64, 22], [50, 52]],                              // upper spine rotated further R
+        [[50, 30], [10, 24], [0, 24]],                     // L-arm extends fully behind
+        [[50, 30], [78, 34], [92, 46]],                    // R-arm deeper push
+        [[50, 52], [28, 60], [16, 74]],                    // L-leg — UNCHANGED
+        [[50, 52], [72, 60], [84, 74]],                    // R-leg — UNCHANGED
+      ],
+    },
+  ],
+
+  // ── PIGEON POSE HIP OPENER ────────────────────────────────────────────────
+  // Side view. Front shin lies horizontal across the mat; back leg extends
+  // straight behind. Torso progresses from upright to folded over the shin.
+  "Pigeon Pose Hip Opener": [
+    { // START — all-fours (quadruped) about to transition
+      head: { cx: 82, cy: 22, r: 6 },
+      lines: [
+        [[78, 26], [62, 28], [46, 32]],                    // spine (horizontal)
+        [[62, 28], [44, 28], [28, 32]],                    // L-arm to floor
+        [[62, 28], [66, 40], [70, 52]],                    // R-arm (other side)
+        [[46, 32], [40, 52], [38, 70]],                    // L-leg (front, becoming shin)
+        [[46, 32], [56, 52], [70, 72]],                    // R-leg (back)
+      ],
+    },
+    { // MID — front shin across mat, back leg extended, torso upright over hip
+      head: { cx: 50, cy: 16, r: 6 },
+      lines: [
+        [[50, 22], [50, 56]],                              // torso upright
+        [[50, 30], [34, 40], [26, 54]],                    // L-arm
+        [[50, 30], [66, 40], [74, 54]],                    // R-arm
+        [[50, 56], [34, 62], [18, 62], [24, 74]],          // front leg: hip→shin horizontal→foot
+        [[50, 56], [64, 70], [84, 84], [92, 92]],          // back leg: extends far behind on floor
+      ],
+      muscleGlow: { cx: 26, cy: 64, rx: 14, ry: 10 },
+    },
+    { // END — folded forward over front shin, chest sinking toward floor
+      head: { cx: 28, cy: 54, r: 6 },
+      lines: [
+        [[28, 48], [44, 44], [56, 46]],                    // torso folded (near horizontal)
+        [[56, 46], [38, 60], [20, 64], [24, 76]],          // front shin
+        [[56, 46], [68, 62], [86, 76], [94, 86]],          // back leg extended
+        [[40, 44], [24, 58], [12, 70]],                    // arm reaching forward
+        [[40, 44], [56, 58], [64, 68]],                    // other arm
+      ],
+    },
+  ],
+
+  // ── OVERHEAD TRICEPS STRETCH ──────────────────────────────────────────────
+  // Front view. One arm raised, elbow bent so hand drops behind head; the
+  // other hand presses the elbow to deepen the stretch.
+  "Overhead Triceps Stretch": [
+    { // START — standing, arms at sides
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [36, 30], [28, 44]],
+        [[50, 22], [64, 30], [72, 44]],
+        [[50, 48], [44, 66], [42, 86]],
+        [[50, 48], [56, 66], [58, 86]],
+      ],
+    },
+    { // MID — R-arm: upper-arm vertical, elbow bent, hand behind head; L-hand on elbow
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [62, 12], [68, 2], [58, 16]],           // R upper-arm up → elbow → hand down behind head
+        [[50, 22], [36, 16], [66, 10]],                    // L-arm reaching across to R-elbow
+        [[50, 48], [44, 66], [42, 86]],
+        [[50, 48], [56, 66], [58, 86]],
+      ],
+      muscleGlow: { cx: 62, cy: 8, rx: 8, ry: 14 },
+    },
+    { // END — deeper elbow press, hand further down behind back
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [62, 10], [70, 0], [58, 14]],
+        [[50, 22], [34, 14], [68, 8]],
+        [[50, 48], [44, 66], [42, 86]],
+        [[50, 48], [56, 66], [58, 86]],
+      ],
+    },
+  ],
+
+  // ── PANCAKE STRETCH ───────────────────────────────────────────────────────
+  // Front view. Wide straddle seated; hinging forward from the hips with a
+  // flat back, walking hands out until chest approaches the floor.
+  "Pancake Stretch": [
+    { // START — seated, legs wide, torso upright
+      head: { cx: 50, cy: 16, r: 7 },
+      lines: [
+        [[50, 22], [50, 54]],
+        [[50, 36], [32, 46], [20, 58]],
+        [[50, 36], [68, 46], [80, 58]],
+        [[50, 54], [22, 62], [8, 74]],                     // L-leg wide left
+        [[50, 54], [78, 62], [92, 74]],                    // R-leg wide right
+      ],
+    },
+    { // MID — hinged forward ~45°, hands walking out, chest getting lower
+      head: { cx: 50, cy: 50, r: 6 },
+      lines: [
+        [[50, 44], [50, 66]],                              // short spine (folded forward)
+        [[50, 66], [22, 62], [8, 72]],                     // L-leg
+        [[50, 66], [78, 62], [92, 72]],                    // R-leg
+        [[50, 44], [28, 56], [12, 64]],                    // L-arm walking out
+        [[50, 44], [72, 56], [88, 64]],                    // R-arm walking out
+      ],
+      muscleGlow: { cx: 50, cy: 66, rx: 26, ry: 8 },
+    },
+    { // END — chest near floor, hands fully extended, maximum depth
+      head: { cx: 50, cy: 62, r: 6 },
+      lines: [
+        [[50, 56], [50, 72]],
+        [[50, 72], [20, 68], [6, 78]],
+        [[50, 72], [80, 68], [94, 78]],
+        [[50, 56], [24, 64], [8, 72]],
+        [[50, 56], [76, 64], [92, 72]],
+      ],
+    },
+  ],
+
+  // ── REVERSE SHOULDER FLEXION ──────────────────────────────────────────────
+  // Side view. Kneeling, hands placed behind on a low surface with fingers
+  // pointing away; hips lower to progressively open the anterior shoulders.
+  "Reverse Shoulder Flexion": [
+    { // START — kneeling upright, arms at sides
+      head: { cx: 50, cy: 10, r: 7 },
+      lines: [
+        [[50, 17], [50, 48]],
+        [[50, 23], [36, 32], [28, 46]],
+        [[50, 23], [64, 32], [72, 46]],
+        [[50, 48], [42, 66], [40, 84]],
+        [[50, 48], [58, 66], [60, 84]],
+      ],
+    },
+    { // MID — hands on surface BEHIND (fingers pointing away), chest opening, head back
+      head: { cx: 50, cy: 18, r: 7 },
+      lines: [
+        [[50, 25], [50, 56]],
+        [[50, 34], [72, 46], [86, 58]],                    // R-arm reaches BEHIND body to surface
+        [[50, 34], [28, 46], [14, 58]],                    // L-arm reaches BEHIND body to surface
+        [[50, 56], [44, 72], [42, 88]],
+        [[50, 56], [56, 72], [58, 88]],
+      ],
+      muscleGlow: { cx: 50, cy: 28, rx: 22, ry: 9 },
+    },
+    { // END — hips lower, arms more extended, deeper anterior shoulder stretch
+      head: { cx: 50, cy: 22, r: 7 },
+      lines: [
+        [[50, 29], [50, 60]],
+        [[50, 38], [76, 52], [92, 64]],
+        [[50, 38], [24, 52], [8, 64]],
+        [[50, 60], [44, 76], [42, 92]],
+        [[50, 60], [56, 76], [58, 92]],
+      ],
+    },
+  ],
+
+  // ── ANKLE MOBILITY CIRCLES ────────────────────────────────────────────────
+  // Front view. Standing on one leg; raised foot draws large slow circles,
+  // showing two opposite points in the arc (outward then inward).
+  "Ankle Mobility Circles": [
+    { // START — standing, both feet flat (bilateral, about to lift one)
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [36, 30], [28, 44]],
+        [[50, 22], [64, 30], [72, 44]],
+        [[50, 48], [44, 66], [42, 86]],
+        [[50, 48], [56, 66], [58, 86]],
+      ],
+    },
+    { // MID — standing on R-leg; L-knee raised, foot at outer arc (toe out-down)
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [36, 30], [28, 44]],
+        [[50, 22], [64, 30], [72, 44]],
+        [[50, 48], [56, 66], [60, 88]],                    // R-leg (standing, straight)
+        [[50, 48], [42, 62], [36, 76], [44, 86]],          // L-leg raised: knee up, foot circling outward
+      ],
+      muscleGlow: { cx: 42, cy: 82, rx: 10, ry: 8 },
+    },
+    { // END — foot has circled to inner arc (toe now pointing inward-down)
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [36, 30], [28, 44]],
+        [[50, 22], [64, 30], [72, 44]],
+        [[50, 48], [56, 66], [60, 88]],
+        [[50, 48], [42, 62], [36, 76], [28, 82]],          // foot circled to inner position
+      ],
+    },
+  ],
+
+  // ── WALL CALF STRETCH ─────────────────────────────────────────────────────
+  // Side view. One foot stepped back with heel pressed flat to floor and knee
+  // straight; body leans forward into a wall to stretch the calf/Achilles.
+  "Wall Calf Stretch": [
+    { // START — standing upright, facing wall (arms forward reaching up)
+      head: { cx: 54, cy: 10, r: 6 },
+      lines: [
+        [[54, 16], [52, 48]],
+        [[52, 24], [66, 20], [78, 16]],                    // arms on wall
+        [[52, 24], [40, 28], [30, 30]],
+        [[52, 48], [48, 66], [44, 88]],
+        [[52, 48], [58, 66], [62, 88]],
+      ],
+    },
+    { // MID — R-foot back, heel flat, R-knee straight; L-knee bent forward; leaning in
+      head: { cx: 58, cy: 12, r: 6 },
+      lines: [
+        [[58, 18], [54, 50]],                              // torso (slight forward lean)
+        [[54, 26], [70, 18], [84, 12]],                    // arms on wall (forward)
+        [[54, 26], [38, 24], [22, 20]],
+        [[54, 50], [62, 66], [68, 86], [66, 94]],          // front (L) leg: knee bent
+        [[54, 50], [40, 66], [32, 86], [24, 94]],          // back (R) leg: STRAIGHT, heel flat
+      ],
+      muscleGlow: { cx: 34, cy: 84, rx: 10, ry: 14 },
+    },
+    { // END — deeper lean, more calf/Achilles stretch
+      head: { cx: 62, cy: 14, r: 6 },
+      lines: [
+        [[62, 20], [56, 52]],
+        [[56, 28], [74, 20], [88, 12]],
+        [[56, 28], [38, 26], [20, 22]],
+        [[56, 52], [66, 68], [72, 88], [70, 96]],
+        [[56, 52], [40, 68], [30, 88], [20, 96]],
+      ],
+    },
+  ],
+
+  // ── WALL PUPPY POSE ───────────────────────────────────────────────────────
+  // Side view. Palms on wall, feet walked back; hips hinge back and down as
+  // the chest drops to unlock thoracic extension and shoulder overhead range.
+  "Wall Puppy Pose": [
+    { // START — standing close to wall, palms on wall at shoulder height
+      head: { cx: 68, cy: 12, r: 6 },
+      lines: [
+        [[64, 18], [58, 50]],
+        [[62, 24], [78, 14], [90, 8]],                     // arms reaching up-right to wall
+        [[62, 24], [52, 34], [46, 46]],
+        [[58, 50], [54, 68], [52, 88]],
+        [[58, 50], [64, 68], [68, 88]],
+      ],
+    },
+    { // MID — feet walked back, hips hinging down, chest starting to drop
+      head: { cx: 82, cy: 36, r: 6 },
+      lines: [
+        [[78, 32], [60, 38], [44, 48]],                    // spine (angled forward-down as body hinges)
+        [[62, 34], [80, 20], [90, 10]],                    // arms straight to wall (right edge)
+        [[62, 34], [74, 18], [84, 8]],
+        [[44, 48], [36, 68], [30, 88]],                    // legs (feet now far behind)
+        [[44, 48], [44, 68], [42, 88]],
+      ],
+      muscleGlow: { cx: 66, cy: 28, rx: 20, ry: 10 },
+    },
+    { // END — chest fully dropped, maximum thoracic extension
+      head: { cx: 86, cy: 46, r: 6 },
+      lines: [
+        [[82, 42], [62, 48], [40, 58]],
+        [[62, 44], [82, 26], [92, 14]],
+        [[62, 44], [76, 26], [86, 12]],
+        [[40, 58], [30, 74], [24, 92]],
+        [[40, 58], [40, 74], [38, 92]],
+      ],
+    },
+  ],
+
+  // ── FIRST KNUCKLE RAISES ──────────────────────────────────────────────────
+  // Side view. Same kneeling base as wrist extension. Palms are progressively
+  // raised off the floor leaving only the first knuckles in contact.
+  "First Knuckle Raises": [
+    { // START — kneeling, palms fully flat on floor (rest position)
+      head: { cx: 80, cy: 22, r: 6 },
+      lines: [
+        [[76, 26], [60, 32], [44, 40]],
+        [[60, 32], [44, 38], [22, 46]],
+        [[60, 32], [54, 38], [34, 46]],
+        [[44, 40], [38, 58], [22, 60]],
+        [[44, 40], [44, 58], [28, 60]],
+      ],
+    },
+    { // MID — palms RAISED, only knuckles on floor (active wrist contraction)
+      head: { cx: 80, cy: 22, r: 6 },
+      lines: [
+        [[76, 26], [60, 32], [44, 40]],
+        [[60, 32], [44, 36], [28, 42], [22, 50]],          // arm: hand raised, knuckle pivot at floor
+        [[60, 32], [54, 36], [38, 42], [32, 50]],          // other arm same
+        [[44, 40], [38, 58], [22, 60]],
+        [[44, 40], [44, 58], [28, 60]],
+      ],
+      muscleGlow: { cx: 28, cy: 46, rx: 14, ry: 8 },
+    },
+    { // END — palms lowered back to flat (return phase of rep)
+      head: { cx: 80, cy: 22, r: 6 },
+      lines: [
+        [[76, 26], [60, 32], [44, 40]],
+        [[60, 32], [44, 38], [22, 46]],
+        [[60, 32], [54, 38], [34, 46]],
+        [[44, 40], [38, 58], [22, 60]],
+        [[44, 40], [44, 58], [28, 60]],
+      ],
+    },
+  ],
+
+  // ── BUTCHER'S BLOCK STRETCH ───────────────────────────────────────────────
+  // Side view. Kneeling in front of a bench/chair; elbows on surface,
+  // hands clasped behind head, chest sinking under gravity.
+  "Butcher's Block Stretch": [
+    { // START — kneeling upright in front of bench
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [36, 30], [28, 44]],
+        [[50, 22], [64, 30], [72, 44]],
+        [[50, 48], [42, 66], [28, 68]],
+        [[50, 48], [58, 66], [44, 68]],
+      ],
+    },
+    { // MID — elbows on bench, chest starting to drop
+      head: { cx: 72, cy: 28, r: 6 },
+      lines: [
+        [[68, 24], [54, 36], [40, 50]],                    // spine angling forward-down
+        [[60, 30], [76, 20], [88, 18]],                    // R upper-arm: elbow on bench surface
+        [[60, 30], [72, 28], [80, 36]],                    // hands clasped behind head
+        [[40, 50], [32, 68], [18, 70]],
+        [[40, 50], [40, 68], [26, 70]],
+      ],
+      muscleGlow: { cx: 54, cy: 30, rx: 18, ry: 10 },
+    },
+    { // END — chest fully dropped, maximum lat/triceps stretch
+      head: { cx: 76, cy: 38, r: 6 },
+      lines: [
+        [[72, 34], [56, 44], [38, 56]],
+        [[62, 38], [80, 26], [92, 22]],
+        [[62, 38], [76, 36], [84, 44]],
+        [[38, 56], [28, 72], [14, 74]],
+        [[38, 56], [38, 72], [22, 74]],
+      ],
+    },
+  ],
+
+  // ── GERMAN HANG (PASSIVE) ─────────────────────────────────────────────────
+  // Side view. Starting from a dead hang, the body slowly rotates backward
+  // until the shoulders are fully extended behind the bar.
+  "German Hang (Passive)": [
+    { // START — dead hang, arms overhead, body straight down
+      head: { cx: 50, cy: 30, r: 6 },
+      lines: [
+        [[50, 24], [36, 24], [28, 10]],                    // L-arm up to bar
+        [[50, 24], [64, 24], [72, 10]],                    // R-arm up to bar
+        [[50, 24], [50, 58]],                              // torso
+        [[50, 58], [44, 78], [44, 94]],
+        [[50, 58], [56, 78], [56, 94]],
+      ],
+    },
+    { // MID — body rotating backward; legs tucking up as shoulders extend
+      head: { cx: 50, cy: 40, r: 6 },
+      lines: [
+        [[50, 34], [36, 20], [28, 8]],                     // L-arm still at bar
+        [[50, 34], [64, 20], [72, 8]],                     // R-arm still at bar
+        [[50, 34], [48, 58]],                              // torso angling back
+        [[48, 58], [36, 44], [28, 30]],                    // legs tucking up-back
+        [[48, 58], [60, 44], [68, 30]],
+      ],
+      muscleGlow: { cx: 50, cy: 26, rx: 22, ry: 10 },
+    },
+    { // END — full German hang; shoulders extended far BEHIND bar, body below
+      head: { cx: 50, cy: 52, r: 6 },
+      lines: [
+        [[50, 46], [36, 22], [28, 8]],                     // L-arm: shoulder far below, reaches UP-FORWARD to bar
+        [[50, 46], [64, 22], [72, 8]],                     // R-arm same
+        [[50, 46], [50, 72]],                              // torso hanging below-behind
+        [[50, 72], [40, 88], [34, 96]],
+        [[50, 72], [60, 88], [66, 96]],
+      ],
+    },
+  ],
+
+  // ── SKIN THE CAT (PARTIAL) ────────────────────────────────────────────────
+  // Side view. From a dead hang, knees tuck and hips rotate overhead;
+  // the body passes through an inverted position under control.
+  "Skin the Cat (Partial)": [
+    { // START — dead hang
+      head: { cx: 50, cy: 30, r: 6 },
+      lines: [
+        [[50, 24], [36, 24], [28, 10]],
+        [[50, 24], [64, 24], [72, 10]],
+        [[50, 24], [50, 58]],
+        [[50, 58], [44, 78], [44, 94]],
+        [[50, 58], [56, 78], [56, 94]],
+      ],
+    },
+    { // MID — knees tucked to chest, hips rotating overhead (inverted transition)
+      head: { cx: 50, cy: 36, r: 6 },
+      lines: [
+        [[50, 30], [36, 20], [28, 8]],
+        [[50, 30], [64, 20], [72, 8]],
+        [[50, 30], [50, 52]],
+        [[50, 52], [40, 36], [36, 20]],                    // legs tucked (knees toward bar)
+        [[50, 52], [60, 36], [64, 20]],
+      ],
+      muscleGlow: { cx: 50, cy: 24, rx: 22, ry: 12 },
+    },
+    { // END — body inverted, legs passing through (below-and-behind position)
+      head: { cx: 50, cy: 62, r: 6 },
+      lines: [
+        [[50, 56], [36, 18], [28, 6]],                     // arms to bar (shoulder now far down)
+        [[50, 56], [64, 18], [72, 6]],
+        [[50, 56], [50, 36]],                              // torso pointing upward (inverted)
+        [[50, 36], [40, 18], [38, 6]],                     // legs pointing up through
+        [[50, 36], [60, 18], [62, 6]],
+      ],
+    },
+  ],
+
+  // ── DEEP LAT FOAM ROLL ────────────────────────────────────────────────────
+  // Prone side view. Lying on the side with a foam roller under the armpit;
+  // the top arm reaches overhead to maximise the lat stretch as it rolls.
+  "Deep Lat Foam Roll": [
+    { // START — lying on side, roller at armpit, top arm resting
+      head: { cx: 88, cy: 46, r: 6 },
+      lines: [
+        [[84, 50], [60, 52], [36, 54], [16, 56]],          // torso (horizontal, on side)
+        [[66, 52], [56, 42], [48, 34]],                    // top arm resting forward
+        [[66, 52], [58, 62], [52, 70]],                    // bottom arm (support on floor)
+        [[16, 56], [10, 68], [8, 80]],
+        [[36, 54], [30, 66], [26, 78]],
+      ],
+    },
+    { // MID — top arm reaching FULLY OVERHEAD (maximum lat stretch on the roller)
+      head: { cx: 88, cy: 46, r: 6 },
+      lines: [
+        [[84, 50], [60, 52], [36, 54], [16, 56]],
+        [[68, 50], [62, 36], [56, 22], [52, 8]],           // arm reaching fully overhead
+        [[68, 50], [60, 62], [54, 72]],                    // bottom arm (support)
+        [[16, 56], [10, 68], [8, 80]],
+        [[36, 54], [30, 66], [26, 78]],
+      ],
+      muscleGlow: { cx: 64, cy: 50, rx: 14, ry: 22 },
+    },
+    { // END — roller moved slightly toward lower ribs, arm still extended
+      head: { cx: 88, cy: 48, r: 6 },
+      lines: [
+        [[84, 52], [58, 54], [34, 56], [14, 58]],
+        [[62, 52], [56, 38], [50, 22], [46, 8]],
+        [[62, 52], [56, 64], [50, 74]],
+        [[14, 58], [8, 70], [6, 82]],
+        [[34, 56], [28, 68], [24, 80]],
+      ],
+    },
+  ],
+
+  // ── PLANCHE LEANS ─────────────────────────────────────────────────────────
+  // Side view. Starting from a neutral plank, the whole body leans forward
+  // until the shoulders pass in front of the wrists, then returns.
+  "Planche Leans": [
+    { // START — neutral plank position
+      head: { cx: 88, cy: 14, r: 6 },
+      lines: [
+        [[84, 18], [68, 20], [50, 22], [34, 26]],          // body line (horizontal)
+        [[68, 20], [58, 28], [44, 36]],                    // arms (wrists at floor)
+        [[50, 22], [42, 30], [30, 38]],
+        [[34, 26], [24, 42], [12, 54]],                    // legs
+        [[34, 26], [38, 44], [18, 56]],
+      ],
+    },
+    { // MID — shoulders PAST WRISTS (full forward lean, scapular protraction)
+      head: { cx: 80, cy: 14, r: 6 },
+      lines: [
+        [[76, 18], [60, 18], [42, 22], [26, 26]],          // body tilted forward
+        [[60, 18], [52, 28], [40, 38]],                    // arms (shoulder now in front of hands)
+        [[42, 22], [36, 30], [24, 40]],
+        [[26, 26], [16, 42], [4, 54]],
+        [[26, 26], [28, 44], [8, 56]],
+      ],
+      muscleGlow: { cx: 54, cy: 20, rx: 16, ry: 9 },
+    },
+    { // END — returned to plank (completing the lean cycle)
+      head: { cx: 88, cy: 14, r: 6 },
+      lines: [
+        [[84, 18], [68, 20], [50, 22], [34, 26]],
+        [[68, 20], [58, 28], [44, 36]],
+        [[50, 22], [42, 30], [30, 38]],
+        [[34, 26], [24, 42], [12, 54]],
+        [[34, 26], [38, 44], [18, 56]],
+      ],
+    },
+  ],
+
+  // ── REVERSE TABLETOP STRETCH ──────────────────────────────────────────────
+  // Side view. Sitting with knees bent and hands behind; hips press up until
+  // the body is table-flat, then the head drops back to open the chest.
+  "Reverse Tabletop Stretch": [
+    { // START — sitting, knees bent, hands planted behind, slightly reclined
+      head: { cx: 28, cy: 24, r: 6 },
+      lines: [
+        [[28, 30], [38, 56]],                              // spine (reclined)
+        [[34, 38], [56, 46], [74, 52]],                    // R-arm behind (on floor)
+        [[34, 38], [18, 44], [4, 50]],                     // L-arm behind
+        [[38, 56], [58, 62], [74, 56]],                    // R-leg (knee bent, foot flat)
+        [[38, 56], [30, 72], [28, 88]],                    // L-leg
+      ],
+    },
+    { // MID — hips FULLY RAISED, body horizontal (tabletop position), head drops back
+      head: { cx: 20, cy: 22, r: 6 },
+      lines: [
+        [[22, 28], [44, 32], [66, 36]],                    // spine horizontal (tabletop!)
+        [[44, 32], [68, 44], [84, 56]],                    // R-arm going down-behind to floor
+        [[44, 32], [20, 44], [6, 56]],                     // L-arm going down-behind to floor
+        [[66, 36], [78, 52], [82, 72]],                    // R-leg (knee bent, foot flat)
+        [[66, 36], [72, 54], [76, 74]],                    // L-leg
+      ],
+      muscleGlow: { cx: 40, cy: 28, rx: 24, ry: 8 },
+    },
+    { // END — same tabletop held (glutes engaged, deeper anterior stretch)
+      head: { cx: 18, cy: 24, r: 6 },
+      lines: [
+        [[20, 30], [44, 34], [68, 38]],
+        [[44, 34], [70, 46], [86, 58]],
+        [[44, 34], [18, 46], [2, 58]],
+        [[68, 38], [80, 54], [84, 74]],
+        [[68, 38], [74, 56], [78, 76]],
+      ],
+    },
+  ],
+
+  // ── FINGER TENDON PULSES ──────────────────────────────────────────────────
+  // Front view. One arm extended palm-up; the other hand bends each finger
+  // individually back into gentle extension.
+  "Finger Tendon Pulses": [
+    { // START — standing, arms at sides
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [36, 30], [28, 44]],
+        [[50, 22], [64, 30], [72, 44]],
+        [[50, 48], [44, 66], [42, 86]],
+        [[50, 48], [56, 66], [58, 86]],
+      ],
+    },
+    { // MID — R-arm extended palm-up; L-hand bends finger back (gentle pull)
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [64, 22], [82, 22]],                    // R-arm horizontal, palm up
+        [[50, 22], [62, 22], [78, 18], [82, 14]],          // L-hand at R-wrist, finger bent up
+        [[50, 48], [44, 66], [42, 86]],
+        [[50, 48], [56, 66], [58, 86]],
+      ],
+      muscleGlow: { cx: 80, cy: 20, rx: 8, ry: 10 },
+    },
+    { // END — finger fully extended (deeper pulse)
+      head: { cx: 50, cy: 10, r: 6 },
+      lines: [
+        [[50, 16], [50, 48]],
+        [[50, 22], [64, 22], [82, 22]],
+        [[50, 22], [62, 22], [78, 18], [84, 10]],
+        [[50, 48], [44, 66], [42, 86]],
+        [[50, 48], [56, 66], [58, 86]],
+      ],
+    },
+  ],
+
+  // ── WEIGHTED ANKLE DORSIFLEXION ───────────────────────────────────────────
+  // Side view. Foot ~10 cm from wall; knee driven progressively forward over
+  // the toes to touch the wall while the heel stays flat.
+  "Weighted Ankle Dorsiflexion": [
+    { // START — standing upright, foot close to wall
+      head: { cx: 54, cy: 10, r: 6 },
+      lines: [
+        [[54, 16], [52, 48]],
+        [[52, 24], [66, 22], [80, 20]],                    // arms on wall
+        [[52, 24], [38, 28], [28, 32]],
+        [[52, 48], [48, 66], [46, 88]],
+        [[52, 48], [58, 66], [62, 88]],
+      ],
+    },
+    { // MID — knee driven FORWARD over toes (dorsiflexion); heel flat on floor
+      head: { cx: 58, cy: 12, r: 6 },
+      lines: [
+        [[58, 18], [54, 50]],
+        [[54, 26], [70, 18], [84, 12]],                    // hands on wall
+        [[54, 26], [40, 22], [26, 18]],
+        [[54, 50], [66, 64], [72, 82], [68, 92]],          // front leg: knee driven forward, heel flat
+        [[54, 50], [46, 68], [42, 88]],                    // back leg (straight support)
+      ],
+      muscleGlow: { cx: 66, cy: 82, rx: 10, ry: 10 },
+    },
+    { // END — slightly deeper knee drive (further dorsiflexion range)
+      head: { cx: 60, cy: 12, r: 6 },
+      lines: [
+        [[60, 18], [56, 50]],
+        [[56, 26], [72, 18], [86, 12]],
+        [[56, 26], [40, 22], [24, 18]],
+        [[56, 50], [70, 64], [76, 82], [70, 92]],
+        [[56, 50], [46, 68], [40, 88]],
+      ],
+    },
+  ],
+
+  // ── COSSACK SQUATS ────────────────────────────────────────────────────────
+  // Front view. Wide stance; weight shifts to one side into a deep lateral
+  // squat while the opposite leg extends fully along the floor.
+  "Cossack Squats": [
+    { // START — wide-stance standing
+      head: { cx: 50, cy: 10, r: 7 },
+      lines: [
+        [[50, 17], [50, 48]],
+        [[50, 23], [36, 32], [28, 46]],
+        [[50, 23], [64, 32], [72, 46]],
+        [[50, 48], [26, 64], [14, 86]],
+        [[50, 48], [74, 64], [86, 86]],
+      ],
+    },
+    { // MID — shifted LEFT: deep squat on L-leg (heel flat), R-leg extended straight
+      head: { cx: 28, cy: 22, r: 7 },
+      lines: [
+        [[28, 29], [32, 60]],                              // torso upright over squatting leg
+        [[28, 38], [12, 46], [6, 58]],                     // L-arm (balance)
+        [[28, 38], [44, 44], [56, 52]],                    // R-arm on knee
+        [[32, 60], [18, 76], [10, 96]],                    // L-leg: deep squat, heel flat
+        [[32, 60], [60, 68], [88, 74], [96, 76]],          // R-leg: fully extended to the right
+      ],
+      muscleGlow: { cx: 20, cy: 76, rx: 12, ry: 16 },
+    },
+    { // END — shifted RIGHT: deep squat on R-leg, L-leg extended to the left
+      head: { cx: 72, cy: 22, r: 7 },
+      lines: [
+        [[72, 29], [68, 60]],
+        [[72, 38], [88, 46], [94, 58]],
+        [[72, 38], [56, 44], [44, 52]],
+        [[68, 60], [82, 76], [90, 96]],                    // R-leg: deep squat
+        [[68, 60], [40, 68], [12, 74], [4, 76]],           // L-leg: extended to the left
+      ],
+    },
+  ],
+
+  // ── ACTIVE SCAPULAR HANGS ─────────────────────────────────────────────────
+  // Front view. Hanging from bar. Scapulae alternate between active depression
+  // (body "rises") and full elevation (body "drops") — arms stay straight.
+  "Active Scapular Hangs": [
+    { // START — dead hang, shoulders fully ELEVATED (passive, scapulae high)
+      head: { cx: 50, cy: 28, r: 6 },
+      lines: [
+        [[50, 22], [36, 22], [28, 8]],                     // L-arm to bar
+        [[50, 22], [64, 22], [72, 8]],                     // R-arm to bar
+        [[50, 22], [50, 56]],                              // torso
+        [[50, 56], [44, 74], [42, 92]],
+        [[50, 56], [56, 74], [58, 92]],
+      ],
+    },
+    { // MID — scapulae actively DEPRESSED; body rises in the socket
+      head: { cx: 50, cy: 36, r: 6 },
+      lines: [
+        [[50, 30], [36, 16], [28, 4]],                     // arms (shoulders now LOWER = pulled down)
+        [[50, 30], [64, 16], [72, 4]],
+        [[50, 30], [50, 64]],                              // torso slightly longer (body "rose")
+        [[50, 64], [44, 80], [42, 96]],
+        [[50, 64], [56, 80], [58, 96]],
+      ],
+      muscleGlow: { cx: 50, cy: 40, rx: 18, ry: 12 },
+    },
+    { // END — scapulae re-elevated (top of full range cycle)
+      head: { cx: 50, cy: 24, r: 6 },
+      lines: [
+        [[50, 18], [36, 24], [28, 10]],                    // shoulders elevated again
+        [[50, 18], [64, 24], [72, 10]],
+        [[50, 18], [50, 52]],
+        [[50, 52], [44, 70], [42, 88]],
+        [[50, 52], [56, 70], [58, 88]],
+      ],
+    },
+  ],
+
+  // ── PRONE Y-RAISES ────────────────────────────────────────────────────────
+  // Prone view (face-down, head to the right). Arms raise from resting at
+  // sides up into a Y formation with thumbs pointing up.
+  "Prone Y-Raises": [
+    { // START — face down, arms resting at sides (T prep)
+      head: { cx: 88, cy: 50, r: 6 },
+      lines: [
+        [[84, 54], [60, 54], [36, 56], [14, 58]],          // torso (horizontal)
+        [[66, 54], [54, 48], [44, 44]],                    // top arm at side
+        [[66, 54], [54, 60], [44, 66]],                    // bottom arm at side
+        [[14, 58], [10, 66], [8, 78]],
+        [[36, 56], [30, 64], [26, 76]],
+      ],
+    },
+    { // MID — arms raised in Y formation (thumbs up, scapulae squeezed together)
+      head: { cx: 88, cy: 48, r: 6 },
+      lines: [
+        [[84, 52], [60, 52], [36, 54], [14, 56]],
+        [[66, 52], [50, 36], [34, 22]],                    // top arm raised (Y, upper branch)
+        [[66, 52], [50, 68], [34, 82]],                    // bottom arm raised (Y, lower branch)
+        [[14, 56], [10, 64], [8, 76]],
+        [[36, 54], [30, 62], [26, 74]],
+      ],
+      muscleGlow: { cx: 56, cy: 50, rx: 14, ry: 14 },
+    },
+    { // END — arms lowering back toward sides
+      head: { cx: 88, cy: 50, r: 6 },
+      lines: [
+        [[84, 54], [60, 54], [36, 56], [14, 58]],
+        [[66, 54], [54, 46], [46, 40]],
+        [[66, 54], [54, 62], [46, 68]],
+        [[14, 58], [10, 66], [8, 78]],
+        [[36, 56], [30, 64], [26, 76]],
+      ],
+    },
+  ],
+
+  // ── THORACIC BRIDGE ───────────────────────────────────────────────────────
+  // Side view. Lying on back → glute bridge → thoracic extension with arms
+  // walking overhead until the chest arches through the mid-back.
+  "Thoracic Bridge": [
+    { // START — lying on back, knees bent, feet flat, arms at sides
+      head: { cx: 14, cy: 60, r: 6 },
+      lines: [
+        [[14, 66], [40, 64], [62, 62]],                    // torso (lying flat on floor)
+        [[62, 62], [70, 46], [76, 32]],                    // R-leg: knee bent (shin goes up)
+        [[62, 62], [72, 76], [78, 88]],                    // L-leg: other bent knee
+        [[14, 66], [14, 78], [18, 90]],                    // arm at side
+        [[40, 64], [42, 76], [44, 86]],
+      ],
+    },
+    { // MID — hips raised (glute bridge), torso angled, arms walking overhead
+      head: { cx: 14, cy: 66, r: 6 },
+      lines: [
+        [[14, 72], [40, 58], [62, 48]],                    // torso (hips raised, body angled)
+        [[62, 48], [72, 66], [76, 86]],                    // R-leg: knee bent, foot flat
+        [[62, 48], [58, 68], [52, 86]],                    // L-leg
+        [[14, 72], [14, 82], [18, 90]],
+        [[40, 58], [36, 72], [34, 84]],
+      ],
+      muscleGlow: { cx: 38, cy: 58, rx: 20, ry: 10 },
+    },
+    { // END — thoracic EXTENSION: chest arched upward through mid-back, arms overhead
+      head: { cx: 22, cy: 60, r: 6 },
+      lines: [
+        [[22, 66], [46, 52], [68, 40]],                    // spine arching upward (mid-back ext.)
+        [[68, 40], [78, 60], [82, 82]],                    // R-leg: knee bent
+        [[68, 40], [64, 62], [58, 84]],                    // L-leg
+        [[22, 66], [12, 54], [8, 40], [10, 26]],           // arms reaching OVERHEAD on floor
+        [[22, 66], [16, 54], [12, 38], [14, 24]],
+      ],
+    },
+  ],
+
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Exercise → Pose Type mapping (covers all exercises + all daily mobility)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1168,6 +2220,7 @@ const EXERCISE_POSE_MAP: Record<string, PoseType> = {
 };
 
 export function getPoseSet(exerciseName: string): PoseSet {
+  if (MOBILITY_POSE_LIBRARY[exerciseName]) return MOBILITY_POSE_LIBRARY[exerciseName];
   const poseType = EXERCISE_POSE_MAP[exerciseName] ?? "default";
   return POSE_LIBRARY[poseType];
 }
