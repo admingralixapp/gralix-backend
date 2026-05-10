@@ -5,7 +5,8 @@ import { ArrowLeft, CheckCircle2, Flame, Pause, Play, SkipForward, X } from "luc
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
-import { getPoseSet, getExerciseIntensity, type PoseData } from "@/lib/exercise-poses";
+import { getExerciseIntensity, type PoseData } from "@/lib/exercise-poses";
+import { getStretchPoseSet } from "@/lib/stretch-data";
 import { useTranslation } from "react-i18next";
 import { speak, setActiveVoiceProfile } from "@/lib/voice-service";
 import { getVoiceCues, getVoiceProfile } from "@/lib/workout-preferences";
@@ -259,11 +260,11 @@ const POSE_SEQ = [0, 1, 2, 1] as const;
 const FRAME_LABELS = ["Start", "Mid", "End"] as const;
 
 function HeroSkeleton({
-  exerciseName, paused, color = "#22c55e",
+  stretchId, exerciseName, paused, color = "#22c55e",
 }: {
-  exerciseName: string; paused: boolean; color?: string;
+  stretchId: string; exerciseName: string; paused: boolean; color?: string;
 }) {
-  const poseSet = getPoseSet(exerciseName);
+  const poseSet = getStretchPoseSet(stretchId);
   const intensity = getExerciseIntensity(exerciseName);
   const intervalMs = intensity === "strenuous" ? 800 : intensity === "relaxed" ? 1900 : 1300;
 
@@ -709,7 +710,7 @@ function ActiveWorkoutPlayer({
             <motion.div key={`hero-${stretchIndex}`} className="hero-inner"
               initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.94 }} transition={{ duration: 0.22, ease: "easeOut" }}>
-              <HeroSkeleton exerciseName={currentStretch.name} paused={paused} />
+              <HeroSkeleton stretchId={currentStretch.id} exerciseName={currentStretch.name} paused={paused} />
             </motion.div>
           </AnimatePresence>
         </div>
@@ -779,7 +780,7 @@ function ActiveWorkoutPlayer({
                   background: "rgba(255,255,255,0.03)", padding: 5, flexShrink: 0,
                 }}>
                   <BioThumbnailSVG
-                    pose={getPoseSet(nextStretch.name)[0]}
+                    pose={getStretchPoseSet(nextStretch.id)[0]}
                     color="rgba(100,116,139,0.5)"
                   />
                 </div>
