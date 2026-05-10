@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   getTasksForPreferences,
   GOAL_LABELS,
+  GOAL_AUTO_AREAS,
   QUESTIONNAIRE_GOAL_OPTIONS,
   STIFFNESS_OPTIONS,
   TIME_OPTIONS,
@@ -89,62 +90,124 @@ function writeNotifPrefs(p: NotifPrefs) {
 interface GoalSearchItem { label: string; value: MobilityGoal }
 
 const GOAL_SEARCH_DB: GoalSearchItem[] = [
-  // Primary goal names
-  { label: "Pull-Up Mastery",          value: "pull"         },
-  { label: "First Pull-Up",            value: "pull"         },
-  { label: "Front Lever",              value: "front-lever"  },
-  { label: "Tuck Front Lever",         value: "front-lever"  },
-  { label: "Straddle Front Lever",     value: "front-lever"  },
-  { label: "Full Front Lever",         value: "front-lever"  },
-  { label: "Muscle-Up",                value: "muscle-up"    },
-  { label: "Kipping Muscle-Up",        value: "muscle-up"    },
-  { label: "Strict Muscle-Up",         value: "muscle-up"    },
-  { label: "Ring Muscle-Up",           value: "muscle-up"    },
-  { label: "Weighted Muscle-Up",       value: "muscle-up"    },
-  { label: "Planche / Push",           value: "push"         },
-  { label: "Planche",                  value: "push"         },
-  { label: "Handstand",                value: "handstand"    },
-  { label: "Handstand Push-Up",        value: "handstand"    },
-  { label: "Pike Push-Up",             value: "handstand"    },
-  { label: "Elevated Pike Push-Up",    value: "handstand"    },
-  { label: "Dragon Flag / Human Flag", value: "core"         },
-  { label: "Dragon Flag",              value: "core"         },
-  { label: "Human Flag",               value: "core"         },
-  { label: "Pistol Squat",             value: "legs"         },
-  { label: "General Mobility",         value: "general"      },
-  { label: "All-Round Mobility",       value: "general"      },
-  // Skill tree exercises
-  { label: "Push-Up",                  value: "push"         },
-  { label: "Wall Push-Up",             value: "push"         },
-  { label: "Incline Push-Up",          value: "push"         },
-  { label: "Knee Push-Up",             value: "push"         },
-  { label: "Diamond Push-Up",          value: "push"         },
-  { label: "Dip",                      value: "push"         },
-  { label: "Ring Dip",                 value: "push"         },
-  { label: "Weighted Dip",             value: "push"         },
-  { label: "Pull-Up",                  value: "pull"         },
-  { label: "Negative Pull-Up",         value: "pull"         },
-  { label: "Australian Rows",          value: "pull"         },
-  { label: "Scapular Shrugs",          value: "pull"         },
-  { label: "Chest-to-Bar Pull-Up",     value: "pull"         },
-  { label: "Archer Pull-Up",           value: "pull"         },
-  { label: "Explosive Pull-Up",        value: "pull"         },
-  { label: "Ring Pull-Up",             value: "pull"         },
-  { label: "Ring Support Hold",        value: "push"         },
-  { label: "Weighted Pull-Up",         value: "pull"         },
-  { label: "Bar Pull-Up Volume",       value: "pull"         },
-  { label: "Plank",                    value: "core"         },
-  { label: "Burpee",                   value: "core"         },
-  { label: "Hollow Body Hold",         value: "core"         },
-  { label: "Tuck L-Sit",              value: "core"         },
-  { label: "Squat",                    value: "legs"         },
-  { label: "Air Squat",                value: "legs"         },
-  { label: "Assisted Squat",           value: "legs"         },
-  { label: "Archer Squat",             value: "legs"         },
-  { label: "Nordic Curls",             value: "legs"         },
-  { label: "Lunge",                    value: "legs"         },
-  { label: "Bulgarian Split Squat",    value: "legs"         },
-  { label: "Shrimp Squat",             value: "legs"         },
+  // ── Goal buckets ─────────────────────────────────────────────────────────
+  { label: "Pull-Up Mastery",             value: "pull"         },
+  { label: "Front Lever",                 value: "front-lever"  },
+  { label: "Muscle-Up",                   value: "muscle-up"    },
+  { label: "Planche / Push",              value: "push"         },
+  { label: "Handstand",                   value: "handstand"    },
+  { label: "Dragon Flag / Human Flag",    value: "core"         },
+  { label: "Pistol Squat",               value: "legs"         },
+  { label: "General Mobility",            value: "general"      },
+  { label: "All-Round Mobility",          value: "general"      },
+
+  // ── PUSH branch ──────────────────────────────────────────────────────────
+  { label: "First Push-Up",               value: "push"         },
+  { label: "Push-Up Strength",            value: "push"         },
+  { label: "Wall Push-Up",               value: "push"         },
+  { label: "Incline Push-Up",            value: "push"         },
+  { label: "Knee Push-Up",               value: "push"         },
+  { label: "Diamond Push-Up",            value: "push"         },
+  { label: "Archer Push-Up",             value: "push"         },
+  { label: "Pseudo Planche Push-Up",     value: "push"         },
+  { label: "Dip",                        value: "push"         },
+  { label: "Ring Dip",                   value: "push"         },
+  { label: "Weighted Dip",               value: "push"         },
+  { label: "Ring Support Hold",          value: "push"         },
+  { label: "Ring Muscle-Up",             value: "muscle-up"    },
+
+  // ── PUSH — Overhead / Handstand path ─────────────────────────────────────
+  { label: "Pike Push-Up",               value: "handstand"    },
+  { label: "Elevated Pike Push-Up",      value: "handstand"    },
+  { label: "Wall Handstand Push-Up",     value: "handstand"    },
+  { label: "Handstand Push-Up",          value: "handstand"    },
+
+  // ── PUSH — Planche path ───────────────────────────────────────────────────
+  { label: "Planche",                    value: "push"         },
+  { label: "Planche Lean",               value: "push"         },
+  { label: "Tuck Planche",               value: "push"         },
+  { label: "Straddle Planche",           value: "push"         },
+  { label: "Full Planche",               value: "push"         },
+
+  // ── PULL branch ───────────────────────────────────────────────────────────
+  { label: "First Pull-Up",              value: "pull"         },
+  { label: "Pull-Up Consistency",        value: "pull"         },
+  { label: "Negative Pull-Ups",          value: "pull"         },
+  { label: "Pull-Up",                    value: "pull"         },
+  { label: "Australian Rows",            value: "pull"         },
+  { label: "Scapular Shrugs",            value: "pull"         },
+  { label: "Chest-to-Bar Pull-Up",       value: "pull"         },
+  { label: "Archer Pull-Up",             value: "pull"         },
+  { label: "Typewriter Pull-Up",         value: "pull"         },
+  { label: "Explosive Pull-Up",          value: "pull"         },
+  { label: "Ring Pull-Up",               value: "pull"         },
+  { label: "Weighted Pull-Up",           value: "pull"         },
+  { label: "Weighted Pull-Up Volume",    value: "pull"         },
+  { label: "One-Arm Active Hang",        value: "pull"         },
+  { label: "One-Arm Pull-Up",            value: "pull"         },
+
+  // ── PULL — Muscle-Up path ─────────────────────────────────────────────────
+  { label: "Kipping Muscle-Up",          value: "muscle-up"    },
+  { label: "Strict Muscle-Up",           value: "muscle-up"    },
+  { label: "Weighted Muscle-Up",         value: "muscle-up"    },
+
+  // ── PULL — Front Lever path ───────────────────────────────────────────────
+  { label: "Tuck Front Lever",           value: "front-lever"  },
+  { label: "Straddle Front Lever",       value: "front-lever"  },
+  { label: "Full Front Lever",           value: "front-lever"  },
+
+  // ── CORE branch ───────────────────────────────────────────────────────────
+  { label: "Plank Foundation",           value: "core"         },
+  { label: "Side Plank",                 value: "core"         },
+  { label: "Plank",                      value: "core"         },
+  { label: "Dead Bug",                   value: "core"         },
+  { label: "Back Extensions",            value: "core"         },
+  { label: "Hollow Body Hold",           value: "core"         },
+  { label: "Dragon Flag Negative",       value: "core"         },
+  { label: "Dragon Flag",                value: "core"         },
+  { label: "Burpee",                     value: "core"         },
+  { label: "Active Hang",                value: "core"         },
+  { label: "Hanging Knee Tucks",         value: "core"         },
+  { label: "Hanging Leg Raises",         value: "core"         },
+  { label: "Toes to Bar",                value: "core"         },
+  { label: "Hanging Windshield Wipers",  value: "core"         },
+  { label: "Tucked Human Flag",          value: "core"         },
+  { label: "One-Leg Human Flag",         value: "core"         },
+  { label: "Human Flag",                 value: "core"         },
+  { label: "Weighted Plank",             value: "core"         },
+  { label: "Ring Knee Raises",           value: "core"         },
+  { label: "Weighted Leg Raises",        value: "core"         },
+  { label: "Weighted Dragon Flag",       value: "core"         },
+  { label: "Ab Roller Rollout",          value: "core"         },
+  { label: "Banded Pallof Press",        value: "core"         },
+  { label: "Ring Rollouts",              value: "core"         },
+
+  // ── LEGS branch ───────────────────────────────────────────────────────────
+  { label: "Squat Foundation",           value: "legs"         },
+  { label: "Squat Strength",             value: "legs"         },
+  { label: "Squat",                      value: "legs"         },
+  { label: "Air Squat",                  value: "legs"         },
+  { label: "Assisted Squat",             value: "legs"         },
+  { label: "Shrimp Squat",               value: "legs"         },
+  { label: "Bulgarian Split Squat",      value: "legs"         },
+  { label: "Nordic Curls",               value: "legs"         },
+  { label: "Lunge",                      value: "legs"         },
+  { label: "Step-Ups",                   value: "legs"         },
+  { label: "Assisted Pistol Squat",      value: "legs"         },
+  { label: "Close-Stance Squat",         value: "legs"         },
+  { label: "Weighted Goblet Squat",      value: "legs"         },
+  { label: "Weighted Bulgarian Split Squat", value: "legs"     },
+  { label: "Weighted Pistol Squat",      value: "legs"         },
+  { label: "Weighted Shrimp Squat",      value: "legs"         },
+  { label: "Banded Lateral Walks",       value: "legs"         },
+  { label: "Box Jumps",                  value: "legs"         },
+  { label: "Slider Hamstring Curls",     value: "legs"         },
+
+  // ── LEGS — L-Sit path ────────────────────────────────────────────────────
+  { label: "Pike Stretch",               value: "legs"         },
+  { label: "L-Sit Compressions",         value: "core"         },
+  { label: "Tuck L-Sit",                value: "core"         },
+  { label: "Full L-Sit",                 value: "core"         },
 ];
 
 // ─── Extended body parts for stiffness search ─────────────────────────────────
@@ -223,6 +286,10 @@ function Questionnaire({
     setGoal(item.value);
     setGoalQuery(item.label);
     setGoalOpen(false);
+    // Auto-populate recommended stiffness areas for this goal so the
+    // routine immediately targets the right joints (user can still edit them)
+    const autoAreas = GOAL_AUTO_AREAS[item.value] ?? [];
+    if (autoAreas.length > 0) setAreas(autoAreas);
   }
 
   function toggleArea(area: string) {

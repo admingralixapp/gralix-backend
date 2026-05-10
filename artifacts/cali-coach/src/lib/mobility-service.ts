@@ -80,6 +80,22 @@ export type StiffnessArea = (typeof STIFFNESS_OPTIONS)[number];
 export const TIME_OPTIONS = [5, 10, 15] as const;
 export type DailyTimeMinutes = (typeof TIME_OPTIONS)[number];
 
+/**
+ * Auto-recommended stiffness areas for each mobility goal.
+ * Used to pre-populate the questionnaire when a user picks a goal from the
+ * skill-tree search, so the routine immediately targets the right joints.
+ */
+export const GOAL_AUTO_AREAS: Record<MobilityGoal, string[]> = {
+  handstand:      ["Wrists", "Shoulders"],
+  "muscle-up":    ["Shoulders", "Wrists"],
+  push:           ["Wrists", "Shoulders"],
+  "front-lever":  ["Shoulders", "Lower Back"],
+  pull:           ["Shoulders", "Lower Back"],
+  core:           ["Lower Back", "Hips"],
+  legs:           ["Ankles", "Hips"],
+  general:        [],
+};
+
 // ─── Stretch Library ─────────────────────────────────────────────────────────
 
 const STRETCHES: Record<string, Stretch> = {
