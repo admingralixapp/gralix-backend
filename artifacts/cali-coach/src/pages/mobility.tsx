@@ -530,37 +530,94 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
   // ── DONE STATE ──────────────────────────────────────────────────────────────
   if (pageState === "done") {
     const streak = finalStreak ?? 1;
+    const totalSeconds = routine.reduce((s, r) => s + r.durationSeconds, 0);
+    const totalMin = Math.round(totalSeconds / 60);
     return (
-      <div className="p-6 max-w-lg mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
-        <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center">
-          <CheckCircle2 className="w-10 h-10 text-primary" />
-        </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 60,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          touchAction: "none",
+          overscrollBehavior: "none",
+        }}
+        className="bg-background px-6"
+      >
+        {/* ── Success Icon ─────────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1, type: "spring", stiffness: 260, damping: 20 }}
+          className="w-24 h-24 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center mb-8"
+        >
+          <CheckCircle2 className="w-12 h-12 text-primary" />
+        </motion.div>
 
-        <div>
-          <h2 className="text-3xl font-bold mb-2">Session Complete!</h2>
-          <p className="text-muted-foreground">
-            You held {routine.length} stretches for {routine[0]?.durationSeconds ?? 60}s each.
+        {/* ── Heading ──────────────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ y: 16, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.18, duration: 0.32, ease: "easeOut" }}
+          className="text-center mb-6"
+        >
+          <h2 className="text-4xl font-extrabold tracking-tight mb-3">Session Complete!</h2>
+          <p className="text-muted-foreground text-base leading-relaxed max-w-xs mx-auto">
+            You completed {routine.length} stretch{routine.length !== 1 ? "es" : ""} in {totalMin} minute{totalMin !== 1 ? "s" : ""}.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="flex items-center gap-2 bg-orange-500/10 text-orange-400 rounded-full px-5 py-2.5 text-lg font-bold">
-          <Flame className="w-5 h-5" />
-          {streak}-day mobility streak!
-        </div>
+        {/* ── Stats row ────────────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ y: 16, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.26, duration: 0.32, ease: "easeOut" }}
+          className="flex gap-4 mb-8"
+        >
+          <div className="flex flex-col items-center px-5 py-3 rounded-2xl bg-card border border-border">
+            <span className="text-2xl font-bold text-foreground">{routine.length}</span>
+            <span className="text-xs text-muted-foreground mt-0.5">stretches</span>
+          </div>
+          <div className="flex flex-col items-center px-5 py-3 rounded-2xl bg-card border border-border">
+            <span className="text-2xl font-bold text-foreground">{totalMin}m</span>
+            <span className="text-xs text-muted-foreground mt-0.5">total time</span>
+          </div>
+          <div className="flex flex-col items-center px-5 py-3 rounded-2xl bg-orange-500/10 border border-orange-500/25">
+            <span className="text-2xl font-bold text-orange-400 flex items-center gap-1">
+              <Flame className="w-5 h-5" />{streak}
+            </span>
+            <span className="text-xs text-orange-400/70 mt-0.5">day streak</span>
+          </div>
+        </motion.div>
 
-        <div className="flex gap-3 pt-2">
-          <Button variant="outline" onClick={startSession}>
-            Repeat Session
-          </Button>
+        {/* ── Buttons ──────────────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ y: 16, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.34, duration: 0.32, ease: "easeOut" }}
+          className="flex flex-col gap-3 w-full max-w-xs"
+        >
           {onDismiss ? (
-            <Button onClick={onDismiss}>Back to Daily Tasks</Button>
+            <Button size="lg" className="w-full font-bold" onClick={onDismiss}>
+              Back to Daily Tasks
+            </Button>
           ) : (
-            <Button asChild>
+            <Button size="lg" className="w-full font-bold" asChild>
               <Link href="/">Back to Dashboard</Link>
             </Button>
           )}
-        </div>
-      </div>
+          <Button size="lg" variant="outline" className="w-full" onClick={startSession}>
+            <Play className="w-4 h-4 mr-2" />
+            Repeat Session
+          </Button>
+        </motion.div>
+      </motion.div>
     );
   }
 
