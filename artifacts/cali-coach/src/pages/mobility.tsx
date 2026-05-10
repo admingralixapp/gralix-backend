@@ -547,13 +547,12 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
 
   function exitSession() {
     setPaused(false);
-    // Always strip the scroll-lock class in case this is standalone route usage
     document.documentElement.classList.remove("workout-active");
     document.body.classList.remove("workout-active");
     if (onDismiss) {
       onDismiss();
     } else {
-      setLocation("/");
+      setLocation("/daily-tasks");
     }
   }
 
@@ -713,7 +712,7 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
             </Button>
           ) : (
             <Button size="lg" className="w-full font-bold" asChild>
-              <Link href="/">Back to Dashboard</Link>
+              <Link href="/daily-tasks">Back to Daily Tasks</Link>
             </Button>
           )}
           <Button size="lg" variant="outline" className="w-full" onClick={startSession}>

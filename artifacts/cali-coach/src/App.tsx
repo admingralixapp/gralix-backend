@@ -238,29 +238,37 @@ function AppRouter() {
         <ProfileSync />
         <UploadManagerProvider>
           <TooltipProvider>
-            <Layout>
-              <Switch>
-                <Route path="/" component={HomeRoute} />
-                <Route path="/sign-in/*?" component={SignInPage} />
-                <Route path="/sign-up/*?" component={SignUpPage} />
-                <Route path="/workout" component={Workout} />
-                <Route path="/history" component={History} />
-                <Route path="/session/:id" component={SessionDetail} />
-                <Route path="/progress" component={Progress} />
-                <Route path="/exercises" component={Exercises} />
-                <Route path="/community" component={CommunityFeedPage} />
-                <Route path="/skill-tree" component={SkillTreePage} />
-                <Route path="/leaderboard" component={Leaderboard} />
-                <Route path="/friends" component={Friends} />
-                <Route path="/profile/:username" component={ProfilePage} />
-                <Route path="/settings" component={Settings} />
-                <Route path="/shop" component={ShopPage} />
-                <Route path="/calibration" component={BodyCalibration} />
-                <Route path="/mobility">{() => <MobilityPage />}</Route>
-                <Route path="/daily-tasks" component={DailyTasksPage} />
-                <Route component={NotFound} />
-              </Switch>
-            </Layout>
+            <Switch>
+              {/* Full-screen takeover — no sidebar/layout wrapper */}
+              <Route path="/mobility-session">{() => <MobilityPage autoStart={true} />}</Route>
+
+              {/* All other routes rendered inside the sidebar Layout */}
+              <Route>{() => (
+                <Layout>
+                  <Switch>
+                    <Route path="/" component={HomeRoute} />
+                    <Route path="/sign-in/*?" component={SignInPage} />
+                    <Route path="/sign-up/*?" component={SignUpPage} />
+                    <Route path="/workout" component={Workout} />
+                    <Route path="/history" component={History} />
+                    <Route path="/session/:id" component={SessionDetail} />
+                    <Route path="/progress" component={Progress} />
+                    <Route path="/exercises" component={Exercises} />
+                    <Route path="/community" component={CommunityFeedPage} />
+                    <Route path="/skill-tree" component={SkillTreePage} />
+                    <Route path="/leaderboard" component={Leaderboard} />
+                    <Route path="/friends" component={Friends} />
+                    <Route path="/profile/:username" component={ProfilePage} />
+                    <Route path="/settings" component={Settings} />
+                    <Route path="/shop" component={ShopPage} />
+                    <Route path="/calibration" component={BodyCalibration} />
+                    <Route path="/mobility">{() => <MobilityPage />}</Route>
+                    <Route path="/daily-tasks" component={DailyTasksPage} />
+                    <Route component={NotFound} />
+                  </Switch>
+                </Layout>
+              )}</Route>
+            </Switch>
             <Toaster />
           </TooltipProvider>
         </UploadManagerProvider>

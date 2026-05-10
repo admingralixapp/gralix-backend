@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
-import { MobilityPage } from "@/pages/mobility";
+import { useLocation } from "wouter";
 import {
   Bell,
   BellOff,
@@ -703,32 +703,13 @@ function NotificationCard({
 
 export function DailyTasksPage() {
   const { t }              = useTranslation();
+  const [, setLocation]    = useLocation();
   const { data: status }   = useMobilityStatus();
   const updateSettings     = useUpdateMobilitySettings();
   const { toast }          = useToast();
 
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [showSavedBadge,    setShowSavedBadge]    = useState(false);
-  const [showSession,       setShowSession]       = useState(false);
-
-  // ── Total scroll lockdown while session overlay is open ──────────────────
-  useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    if (showSession) {
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-      // Add class to BOTH html and body — CSS handles the heavy lifting
-      html.classList.add("workout-active");
-      body.classList.add("workout-active");
-    } else {
-      html.classList.remove("workout-active");
-      body.classList.remove("workout-active");
-    }
-    return () => {
-      html.classList.remove("workout-active");
-      body.classList.remove("workout-active");
-    };
-  }, [showSession]);
 
   // ── Optimistic local preferences ──────────────────────────────────────────
   // Initialised from localStorage (instant) then overwritten by server data.
@@ -1003,33 +984,29 @@ export function DailyTasksPage() {
         </AnimatePresence>
       </div>
 
-      {/* Start Session CTA — hidden while session overlay is open */}
-      {!showSession && (
-        <Button
-          size="lg"
-          className="w-full font-bold"
-          onClick={() => setShowSession(true)}
-        >
-          <Play className="w-5 h-5 mr-2" />
-          {status?.completedToday ? t("mobility.repeatSession") : t("mobility.startSession")}
-        </Button>
-      )}
+      {/* Start Session CTA */}
+      <Button
+        size="lg"
+        className="w-full font-bold"
+        onClick={() => setLocation("/mobility-session")}
+      >
+        <Play className="w-5 h-5 mr-2" />
+        {status?.completedToday ? t("mobility.repeatSession") : t("mobility.startSession")}
+      </Button>
 
-      {/* Notification card — hidden while session overlay is open */}
-      {!showSession && (
-        <NotificationCard
-          enabled={enabled}
-          blocked={notifBlocked}
-          notificationTime={notificationTime}
-          goalLabel={goalLabel}
-          stiffnessAreas={stiffnessAreas}
-          dailyTimeMinutes={dailyTimeMinutes}
-          onToggle={handleToggleNotification}
-          onTimeChange={handleTimeChange}
-        />
-      )}
+      {/* Notification card */}
+      <NotificationCard
+        enabled={enabled}
+        blocked={notifBlocked}
+        notificationTime={notificationTime}
+        goalLabel={goalLabel}
+        stiffnessAreas={stiffnessAreas}
+        dailyTimeMinutes={dailyTimeMinutes}
+        onToggle={handleToggleNotification}
+        onTimeChange={handleTimeChange}
+      />
 
-      {/* Questionnaire modal — rendered with AnimatePresence for slide-up enter/exit */}
+      {/* Questionnaire modal */}
       <AnimatePresence>
         {showQuestionnaire && (
           <Questionnaire
@@ -1045,30 +1022,6 @@ export function DailyTasksPage() {
       {/* Saved badge */}
       <AnimatePresence>
         {showSavedBadge && <SavedBadge />}
-      </AnimatePresence>
-
-      {/* Inline session overlay — position:fixed anchored to top:0 so browser
-          scroll position of the parent page is completely irrelevant */}
-      <AnimatePresence>
-        {showSession && (
-          <motion.div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100vw",
-              height: "100dvh",
-              zIndex: 50,
-              overflow: "hidden",
-            }}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 32, stiffness: 320 }}
-          >
-            <MobilityPage onDismiss={() => setShowSession(false)} autoStart={true} />
-          </motion.div>
-        )}
       </AnimatePresence>
     </div>
   );
