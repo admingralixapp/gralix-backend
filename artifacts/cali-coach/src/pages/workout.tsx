@@ -2267,30 +2267,27 @@ export function Workout() {
 
                 <div className="space-y-5 mt-1">
 
-                  {/* ── Locked banner ─────────────────────────────────────── */}
+                  {/* ── Skill Tree note (informational only — does NOT block training) ── */}
                   {isLocked && (
                     <div
-                      className="rounded-xl border p-4 space-y-3"
+                      className="rounded-xl border p-4 space-y-2"
                       style={{
-                        background: "rgba(239,68,68,0.06)",
-                        borderColor: "rgba(239,68,68,0.25)",
+                        background: "rgba(168,85,247,0.06)",
+                        borderColor: "rgba(168,85,247,0.25)",
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Lock className="w-4 h-4 text-red-400 shrink-0" />
-                        <span className="text-sm font-bold text-red-400">{t("workout.exerciseLocked")}</span>
+                        <Lock className="w-3.5 h-3.5 text-purple-400/80 shrink-0" />
+                        <span className="text-sm font-bold text-purple-300/90">{t("workout.skillTreeNote", { defaultValue: "Skill Tree — Not Yet Mastered" })}</span>
                       </div>
-                      {prereqNode ? (
-                        <p className="text-xs text-white/60 leading-relaxed">
-                          {t("workout.exerciseLockedPrereq", { level: prereqNode.level, title: prereqNode.title })}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-white/60 leading-relaxed">
-                          {t("workout.exerciseLockedGeneric")}
-                        </p>
-                      )}
+                      <p className="text-xs text-white/50 leading-relaxed">
+                        {prereqNode
+                          ? t("workout.skillTreeNotePrereq", { title: prereqNode.title, defaultValue: `Master ${prereqNode.title} first to unlock this node in the Skill Tree. You can still practise this exercise freely.` })
+                          : t("workout.skillTreeNoteGeneric", { defaultValue: "Complete the prerequisites in the Skill Tree to unlock this node. You can still practise this exercise freely." })
+                        }
+                      </p>
                       <button
-                        className="flex items-center gap-2 w-full justify-center px-4 py-2.5 rounded-lg border border-white/15 bg-white/[0.06] text-sm font-semibold text-white/80 hover:bg-white/[0.10] transition-colors"
+                        className="flex items-center gap-2 w-full justify-center px-3 py-2 rounded-lg border border-purple-500/20 bg-purple-500/[0.08] text-xs font-semibold text-purple-300/80 hover:bg-purple-500/[0.14] transition-colors"
                         onClick={() => {
                           setInfoExercise(null);
                           setLocation(infoExercise.nodeId
@@ -2299,7 +2296,7 @@ export function Workout() {
                           );
                         }}
                       >
-                        <Activity className="w-3.5 h-3.5 text-primary" />
+                        <Activity className="w-3 h-3" />
                         {t("workout.viewSkillTree")}
                       </button>
                     </div>
@@ -2345,26 +2342,16 @@ export function Workout() {
                     </div>
                   )}
 
-                  {/* ── Train / Locked action button ──────────────────────── */}
-                  {isLocked ? (
-                    <div
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-sm font-bold text-white/30"
-                      style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
-                    >
-                      <Lock className="w-4 h-4" />
-                      {t("workout.lockedCompleteFirst")}
-                    </div>
-                  ) : (
-                    <Button
-                      className="w-full font-bold mt-2"
-                      onClick={() => {
-                        if (infoExercise) setSelectedExerciseId(infoExercise.id.toString());
-                        setInfoExercise(null);
-                      }}
-                    >
-                      {t("workout.trainExercise", { name: infoExercise.name })}
-                    </Button>
-                  )}
+                  {/* ── Train action button — always available ────────────── */}
+                  <Button
+                    className="w-full font-bold mt-2"
+                    onClick={() => {
+                      if (infoExercise) setSelectedExerciseId(infoExercise.id.toString());
+                      setInfoExercise(null);
+                    }}
+                  >
+                    {t("workout.trainExercise", { name: infoExercise.name })}
+                  </Button>
                 </div>
               </>
             );
@@ -2674,7 +2661,7 @@ export function Workout() {
               const isSelected = item.id.toString() === selectedExerciseId;
               return (
                 <div
-                  className={`flex items-center gap-1 border-b border-border/20 group transition-colors ${isSelected ? "" : locked ? "opacity-50 hover:opacity-70" : "hover:bg-white/[0.04]"}`}
+                  className={`flex items-center gap-1 border-b border-border/20 group transition-colors ${isSelected ? "" : "hover:bg-white/[0.04]"}`}
                   style={isSelected ? { background: `${branchColor}20` } : undefined}
                 >
                   <button
@@ -2682,19 +2669,13 @@ export function Workout() {
                     style={isSelected ? { color: branchColor, fontWeight: 600 } : undefined}
                     onMouseDown={e => e.preventDefault()}
                     onClick={() => {
-                      if (locked) {
-                        setBwOpen(false);
-                        setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId });
-                      } else {
-                        setSelectedExerciseId(item.id.toString());
-                        setBwOpen(false);
-                        setBwInputVal(item.label);
-                        // Clear EQ side
-                        setEqInputVal("");
-                      }
+                      setSelectedExerciseId(item.id.toString());
+                      setBwOpen(false);
+                      setBwInputVal(item.label);
+                      setEqInputVal("");
                     }}
                   >
-                    {locked && <Lock className="w-2.5 h-2.5 shrink-0 text-white/30" />}
+                    {locked && <Lock className="w-2.5 h-2.5 shrink-0 text-white/40" />}
                     <span className="truncate">{item.label}</span>
                   </button>
                   <button
@@ -2702,7 +2683,7 @@ export function Workout() {
                     onMouseDown={e => e.preventDefault()}
                     onClick={e => { e.stopPropagation(); setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId }); }}
                   >
-                    {locked ? <Lock className="w-3 h-3" /> : <Info className="w-3 h-3" />}
+                    <Info className="w-3 h-3" />
                   </button>
                 </div>
               );
@@ -2920,7 +2901,7 @@ export function Workout() {
                                         </div>
                                       )}
                                       <div
-                                        className={`flex items-center gap-1 border-b border-border/20 group transition-colors ${isSelected ? "" : locked ? "opacity-50 hover:opacity-70" : "hover:bg-white/[0.04]"}`}
+                                        className={`flex items-center gap-1 border-b border-border/20 group transition-colors ${isSelected ? "" : "hover:bg-white/[0.04]"}`}
                                         style={isSelected ? { background: `${branchColor}20` } : undefined}
                                       >
                                         <button
@@ -2928,19 +2909,13 @@ export function Workout() {
                                           style={isSelected ? { color: branchColor, fontWeight: 600 } : undefined}
                                           onMouseDown={e => e.preventDefault()}
                                           onClick={() => {
-                                            if (locked) {
-                                              setEqOpen(false);
-                                              setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId });
-                                            } else {
-                                              setSelectedExerciseId(item.id.toString());
-                                              setEqOpen(false);
-                                              setEqInputVal(item.label);
-                                              // Clear BW side
-                                              setBwInputVal("");
-                                            }
+                                            setSelectedExerciseId(item.id.toString());
+                                            setEqOpen(false);
+                                            setEqInputVal(item.label);
+                                            setBwInputVal("");
                                           }}
                                         >
-                                          {locked && <Lock className="w-2.5 h-2.5 shrink-0 text-white/30" />}
+                                          {locked && <Lock className="w-2.5 h-2.5 shrink-0 text-white/40" />}
                                           <span className="flex-1 truncate">{item.label}</span>
                                         </button>
                                         <button
@@ -2948,7 +2923,7 @@ export function Workout() {
                                           onMouseDown={e => e.preventDefault()}
                                           onClick={e => { e.stopPropagation(); setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId }); }}
                                         >
-                                          {locked ? <Lock className="w-3 h-3" /> : <Info className="w-3 h-3" />}
+                                          <Info className="w-3 h-3" />
                                         </button>
                                       </div>
                                     </div>
