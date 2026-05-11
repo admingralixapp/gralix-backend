@@ -6,18 +6,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
   LayoutDashboard,
-  History,
-  TrendingUp,
   GitBranch,
   Users,
   Settings,
   LogIn,
   LogOut,
-  Trophy,
-  ClipboardList,
-  Rss,
   ShoppingBag,
-  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMyProfile, useFriendRequests } from "@/lib/social";
@@ -33,21 +27,29 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/",            label: "Dashboard",   labelKey: "nav.dashboard",   icon: LayoutDashboard },
-  { href: "/workout",     label: "Workout",     labelKey: "nav.workout",     icon: Activity },
-  { href: "/daily-tasks", label: "Daily",       labelKey: "nav.daily",       icon: ClipboardList },
-  { href: "/community",   label: "Community",   labelKey: "nav.community",   icon: Rss },
-  { href: "/history",     label: "History",     labelKey: "nav.history",     icon: History },
-  { href: "/progress",    label: "Progress",    labelKey: "nav.progress",    icon: TrendingUp },
-  { href: "/skill-tree",  label: "Skill Tree",  labelKey: "nav.skillTree",   icon: GitBranch },
-  { href: "/leaderboard", label: "Leaderboard", labelKey: "nav.leaderboard", icon: Trophy },
-  { href: "/friends",     label: "Friends",     labelKey: "nav.friends",     icon: Users },
-  { href: "/shop",        label: "Shop",        labelKey: "nav.shop",        icon: ShoppingBag },
-  { href: "/settings",    label: "Settings",    labelKey: "nav.settings",    icon: Settings },
+  { href: "/",          label: "Home",      labelKey: "nav.dashboard",  icon: LayoutDashboard },
+  { href: "/training",  label: "Training",  labelKey: "nav.training",   icon: Activity },
+  { href: "/mastery",   label: "Mastery",   labelKey: "nav.mastery",    icon: GitBranch },
+  { href: "/community", label: "Community", labelKey: "nav.community",  icon: Users },
+  { href: "/shop",      label: "Shop",      labelKey: "nav.shop",       icon: ShoppingBag },
 ];
 
-/** The three tabs reachable by swiping left / right. */
-const SWIPEABLE_ROUTES = ["/", "/workout", "/skill-tree"] as const;
+/**
+ * Maps legacy sub-routes to their new parent tab so isActive highlights correctly.
+ */
+const LEGACY_ROUTE_MAP: Record<string, string> = {
+  "/workout":     "/training",
+  "/daily-tasks": "/training",
+  "/mobility":    "/training",
+  "/skill-tree":  "/mastery",
+  "/history":     "/mastery",
+  "/progress":    "/mastery",
+  "/leaderboard": "/community",
+  "/friends":     "/community",
+};
+
+/** Swipeable top-level tabs */
+const SWIPEABLE_ROUTES = ["/", "/training", "/mastery", "/community", "/shop"] as const;
 
 // ─── Animation config ─────────────────────────────────────────────────────────
 
@@ -69,9 +71,18 @@ function triggerHaptic() {
   } catch { /* not supported */ }
 }
 
+function resolveTab(path: string): string {
+  // Check exact match in legacy map
+  for (const [prefix, tab] of Object.entries(LEGACY_ROUTE_MAP)) {
+    if (path === prefix || path.startsWith(prefix + "/")) return tab;
+  }
+  return path;
+}
+
 function getNavIndex(path: string): number {
+  const tab = resolveTab(path);
   return NAV_ITEMS.findIndex(item =>
-    item.href === "/" ? path === "/" : path.startsWith(item.href),
+    item.href === "/" ? tab === "/" : tab.startsWith(item.href),
   );
 }
 
@@ -149,11 +160,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   const [direction, setDirection] = useState(0);
-  const { data: layoutProfile } = useMyProfile();
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
 
-  // Refs for mobile nav auto-centering
   const mobileNavRef = useRef<HTMLElement>(null);
   const navItemRefs  = useRef<Map<string, HTMLButtonElement>>(new Map());
 
@@ -169,11 +178,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   // ── Auto-center active tab in mobile nav ─────────────────────────────────
   useEffect(() => {
+    const tab = resolveTab(location);
     const activeItem = NAV_ITEMS.find(item =>
-      item.href === "/" ? location === "/" : location.startsWith(item.href),
+      item.href === "/" ? tab === "/" : tab.startsWith(item.href),
     );
     if (!activeItem) return;
-
     const el = navItemRefs.current.get(activeItem.href);
     if (el && mobileNavRef.current) {
       el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
@@ -233,8 +242,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isActive = (href: string) =>
-    href === "/" ? location === "/" : location.startsWith(href);
+  const isActive = (href: string) => {
+    if (href === "/") return location === "/";
+    const tab = resolveTab(location);
+    return tab.startsWith(href) || location.startsWith(href);
+  };
+
+  const isSettingsActive = location.startsWith("/settings");
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
@@ -242,6 +256,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── Desktop Sidebar ─────────────────────────────────────────────── */}
       <aside className="hidden md:flex w-64 flex-col border-r border-white/[0.06] glass-nav shrink-0">
+        {/* Logo */}
         <div className="p-6">
           <button onClick={() => navigateTo("/")} className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center neon-glow">
@@ -251,11 +266,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
+        {/* Main 5 tabs */}
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const Icon   = item.icon;
             const active = isActive(item.href);
-            const isProgressLocked = item.href === "/progress" && !layoutProfile?.isPro;
             return (
               <button
                 key={item.href}
@@ -269,94 +284,89 @@ export function Layout({ children }: { children: React.ReactNode }) {
               >
                 <Icon className={cn("w-5 h-5 shrink-0", active && "nav-icon-active")} />
                 <span className="flex-1">{t(item.labelKey, item.label)}</span>
-                {isProgressLocked && (
-                  <span
-                    className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md shrink-0"
-                    style={{
-                      background: "rgba(168,85,247,0.15)",
-                      color: "#c084fc",
-                      border: "1px solid rgba(168,85,247,0.3)",
-                    }}
-                  >
-                    <Lock className="w-2.5 h-2.5" />
-                    Pro
-                  </span>
-                )}
               </button>
             );
           })}
         </nav>
 
+        {/* Settings — separate, pinned above user section */}
+        <div className="px-4 pb-2">
+          <button
+            onClick={() => navigateTo("/settings")}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm text-left",
+              isSettingsActive
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+            )}
+          >
+            <Settings className={cn("w-4 h-4 shrink-0", isSettingsActive && "nav-icon-active")} />
+            <span>{t("nav.settings", "Settings")}</span>
+          </button>
+        </div>
+
         <UserSection />
       </aside>
 
       {/* ── Mobile Bottom Nav ───────────────────────────────────────────── */}
-      {/*
-        overflow-x-auto + flex lets it scroll horizontally.
-        scrollbar-none hides the track on WebKit; scrollbar-width:none on Firefox.
-        Each button is flex-shrink-0 so it never collapses.
-      */}
       <nav
         ref={mobileNavRef}
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06] glass-nav flex overflow-x-auto px-1 pb-safe"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06] glass-nav flex items-end pb-safe"
         style={{ scrollbarWidth: "none" } as React.CSSProperties}
       >
-        <style>{`
-          nav::-webkit-scrollbar { display: none; }
-        `}</style>
-
-        {NAV_ITEMS.map((item) => {
-          const Icon   = item.icon;
-          const active = isActive(item.href);
-          const isProgressLocked = item.href === "/progress" && !layoutProfile?.isPro;
-          return (
-            <button
-              key={item.href}
-              ref={(el) => {
-                if (el) navItemRefs.current.set(item.href, el);
-                else navItemRefs.current.delete(item.href);
-              }}
-              onClick={() => navigateTo(item.href)}
-              className={cn(
-                "flex-shrink-0 flex flex-col items-center justify-center px-3.5 py-2.5 rounded-xl relative transition-all",
-                active ? "text-primary" : "text-muted-foreground",
-              )}
-              style={{ minWidth: 60 }}
-            >
-              <div className="relative">
-                <Icon className={cn("w-5 h-5", active && "nav-icon-active")} />
-                {/* Pro lock dot — top-right corner of icon */}
-                {isProgressLocked && (
-                  <div
-                    className="absolute -top-1 -right-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
-                    style={{
-                      background: "linear-gradient(135deg, #a855f7, #7c3aed)",
-                      boxShadow: "0 0 6px rgba(168,85,247,0.7)",
-                    }}
-                  >
-                    <Lock className="w-2 h-2 text-white" />
-                  </div>
+        {/* 5 main tabs */}
+        <div className="flex flex-1 overflow-x-auto px-1" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
+          <style>{`div::-webkit-scrollbar { display: none; }`}</style>
+          {NAV_ITEMS.map((item) => {
+            const Icon   = item.icon;
+            const active = isActive(item.href);
+            return (
+              <button
+                key={item.href}
+                ref={(el) => {
+                  if (el) navItemRefs.current.set(item.href, el);
+                  else navItemRefs.current.delete(item.href);
+                }}
+                onClick={() => navigateTo(item.href)}
+                className={cn(
+                  "flex-shrink-0 flex flex-col items-center justify-center px-3.5 py-2.5 rounded-xl relative transition-all",
+                  active ? "text-primary" : "text-muted-foreground",
                 )}
-              </div>
-              <span className={cn(
-                "text-[9px] mt-0.5 whitespace-nowrap",
-                active ? "font-bold" : "font-light opacity-80",
-              )}>
-                {t(item.labelKey, item.label)}
-              </span>
+                style={{ minWidth: 60 }}
+              >
+                <div className="relative">
+                  <Icon className={cn("w-5 h-5", active && "nav-icon-active")} />
+                </div>
+                <span className={cn(
+                  "text-[9px] mt-0.5 whitespace-nowrap",
+                  active ? "font-bold" : "font-light opacity-80",
+                )}>
+                  {t(item.labelKey, item.label)}
+                </span>
+                {active && (
+                  <motion.div
+                    layoutId="mobile-nav-indicator"
+                    className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
+                    style={{ boxShadow: "0 0 6px rgba(0,255,100,0.8)" }}
+                    transition={springTransition}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-              {/* Active indicator dot */}
-              {active && (
-                <motion.div
-                  layoutId="mobile-nav-indicator"
-                  className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
-                  style={{ boxShadow: "0 0 6px rgba(0,255,100,0.8)" }}
-                  transition={springTransition}
-                />
-              )}
-            </button>
-          );
-        })}
+        {/* Settings — small icon at far right, visually separated */}
+        <button
+          onClick={() => navigateTo("/settings")}
+          className={cn(
+            "flex-shrink-0 flex flex-col items-center justify-center px-3 py-2.5 border-l border-white/[0.06] transition-all",
+            isSettingsActive ? "text-primary" : "text-muted-foreground/60",
+          )}
+        >
+          <Settings className="w-4 h-4" />
+          <span className="text-[8px] mt-0.5 font-light opacity-70">{t("nav.settings", "Settings")}</span>
+        </button>
       </nav>
 
       {/* ── Animated Main Content ───────────────────────────────────────── */}
@@ -373,7 +383,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
             className="absolute inset-0 overflow-y-auto"
             style={{ willChange: "transform, opacity", transform: "translateZ(0)" }}
           >
-            {/* Extra bottom padding so content clears the fixed nav bar on mobile */}
             <div className="max-w-6xl mx-auto pb-[120px] md:pb-8">
               {children}
             </div>

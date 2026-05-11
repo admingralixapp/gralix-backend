@@ -1,5 +1,5 @@
-import { useGetProgressSummary, useGetRecentSessions } from "@workspace/api-client-react";
-import { Link } from "wouter";
+import { useGetProgressSummary, useGetRecentSessions, useGetProgressTimeline } from "@workspace/api-client-react";
+import { Link, useLocation } from "wouter";
 import {
   Activity,
   Flame,
@@ -13,6 +13,8 @@ import {
   ChevronRight,
   PenLine,
   Clock,
+  Crown,
+  TrendingUp,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,9 +23,16 @@ import { SkillMap } from "@/components/skill-map";
 import { SocialFeed } from "@/components/social-feed";
 import { useMobilityStatus, useNotificationScheduler } from "@/lib/use-mobility";
 import { GOAL_LABELS, type MobilityGoal } from "@/lib/mobility-service";
-import { useLeaderboard } from "@/lib/social";
+import { useLeaderboard, useMyProfile } from "@/lib/social";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  Tooltip,
+  XAxis,
+} from "recharts";
 
 // ─── Countdown helpers ────────────────────────────────────────────────────────
 
@@ -84,14 +93,207 @@ function StatCard({
   );
 }
 
+// ─── Performance Trends card ──────────────────────────────────────────────────
+
+function PerformanceTrendsCard({ isPro }: { isPro: boolean }) {
+  const { t } = useTranslation();
+  const [, setLocation] = useLocation();
+  const { data: timeline } = useGetProgressTimeline({ days: 30 });
+  const { data: summary }  = useGetProgressSummary();
+
+  const chartData = useMemo(() => {
+    if (!timeline?.length) {
+      // synthetic skeleton data so the blurred chart looks meaningful
+      return Array.from({ length: 12 }, (_, i) => ({
+        label: "",
+        form:  60 + Math.round(Math.sin(i * 0.6) * 20 + Math.random() * 10),
+        reps:  20 + Math.round(Math.cos(i * 0.4) * 15 + Math.random() * 8),
+      }));
+    }
+    return timeline.slice(-12).map((pt) => ({
+      label: new Date(pt.date).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      form:  pt.avgFormScore != null ? Math.round(pt.avgFormScore) : null,
+      reps:  pt.totalReps ?? 0,
+    }));
+  }, [timeline]);
+
+  return (
+    <Card className="border-border bg-card overflow-hidden relative">
+      {/* Blurred content layer */}
+      <div
+        className={!isPro ? "pointer-events-none select-none" : undefined}
+        style={!isPro ? { filter: "blur(5px) brightness(0.4)", userSelect: "none" } : undefined}
+        aria-hidden={!isPro}
+      >
+        <CardHeader className="pb-2 border-b border-border">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              {t("dashboard.performanceTrends", "Performance Trends")}
+            </CardTitle>
+            <span className="text-xs text-muted-foreground">
+              {t("dashboard.last30Days", "Last 30 days")}
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-4">
+          {/* Mini stat row */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              {
+                label: t("dashboard.avgForm", "Avg Form"),
+                value: summary?.avgFormScore != null ? `${Math.round(summary.avgFormScore)}` : "--",
+                unit: "/100",
+                color: "#22c55e",
+              },
+              {
+                label: t("dashboard.totalReps", "Total Reps"),
+                value: summary?.totalReps != null ? `${summary.totalReps}` : "--",
+                unit: "",
+                color: "#60a5fa",
+              },
+              {
+                label: t("dashboard.sessions", "Sessions"),
+                value: summary?.totalSessions != null ? `${summary.totalSessions}` : "--",
+                unit: "",
+                color: "#c084fc",
+              },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="rounded-xl p-3 text-center"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <div className="text-xl font-black font-mono" style={{ color: s.color }}>
+                  {s.value}
+                  {s.unit && <span className="text-xs text-white/30 ml-0.5">{s.unit}</span>}
+                </div>
+                <div className="text-[9px] font-bold uppercase tracking-widest text-white/40 mt-0.5">
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Form score area chart */}
+          <div className="h-28">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="formGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="label" hide />
+                <Tooltip
+                  contentStyle={{
+                    background: "rgba(10,15,26,0.95)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 8,
+                    fontSize: 11,
+                  }}
+                  labelStyle={{ color: "rgba(255,255,255,0.5)" }}
+                  itemStyle={{ color: "#22c55e" }}
+                  formatter={(v: number) => [`${v}`, "Form"]}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="form"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  fill="url(#formGrad)"
+                  dot={false}
+                  connectNulls
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-[10px] text-white/25 text-center">
+            {t("dashboard.formScoreOverTime", "Form score over time")}
+          </p>
+        </CardContent>
+      </div>
+
+      {/* Pro paywall overlay — only for free users */}
+      {!isPro && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center px-6 py-8">
+          <div className="absolute inset-0 backdrop-blur-[2px]" />
+          <div
+            className="relative z-10 w-full max-w-sm rounded-2xl border p-6 flex flex-col items-center text-center space-y-4 shadow-2xl"
+            style={{
+              background: "linear-gradient(145deg, rgba(168,85,247,0.18) 0%, rgba(109,40,217,0.08) 50%, rgba(15,10,20,0.96) 100%)",
+              borderColor: "rgba(168,85,247,0.35)",
+              backdropFilter: "blur(32px)",
+              WebkitBackdropFilter: "blur(32px)",
+              boxShadow: "0 0 60px rgba(168,85,247,0.18), inset 0 1px 0 rgba(168,85,247,0.12)",
+            }}
+          >
+            {/* Ambient glow */}
+            <div
+              className="absolute -top-8 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full blur-3xl opacity-25 pointer-events-none"
+              style={{ background: "radial-gradient(circle, #a855f7 0%, transparent 70%)" }}
+            />
+
+            {/* Icon */}
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{
+                background: "rgba(168,85,247,0.18)",
+                border: "1px solid rgba(168,85,247,0.4)",
+                boxShadow: "0 0 20px rgba(168,85,247,0.3)",
+              }}
+            >
+              <Crown className="w-6 h-6" style={{ color: "#c084fc" }} />
+            </div>
+
+            {/* Copy */}
+            <div>
+              <div className="text-[9px] font-black uppercase tracking-[0.18em] mb-1" style={{ color: "#c084fc" }}>
+                {t("dashboard.proFeature", "Pro Feature")}
+              </div>
+              <h3 className="text-lg font-black" style={{ color: "#e9d5ff" }}>
+                {t("dashboard.unlockPerformance", "Unlock Your Performance Data")}
+              </h3>
+              <p className="text-xs text-white/50 mt-1 leading-relaxed">
+                {t("dashboard.performanceDesc", "See form trends, rep volume, and progress charts with a Pro plan.")}
+              </p>
+            </div>
+
+            {/* CTA */}
+            <button
+              onClick={() => setLocation("/shop")}
+              className="w-full py-3 rounded-xl text-sm font-black tracking-wide transition-all"
+              style={{
+                background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+                color: "#fff",
+                boxShadow: "0 4px 20px rgba(168,85,247,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
+              }}
+            >
+              {t("dashboard.startTrial", "Start 3-Day Free Trial")}
+            </button>
+            <p className="text-[9px] text-white/25">
+              {t("progress.trialNote", "Cancel any time · No charge today")}
+            </p>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ─── Home page ────────────────────────────────────────────────────────────────
+
 export function Home() {
   const { t } = useTranslation();
   const { data: summary, isLoading: loadingSummary } = useGetProgressSummary();
   const { data: recentSessions, isLoading: loadingSessions } = useGetRecentSessions({ limit: 5 });
   const { data: mobilityStatus, isLoading: loadingMobility } = useMobilityStatus();
+  const { data: profile } = useMyProfile();
 
   useNotificationScheduler(mobilityStatus);
 
+  const isPro = profile?.isPro ?? false;
   const mobilityGoal = (mobilityStatus?.settings.mobilityGoal ?? "general") as MobilityGoal;
   const goalLabel = GOAL_LABELS[mobilityGoal];
 
@@ -125,7 +327,7 @@ export function Home() {
           )}
         </div>
         <Button asChild size="lg" className="font-extrabold">
-          <Link href="/workout">
+          <Link href="/training">
             <Activity className="w-5 h-5 mr-2" />
             {t("dashboard.startWorkout")}
           </Link>
@@ -175,6 +377,9 @@ export function Home() {
         />
       </div>
 
+      {/* ── Performance Trends (Pro paywall) ──────────────────────── */}
+      <PerformanceTrendsCard isPro={isPro} />
+
       {/* ── Daily Mobility Card ────────────────────────────────────── */}
       <Card className="border-border bg-card overflow-hidden">
         <div className="flex items-stretch">
@@ -214,7 +419,7 @@ export function Home() {
               </div>
 
               <Button asChild size="sm" variant={mobilityStatus?.completedToday ? "outline" : "default"}>
-                <Link href="/mobility">
+                <Link href="/training">
                   {mobilityStatus?.completedToday ? t("dashboard.repeat") : t("dashboard.begin")}
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Link>
@@ -233,7 +438,7 @@ export function Home() {
               {t("dashboard.skillMap")}
             </CardTitle>
             <Button variant="ghost" size="sm" asChild className="text-xs text-primary h-7 px-2">
-              <Link href="/skill-tree">{t("dashboard.fullTree")}</Link>
+              <Link href="/mastery">{t("dashboard.fullTree")}</Link>
             </Button>
           </div>
         </CardHeader>
@@ -247,7 +452,7 @@ export function Home() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-extrabold">{t("dashboard.recentSessions")}</h2>
           <Button variant="link" asChild className="text-primary">
-            <Link href="/history">
+            <Link href="/mastery">
               {t("dashboard.viewAll")} <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
           </Button>
@@ -264,7 +469,7 @@ export function Home() {
             <Dumbbell className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-30" />
             <p className="text-muted-foreground font-light opacity-80 mb-4">{t("dashboard.noSessionsYet")}</p>
             <Button asChild variant="outline">
-              <Link href="/workout">{t("dashboard.startFirstWorkout")}</Link>
+              <Link href="/training">{t("dashboard.startFirstWorkout")}</Link>
             </Button>
           </div>
         ) : (

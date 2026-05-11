@@ -38,6 +38,9 @@ import { PrivacyPage } from "@/pages/privacy";
 import { MobilityPage } from "@/pages/mobility";
 import { DailyTasksPage } from "@/pages/daily-tasks";
 import { BodyCalibration } from "@/pages/body-calibration";
+import { TrainingHub } from "@/pages/training-hub";
+import { MasteryHub } from "@/pages/mastery-hub";
+import { CommunityHub } from "@/pages/community-hub";
 import NotFound from "@/pages/not-found";
 import { useMyProfile, useUpsertProfile } from "@/lib/social";
 import { setVoiceLanguage } from "@/lib/voice-service";
@@ -277,12 +280,17 @@ function AppRouter() {
                     <Route path="/" component={HomeRoute} />
                     <Route path="/sign-in/*?" component={SignInPage} />
                     <Route path="/sign-up/*?" component={SignUpPage} />
+                    {/* ── Hub routes (new consolidated tabs) ─────────── */}
+                    <Route path="/training" component={TrainingHub} />
+                    <Route path="/mastery" component={MasteryHub} />
+                    <Route path="/community" component={CommunityHub} />
+                    {/* ── Legacy sub-routes (deep links still work) ──── */}
                     <Route path="/workout" component={Workout} />
                     <Route path="/history" component={History} />
                     <Route path="/session/:id" component={SessionDetail} />
                     <Route path="/progress" component={Progress} />
                     <Route path="/exercises" component={Exercises} />
-                    <Route path="/community" component={CommunityFeedPage} />
+                    <Route path="/feed" component={CommunityFeedPage} />
                     <Route path="/skill-tree" component={SkillTreePage} />
                     <Route path="/leaderboard" component={Leaderboard} />
                     <Route path="/friends" component={Friends} />

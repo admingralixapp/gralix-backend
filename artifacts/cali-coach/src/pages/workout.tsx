@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell } from "lucide-react";
+import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMyProfile } from "@/lib/social";
 import { getExerciseConfig, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile, getAudioContext, CUE_PRIORITY } from "@/lib/voice-service";
 import { getWorkoutPhrase } from "@/lib/cue-translations";
@@ -476,6 +477,8 @@ export function Workout() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const { toast } = useToast();
+  const { data: profile } = useMyProfile();
+  const isPro = profile?.isPro ?? false;
   const { data: exercises } = useListExercises();
   // Keep Web Speech API locale in sync with the app's chosen language
   const { i18n, t } = useTranslation();
@@ -623,6 +626,9 @@ export function Workout() {
 
   // ── Camera-init state (1-second ramp before workout goes live) ─────────────
   const [isCameraInitializing, setIsCameraInitializing] = useState(false);
+
+  // ── Pro paywall — camera/AI tracking gate ──────────────────────────────────
+  const [showCameraPaywall, setShowCameraPaywall] = useState(false);
 
   // ── Refs ───────────────────────────────────────────────────────────────────
   const videoRef    = useRef<HTMLVideoElement>(null);
@@ -1522,6 +1528,11 @@ export function Workout() {
       toast({ title: t("workout.selectExerciseFirst"), description: t("workout.pickExerciseFirst") });
       return;
     }
+    // Gate AI camera tracking behind Pro
+    if (!isPro) {
+      setShowCameraPaywall(true);
+      return;
+    }
     // Eagerly unlock the AudioContext during this user-gesture click so ElevenLabs
     // audio can play without hitting the browser autoplay restriction later.
     try {
@@ -2268,6 +2279,99 @@ export function Workout() {
           />
         </div>
       )}
+
+      {/* ── Camera / AI Tracking Pro Paywall ────────────────────────────────── */}
+      <Dialog open={showCameraPaywall} onOpenChange={(open) => { if (!open) setShowCameraPaywall(false); }}>
+        <DialogContent
+          className="max-w-sm border-0 p-0 overflow-hidden"
+          style={{
+            background: "linear-gradient(145deg, rgba(168,85,247,0.18) 0%, rgba(109,40,217,0.08) 50%, rgba(15,10,20,0.98) 100%)",
+            borderRadius: 24,
+            border: "1px solid rgba(168,85,247,0.35)",
+            boxShadow: "0 0 80px rgba(168,85,247,0.22), inset 0 1px 0 rgba(168,85,247,0.15)",
+          }}
+        >
+          {/* Ambient glow */}
+          <div
+            className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full blur-3xl opacity-25 pointer-events-none"
+            style={{ background: "radial-gradient(circle, #a855f7 0%, transparent 70%)" }}
+          />
+
+          <div className="relative z-10 flex flex-col items-center text-center p-7 space-y-5">
+            {/* Icon */}
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center"
+              style={{
+                background: "rgba(168,85,247,0.18)",
+                border: "1px solid rgba(168,85,247,0.4)",
+                boxShadow: "0 0 24px rgba(168,85,247,0.35)",
+              }}
+            >
+              <Crown className="w-8 h-8" style={{ color: "#c084fc" }} />
+            </div>
+
+            {/* Copy */}
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-[0.18em] mb-1.5" style={{ color: "#c084fc" }}>
+                {t("shop.proLabel", "Pro Feature")}
+              </div>
+              <DialogTitle className="text-xl font-black" style={{ color: "#e9d5ff" }}>
+                {t("workout.proPaywallTitle", "Unlock AI Form Tracking")}
+              </DialogTitle>
+              <p className="text-sm text-white/55 mt-2 leading-relaxed">
+                {t("workout.proPaywallDesc", "Real-time pose detection, rep counting, and form scoring require a Pro plan. Manual logging is always free.")}
+              </p>
+            </div>
+
+            {/* Features */}
+            <div className="w-full space-y-2 text-left">
+              {[
+                { icon: "🎯", label: t("workout.featureFormScoring", "Live form scoring & feedback") },
+                { icon: "📊", label: t("workout.featureRepCounting", "Automatic rep counting") },
+                { icon: "👻", label: t("workout.featureGhostMode", "Ghost Mode AR overlay") },
+                { icon: "✅", label: t("workout.featureVerified", "Verified session badge") },
+              ].map(({ icon, label }) => (
+                <div key={label} className="flex items-center gap-3">
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm"
+                    style={{ background: "rgba(168,85,247,0.14)", border: "1px solid rgba(168,85,247,0.22)" }}
+                  >
+                    {icon}
+                  </div>
+                  <span className="text-sm text-white/75">{label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTAs */}
+            <div className="w-full space-y-2.5 pt-1">
+              <button
+                onClick={() => { setShowCameraPaywall(false); setLocation("/shop"); }}
+                className="w-full py-3.5 rounded-xl text-sm font-black tracking-wide transition-all"
+                style={{
+                  background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+                  color: "#fff",
+                  boxShadow: "0 4px 24px rgba(168,85,247,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
+                }}
+              >
+                {t("progress.startTrial", "Start 3-Day Free Trial")}
+              </button>
+              <button
+                onClick={() => {
+                  setShowCameraPaywall(false);
+                  setIsManualLog(true);
+                  setManualReps(10);
+                  setManualRpe(null);
+                }}
+                className="w-full py-2.5 rounded-xl text-sm font-semibold text-white/50 hover:text-white/70 transition-colors"
+              >
+                {t("workout.manualLogNoAI", "Continue with Manual Log")}
+              </button>
+            </div>
+            <p className="text-[10px] text-white/25">{t("progress.trialNote", "Cancel any time · No charge today")}</p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Exercise Info Modal ─────────────────────────────────────────────── */}
       <Dialog open={!!infoExercise} onOpenChange={(open) => { if (!open) setInfoExercise(null); }}>
