@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Flame, Pause, Play, SkipForward, X } from "lucide-react";
@@ -683,18 +684,18 @@ function ActiveWorkoutPlayer({
         @keyframes cockpitFadeIn   { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         @keyframes bioGhostPulse   { 0%,100%{opacity:.78} 50%{opacity:1} }
 
-        /* ── Shell: solid dark full-screen grid ── */
+        /* ── Shell: solid dark full-screen grid (3 rows) ── */
         #ms-shell {
           position: fixed; inset: 0;
-          width: 100vw; height: 100dvh;
           background: #080d12;
           display: grid;
-          grid-template-rows: 52px 68px 1fr 172px;
+          grid-template-rows: 52px 1fr 172px;
           overflow: hidden;
           touch-action: none; overscroll-behavior: none;
           user-select: none; -webkit-user-select: none;
           -webkit-tap-highlight-color: transparent;
           box-sizing: border-box;
+          z-index: 9999;
         }
         #ms-shell *, #ms-shell *::before, #ms-shell *::after {
           box-sizing: border-box; touch-action: none;
@@ -724,48 +725,49 @@ function ActiveWorkoutPlayer({
           color: rgba(148,163,184,0.9); font-size: 11px; font-weight: 600;
         }
 
-        /* ── ROW 2: Title band ── */
-        #ms-ttl {
+        /* ── ROW 2: Unified focus area — title + skeleton + thumbnails ── */
+        #ms-focus {
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          padding: 0 28px; gap: 4px; overflow: hidden;
-          border-bottom: 1px solid rgba(255,255,255,0.04);
+          gap: 10px; padding: 10px 24px 6px;
+          overflow: hidden; min-height: 0;
+          position: relative; width: 100%;
         }
-        #ms-ttl .chip {
+        /* Radial green glow behind skeleton */
+        #ms-focus::before {
+          content: "";
+          position: absolute; inset: 0; pointer-events: none;
+          background: radial-gradient(ellipse 55% 50% at 50% 55%, rgba(34,197,94,0.08) 0%, transparent 72%);
+        }
+        /* Title chip + exercise name */
+        #ms-focus .focus-title {
+          display: flex; flex-direction: column;
+          align-items: center; gap: 4px; z-index: 1;
+          flex-shrink: 0;
+        }
+        #ms-focus .chip {
           font-size: 9px; font-weight: 800;
           letter-spacing: 0.16em; text-transform: uppercase;
           color: #22c55e;
           background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.22);
           border-radius: 99px; padding: 2px 10px; line-height: 1.6;
         }
-        #ms-ttl h2 {
+        #ms-focus h2 {
           font-size: 21px; font-weight: 900; letter-spacing: -0.02em;
           margin: 0; line-height: 1.15; text-align: center;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-          max-width: 100%; color: #f1f5f9;
+          max-width: min(90vw, 480px); color: #f1f5f9;
         }
-
-        /* ── ROW 3: Hero stage ── */
-        #ms-stage {
-          display: flex; align-items: center; justify-content: center;
-          padding: 8px 24px 6px; overflow: hidden; min-height: 0;
-          position: relative;
-        }
-        /* Subtle green vignette behind the skeleton */
-        #ms-stage::before {
-          content: "";
-          position: absolute; inset: 0; pointer-events: none;
-          background: radial-gradient(ellipse 60% 55% at 50% 40%, rgba(34,197,94,0.07) 0%, transparent 75%);
-        }
-        #ms-stage .hero-inner {
-          width: 100%; max-width: 320px;
+        /* Skeleton hero container */
+        #ms-focus .hero-inner {
+          width: 100%; max-width: 320px; flex-shrink: 0; z-index: 1;
           animation: cockpitFadeIn 0.22s ease-out both;
         }
 
-        /* ── ROW 4: Pro cockpit dock ── */
+        /* ── ROW 3: Symmetric info dock ── */
         #ms-dock {
           display: grid;
-          grid-template-columns: 104px 1fr 96px;
+          grid-template-columns: 108px 1fr 108px;
           align-items: center;
           gap: 0;
           background: rgba(8,13,18,0.92);
@@ -779,7 +781,7 @@ function ActiveWorkoutPlayer({
         #ms-dock .dock-timer {
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          padding: 12px 4px 14px 14px; gap: 3px;
+          padding: 12px 8px 14px 12px; gap: 3px;
           border-right: 1px solid rgba(255,255,255,0.05);
         }
         #ms-dock .dock-timer .timer-label {
@@ -814,11 +816,11 @@ function ActiveWorkoutPlayer({
           border: 1px solid rgba(34,197,94,0.2);
         }
 
-        /* Right cell: silhouette + next */
+        /* Right cell: next exercise preview */
         #ms-dock .dock-right {
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          padding: 10px 14px 12px 4px; gap: 5px;
+          padding: 10px 12px 12px 8px; gap: 5px;
           border-left: 1px solid rgba(255,255,255,0.05);
           overflow: hidden;
         }
@@ -831,7 +833,7 @@ function ActiveWorkoutPlayer({
           color: rgba(226,232,240,0.9); line-height: 1.3;
           overflow: hidden; text-overflow: ellipsis;
           display: -webkit-box; -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical; max-width: 80px;
+          -webkit-box-orient: vertical; max-width: 84px;
         }
         #ms-dock .last-strong {
           font-size: 9px; font-weight: 800;
@@ -859,18 +861,20 @@ function ActiveWorkoutPlayer({
           </div>
         </div>
 
-        {/* ── ROW 2: Title band ─────────────────────────────────────── */}
-        <AnimatePresence mode="wait">
-          <motion.div id="ms-ttl" key={`ttl-${stretchIndex}`}
-            initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: "easeOut" }}>
-            <div className="chip">Stretch {stretchIndex + 1} of {routine.length}</div>
-            <h2>{currentStretch.name}</h2>
-          </motion.div>
-        </AnimatePresence>
+        {/* ── ROW 2: Unified focus column — title + skeleton + thumbnails ── */}
+        <div id="ms-focus">
 
-        {/* ── ROW 3: Hero stage — animated skeleton ─────────────────── */}
-        <div id="ms-stage">
+          {/* Title: chip + exercise name — animates in on stretch change */}
+          <AnimatePresence mode="wait">
+            <motion.div key={`ttl-${stretchIndex}`} className="focus-title"
+              initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: "easeOut" }}>
+              <div className="chip">Stretch {stretchIndex + 1} of {routine.length}</div>
+              <h2>{currentStretch.name}</h2>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Skeleton hero — spring-morphing bio-mechanical figure */}
           <AnimatePresence mode="wait">
             <motion.div key={`hero-${stretchIndex}`} className="hero-inner"
               initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }}
@@ -878,9 +882,10 @@ function ActiveWorkoutPlayer({
               <HeroSkeleton exerciseName={currentStretch.name} paused={paused} />
             </motion.div>
           </AnimatePresence>
+
         </div>
 
-        {/* ── ROW 4: Pro cockpit info dock ──────────────────────────── */}
+        {/* ── ROW 3: Symmetric info dock ────────────────────────────── */}
         <div id="ms-dock">
 
           {/* LEFT — Arc timer */}
@@ -1148,8 +1153,7 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
     const streak = finalStreak ?? 1;
     const totalSeconds = routine.reduce((s, r) => s + r.durationSeconds, 0);
     const totalMin = Math.round(totalSeconds / 60);
-    return (
-      <motion.div
+    return createPortal(<motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
@@ -1233,13 +1237,12 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
             Repeat Session
           </Button>
         </motion.div>
-      </motion.div>
-    );
+      </motion.div>, document.body);
   }
 
-  // ── ACTIVE STATE — rendered by its own component which owns the scroll lock ──
+  // ── ACTIVE STATE — portal-rendered so position:fixed is relative to viewport ─
   if (pageState === "active") {
-    return (
+    return createPortal(
       <ActiveWorkoutPlayer
         routine={routine}
         stretchIndex={stretchIndex}
@@ -1248,7 +1251,8 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
         onExit={exitSession}
         onSkip={advanceStretch}
         onPauseToggle={() => setPaused((p) => !p)}
-      />
+      />,
+      document.body,
     );
   }
 
