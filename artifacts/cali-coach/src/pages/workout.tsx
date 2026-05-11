@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLocation, useSearch } from "wouter";
-import { useListExercises, useListSessions, useCreateSession, useUpdateSession, useCreateRep, useGetCalibration } from "@workspace/api-client-react";
+import { useListExercises, useListSessions, useCreateSession, useUpdateSession, useCreateRep, useGetCalibration, getListSessionsQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-vision";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -750,6 +751,7 @@ export function Workout() {
     pacerTimeoutsRef.current = [];
   };
 
+  const queryClient   = useQueryClient();
   const createSession = useCreateSession();
   const updateSession = useUpdateSession();
   const createRep     = useCreateRep();
@@ -1660,6 +1662,9 @@ export function Workout() {
         newExerciseTiers?: Array<{ exerciseName: string; tier: string; title: string; icon: string }>;
       };
 
+      // Immediately refresh History so the new entry is visible when the user lands there
+      queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
+
       // Show milestone badge toasts for newly earned category badges
       const milestones = sessionResult?.newBadges ?? [];
       for (const badge of milestones) {
@@ -1958,6 +1963,7 @@ export function Workout() {
           sets:        1,
         },
       });
+      queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
 
       const newSession: SessionSummary = {
         exerciseName,
@@ -2036,6 +2042,7 @@ export function Workout() {
           sets:         totalSets,
         },
       });
+      queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
 
       const exerciseName = exercise?.name ?? "Exercise";
       const newSession: SessionSummary = {

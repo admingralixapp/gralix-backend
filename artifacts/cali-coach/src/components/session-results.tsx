@@ -322,7 +322,11 @@ export function SessionResults({
 
   const handleContinue = () => {
     if (newlyUnlockedNode) {
+      // Navigate to the next skill's exercise
       navigate(`/workout?exercise=${encodeURIComponent(newlyUnlockedNode.exercises[0])}`);
+    } else {
+      // Return to History so the user can immediately see their new entry
+      navigate("/history");
     }
     onClose();
   };
