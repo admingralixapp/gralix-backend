@@ -2675,7 +2675,6 @@ export function Workout() {
                       setEqInputVal("");
                     }}
                   >
-                    {locked && <Lock className="w-2.5 h-2.5 shrink-0 text-white/40" />}
                     <span className="truncate">{item.label}</span>
                   </button>
                   <button
@@ -2915,7 +2914,6 @@ export function Workout() {
                                             setBwInputVal("");
                                           }}
                                         >
-                                          {locked && <Lock className="w-2.5 h-2.5 shrink-0 text-white/40" />}
                                           <span className="flex-1 truncate">{item.label}</span>
                                         </button>
                                         <button
