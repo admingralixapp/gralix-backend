@@ -91,6 +91,7 @@ router.get("/sessions", async (req, res) => {
     .limit(limit ?? 20)
     .offset(offset ?? 0);
 
+  res.set("Cache-Control", "no-store");
   res.json(ListSessionsResponse.parse(sessions));
 });
 

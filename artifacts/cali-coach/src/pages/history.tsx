@@ -1,4 +1,6 @@
-import { useListSessions } from "@workspace/api-client-react";
+import { useEffect } from "react";
+import { useListSessions, getListSessionsQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Link } from "wouter";
@@ -43,8 +45,15 @@ const BRANCH_STYLES: Record<Branch, { label: string; bg: string; text: string; b
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function History() {
+  const queryClient = useQueryClient();
   const { data: sessions, isLoading, isError } = useListSessions();
   const { t } = useTranslation();
+
+  // Force a fresh fetch from the server every time this page mounts,
+  // so a newly completed workout always appears immediately.
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
+  }, [queryClient]);
 
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
