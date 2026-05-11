@@ -71,6 +71,8 @@ export interface Session {
   source: string;
   /** Number of sets completed in this session */
   sets?: number | null;
+  /** Storage object path of the session's video clip, set after upload */
+  videoUrl?: string | null;
 }
 
 export interface Rep {
@@ -103,6 +105,8 @@ export interface UpdateSessionBody {
   isVerified?: boolean;
   /** Number of sets completed */
   sets?: number | null;
+  /** Storage object path of the session's video clip */
+  videoUrl?: string | null;
 }
 
 export interface CreateRepBody {

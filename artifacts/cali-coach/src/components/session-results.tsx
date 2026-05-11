@@ -11,11 +11,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Trophy, Star, ChevronRight, Zap, Ghost } from "lucide-react";
+import { Trophy, Star, ChevronRight, Zap, Ghost, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type EvaluatedSkill } from "@/lib/skill-tree";
 import { getExerciseConfig } from "@/lib/exercise-registry";
+import { useUpdateSession, getListSessionsQueryKey } from "@workspace/api-client-react";
+import { getClip } from "@/lib/clip-store";
 
 // ─── Thresholds ───────────────────────────────────────────────────────────────
 
@@ -317,13 +320,40 @@ export function SessionResults({
 
   const skillUnlocked = !!newlyMasteredNode;
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleContinue = () => {
+  // ── Async save + navigate ─────────────────────────────────────────────────
+  const updateSession = useUpdateSession();
+  const queryClient   = useQueryClient();
+  const [isSaving, setIsSaving]       = useState(false);
+  const [saveClip,  setSaveClip]      = useState(true);
+
+  // Check whether an uploaded clip is already available in localStorage.
+  const existingClip = getClip(sessionId);
+
+  const handleContinue = async () => {
+    setIsSaving(true);
+    try {
+      // If a clip was uploaded for this session and the user wants it attached,
+      // PATCH the session with the video storage path so it persists in the DB.
+      if (saveClip && existingClip) {
+        await updateSession.mutateAsync({
+          id:   sessionId,
+          data: { videoUrl: existingClip.objectPath },
+        });
+        console.log("Workout Saved Successfully: clip attached", existingClip.objectPath);
+      }
+
+      // Guarantee History has fresh data before navigating
+      await queryClient.refetchQueries({ queryKey: getListSessionsQueryKey() });
+    } catch (error) {
+      console.error("Database Save Failed:", error);
+      // Non-fatal — navigate anyway; the session core data is already saved
+    } finally {
+      setIsSaving(false);
+    }
+
     if (newlyUnlockedNode) {
-      // Navigate to the next skill's exercise
       navigate(`/workout?exercise=${encodeURIComponent(newlyUnlockedNode.exercises[0])}`);
     } else {
-      // Return to History so the user can immediately see their new entry
       navigate("/history");
     }
     onClose();
@@ -447,10 +477,39 @@ export function SessionResults({
               </div>
             )}
 
+            {/* Clip attachment toggle — only shown when a clip is ready */}
+            {existingClip && !newlyUnlockedNode && (
+              <button
+                type="button"
+                onClick={() => setSaveClip(v => !v)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-sm transition-colors ${
+                  saveClip
+                    ? "bg-blue-500/15 border-blue-500/40 text-blue-300"
+                    : "bg-secondary/60 border-border text-muted-foreground"
+                }`}
+              >
+                <Video className="w-4 h-4 shrink-0" />
+                <span className="flex-1 text-left font-medium">
+                  {saveClip ? "Clip will be saved to History" : "Clip save skipped"}
+                </span>
+                <span className={`text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${saveClip ? "bg-blue-500/30 text-blue-200" : "bg-muted text-muted-foreground"}`}>
+                  {saveClip ? "On" : "Off"}
+                </span>
+              </button>
+            )}
+
             {/* Actions */}
             <div className="flex gap-3 pt-1">
-              <Button className="w-full font-bold" onClick={handleContinue}>
-                {newlyUnlockedNode ? t("session.trainNext") : t("history.title")}
+              <Button
+                className="w-full font-bold"
+                onClick={handleContinue}
+                disabled={isSaving}
+              >
+                {isSaving
+                  ? "Saving…"
+                  : newlyUnlockedNode
+                    ? t("session.trainNext")
+                    : t("history.title")}
               </Button>
             </div>
 

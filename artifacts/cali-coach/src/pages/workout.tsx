@@ -1662,6 +1662,8 @@ export function Workout() {
         newExerciseTiers?: Array<{ exerciseName: string; tier: string; title: string; icon: string }>;
       };
 
+      console.log("Workout Saved Successfully:", sessionResult);
+
       // Immediately refresh History so the new entry is visible when the user lands there
       queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
 
@@ -1718,7 +1720,8 @@ export function Workout() {
 
       // No recording available → go straight to session results
       setSessionResults(resultsProps);
-    } catch {
+    } catch (error) {
+      console.error("Database Save Failed:", error);
       recorder?.destroy();
       toast({ title: "Save error", description: "Failed to save session. Please try again.", variant: "destructive" });
     } finally {
@@ -1953,7 +1956,7 @@ export function Workout() {
       }));
       const prevEvaluated = evaluateSkillTree(history);
 
-      await updateSession.mutateAsync({
+      const manualResult = await updateSession.mutateAsync({
         id:   session.id,
         data: {
           completedAt: new Date().toISOString(),
@@ -1963,6 +1966,7 @@ export function Workout() {
           sets:        1,
         },
       });
+      console.log("Workout Saved Successfully:", manualResult);
       queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
 
       const newSession: SessionSummary = {
@@ -1985,7 +1989,8 @@ export function Workout() {
         prevEvaluated,
         nextEvaluated,
       });
-    } catch {
+    } catch (error) {
+      console.error("Database Save Failed:", error);
       toast({ title: "Error", description: "Could not save workout.", variant: "destructive" });
     } finally {
       setIsSavingManual(false);
@@ -2033,7 +2038,7 @@ export function Workout() {
       }));
       const prevEvaluated = evaluateSkillTree(history);
 
-      await updateSession.mutateAsync({
+      const testResult = await updateSession.mutateAsync({
         id:   session.id,
         data: {
           completedAt:  new Date().toISOString(),
@@ -2042,6 +2047,7 @@ export function Workout() {
           sets:         totalSets,
         },
       });
+      console.log("Workout Saved Successfully:", testResult);
       queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
 
       const exerciseName = exercise?.name ?? "Exercise";
@@ -2062,7 +2068,8 @@ export function Workout() {
         prevEvaluated,
         nextEvaluated,
       });
-    } catch {
+    } catch (error) {
+      console.error("Database Save Failed:", error);
       toast({ title: "Error", description: "Could not save test workout.", variant: "destructive" });
     } finally {
       setIsSavingTest(false);

@@ -142,6 +142,12 @@ export const ListSessionsResponseItem = zod.object({
     .number()
     .nullish()
     .describe("Number of sets completed in this session"),
+  videoUrl: zod
+    .string()
+    .nullish()
+    .describe(
+      "Storage object path of the session's video clip, set after upload",
+    ),
 });
 export const ListSessionsResponse = zod.array(ListSessionsResponseItem);
 
@@ -201,6 +207,12 @@ export const GetSessionResponse = zod
       .number()
       .nullish()
       .describe("Number of sets completed in this session"),
+    videoUrl: zod
+      .string()
+      .nullish()
+      .describe(
+        "Storage object path of the session's video clip, set after upload",
+      ),
   })
   .and(
     zod.object({
@@ -233,6 +245,10 @@ export const UpdateSessionBody = zod.object({
   rpe: zod.number().nullish(),
   isVerified: zod.boolean().optional(),
   sets: zod.number().nullish().describe("Number of sets completed"),
+  videoUrl: zod
+    .string()
+    .nullish()
+    .describe("Storage object path of the session's video clip"),
 });
 
 export const updateSessionResponseLogTypeDefault = `ai`;
@@ -274,6 +290,12 @@ export const UpdateSessionResponse = zod.object({
     .number()
     .nullish()
     .describe("Number of sets completed in this session"),
+  videoUrl: zod
+    .string()
+    .nullish()
+    .describe(
+      "Storage object path of the session's video clip, set after upload",
+    ),
 });
 
 /**

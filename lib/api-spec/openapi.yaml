@@ -507,6 +507,10 @@ components:
           type: integer
           nullable: true
           description: "Number of sets completed in this session"
+        videoUrl:
+          type: string
+          nullable: true
+          description: "Storage object path of the session's video clip, set after upload"
       required:
         - id
         - exerciseId
@@ -569,6 +573,10 @@ components:
           type: integer
           nullable: true
           description: "Number of sets completed"
+        videoUrl:
+          type: string
+          nullable: true
+          description: "Storage object path of the session's video clip"
 
     Rep:
       type: object

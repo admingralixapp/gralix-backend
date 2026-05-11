@@ -26,6 +26,8 @@ export const sessionsTable = pgTable("sessions", {
   source:       varchar("source", { length: 16 }).notNull().default("workout"),
   /** Number of sets completed in this session */
   sets:         integer("sets"),
+  /** Storage object path of the session's video clip, set after upload completes */
+  videoUrl:     text("video_url"),
 });
 
 export const insertSessionSchema = createInsertSchema(sessionsTable).omit({
