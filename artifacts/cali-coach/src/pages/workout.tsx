@@ -1647,6 +1647,7 @@ export function Workout() {
     const prevEvaluated = evaluateSkillTree(history);
 
     try {
+      console.log("Attempting to save workout...", { sessionId: finalSessionId, exerciseName, finalReps, finalFormScore });
       // Wait for the DB write to succeed before showing the summary screen.
       const sessionResult = await updateSession.mutateAsync({
         id:   finalSessionId,
@@ -1662,10 +1663,10 @@ export function Workout() {
         newExerciseTiers?: Array<{ exerciseName: string; tier: string; title: string; icon: string }>;
       };
 
-      console.log("Workout Saved Successfully:", sessionResult);
+      console.log("Save successful!", sessionResult);
 
       // Immediately refresh History so the new entry is visible when the user lands there
-      queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
+      void queryClient.refetchQueries({ queryKey: getListSessionsQueryKey() });
 
       // Show milestone badge toasts for newly earned category badges
       const milestones = sessionResult?.newBadges ?? [];
@@ -1942,6 +1943,7 @@ export function Workout() {
     }
     setIsSavingManual(true);
     try {
+      console.log("Attempting to save workout...", { exerciseId: selectedExerciseId, type: "manual", reps: manualReps });
       const session = await createSession.mutateAsync({
         data: { exerciseId: parseInt(selectedExerciseId), logType: "manual" },
       });
@@ -1966,8 +1968,8 @@ export function Workout() {
           sets:        1,
         },
       });
-      console.log("Workout Saved Successfully:", manualResult);
-      queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
+      console.log("Save successful!", manualResult);
+      void queryClient.refetchQueries({ queryKey: getListSessionsQueryKey() });
 
       const newSession: SessionSummary = {
         exerciseName,
@@ -2005,6 +2007,7 @@ export function Workout() {
     }
     setIsSavingTest(true);
     try {
+      console.log("Attempting to save workout...", { exerciseId: selectedExerciseId, type: "test" });
       const session = await createSession.mutateAsync({
         data: { exerciseId: parseInt(selectedExerciseId) },
       });
@@ -2047,8 +2050,8 @@ export function Workout() {
           sets:         totalSets,
         },
       });
-      console.log("Workout Saved Successfully:", testResult);
-      queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
+      console.log("Save successful!", testResult);
+      void queryClient.refetchQueries({ queryKey: getListSessionsQueryKey() });
 
       const exerciseName = exercise?.name ?? "Exercise";
       const newSession: SessionSummary = {

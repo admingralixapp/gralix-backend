@@ -52,7 +52,7 @@ export function History() {
   // Force a fresh fetch from the server every time this page mounts,
   // so a newly completed workout always appears immediately.
   useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
+    void queryClient.refetchQueries({ queryKey: getListSessionsQueryKey() });
   }, [queryClient]);
 
   return (

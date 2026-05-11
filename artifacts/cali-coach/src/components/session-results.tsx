@@ -335,14 +335,15 @@ export function SessionResults({
       // If a clip was uploaded for this session and the user wants it attached,
       // PATCH the session with the video storage path so it persists in the DB.
       if (saveClip && existingClip) {
+        console.log("Attempting to save workout...", { sessionId, clip: existingClip.objectPath });
         await updateSession.mutateAsync({
           id:   sessionId,
           data: { videoUrl: existingClip.objectPath },
         });
-        console.log("Workout Saved Successfully: clip attached", existingClip.objectPath);
+        console.log("Save successful! clip attached", existingClip.objectPath);
       }
 
-      // Guarantee History has fresh data before navigating
+      // Always force a fresh fetch so History shows the latest entry immediately
       await queryClient.refetchQueries({ queryKey: getListSessionsQueryKey() });
     } catch (error) {
       console.error("Database Save Failed:", error);
