@@ -53,6 +53,8 @@ export interface UserProfile {
   inventory: string[];
   activeAura: ActiveAura;
   hasClaimedSigningBonus: boolean;
+  /** BCP-47 locale code, e.g. "en-GB", "en-US", "fr". Null = not yet set. */
+  preferredLanguage: string | null;
   createdAt: string;
 }
 
@@ -95,6 +97,28 @@ export function useMyProfile() {
     },
     retry: false,
     staleTime: 60_000,
+  });
+}
+
+export function useSaveLanguage() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (preferredLanguage: string) => {
+      const token = await getToken();
+      return apiFetchAuth<{ ok: boolean; preferredLanguage: string }>(
+        "/api/users/me/language",
+        token,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ preferredLanguage }),
+        },
+      );
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["/api/users/me"] });
+    },
   });
 }
 

@@ -40,6 +40,8 @@ import { DailyTasksPage } from "@/pages/daily-tasks";
 import { BodyCalibration } from "@/pages/body-calibration";
 import NotFound from "@/pages/not-found";
 import { useMyProfile, useUpsertProfile } from "@/lib/social";
+import { setVoiceLanguage } from "@/lib/voice-service";
+import { setAuraLanguage } from "@/lib/aura-audio";
 
 // ---------------------------------------------------------------------------
 // Clerk setup
@@ -125,6 +127,29 @@ function RTLDirectionSync() {
     document.documentElement.dir = dir;
     document.documentElement.lang = i18n.language ?? "en";
   }, [i18n.language]);
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Syncs preferred language from the DB profile to i18n on sign-in / page load.
+// This enables cross-device language/currency consistency.
+// ---------------------------------------------------------------------------
+function LangSync() {
+  const { data: profile } = useMyProfile();
+  const { isSignedIn } = useUser();
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    if (!isSignedIn || !profile?.preferredLanguage) return;
+    if (profile.preferredLanguage !== i18n.language) {
+      void i18n.changeLanguage(profile.preferredLanguage);
+      setVoiceLanguage(profile.preferredLanguage);
+      setAuraLanguage(profile.preferredLanguage);
+    }
+  // Only run when the profile loads — don't re-run on every i18n change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.preferredLanguage, isSignedIn]);
+
   return null;
 }
 
@@ -236,6 +261,7 @@ function AppRouter() {
     >
       <QueryClientProvider client={queryClient}>
         <RTLDirectionSync />
+        <LangSync />
         <ClerkQueryClientCacheInvalidator />
         <ProfileSync />
         <UploadManagerProvider>

@@ -4,6 +4,9 @@
  * Lazy-loads locale files from /locales/{lang}/translation.json via HTTP backend.
  * Detects preferred language from localStorage → browser, falls back to English.
  * RTL direction is applied in App.tsx via the onLanguageChanged handler.
+ *
+ * Regional English variants (en-GB, en-US) are supported for currency localisation.
+ * Plain "en" stored from older sessions is migrated to "en-GB" automatically.
  */
 
 import i18n from "i18next";
@@ -30,6 +33,11 @@ i18n
       order: ["localStorage", "navigator", "htmlTag"],
       lookupLocalStorage: "calicoach_lang",
       caches: ["localStorage"],
+      /**
+       * Migrate legacy plain "en" → "en-GB" so existing users get GBP pricing.
+       * All other stored codes pass through unchanged.
+       */
+      convertDetectedLanguage: (lng: string) => (lng === "en" ? "en-GB" : lng),
     },
 
     interpolation: {
@@ -40,7 +48,6 @@ i18n
       useSuspense: false,
     },
 
-    // Only log missing keys in development so we can track what still needs translation
     saveMissing: false,
   });
 

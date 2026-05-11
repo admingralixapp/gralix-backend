@@ -70,6 +70,11 @@ export const usersTable = pgTable("users", {
    * True after the user has claimed their one-time Pro signing bonus pack.
    */
   hasClaimedSigningBonus: boolean("has_claimed_signing_bonus").notNull().default(false),
+  /**
+   * BCP-47 locale tag for the user's preferred language/regional currency,
+   * e.g. "en-GB" (GBP), "en-US" (USD), "fr" (EUR). Null = auto-detect.
+   */
+  preferredLanguage: varchar("preferred_language", { length: 16 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

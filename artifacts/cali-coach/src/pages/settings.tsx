@@ -18,6 +18,7 @@ import {
   getMirrorVideo, setMirrorVideo,
   getVoiceProfile, setVoiceProfile,
 } from "@/lib/workout-preferences";
+import { useSaveLanguage } from "@/lib/social";
 import { VOICE_PROFILE_LIST } from "@/lib/voice-profiles";
 import { clearCueCache } from "@/lib/voice-service";
 import {
@@ -68,7 +69,10 @@ export function Settings() {
 
   // Only offer languages that ElevenLabs Multilingual v2 can actually speak.
   // UI text is served via i18n for all 100 languages — voice is the constraint.
-  const EL_LANGUAGES = LANGUAGES.filter((l) => ELEVENLABS_SUPPORTED.has(l.code));
+  // Use base code check so en-GB / en-US both pass (base "en" is supported).
+  const EL_LANGUAGES = LANGUAGES.filter((l) =>
+    ELEVENLABS_SUPPORTED.has(l.code.split("-")[0]!),
+  );
 
   const filteredLangs = langSearch.trim()
     ? EL_LANGUAGES.filter(
@@ -79,10 +83,13 @@ export function Settings() {
       )
     : EL_LANGUAGES;
 
+  const saveLanguage = useSaveLanguage();
+
   function handleLanguageChange(code: string) {
-    i18n.changeLanguage(code);
+    void i18n.changeLanguage(code);
     setVoiceLanguage(code);
     setAuraLanguage(code);
+    saveLanguage.mutate(code);
     toast({ title: `Language changed to ${getLang(code)?.nativeName ?? code}` });
   }
 
@@ -329,6 +336,9 @@ export function Settings() {
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           {/* Current language pill */}
           <div className="p-4 flex items-center gap-3 border-b border-border/60">
+            {currentLang.flag && (
+              <span className="text-2xl leading-none">{currentLang.flag}</span>
+            )}
             <div className="flex-1">
               <div className="font-medium text-sm">{currentLang.nativeName}</div>
               <div className="text-xs text-muted-foreground">{currentLang.name}</div>
@@ -370,6 +380,11 @@ export function Settings() {
                         : "hover:bg-muted/40 text-foreground",
                     ].join(" ")}
                   >
+                    {lang.flag ? (
+                      <span className="text-lg leading-none shrink-0">{lang.flag}</span>
+                    ) : (
+                      <span className="w-5 shrink-0" />
+                    )}
                     <div className="flex-1 min-w-0">
                       <span className="text-sm font-medium">{lang.nativeName}</span>
                       <span className="text-xs text-muted-foreground ml-2">{lang.name}</span>

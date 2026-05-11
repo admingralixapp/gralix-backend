@@ -2,11 +2,13 @@ export interface Language {
   code: string;
   name: string;
   nativeName: string;
+  flag?: string;
   rtl?: boolean;
 }
 
 export const LANGUAGES: Language[] = [
-  { code: "en",  name: "English",              nativeName: "English" },
+  { code: "en-GB", name: "English (United Kingdom)", nativeName: "English (UK)",  flag: "🇬🇧" },
+  { code: "en-US", name: "English (United States)",  nativeName: "English (US)",  flag: "🇺🇸" },
   { code: "zh",  name: "Chinese (Mandarin)",   nativeName: "中文" },
   { code: "hi",  name: "Hindi",                nativeName: "हिन्दी" },
   { code: "es",  name: "Spanish",              nativeName: "Español" },
@@ -111,11 +113,20 @@ export const RTL_LANGS = new Set(
 );
 
 export function isRTL(lang: string): boolean {
-  const base = lang.split("-")[0];
+  if (RTL_LANGS.has(lang)) return true;
+  const base = lang.split("-")[0]!;
   return RTL_LANGS.has(base);
 }
 
+/**
+ * Find a Language entry by its code. Checks exact match first (e.g. "en-GB"),
+ * then falls back to base-code match (e.g. "en" → en-GB as first English entry).
+ */
 export function getLang(code: string): Language | undefined {
-  const base = code.split("-")[0];
-  return LANGUAGES.find((l) => l.code === base);
+  // 1. Exact match (handles "en-GB", "en-US", "fr", etc.)
+  const exact = LANGUAGES.find((l) => l.code === code);
+  if (exact) return exact;
+  // 2. Base-code match (legacy "en" → first English variant = en-GB)
+  const base = code.split("-")[0]!.toLowerCase();
+  return LANGUAGES.find((l) => l.code.split("-")[0]!.toLowerCase() === base);
 }

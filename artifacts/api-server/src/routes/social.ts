@@ -234,6 +234,41 @@ router.put(
 );
 
 // ---------------------------------------------------------------------------
+// PATCH /api/users/me/language — save preferred language/locale for cross-device sync
+// ---------------------------------------------------------------------------
+router.patch(
+  "/users/me/language",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const { preferredLanguage } = req.body as { preferredLanguage?: string };
+
+    if (
+      !preferredLanguage ||
+      typeof preferredLanguage !== "string" ||
+      preferredLanguage.length > 16
+    ) {
+      res.status(400).json({ error: "Invalid preferredLanguage" });
+      return;
+    }
+
+    const me = await getMe(clerkId);
+    if (!me) {
+      res.status(404).json({ error: "Profile not found" });
+      return;
+    }
+
+    const [updated] = await db
+      .update(usersTable)
+      .set({ preferredLanguage })
+      .where(eq(usersTable.id, me.id))
+      .returning();
+
+    res.json({ ok: true, preferredLanguage: updated.preferredLanguage });
+  },
+);
+
+// ---------------------------------------------------------------------------
 // PUT /api/users/me/subscription — activate Pro trial
 // ---------------------------------------------------------------------------
 router.put(
