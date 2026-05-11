@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useListSessions, getListSessionsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -46,14 +46,37 @@ const BRANCH_STYLES: Record<Branch, { label: string; bg: string; text: string; b
 
 export function History() {
   const queryClient = useQueryClient();
-  const { data: sessions, isLoading, isError } = useListSessions();
   const { t } = useTranslation();
 
-  // Force a fresh fetch from the server every time this page mounts,
-  // so a newly completed workout always appears immediately.
+  // `ready` flips to true only after the first fresh network fetch completes on
+  // this mount, preventing the "No workouts recorded" flash from stale cache.
+  const [ready, setReady] = useState(false);
+
+  const {
+    data: sessions,
+    isLoading,
+    isFetching,
+    isError,
+  } = useListSessions();
+
+  // Force a fresh refetch every time this component mounts
+  // (e.g. user switches away and back to the History tab).
   useEffect(() => {
-    void queryClient.refetchQueries({ queryKey: getListSessionsQueryKey() });
+    setReady(false);
+    void queryClient
+      .refetchQueries({ queryKey: getListSessionsQueryKey() })
+      .then(() => setReady(true));
   }, [queryClient]);
+
+  // Show skeletons until the explicit refetch above has resolved.
+  const showSkeleton = !ready || isLoading || isFetching;
+
+  const sorted = sessions
+    ? [...sessions].sort(
+        (a, b) =>
+          new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime(),
+      )
+    : [];
 
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
@@ -62,7 +85,7 @@ export function History() {
         <p className="text-muted-foreground mt-1">{t("history.subtitle")}</p>
       </div>
 
-      {isLoading ? (
+      {showSkeleton ? (
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
             <Skeleton key={i} className="h-24 w-full" />
@@ -76,7 +99,7 @@ export function History() {
             Something went wrong fetching your history. Please try refreshing the page.
           </p>
         </div>
-      ) : sessions?.length === 0 ? (
+      ) : sorted.length === 0 ? (
         <div className="text-center py-20 border border-dashed rounded-lg">
           <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
           <p className="font-semibold text-foreground mb-1">No workouts recorded yet.</p>
@@ -86,7 +109,7 @@ export function History() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {sessions?.map(session => {
+          {sorted.map(session => {
             const clip    = getClip(session.id);
             const hasClip = clip !== null;
             const branch  = getExerciseBranch(session.exerciseName ?? "");

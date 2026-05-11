@@ -452,7 +452,7 @@ export function Home() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-extrabold">{t("dashboard.recentSessions")}</h2>
           <Button variant="link" asChild className="text-primary">
-            <Link href="/mastery">
+            <Link href="/mastery?tab=history">
               {t("dashboard.viewAll")} <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
           </Button>

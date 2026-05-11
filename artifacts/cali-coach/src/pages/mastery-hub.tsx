@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GitBranch, History as HistoryIcon, BarChart2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { SkillTreePage } from "./skill-tree";
 import { History } from "./history";
@@ -8,9 +9,33 @@ import { Progress } from "./progress";
 
 type Tab = "skill-tree" | "history" | "progress";
 
+const VALID_TABS = new Set<Tab>(["skill-tree", "history", "progress"]);
+
+function getTabFromSearch(): Tab {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("tab");
+  return VALID_TABS.has(raw as Tab) ? (raw as Tab) : "skill-tree";
+}
+
 export function MasteryHub() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<Tab>("skill-tree");
+  const [, setLocation] = useLocation();
+  const [tab, setTab] = useState<Tab>(getTabFromSearch);
+
+  // Sync when the URL changes externally (e.g. browser back/forward or View All link)
+  useEffect(() => {
+    const sync = () => setTab(getTabFromSearch());
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, []);
+
+  function switchTab(next: Tab) {
+    setTab(next);
+    // Update URL without triggering a full navigation so wouter doesn't remount
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", next);
+    window.history.replaceState(null, "", `/mastery?${params.toString()}`);
+  }
 
   return (
     <div className="flex flex-col min-h-full">
@@ -19,7 +44,7 @@ export function MasteryHub() {
         style={{ background: "rgba(10,15,26,0.92)", backdropFilter: "blur(16px)" }}
       >
         <button
-          onClick={() => setTab("skill-tree")}
+          onClick={() => switchTab("skill-tree")}
           className={cn(
             "flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-all border-b-2",
             tab === "skill-tree"
@@ -32,7 +57,7 @@ export function MasteryHub() {
         </button>
 
         <button
-          onClick={() => setTab("history")}
+          onClick={() => switchTab("history")}
           className={cn(
             "flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-all border-b-2",
             tab === "history"
@@ -45,7 +70,7 @@ export function MasteryHub() {
         </button>
 
         <button
-          onClick={() => setTab("progress")}
+          onClick={() => switchTab("progress")}
           className={cn(
             "flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-all border-b-2",
             tab === "progress"
