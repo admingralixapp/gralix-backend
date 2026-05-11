@@ -610,9 +610,6 @@ function ActiveWorkoutPlayer({
 
   const { i18n } = useTranslation();
 
-  // ── Exit confirmation ─────────────────────────────────────────────────────
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
-
   // ── Sync the equipped voice profile ─────────────────────────────────────
   useEffect(() => {
     setActiveVoiceProfile(getVoiceProfile());
@@ -629,14 +626,14 @@ function ActiveWorkoutPlayer({
     return () => clearTimeout(t);
   }, [stretchIndex]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Voice cues at 15 s remaining and at 0 s ───────────────────────────────
+  // ── Voice cues at 30 s remaining and at 0 s ───────────────────────────────
   const spokenRef = useRef<Record<string, boolean>>({});
   useEffect(() => {
     if (!getVoiceCues()) return;
-    const key15 = `${stretchIndex}:15`;
+    const key30 = `${stretchIndex}:30`;
     const key0  = `${stretchIndex}:0`;
-    if (secondsLeft === 15 && !spokenRef.current[key15]) {
-      spokenRef.current[key15] = true;
+    if (secondsLeft === 30 && !spokenRef.current[key30]) {
+      spokenRef.current[key30] = true;
       speak(getWorkoutCue("30s", i18n.language), "encouraging");
     }
     if (secondsLeft === 0 && !spokenRef.current[key0]) {
@@ -709,30 +706,23 @@ function ActiveWorkoutPlayer({
 
         /* ── ROW 1: Header bar ── */
         #ms-hdr {
-          display: grid;
-          grid-template-columns: 1fr auto 1fr;
-          align-items: center;
-          padding: 0 16px;
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 20px;
           border-bottom: 1px solid rgba(255,255,255,0.05);
-          gap: 8px;
         }
-        #ms-hdr .ctrl-row { display: flex; align-items: center; gap: 8px; }
+        #ms-hdr .exit-btn {
+          display: flex; align-items: center; gap: 6px;
+          background: none; border: none;
+          color: rgba(100,116,139,0.9); font-size: 13px; font-weight: 500;
+          padding: 6px 0;
+        }
+        #ms-hdr .ctrl-row { display: flex; align-items: center; gap: 16px; }
         #ms-hdr .ctrl-btn {
           background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 8px; padding: 5px 9px;
-          display: flex; align-items: center; gap: 4px;
+          border-radius: 8px; padding: 6px 10px;
+          display: flex; align-items: center; gap: 5px;
           color: rgba(148,163,184,0.9); font-size: 11px; font-weight: 600;
         }
-        #ms-hdr .exit-x {
-          display: flex; align-items: center; justify-content: flex-end;
-        }
-        #ms-hdr .exit-x button {
-          display: flex; align-items: center; justify-content: center;
-          width: 32px; height: 32px; border-radius: 8px;
-          background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
-          color: rgba(148,163,184,0.8);
-        }
-        #ms-hdr .exit-x button:hover { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: #f87171; }
 
         /* ── ROW 2: Title band ── */
         #ms-ttl {
@@ -775,10 +765,10 @@ function ActiveWorkoutPlayer({
         /* ── ROW 4: Pro cockpit dock ── */
         #ms-dock {
           display: grid;
-          grid-template-columns: 96px 1fr 88px;
+          grid-template-columns: 104px 1fr 96px;
           align-items: center;
           gap: 0;
-          background: rgba(8,13,18,0.95);
+          background: rgba(8,13,18,0.92);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
           border-top: 1px solid rgba(34,197,94,0.14);
@@ -789,9 +779,8 @@ function ActiveWorkoutPlayer({
         #ms-dock .dock-timer {
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          padding: 10px 4px 12px 10px; gap: 2px;
+          padding: 12px 4px 14px 14px; gap: 3px;
           border-right: 1px solid rgba(255,255,255,0.05);
-          flex-shrink: 0;
         }
         #ms-dock .dock-timer .timer-label {
           font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
@@ -803,53 +792,50 @@ function ActiveWorkoutPlayer({
         #ms-dock .dock-center {
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          padding: 10px 8px 12px; gap: 6px;
-          overflow: hidden; min-width: 0;
+          padding: 12px 12px 14px; gap: 8px; overflow: hidden;
         }
         #ms-dock .dock-cue {
-          font-size: 11px; line-height: 1.5;
+          font-size: 11.5px; line-height: 1.55;
           color: rgba(148,163,184,0.9);
           text-align: center;
           display: -webkit-box; -webkit-line-clamp: 2;
           -webkit-box-orient: vertical; overflow: hidden;
-          width: 100%;
+          max-width: 240px;
         }
         #ms-dock .dock-muscles {
-          display: flex; flex-wrap: wrap; gap: 4px; justify-content: center;
-          align-items: center; overflow: hidden; max-height: 52px;
+          display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;
+          align-items: center;
         }
         #ms-dock .muscle-pill {
-          font-size: 9px; font-weight: 700; padding: 2px 7px;
+          font-size: 9.5px; font-weight: 700; padding: 2px 8px;
           border-radius: 99px;
           background: rgba(34,197,94,0.08);
           color: rgba(34,197,94,0.85);
           border: 1px solid rgba(34,197,94,0.2);
-          white-space: nowrap;
         }
 
         /* Right cell: silhouette + next */
         #ms-dock .dock-right {
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          padding: 8px 10px 10px 4px; gap: 4px;
+          padding: 10px 14px 12px 4px; gap: 5px;
           border-left: 1px solid rgba(255,255,255,0.05);
-          overflow: hidden; min-width: 0; flex-shrink: 0;
+          overflow: hidden;
         }
         #ms-dock .next-header {
-          font-size: 8px; font-weight: 800; letter-spacing: 0.12em;
+          font-size: 8px; font-weight: 800; letter-spacing: 0.14em;
           text-transform: uppercase; color: rgba(100,116,139,0.7);
         }
         #ms-dock .next-name {
-          font-size: 9px; font-weight: 700; text-align: center;
+          font-size: 9.5px; font-weight: 700; text-align: center;
           color: rgba(226,232,240,0.9); line-height: 1.3;
           overflow: hidden; text-overflow: ellipsis;
           display: -webkit-box; -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical; max-width: 76px;
+          -webkit-box-orient: vertical; max-width: 80px;
         }
         #ms-dock .last-strong {
-          font-size: 8.5px; font-weight: 800;
+          font-size: 9px; font-weight: 800;
           color: #22c55e; text-align: center; letter-spacing: 0.02em;
-          padding: 0 4px;
         }
       `}</style>
 
@@ -857,7 +843,12 @@ function ActiveWorkoutPlayer({
 
         {/* ── ROW 1: Header ────────────────────────────────────────────── */}
         <div id="ms-hdr">
-          {/* Left: Pause + Skip controls */}
+          <button className="exit-btn" onClick={onExit}>
+            <ArrowLeft size={14} /> Exit
+          </button>
+
+          <ProgressDots total={routine.length} current={stretchIndex} done={secondsLeft === 0} />
+
           <div className="ctrl-row">
             <button className="ctrl-btn" onClick={onPauseToggle} aria-label={paused ? "Resume" : "Pause"}>
               {paused ? <><Play size={12} /> Resume</> : <><Pause size={12} /> Pause</>}
@@ -866,71 +857,7 @@ function ActiveWorkoutPlayer({
               <SkipForward size={12} /> Skip
             </button>
           </div>
-
-          {/* Center: progress dots */}
-          <ProgressDots total={routine.length} current={stretchIndex} done={secondsLeft === 0} />
-
-          {/* Right: X exit */}
-          <div className="exit-x">
-            <button aria-label="Exit session" onClick={() => { setShowExitConfirm(true); }}>
-              <X size={15} />
-            </button>
-          </div>
         </div>
-
-        {/* ── Exit confirmation overlay ────────────────────────────────── */}
-        {showExitConfirm && (
-          <div style={{
-            position: "fixed", inset: 0, zIndex: 200,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            background: "rgba(8,13,18,0.88)", backdropFilter: "blur(10px)",
-          }}>
-            <div style={{
-              background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 18, padding: "28px 24px", maxWidth: 300, width: "90%",
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 18,
-              boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
-            }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: "50%",
-                background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <X size={22} color="#f87171" />
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <p style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 800, color: "#f1f5f9" }}>
-                  Exit session?
-                </p>
-                <p style={{ margin: 0, fontSize: 13, color: "rgba(148,163,184,0.8)", lineHeight: 1.5 }}>
-                  Your progress won't be saved. You can redo this session any time.
-                </p>
-              </div>
-              <div style={{ display: "flex", gap: 10, width: "100%" }}>
-                <button
-                  onClick={() => setShowExitConfirm(false)}
-                  style={{
-                    flex: 1, padding: "10px 0", borderRadius: 10, fontWeight: 700, fontSize: 14,
-                    background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                    color: "#cbd5e1", cursor: "pointer",
-                  }}
-                >
-                  Keep Going
-                </button>
-                <button
-                  onClick={onExit}
-                  style={{
-                    flex: 1, padding: "10px 0", borderRadius: 10, fontWeight: 700, fontSize: 14,
-                    background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)",
-                    color: "#f87171", cursor: "pointer",
-                  }}
-                >
-                  Exit
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ── ROW 2: Title band ─────────────────────────────────────── */}
         <AnimatePresence mode="wait">
@@ -1138,7 +1065,7 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
     if (onDismiss) {
       onDismiss();
     } else {
-      setLocation("/training");
+      setLocation("/daily-tasks");
     }
   }
 
@@ -1294,11 +1221,11 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
         >
           {onDismiss ? (
             <Button size="lg" className="w-full font-bold" onClick={onDismiss}>
-              Back to Training
+              Back to Daily Tasks
             </Button>
           ) : (
             <Button size="lg" className="w-full font-bold" asChild>
-              <Link href="/training">Back to Training</Link>
+              <Link href="/daily-tasks">Back to Daily Tasks</Link>
             </Button>
           )}
           <Button size="lg" variant="outline" className="w-full" onClick={startSession}>
