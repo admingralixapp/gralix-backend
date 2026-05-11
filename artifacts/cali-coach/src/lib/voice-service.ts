@@ -2,12 +2,13 @@
  * voiceService — ElevenLabs streaming TTS via new Audio() element
  *
  * Architecture for paid profiles (Monk, Noir Detective, Rio Flair, …):
- *   1. speak() / speakCue() / testCoachVoice() are called by workout.tsx / shop.tsx.
- *   2. A new Audio() element is created with src = /api/tts/stream?...
+ *   1. enqueueCue() is the primary entry point from workout.tsx.
+ *   2. The queue guarantees atomic playback: the current sentence always plays
+ *      to completion before the next cue starts.  Only SAFETY cues interrupt.
+ *   3. A SILENCE_BUFFER_MS gap is enforced after every cue.
+ *   4. A new Audio() element is created with src = /api/tts/stream?...
  *      (GET endpoint that does LLM personality injection + ElevenLabs TTS).
- *   3. audio.volume = 1.0, audio.play() — browser handles streaming.
- *   4. NO fallback to browser TTS. window.speechSynthesis is NEVER touched for
- *      paid profiles. Silence = bug, not fallback.
+ *   5. NO fallback to browser TTS.  Silence = bug, not fallback.
  *
  * Architecture for free profiles (classic, classic_female):
  *   → browser Web Speech API only, no ElevenLabs, no network cost.
@@ -47,6 +48,12 @@ const DUCK_TARGET    = 0.3;
 const DUCK_RAMP_DOWN = 0.08;
 const DUCK_RAMP_UP   = 0.5;
 const FULL_GAIN      = 1.0;
+
+/**
+ * Dead time (ms) between consecutive cues.
+ * Prevents the coach from talking continuously; gives the user time to process.
+ */
+const SILENCE_BUFFER_MS = 900;
 
 // ─── AudioContext + GainNode singletons (for non-speech ducking only) ─────────
 
@@ -142,15 +149,6 @@ let _speechLang = "en-US";
 
 /**
  * Read the active coach language live from localStorage at the moment of use.
- *
- * WHY live reads instead of a cached variable:
- * - workout.tsx calls setVoiceLanguage(i18n.language) in a useEffect.
- *   On mount, i18n.language may briefly be "en" (before the LanguageDetector
- *   reads localStorage), which would reset a cached variable to "en" even
- *   though the user chose French/Spanish.
- * - Reading localStorage directly always returns the value written by
- *   i18next's LanguageDetector (key: "calicoach_lang") which is updated
- *   atomically whenever the user changes language in Settings.
  */
 function getLiveCoachLang(): string {
   try {
@@ -163,21 +161,15 @@ function getLiveCoachLang(): string {
 
 /**
  * Called by Settings / Workout whenever the UI language changes.
- * Updates the browser TTS locale (Web Speech API lang attribute).
- * ElevenLabs language is now always derived live via getLiveCoachLang()
- * so this no longer needs to maintain a separate _coachLang variable.
  */
 export function setVoiceLanguage(bcp47: string): void {
   _speechLang = bcp47;
-  // Write to localStorage so getLiveCoachLang() picks it up immediately
-  // (i18next also writes here via LanguageDetector, but this guards the
-  //  case where setVoiceLanguage is called before i18next persists the key).
   try {
     localStorage.setItem("calicoach_lang", bcp47);
   } catch { /* ignore */ }
 }
 
-// ─── Browser TTS (FREE profiles ONLY: classic, classic_female) ───────────────
+// ─── Browser TTS (FREE profiles ONLY) ────────────────────────────────────────
 
 function browserSpeakForProfile(text: string, profileId: string): void {
   try {
@@ -222,11 +214,8 @@ function browserSpeakForProfile(text: string, profileId: string): void {
 // ─── Paid-profile playback via new Audio() ────────────────────────────────────
 /**
  * Creates a new Audio() element pointing at GET /api/tts/stream.
- * The server does LLM personality injection + ElevenLabs TTS, returns audio/mpeg.
- * Server-side caching means repeat cues are served in ~2 ms.
- *
- * Returns a Promise that resolves when playback finishes and rejects on any error.
- * NO fallback to browser TTS. window.speechSynthesis is NEVER called here.
+ * Does NOT stop any currently-playing audio — the caller (queue) guarantees
+ * exclusivity.  Returns a Promise that resolves when playback finishes.
  */
 function _speakWithAudioElement(
   text: string,
@@ -234,11 +223,6 @@ function _speakWithAudioElement(
   exerciseName: string,
   cacheKey: string,
 ): Promise<void> {
-  // Stop previous audio element — never browser TTS.
-  stopCurrentAudio();
-
-  // Always read the language live — never use a cached variable, which can be
-  // stale if workout.tsx's useEffect fired while i18n was still initialising.
   const params = new URLSearchParams({
     text:         text.slice(0, 500),
     profile:      profileId,
@@ -292,74 +276,158 @@ function _speakWithAudioElement(
   });
 }
 
-// ─── Public API ───────────────────────────────────────────────────────────────
+// ─── Priority Queue ───────────────────────────────────────────────────────────
 
 /**
- * Speak a general coaching cue using the active voice personality.
+ * Priority levels for the coaching cue queue.
+ * Lower number = higher priority.
  *
- * Paid profiles (monk, noir_detective, rio_flair, …):
- *   → new Audio() → GET /api/tts/stream (LLM personality + ElevenLabs).
- *   → window.speechSynthesis is NEVER touched.
- *
- * Free profiles (classic, classic_female):
- *   → browser Web Speech API.
+ *  SAFETY       — Pain/injury warnings; immediately interrupts any active cue.
+ *  FORM         — Form corrections; waits its turn but wins over phase/motivational.
+ *  PHASE        — Phase-transition and pacer cues.
+ *  MOTIVATIONAL — Rep counts, encouragement, milestone cues.
  */
-export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral"): void {
+export const CUE_PRIORITY = {
+  SAFETY:       0,
+  FORM:         1,
+  PHASE:        2,
+  MOTIVATIONAL: 3,
+} as const;
+
+export type CuePriority = typeof CUE_PRIORITY[keyof typeof CUE_PRIORITY];
+
+export interface QueuedCue {
+  text:         string;
+  profileId:    string;
+  exerciseName: string;
+  cacheKey:     string;
+  priority:     CuePriority;
+  tone:         "encouraging" | "firm" | "neutral";
+}
+
+/** Highest-priority cue accumulated while playback is in progress. */
+let _pendingCue:   QueuedCue | null = null;
+/** True while a cue is actively playing (ElevenLabs request + audio duration). */
+let _busy          = false;
+/** setTimeout handle for the post-cue silence buffer. */
+let _silenceTimer: ReturnType<typeof setTimeout> | null = null;
+
+function _clearSilenceTimer(): void {
+  if (_silenceTimer) { clearTimeout(_silenceTimer); _silenceTimer = null; }
+}
+
+function _scheduleFlush(): void {
+  if (_silenceTimer) return;
+  _silenceTimer = setTimeout(() => {
+    _silenceTimer = null;
+    const cue = _pendingCue;
+    _pendingCue = null;
+    if (cue) void _executeCue(cue);
+  }, SILENCE_BUFFER_MS);
+}
+
+async function _executeCue(cue: QueuedCue): Promise<void> {
+  _busy = true;
+  try {
+    if (FREE_VOICE_PROFILES.has(cue.profileId)) {
+      browserSpeakForProfile(cue.text, cue.profileId);
+      // Browser TTS has no reliable completion callback across all browsers.
+      // Wait a fixed upper-bound so the silence buffer still fires correctly.
+      await new Promise<void>(res => setTimeout(res, 3500));
+    } else {
+      await _speakWithAudioElement(cue.text, cue.profileId, cue.exerciseName, cue.cacheKey);
+    }
+  } catch {
+    // Errors already logged inside the underlying functions.
+  }
+  _busy = false;
+  _scheduleFlush();
+}
+
+/**
+ * Primary public API — enqueue a coaching cue with explicit priority.
+ *
+ * Guarantees:
+ *  - Atomic: the current sentence always plays to completion.
+ *  - Silence buffer: SILENCE_BUFFER_MS gap between consecutive cues.
+ *  - Priority: while busy, the slot is held for the highest-priority pending cue.
+ *  - Safety interrupt: CUE_PRIORITY.SAFETY stops active audio immediately.
+ */
+export function enqueueCue(cue: QueuedCue): void {
   if (_muted) return;
 
-  if (FREE_VOICE_PROFILES.has(_activeProfileId)) {
-    console.log(`[CaliCoach Voice] speak() → FREE profile="${_activeProfileId}" — using browser TTS`);
-    browserSpeakForProfile(text, _activeProfileId);
+  // Safety cues: interrupt everything — pain warnings cannot wait.
+  if (cue.priority === CUE_PRIORITY.SAFETY) {
+    _clearSilenceTimer();
+    _pendingCue = null;
+    stopCurrentAudio();
+    try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
+    _busy = false;
+    void _executeCue(cue);
     return;
   }
 
-  // Paid profile — ElevenLabs only. window.speechSynthesis is NOT called.
+  // Idle with no silence buffer → play immediately.
+  if (!_busy && !_silenceTimer) {
+    void _executeCue(cue);
+    return;
+  }
+
+  // Busy or in silence buffer → hold the highest-priority pending cue.
+  // Lower priority number = more important.
+  if (!_pendingCue || cue.priority < _pendingCue.priority) {
+    _pendingCue = cue;
+  }
+}
+
+// ─── Legacy convenience wrappers (used by shop/test-voice flows) ──────────────
+
+/**
+ * Speak a general coaching cue.
+ * Workout code should prefer enqueueCue() for explicit priority control.
+ */
+export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral", priority: CuePriority = CUE_PRIORITY.MOTIVATIONAL): void {
+  if (_muted) return;
+  const lang = getLiveCoachLang();
   const slug = (s: string) =>
     s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40);
-  const lang = getLiveCoachLang();
   const cacheKey = lang !== "en" ? `${lang}:${slug(text)}` : `general:${slug(text)}`;
 
-  console.log(`[CaliCoach Voice] speak() → PAID profile="${_activeProfileId}" → /api/tts/stream  cue="${text.slice(0, 40)}"`);
-  _speakWithAudioElement(text, _activeProfileId, "Coaching", cacheKey).catch(() => {
-    // Fire-and-forget for workout cues — errors already logged inside _speakWithAudioElement.
+  enqueueCue({
+    text,
+    profileId:    _activeProfileId,
+    exerciseName: "Coaching",
+    cacheKey,
+    priority,
+    tone,
   });
 }
 
 /**
  * Speak a form-correction coaching cue with AI personality injection.
- *
- * Paid profiles: new Audio() → /api/tts/stream (LLM rephrase + ElevenLabs).
- * Free profiles: browser Web Speech API.
  */
 export function speakCue(
   exerciseName: string,
   audioCue: string,
   profileId: string,
   cacheKey: string,
+  priority: CuePriority = CUE_PRIORITY.FORM,
 ): void {
   if (_muted) return;
 
-  if (FREE_VOICE_PROFILES.has(profileId)) {
-    browserSpeakForProfile(audioCue, profileId);
-    return;
-  }
-
-  // Paid profile — ElevenLabs only. window.speechSynthesis is NOT called.
-  console.log(`[CaliCoach Voice] speakCue() → paid profile="${profileId}" cue="${audioCue.slice(0, 40)}"`);
-  _speakWithAudioElement(audioCue, profileId, exerciseName, cacheKey).catch(() => {
-    // Fire-and-forget for workout cues — errors already logged inside _speakWithAudioElement.
+  enqueueCue({
+    text:         audioCue,
+    profileId,
+    exerciseName,
+    cacheKey,
+    priority,
+    tone:         "neutral",
   });
 }
 
 /**
  * Play a short sample cue for a personality so the user can preview it.
  * Called by the Shop "Test Voice" buttons.
- *
- * Returns a Promise:
- *   - resolves when playback finishes (or immediately for free browser-TTS profiles).
- *   - rejects with an Error when ElevenLabs returns an error or audio fails to load.
- *
- * window.speechSynthesis is NEVER called for paid profiles.
  */
 export function testCoachVoice(profileId: string, label?: string): Promise<void> {
   const SAMPLE_CUES: Record<string, string> = {
@@ -377,19 +445,14 @@ export function testCoachVoice(profileId: string, label?: string): Promise<void>
     rio_flair:      "Vamos! Keep your chest up and drive through with power — Ginga is in your soul!",
   };
 
-  // Read the active language live — never use a potentially-stale cached var.
   const activeLang = getLiveCoachLang();
 
-  // When the app is set to a non-English language, use a pre-translated test
-  // phrase so ElevenLabs receives the correct language in the text payload.
-  // For English, keep the personality-specific cue for character flavour.
   const sampleText =
     activeLang !== "en"
       ? getTestPhrase(activeLang)
       : (SAMPLE_CUES[profileId] ??
          "Great form — keep your core tight and breathe through the movement.");
 
-  // ── Verification log — visible in browser DevTools console ─────────────
   console.log(
     `%c[CaliCoach Voice] Sending to ElevenLabs: "${sampleText}" in "${activeLang}"`,
     "color: #22c55e; font-weight: bold;",
@@ -401,21 +464,25 @@ export function testCoachVoice(profileId: string, label?: string): Promise<void>
     return Promise.resolve();
   }
 
-  // Paid profile — ElevenLabs ONLY. window.speechSynthesis is NOT called.
   const voiceName = label ?? profileId;
   console.log(`[CaliCoach Voice] 🎙️ profile="${profileId}" (${voiceName}) → /api/tts/stream?language=${activeLang}`);
 
+  // Test-voice bypasses the queue and stops current audio directly,
+  // so the user gets immediate feedback when previewing profiles in the Shop.
   stopCurrentAudio();
-  // Use a timestamp suffix so the browser never serves a cached response for test clicks.
-  // Without this, Cache-Control: max-age=86400 causes the browser to replay stale audio
-  // from a previous session even when the server has new voice IDs or a new model.
   return _speakWithAudioElement(sampleText, profileId, "Demo", `${profileId}:test_${Date.now()}`);
 }
 
 /**
- * Stop all in-progress audio (ElevenLabs element + Web Speech) and restore ducking.
+ * Stop all in-progress audio, clear the queue, and restore ducking.
+ * Called when a workout ends or the user navigates away.
  */
 export function cancelSpeech(): void {
+  // Clear the queue so no pending cue fires after cancel.
+  _clearSilenceTimer();
+  _pendingCue = null;
+  _busy = false;
+
   stopCurrentAudio();
 
   try {

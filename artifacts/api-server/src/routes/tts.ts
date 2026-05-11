@@ -265,15 +265,17 @@ router.post("/tts/cue", async (req: Request, res: Response) => {
     try {
       const completion = await ai.chat.completions.create({
         model: "gpt-4o-mini",
-        max_completion_tokens: 60,
+        max_completion_tokens: 70,
         messages: [
           { role: "system", content: profile.systemPrompt },
           {
             role: "user",
             content:
-              `Exercise: ${exerciseName}. Form issue detected: "${audioCue}". ` +
-              `Generate exactly one coaching sentence in character. ` +
-              `Do NOT use quotes. Max 15 words.`,
+              `Exercise: ${exerciseName}. Form correction needed: "${audioCue}". ` +
+              `The input may describe one issue or multiple issues joined with "and". ` +
+              `Generate exactly ONE coaching sentence in character that covers all issues. ` +
+              `The sentence must be physically instructional — tell the athlete exactly what to adjust. ` +
+              `Do NOT use quotes. Max 20 words.`,
           },
         ],
       });
@@ -366,15 +368,16 @@ router.get("/tts/stream", async (req: Request, res: Response) => {
     try {
       const completion = await ai.chat.completions.create({
         model: "gpt-4o-mini",
-        max_completion_tokens: 60,
+        max_completion_tokens: 70,
         messages: [
           { role: "system", content: profile.systemPrompt },
           {
             role: "user",
             content:
               `Exercise: ${exerciseName?.trim() || "workout"}. Coaching cue: "${cueText}". ` +
-              `Generate exactly one coaching sentence in character.` +
-              `${langInstruction} Do NOT use quotes. Max 15 words.`,
+              `The cue may contain multiple issues joined with "and" — cover all of them in ONE sentence. ` +
+              `Be instructional: tell the athlete exactly what to do or adjust. ` +
+              `${langInstruction} Do NOT use quotes. Max 20 words.`,
           },
         ],
       });

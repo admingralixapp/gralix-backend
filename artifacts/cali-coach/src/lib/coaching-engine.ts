@@ -3,10 +3,16 @@
  *
  * Responsible for:
  *  1. Choosing the right phrase when a movement phase changes
- *     (e.g. "Take a breath... and lower down." on descent start).
+ *     (e.g. "Controlled descent — chest to floor." on descent start).
  *  2. Providing a sequence of tempo cues for the Active Pacer feature.
- *  3. Milestone cues when the user is fatiguing ("Last one, make it your best form.").
+ *  3. Milestone cues when the user is fatiguing ("Last one — make it count.").
  *  4. Mapping current blended form score → coaching tone for ElevenLabs expressiveness.
+ *  5. Safety cues (highest priority) — used sparingly for injury-prevention warnings.
+ *
+ * Cue design principles:
+ *  - Every cue contains an actionable instruction, not just commentary.
+ *  - Even in character voice modes the LLM preserves the instructional core.
+ *  - Fatigue / milestone cues focus on quality, not just cheerleading.
  */
 
 import type { Phase } from "./exercise-registry";
@@ -28,11 +34,11 @@ type ExerciseCategory = "push" | "pull" | "squat" | "leg" | "core" | "default";
 
 function categorise(name: string): ExerciseCategory {
   const n = name.toLowerCase();
-  if (/push|dip|handstand/.test(n))             return "push";
+  if (/push|dip|handstand/.test(n))                  return "push";
   if (/pull|row|shrug|muscle|chin|negative/.test(n)) return "pull";
-  if (/squat|pistol|archer/.test(n))            return "squat";
-  if (/lunge|nordic|burpee/.test(n))            return "leg";
-  if (/plank|lever|flag|dragon/.test(n))        return "core";
+  if (/squat|pistol|archer/.test(n))                 return "squat";
+  if (/lunge|nordic|burpee/.test(n))                 return "leg";
+  if (/plank|lever|flag|dragon/.test(n))             return "core";
   return "default";
 }
 
@@ -45,62 +51,65 @@ interface PhaseCue {
 
 // Each key is `"${fromPhase}→${toPhase}"`.
 // Arrays allow cycling through variants so the coach sounds less robotic.
+// All cues are instructional — they tell the user what to do, not just what happened.
 const PHASE_CUES: Record<ExerciseCategory, Partial<Record<string, PhaseCue[]>>> = {
   push: {
     "up→down": [
-      { text: "Take a breath... and lower down.",      tone: "neutral" },
-      { text: "Controlled descent — chest to floor.",  tone: "neutral" },
-      { text: "Slow it down — make every inch count.", tone: "neutral" },
+      { text: "Controlled descent — keep elbows tracking back.",  tone: "neutral"  },
+      { text: "Slow it down — chest to floor, full range.",       tone: "neutral"  },
+      { text: "Lower with control — elbows at 45 degrees.",       tone: "neutral"  },
     ],
     "down→up": [
-      { text: "Deep enough — now drive back up!",      tone: "encouraging" },
-      { text: "Push the floor away!",                  tone: "encouraging" },
-      { text: "Lock it out — all the way up!",         tone: "encouraging" },
+      { text: "Drive the floor away — full extension at the top.",  tone: "encouraging" },
+      { text: "Push through — lock out those elbows.",             tone: "encouraging" },
+      { text: "Explode up — squeeze chest at the top.",            tone: "encouraging" },
     ],
   },
   pull: {
     "bottom→top": [
-      { text: "Take a breath... and pull!",            tone: "neutral" },
-      { text: "Engage those lats — here we go.",       tone: "neutral" },
-      { text: "Pull from the back, not the arms.",     tone: "neutral" },
+      { text: "Pull from the lats — drive elbows to your hips.",  tone: "neutral"      },
+      { text: "Lead with the chest, not the chin.",               tone: "neutral"      },
+      { text: "Initiate the pull with a shoulder depression.",    tone: "neutral"      },
     ],
     "top→bottom": [
-      { text: "Lower with control — full extension.",  tone: "neutral" },
-      { text: "Dead hang — fully extend.",             tone: "neutral" },
+      { text: "Lower with control — reach full dead hang.",       tone: "neutral"  },
+      { text: "Slow descent — feel the stretch at the bottom.",   tone: "neutral"  },
     ],
   },
   squat: {
     "up→down": [
-      { text: "Take a breath... and sit back into it.", tone: "neutral" },
-      { text: "Send the hips back — controlled.",       tone: "neutral" },
-      { text: "Nice and slow — break parallel.",        tone: "neutral" },
+      { text: "Send the hips back — break parallel.",             tone: "neutral"  },
+      { text: "Knees track over toes — controlled descent.",      tone: "neutral"  },
+      { text: "Slow it down — sit back into depth.",              tone: "neutral"  },
     ],
     "down→up": [
-      { text: "Deep enough — drive those heels down!",  tone: "encouraging" },
-      { text: "Stand tall — squeeze at the top.",       tone: "encouraging" },
-      { text: "Push the ground away!",                  tone: "encouraging" },
+      { text: "Drive through your heels — stand tall.",           tone: "encouraging" },
+      { text: "Push the ground away — squeeze glutes at the top.",tone: "encouraging" },
+      { text: "Full extension — lock out at the top.",            tone: "encouraging" },
     ],
   },
   leg: {
     "up→down": [
-      { text: "Lower with control.",                   tone: "neutral" },
+      { text: "Control the descent — knee stays stable.",         tone: "neutral"  },
+      { text: "Lower slowly — feel the eccentric.",               tone: "neutral"  },
     ],
     "down→up": [
-      { text: "Drive back up — strong finish!",        tone: "encouraging" },
+      { text: "Drive back up — powerful extension.",              tone: "encouraging" },
+      { text: "Push off the heel — strong finish.",               tone: "encouraging" },
     ],
   },
   core: {
-    // Static holds don't have up/down transitions — cues handled by hold timer.
     "hold": [
-      { text: "Breathe — don't hold your breath.",    tone: "neutral" },
-      { text: "You're in the zone — hold it.",        tone: "neutral" },
+      { text: "Breathe through it — posterior pelvic tilt.",      tone: "neutral"  },
+      { text: "Stay tight — squeeze glutes, brace the core.",     tone: "neutral"  },
+      { text: "Breathe — long exhale, don't hold your breath.",   tone: "neutral"  },
     ],
   },
   default: {
-    "up→down":    [{ text: "Take a breath... and lower down.",   tone: "neutral" }],
-    "down→up":    [{ text: "Deep enough — now drive back up!",   tone: "encouraging" }],
-    "bottom→top": [{ text: "Pull through — all the way!",        tone: "encouraging" }],
-    "top→bottom": [{ text: "Lower with control.",                 tone: "neutral" }],
+    "up→down":    [{ text: "Slow it down — controlled descent.",       tone: "neutral"      }],
+    "down→up":    [{ text: "Full extension — drive all the way up.",    tone: "encouraging"  }],
+    "bottom→top": [{ text: "Pull through — complete the range.",        tone: "encouraging"  }],
+    "top→bottom": [{ text: "Lower with control — full range of motion.",tone: "neutral"      }],
   },
 };
 
@@ -130,23 +139,44 @@ export function getPhaseTransitionCue(
   return catCues[idx];
 }
 
-// ── Milestone / set-end cues ──────────────────────────────────────────────────
+// ── Milestone / fatigue cues ──────────────────────────────────────────────────
 
 const MILESTONE_CUES: PhaseCue[] = [
-  { text: "Last one — make it your best form.",  tone: "encouraging" },
-  { text: "One more — perfect form now.",        tone: "encouraging" },
-  { text: "Final push — give it everything.",    tone: "firm" },
+  { text: "Last one — full depth, full extension.",  tone: "encouraging" },
+  { text: "One more — keep the form tight.",         tone: "encouraging" },
+  { text: "Final rep — make it your cleanest one.",  tone: "firm"        },
+  { text: "Grind it out — don't sacrifice the form.",tone: "firm"        },
 ];
 let _milestoneIdx = 0;
 
 /**
- * Returns a "last rep" encouragement cue (cycles through variants).
- * Call this when the user's rep pace has slowed significantly, indicating
- * they are near the end of their working set.
+ * Returns a fatigue-stage encouragement cue (cycles through variants).
+ * Call this when the user's rep pace has slowed significantly.
  */
 export function getMilestoneCue(): PhaseCue {
   const cue = MILESTONE_CUES[_milestoneIdx % MILESTONE_CUES.length];
   _milestoneIdx++;
+  return cue;
+}
+
+// ── Safety cues ───────────────────────────────────────────────────────────────
+
+/**
+ * Safety cues — the highest priority tier.
+ * Use sparingly; only for genuine injury-risk situations.
+ * These interrupt active playback via CUE_PRIORITY.SAFETY.
+ */
+export const SAFETY_CUES: PhaseCue[] = [
+  { text: "Stop if you feel any sharp pain — don't push through it.",  tone: "firm" },
+  { text: "Pain is a signal — rest and reset before continuing.",       tone: "firm" },
+  { text: "Listen to your body — stop if something doesn't feel right.",tone: "firm" },
+];
+let _safetyIdx = 0;
+
+/** Returns the next safety cue (cycles). */
+export function getSafetyCue(): PhaseCue {
+  const cue = SAFETY_CUES[_safetyIdx % SAFETY_CUES.length];
+  _safetyIdx++;
   return cue;
 }
 
@@ -164,9 +194,9 @@ export interface PacerCue {
  * Three cues spaced 1 s apart give a 3-beat controlled descent.
  */
 export const DESCEND_PACER_CUES: PacerCue[] = [
-  { text: "Down...", tone: "neutral",     delayMs: 0    },
-  { text: "Two...",  tone: "neutral",     delayMs: 1000 },
-  { text: "One...",  tone: "neutral",     delayMs: 1800 },
+  { text: "Down...", tone: "neutral", delayMs: 0    },
+  { text: "Two...",  tone: "neutral", delayMs: 1000 },
+  { text: "One...",  tone: "neutral", delayMs: 1800 },
 ];
 
 /**
@@ -183,9 +213,9 @@ export const ASCEND_PACER_CUE: PacerCue = {
 /**
  * Maps the current blended form score → coaching tone.
  *
- *  ≥ 80  → neutral   (good form, on track)
+ *  ≥ 80  → neutral     (good form, on track)
  *  50–79 → encouraging (struggling but not breaking down)
- *  < 50  → firm       (form is genuinely breaking down)
+ *  < 50  → firm        (form is genuinely breaking down)
  */
 export function toneFromScore(score: number): CoachTone {
   if (score >= 80) return "neutral";

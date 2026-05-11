@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getExerciseConfig, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
-import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile, getAudioContext } from "@/lib/voice-service";
+import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile, getAudioContext, CUE_PRIORITY } from "@/lib/voice-service";
 import { getWorkoutPhrase } from "@/lib/cue-translations";
 import { useTranslation } from "react-i18next";
 import { getRestDuration, type RestDuration, REST_DURATION_OPTIONS } from "@/lib/workout-settings";
@@ -630,21 +630,22 @@ export function Workout() {
   const workoutStartMsRef  = useRef<number>(0);
 
   const stateRef = useRef({
-    phase:            "up" as Phase,
-    repCount:         0,
-    lastSpokenTime:   0,
-    lastPhaseCueMs:   0,   // separate cooldown for phase-transition cues (2 s)
-    sessionStartTime: 0,
-    sessionId:        0,
-    repFormScores:    [] as number[],
-    lastRepTime:      0,
-    avgRepDurationMs: 0,   // rolling average rep duration for milestone detection
-    holdSeconds:      0,
-    lastHoldTickMs:   0,
-    holdActive:       false,
-    lastHoldSpeakSec: -1,
-    bestSyncPct:      0,
-    lastSyncDropMs:   0,
+    phase:              "up" as Phase,
+    repCount:           0,
+    lastSpokenTime:     0,  // motivational cue cooldown (4 s)
+    lastPhaseCueMs:     0,  // phase-transition cue cooldown (2 s)
+    lastFormCueMs:      0,  // form correction cue cooldown (5 s) — independent of motivational
+    sessionStartTime:   0,
+    sessionId:          0,
+    repFormScores:      [] as number[],
+    lastRepTime:        0,
+    avgRepDurationMs:   0,  // rolling average rep duration for milestone detection
+    holdSeconds:        0,
+    lastHoldTickMs:     0,
+    holdActive:         false,
+    lastHoldSpeakSec:   -1,
+    bestSyncPct:        0,
+    lastSyncDropMs:     0,
   });
 
   const calibRef = useRef<{
@@ -690,10 +691,15 @@ export function Workout() {
    *  in the Worker's onmessage handler which is set up only once on mount). */
   const handleFrameResultRef = useRef<((out: WorkerOutputLocal, ctx: PendingFrameData) => void) | null>(null);
 
-  // ── Audio-cue priority buffer (150 ms debounce window) ───────────────────
-  /** Highest-priority cue collected in the current 150 ms window. */
-  const pendingFormCueRef = useRef<{ text: string; tone: "encouraging" | "firm" | "neutral"; priority: number } | null>(null);
-  /** setTimeout ID for flushing the pending form cue. */
+  // ── Form-cue accumulator (150 ms debounce window) ────────────────────────
+  /**
+   * All unique form-correction texts received in the current 150 ms window.
+   * When the flush fires, they are concatenated into one coaching sentence
+   * so the AI can say "keep those hips down AND tuck your elbows in"
+   * instead of firing two separate clips back-to-back.
+   */
+  const pendingFormCuesRef = useRef<string[]>([]);
+  /** setTimeout ID for flushing the pending form cues. */
   const cueFlushTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── "Stay in frame" cue cooldown ─────────────────────────────────────────
@@ -758,25 +764,27 @@ export function Workout() {
 
   // ── Voice helpers ──────────────────────────────────────────────────────────
   /**
-   * General coaching cue — 4 s cooldown prevents rapid-fire speech.
-   * Accepts an optional tone that adjusts ElevenLabs expressiveness.
+   * Motivational coaching cue — 4 s cooldown prevents rapid-fire speech.
+   * Queued as MOTIVATIONAL priority: plays after form/phase cues finish,
+   * never interrupts an active sentence.
    */
   const speak = useCallback((text: string, tone: "encouraging" | "firm" | "neutral" = "neutral") => {
     const now = Date.now();
     if (now - stateRef.current.lastSpokenTime < 4000) return;
     stateRef.current.lastSpokenTime = now;
-    voiceSpeak(text, tone);
+    voiceSpeak(text, tone, CUE_PRIORITY.MOTIVATIONAL);
   }, []);
 
   /**
-   * Phase-transition cue — independent 2 s cooldown so it doesn't block
-   * the general coaching cue queue. Pacer cues bypass this entirely.
+   * Phase-transition cue — independent 2 s cooldown.
+   * Queued as PHASE priority: plays before motivational but after form corrections.
+   * Pacer cues bypass this cooldown entirely (they use their own setTimeout).
    */
   const speakPhase = useCallback((text: string, tone: "encouraging" | "firm" | "neutral" = "neutral") => {
     const now = Date.now();
     if (now - stateRef.current.lastPhaseCueMs < 2000) return;
     stateRef.current.lastPhaseCueMs = now;
-    voiceSpeak(text, tone);
+    voiceSpeak(text, tone, CUE_PRIORITY.PHASE);
   }, []);
 
   const lastSyncVoiceRef = useRef<number>(0);
@@ -784,21 +792,24 @@ export function Workout() {
     const now = Date.now();
     if (now - lastSyncVoiceRef.current < 5000) return;
     lastSyncVoiceRef.current = now;
-    voiceSpeak(getWorkoutPhrase("Get back into position to continue.", i18n.language), "neutral");
+    voiceSpeak(getWorkoutPhrase("Get back into position to continue.", i18n.language), "neutral", CUE_PRIORITY.PHASE);
   }, []);
 
   /**
-   * Priority-buffered form-correction cue.
+   * Form-correction cue accumulator.
    *
-   * During fast reps the exercise state machine can fire multiple audioCues
-   * within a single rep cycle.  This function collects cues for a 150 ms
-   * window and speaks only the highest-priority one — preventing the coach
-   * from shouting three corrections at once.
+   * Collects all form issue strings fired within a 150 ms window, then
+   * concatenates them into a single coaching sentence and enqueues it at
+   * FORM priority.  This prevents the AI from playing two separate clips
+   * back-to-back when multiple issues are detected simultaneously.
    *
-   * Priority levels:
-   *   3 = critical   (blendedScore < 60)
-   *   2 = moderate   (blendedScore < 80)
-   *   1 = general
+   * The combined text (e.g. "Lower your hips and tuck your elbows in") is
+   * sent to the LLM which constructs one fluent personality-appropriate
+   * sentence ("Watch your form — keep those hips down and tuck in those
+   * elbows, recruit!").
+   *
+   * Uses an independent 5 s cooldown that does NOT share with motivational
+   * cues, so a rep-count cue doesn't suppress the next form correction.
    */
   /** Generate a stable, URL-safe cache key from exercise name + cue text. */
   const makeCueCacheKey = useCallback((exercise: string, cue: string): string => {
@@ -808,35 +819,33 @@ export function Workout() {
     return `${lang}:${slug(exercise)}:${slug(cue)}`;
   }, [i18n.language]);
 
-  const speakFormCue = useCallback((
-    text:     string,
-    tone:     "encouraging" | "firm" | "neutral",
-    priority: number,
-  ) => {
-    const cur = pendingFormCueRef.current;
-    // Replace with the incoming cue only if it is at least as important
-    if (!cur || priority >= cur.priority) {
-      pendingFormCueRef.current = { text, tone, priority };
+  const speakFormCue = useCallback((text: string) => {
+    // Accumulate unique form issues in this 150 ms window
+    if (!pendingFormCuesRef.current.includes(text)) {
+      pendingFormCuesRef.current.push(text);
     }
     // Schedule the flush if not already pending
     if (!cueFlushTimerRef.current) {
       cueFlushTimerRef.current = setTimeout(() => {
         cueFlushTimerRef.current = null;
-        const cue = pendingFormCueRef.current;
-        pendingFormCueRef.current = null;
-        if (!cue) return;
-        // Check the global 4 s cooldown before speaking
+        const cues = pendingFormCuesRef.current;
+        pendingFormCuesRef.current = [];
+        if (!cues.length) return;
+        // Independent 5 s cooldown — doesn't share with motivational cues
         const now = Date.now();
-        if (now - stateRef.current.lastSpokenTime < 4000) return;
-        stateRef.current.lastSpokenTime = now;
-        // Use AI-personalised cue if a profile + exercise are known
+        if (now - stateRef.current.lastFormCueMs < 5000) return;
+        stateRef.current.lastFormCueMs = now;
+        // Concatenate multiple issues into one sentence for the LLM to render
+        // as a single fluent correction ("hips down and elbows tucked").
+        // Cap at 2 issues to keep the sentence digestible.
+        const combined = cues.slice(0, 2).join(" and ");
         const exerciseName = activeExerciseNameRef.current;
         const profileId    = voiceProfileIdRef.current;
         if (exerciseName && profileId) {
-          const cacheKey = makeCueCacheKey(exerciseName, cue.text);
-          voiceSpeakCue(exerciseName, cue.text, profileId, cacheKey);
+          const cacheKey = makeCueCacheKey(exerciseName, combined);
+          voiceSpeakCue(exerciseName, combined, profileId, cacheKey, CUE_PRIORITY.FORM);
         } else {
-          voiceSpeak(cue.text, cue.tone);
+          voiceSpeak(combined, "firm", CUE_PRIORITY.FORM);
         }
       }, 150);
     }
@@ -1032,11 +1041,11 @@ export function Workout() {
         if (isDescending) {
           DESCEND_PACER_CUES.forEach(cue => {
             const translated = getWorkoutPhrase(cue.text, i18n.language);
-            const t = setTimeout(() => { voiceSpeak(translated, cue.tone); }, cue.delayMs);
+            const t = setTimeout(() => { voiceSpeak(translated, cue.tone, CUE_PRIORITY.PHASE); }, cue.delayMs);
             pacerTimeoutsRef.current.push(t);
           });
         } else if (isAscending) {
-          voiceSpeak(getWorkoutPhrase(ASCEND_PACER_CUE.text, i18n.language), ASCEND_PACER_CUE.tone);
+          voiceSpeak(getWorkoutPhrase(ASCEND_PACER_CUE.text, i18n.language), ASCEND_PACER_CUE.tone, CUE_PRIORITY.PHASE);
         }
       } else {
         // ── Standard phase-transition cue ─────────────────────────────────
@@ -1144,10 +1153,9 @@ export function Workout() {
       } else if (equipCue) {
         speak(equipCue, tone);
       } else if (audioCue) {
-        // Form correction — priority-buffer (150 ms window) speaks only the
-        // most critical cue per burst, preventing rapid-fire corrections.
-        const priority = blendedScore < 60 ? 3 : blendedScore < 80 ? 2 : 1;
-        speakFormCue(audioCue, tone, priority);
+        // Form correction — accumulator (150 ms window) collects all issues
+        // and concatenates them into one coaching sentence before speaking.
+        speakFormCue(audioCue);
       }
 
       setFormScore(prev => prev * 0.9 + blendedScore * 0.1);
@@ -1317,6 +1325,7 @@ export function Workout() {
             voiceSpeak(
               inFrameCues[Math.floor(Math.random() * inFrameCues.length)]!,
               "neutral",
+              CUE_PRIORITY.PHASE,
             );
           }
         }
@@ -1519,21 +1528,22 @@ export function Workout() {
       const config = selectedExercise ? getExerciseConfig(selectedExercise.name) : null;
 
       stateRef.current = {
-        phase:            config?.initialPhase ?? "up",
-        repCount:         0,
-        lastSpokenTime:   Date.now(),
-        lastPhaseCueMs:   0,
-        sessionStartTime: Date.now(),
-        sessionId:        session.id,
-        repFormScores:    [],
-        lastRepTime:      Date.now(),
-        avgRepDurationMs: 0,
-        holdSeconds:      0,
-        lastHoldTickMs:   0,
-        holdActive:       false,
-        lastHoldSpeakSec: -1,
-        bestSyncPct:      0,
-        lastSyncDropMs:   0,
+        phase:              config?.initialPhase ?? "up",
+        repCount:           0,
+        lastSpokenTime:     Date.now(),
+        lastPhaseCueMs:     0,
+        lastFormCueMs:      0,
+        sessionStartTime:   Date.now(),
+        sessionId:          session.id,
+        repFormScores:      [],
+        lastRepTime:        Date.now(),
+        avgRepDurationMs:   0,
+        holdSeconds:        0,
+        lastHoldTickMs:     0,
+        holdActive:         false,
+        lastHoldSpeakSec:   -1,
+        bestSyncPct:        0,
+        lastSyncDropMs:     0,
       };
 
       // Reset frozen-frame detection for new session
