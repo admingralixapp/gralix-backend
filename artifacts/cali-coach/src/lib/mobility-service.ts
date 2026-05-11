@@ -284,7 +284,46 @@ const STRETCHES: Record<string, Stretch> = {
     pose: "lunge",
   },
 
-  // ── Handstand-specific ──────────────────────────────────────────────────
+  // ── Handstand Path ──────────────────────────────────────────────────────
+
+  activeScapularShrugsFloor: {
+    id: "activeScapularShrugsFloor",
+    name: "Active Scapular Shrugs (Floor)",
+    durationSeconds: 45,
+    targetMuscles: ["Serratus Anterior", "Lower Trapezius", "Scapular Stabilisers"],
+    description:
+      "Start in a push-up plank with arms straight. Without bending the elbows, push the floor away to protract your scapulae (round the upper back), then let them retract fully. Alternate slowly.",
+    coachingCue:
+      "Arms stay locked out throughout. Think 'push the floor, then pinch the blades' — two distinct positions.",
+    why: "Trains the active scapular control needed to keep a hollow body line in a handstand.",
+    pose: "kneeling-forward",
+  },
+
+  puppyPoseFloor: {
+    id: "puppyPoseFloor",
+    name: "Puppy Pose (Floor)",
+    durationSeconds: 60,
+    targetMuscles: ["Thoracic Spine", "Lats", "Shoulder Flexors"],
+    description:
+      "Start on all-fours. Walk your hands forward while keeping hips above your knees. Let your chest melt toward the floor and your arms stretch long overhead. Hold passively.",
+    coachingCue:
+      "Keep hips stacked over knees — don't sit back. Let gravity open the thoracic spine. Breathe into the upper back.",
+    why: "Unlocks thoracic extension and overhead shoulder range essential for a straight handstand line.",
+    pose: "kneeling-forward",
+  },
+
+  wristCircles: {
+    id: "wristCircles",
+    name: "Wrist Circles (Closed Fist)",
+    durationSeconds: 60,
+    targetMuscles: ["Wrist Flexors", "Wrist Extensors", "Forearm Pronators"],
+    description:
+      "Make gentle fists and perform slow, large circles — 10 rotations clockwise, 10 counter-clockwise on each wrist. Then open the fists and repeat with splayed fingers.",
+    coachingCue:
+      "Make the circles as large as possible. Move from the wrist joint, not the elbow. Go slowly — this is warm-up, not a race.",
+    why: "Lubricates the wrist joint and prepares the capsule for the extreme load angles of handstand training.",
+    pose: "standing-arm-up",
+  },
 
   wallPuppyPose: {
     id: "wallPuppyPose",
@@ -323,6 +362,47 @@ const STRETCHES: Record<string, Stretch> = {
       "Keep elbows shoulder-width — don't let them flare. Let gravity pull your chest down, don't force it.",
     why: "Removes lat and triceps tightness that pulls your arms forward and breaks the handstand line.",
     pose: "kneeling-forward",
+  },
+
+  // ── Muscle-Up / Pull Path ───────────────────────────────────────────────
+
+  sleeperStretch: {
+    id: "sleeperStretch",
+    name: "Shoulder Internal Rotation (Sleeper Stretch)",
+    durationSeconds: 60,
+    targetMuscles: ["Posterior Capsule", "External Rotators", "Infraspinatus"],
+    description:
+      "Lie on your side with your bottom arm at 90° (elbow bent, forearm pointing up). Use your top hand to gently press the forearm down toward the floor. Switch at 30 s.",
+    coachingCue:
+      "Don't force it — apply gentle, steady pressure. If you feel pinching, reduce the angle. Keep the shoulder pinned to the floor throughout.",
+    why: "Restores posterior shoulder capsule range needed for the full extension and transition in a muscle-up.",
+    pose: "wide-seated",
+  },
+
+  latSmashFloor: {
+    id: "latSmashFloor",
+    name: "Lat Smash (Floor)",
+    durationSeconds: 60,
+    targetMuscles: ["Lats", "Teres Major", "Thoracic Fascia"],
+    description:
+      "Lie on your back. Place a lacrosse ball or tennis ball under one armpit/lat area. Use your bodyweight to apply pressure and slowly sweep the arm overhead and back. Switch at 30 s.",
+    coachingCue:
+      "Find a tight spot and hold for 5–10 s before moving. The arm sweep amplifies the release — move it slowly.",
+    why: "Breaks up lat adhesions that limit overhead pulling range and the straight-arm lockout position.",
+    pose: "wide-seated",
+  },
+
+  behindBackClasp: {
+    id: "behindBackClasp",
+    name: "Behind-the-Back Clasp",
+    durationSeconds: 60,
+    targetMuscles: ["Anterior Deltoid", "Pectoralis Minor", "Biceps"],
+    description:
+      "Stand tall. Clasp your hands behind your back with straight arms. Gently squeeze your shoulder blades together and lift your arms away from your body. Hold and breathe.",
+    coachingCue:
+      "Keep the chest tall — don't lean forward to compensate. If you can't clasp, hold a towel between your hands.",
+    why: "Opens the anterior shoulder and chest tightness that limits pulling depth and scapular retraction.",
+    pose: "standing-arms-wide",
   },
 
   // ── Muscle-Up-specific ──────────────────────────────────────────────────
@@ -366,6 +446,47 @@ const STRETCHES: Record<string, Stretch> = {
     pose: "wide-seated",
   },
 
+  // ── Planche Path ────────────────────────────────────────────────────────
+
+  backOfHandRocks: {
+    id: "backOfHandRocks",
+    name: "Back-of-Hand Rocks",
+    durationSeconds: 45,
+    targetMuscles: ["Wrist Extensors", "Forearm Dorsal Fascia", "Finger Extensors"],
+    description:
+      "Kneel and place the backs of your hands flat on the floor, fingers pointing toward your knees. Gently rock forward to load the wrist extension position. Hold 5 s, rock back. Repeat.",
+    coachingCue:
+      "Start with very light pressure and build over time. This position is uncomfortable at first — don't force depth. Elbows stay straight.",
+    why: "Conditions the back-of-wrist tissues stressed during planche leans and straight-arm pressing.",
+    pose: "kneeling-forward",
+  },
+
+  plancheLeanActiveStretch: {
+    id: "plancheLeanActiveStretch",
+    name: "Planche Lean (Active Stretch)",
+    durationSeconds: 45,
+    targetMuscles: ["Serratus Anterior", "Wrists", "Shoulder Protractors"],
+    description:
+      "In a plank position with hands turned out slightly, lean your entire body forward until shoulders are directly over — or past — the wrists. Actively protract your scapulae. Hold 5 s, reset. Repeat.",
+    coachingCue:
+      "Think 'shoulders in front of hands'. Keep the body rigid — this is active, not a passive hold. Engage the serratus to round the upper back slightly.",
+    why: "Builds the active shoulder position and tissue tolerance needed to sustain the lean in planche progressions.",
+    pose: "kneeling-forward",
+  },
+
+  wristPalmPeels: {
+    id: "wristPalmPeels",
+    name: "Wrist Palm Peels",
+    durationSeconds: 45,
+    targetMuscles: ["Wrist Flexors", "Palm Fascia", "Finger Flexors"],
+    description:
+      "Place one palm flat on a wall at shoulder height, fingers pointing up. Use your other hand to gently peel the palm away from the wall starting at the base. Hold each position 3–5 s. Switch at 25 s.",
+    coachingCue:
+      "Work through the full palm — base, middle, and fingers separately. Go slowly and breathe through the tight spots.",
+    why: "Mobilises the dense palm fascia that stiffens under the compressive load of straight-arm planche work.",
+    pose: "standing-arm-up",
+  },
+
   // ── Planche-specific ────────────────────────────────────────────────────
 
   plancheLeans: {
@@ -407,6 +528,47 @@ const STRETCHES: Record<string, Stretch> = {
     pose: "standing-arm-up",
   },
 
+  // ── Pistol Squat Path ───────────────────────────────────────────────────
+
+  ninetyNineHipSwitches: {
+    id: "ninetyNineHipSwitches",
+    name: "90/90 Hip Switches",
+    durationSeconds: 60,
+    targetMuscles: ["Hip Internal Rotators", "Hip External Rotators", "Glutes"],
+    description:
+      "Sit on the floor with both legs bent at roughly 90°. Keeping your torso upright, rotate both knees to the opposite side and lower them toward the floor. 'Switch' sides in a controlled windshield-wiper motion.",
+    coachingCue:
+      "Keep your weight centred — don't lean to one side to compensate. Rotate from the hip, not the lower back. Do 8–10 slow switches.",
+    why: "Develops the hip internal and external rotation range needed to keep the pistol squat upright and balanced.",
+    pose: "wide-seated",
+  },
+
+  deepSquatInternalRotation: {
+    id: "deepSquatInternalRotation",
+    name: "Deep Squat Internal Rotation",
+    durationSeconds: 60,
+    targetMuscles: ["Hip Internal Rotators", "Adductors", "Glute Medius"],
+    description:
+      "Sink into a deep squat with feet shoulder-width, toes turned out slightly. Hold onto a door frame or post. From the bottom, drive one knee inward toward the floor while keeping the heel down. Switch sides at 30 s.",
+    coachingCue:
+      "This is a controlled, small-range movement. Don't collapse the arch. Use the post to maintain an upright torso while you rotate.",
+    why: "Unlocks hip internal rotation at full depth — critical for the single-leg balance demand of the pistol squat.",
+    pose: "wide-seated",
+  },
+
+  couchStretch: {
+    id: "couchStretch",
+    name: "Couch Stretch (Wall-Assisted)",
+    durationSeconds: 60,
+    targetMuscles: ["Hip Flexors", "Rectus Femoris", "Quads"],
+    description:
+      "Kneel with one shin pressed against a wall, foot pointing up. Step the other foot forward into a lunge position. Push hips forward and down while keeping the torso upright. Switch at 30 s.",
+    coachingCue:
+      "Squeeze the glute on the back leg to drive the hip into extension — don't just lean. Keep your lower back neutral, not arched.",
+    why: "Restores quad and hip flexor length that allows full hip extension in the pistol squat without forward lean.",
+    pose: "kneeling-backward",
+  },
+
   // ── Pistol Squat-specific ───────────────────────────────────────────────
 
   ankleDorsiflexion: {
@@ -432,6 +594,47 @@ const STRETCHES: Record<string, Stretch> = {
     coachingCue:
       "Keep the extended foot flexed (toes up). Use a doorframe for balance assistance if needed at first.",
     why: "Improves lateral hip mobility essential for the deep hip tracking in a balanced pistol squat.",
+    pose: "wide-seated",
+  },
+
+  // ── General / Core Path ─────────────────────────────────────────────────
+
+  threadTheNeedle: {
+    id: "threadTheNeedle",
+    name: "Thread the Needle",
+    durationSeconds: 60,
+    targetMuscles: ["Thoracic Spine", "Posterior Shoulder", "Obliques"],
+    description:
+      "Start on all-fours. Slide one arm under your body along the floor as far as it will go, rotating your upper back. Let the shoulder and head rest on the floor. Switch at 30 s.",
+    coachingCue:
+      "Keep hips level — don't rotate them with your spine. The rotation should come entirely from your mid-back. Breathe into the rotated position.",
+    why: "Restores thoracic rotation range that keeps the spine mobile under core tension and ring work.",
+    pose: "kneeling-forward",
+  },
+
+  cobraStretch: {
+    id: "cobraStretch",
+    name: "Cobra Stretch",
+    durationSeconds: 60,
+    targetMuscles: ["Abdominals", "Hip Flexors", "Lumbar Spine"],
+    description:
+      "Lie face-down with palms flat beside your chest. Straighten your arms to lift your chest off the floor, keeping your hips down and your lower back long. Hold and breathe.",
+    coachingCue:
+      "Don't crunch the lower back — think 'long spine'. Squeeze your glutes slightly to protect the lumbar. Elbows can stay slightly bent if needed.",
+    why: "Counter-stretches the anterior chain after heavy core compression work like L-sits, dragon flags, and planks.",
+    pose: "kneeling-backward",
+  },
+
+  seatedLSitCompression: {
+    id: "seatedLSitCompression",
+    name: "Seated L-Sit Compression",
+    durationSeconds: 60,
+    targetMuscles: ["Hip Flexors", "Quads", "Abdominals"],
+    description:
+      "Sit on the floor with legs straight out in front. Place hands beside your hips and actively pull your legs off the floor as high as possible, keeping them straight. Hold 3–5 s, lower, repeat.",
+    coachingCue:
+      "Actively pull the toes toward you (flex the feet). Think 'pull the thighs toward your chest' rather than just lifting. It's active — not a rest position.",
+    why: "Directly trains the hip flexor compression strength required to hold a full L-sit with legs horizontal.",
     pose: "wide-seated",
   },
 
@@ -481,24 +684,97 @@ const STRETCHES: Record<string, Stretch> = {
 // ─── Stiffness area → prioritized stretch IDs ────────────────────────────────
 
 const STIFFNESS_STRETCH_IDS: Record<string, string[]> = {
-  "Wrists":      ["wristExtension", "wristFlexion", "firstKnuckleRaises", "fingerPulses"],
-  "Shoulders":   ["shoulderDislocates", "chestOpener", "tricepsStretch", "shoulderFlexion", "germanHang"],
-  "Lower Back":  ["thoracicRotation", "hamstring", "hipFlexorLunge", "thoracicBridge"],
+  "Wrists":      ["wristExtension", "wristFlexion", "firstKnuckleRaises", "fingerPulses", "wristCircles", "backOfHandRocks", "wristPalmPeels"],
+  "Shoulders":   ["shoulderDislocates", "chestOpener", "tricepsStretch", "shoulderFlexion", "germanHang", "sleeperStretch", "behindBackClasp", "activeScapularShrugsFloor"],
+  "Lower Back":  ["thoracicRotation", "hamstring", "hipFlexorLunge", "thoracicBridge", "cobraStretch", "threadTheNeedle"],
   "Ankles":      ["ankleCircles", "calfStretch", "ankleDorsiflexion"],
-  "Hips":        ["hipFlexorLunge", "pigeonPose", "pancake", "cossackSquats"],
+  "Hips":        ["hipFlexorLunge", "pigeonPose", "pancake", "cossackSquats", "ninetyNineHipSwitches", "deepSquatInternalRotation", "couchStretch"],
 };
 
 // ─── Goal → Routine Mapping ──────────────────────────────────────────────────
 
 const GOAL_ROUTINES: Record<MobilityGoal, string[]> = {
-  handstand:      ["wallPuppyPose", "firstKnuckleRaises", "butchersBlock", "wristExtension", "shoulderDislocates"],
-  "muscle-up":    ["germanHang", "skinTheCat", "deepLatStretch", "shoulderDislocates", "wristExtension"],
-  push:           ["plancheLeans", "reverseTabletop", "fingerPulses", "wristExtension", "shoulderDislocates"],
-  legs:           ["ankleDorsiflexion", "pigeonPose", "cossackSquats", "hamstring", "hipFlexorLunge"],
-  "front-lever":  ["scapularHangs", "proneYRaises", "thoracicBridge", "latStretch", "shoulderDislocates"],
-  pull:           ["wristExtension", "shoulderDislocates", "latStretch", "chestOpener", "thoracicRotation"],
-  core:           ["thoracicRotation", "hipFlexorLunge", "hamstring", "latStretch", "chestOpener"],
-  general:        ["wristExtension", "shoulderDislocates", "hipFlexorLunge", "thoracicRotation", "chestOpener"],
+  // 8-entry pools — trimmed to 3/5/8 by getTasksForPreferences based on daily time budget
+  handstand: [
+    "puppyPoseFloor",
+    "activeScapularShrugsFloor",
+    "wristCircles",
+    "firstKnuckleRaises",
+    "wallPuppyPose",
+    "butchersBlock",
+    "wristExtension",
+    "shoulderDislocates",
+  ],
+  "muscle-up": [
+    "sleeperStretch",
+    "latSmashFloor",
+    "behindBackClasp",
+    "germanHang",
+    "skinTheCat",
+    "deepLatStretch",
+    "shoulderDislocates",
+    "wristExtension",
+  ],
+  push: [
+    "backOfHandRocks",
+    "plancheLeanActiveStretch",
+    "wristPalmPeels",
+    "plancheLeans",
+    "reverseTabletop",
+    "fingerPulses",
+    "wristExtension",
+    "shoulderDislocates",
+  ],
+  legs: [
+    "ninetyNineHipSwitches",
+    "deepSquatInternalRotation",
+    "couchStretch",
+    "ankleDorsiflexion",
+    "pigeonPose",
+    "cossackSquats",
+    "hamstring",
+    "hipFlexorLunge",
+  ],
+  "front-lever": [
+    "scapularHangs",
+    "proneYRaises",
+    "thoracicBridge",
+    "latStretch",
+    "shoulderDislocates",
+    "sleeperStretch",
+    "behindBackClasp",
+    "threadTheNeedle",
+  ],
+  pull: [
+    "sleeperStretch",
+    "behindBackClasp",
+    "latSmashFloor",
+    "wristExtension",
+    "shoulderDislocates",
+    "latStretch",
+    "chestOpener",
+    "thoracicRotation",
+  ],
+  core: [
+    "threadTheNeedle",
+    "cobraStretch",
+    "seatedLSitCompression",
+    "thoracicRotation",
+    "hipFlexorLunge",
+    "hamstring",
+    "latStretch",
+    "chestOpener",
+  ],
+  general: [
+    "threadTheNeedle",
+    "cobraStretch",
+    "wristExtension",
+    "shoulderDislocates",
+    "hipFlexorLunge",
+    "thoracicRotation",
+    "chestOpener",
+    "hamstring",
+  ],
 };
 
 // Full extended library for bonus stretches when time allows
