@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { GitBranch, History as HistoryIcon } from "lucide-react";
+import { GitBranch, History as HistoryIcon, BarChart2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { SkillTreePage } from "./skill-tree";
 import { History } from "./history";
+import { Progress } from "./progress";
 
-type Tab = "skill-tree" | "history";
+type Tab = "skill-tree" | "history" | "progress";
 
 export function MasteryHub() {
   const { t } = useTranslation();
@@ -29,6 +30,7 @@ export function MasteryHub() {
           <GitBranch className="w-4 h-4" />
           {t("nav.skillTree", "Skill Tree")}
         </button>
+
         <button
           onClick={() => setTab("history")}
           className={cn(
@@ -41,10 +43,25 @@ export function MasteryHub() {
           <HistoryIcon className="w-4 h-4" />
           {t("nav.history", "History")}
         </button>
+
+        <button
+          onClick={() => setTab("progress")}
+          className={cn(
+            "flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-all border-b-2",
+            tab === "progress"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <BarChart2 className="w-4 h-4" />
+          {t("nav.progress", "Progress")}
+        </button>
       </div>
 
       <div className="flex-1">
-        {tab === "skill-tree" ? <SkillTreePage /> : <History />}
+        {tab === "skill-tree" && <SkillTreePage />}
+        {tab === "history"    && <History />}
+        {tab === "progress"   && <Progress />}
       </div>
     </div>
   );

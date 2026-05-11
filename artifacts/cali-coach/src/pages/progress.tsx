@@ -29,8 +29,8 @@ import {
   Legend,
   BarChart,
 } from "recharts";
-import { Target, TrendingUp, ShieldCheck, GitBranch, Lock, Crown, Zap, Check } from "lucide-react";
-import { format } from "date-fns";
+import { Target, TrendingUp, ShieldCheck, GitBranch, Crown, Zap, Check, Calendar, Flame } from "lucide-react";
+import { format, getISOWeek, getISOWeekYear } from "date-fns";
 import {
   ALL_SKILL_NODES,
   type SessionSummary as SkillSessionSummary,
@@ -210,6 +210,143 @@ export function Progress() {
     }));
     return computeMasteryDates(mapped);
   }, [sessions]);
+
+  // ── Consistency calendar — last 84 days (12 × 7 grid) ────────────────────
+  const { calendarGrid, calendarMonthLabels } = useMemo(() => {
+    // Build date → session count map
+    const dayMap: Record<string, number> = {};
+    sessions?.forEach((s) => {
+      const key = format(new Date(s.startedAt), "yyyy-MM-dd");
+      dayMap[key] = (dayMap[key] ?? 0) + 1;
+    });
+
+    // Generate 84 days newest→oldest, then reverse into week columns
+    const today = new Date();
+    const days: { key: string; count: number; date: Date; isToday: boolean }[] = [];
+    for (let i = 83; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = format(d, "yyyy-MM-dd");
+      days.push({ key, count: dayMap[key] ?? 0, date: d, isToday: i === 0 });
+    }
+
+    // Split into 12 columns (weeks), each 7 days
+    const grid: typeof days[] = [];
+    for (let w = 0; w < 12; w++) {
+      grid.push(days.slice(w * 7, w * 7 + 7));
+    }
+
+    // Month labels per column (show if first day of month appears in that week)
+    const monthLabels: (string | null)[] = grid.map((week) => {
+      const firstDay1 = week.find((d) => d.date.getDate() <= 7);
+      if (firstDay1) return format(firstDay1.date, "MMM");
+      return null;
+    });
+
+    return { calendarGrid: grid, calendarMonthLabels: monthLabels };
+  }, [sessions]);
+
+  const totalWorkoutDays = useMemo(() => {
+    const keys = new Set(
+      sessions?.map((s) => format(new Date(s.startedAt), "yyyy-MM-dd")) ?? [],
+    );
+    return keys.size;
+  }, [sessions]);
+
+  // ── Weekly volume data ─────────────────────────────────────────────────────
+  const weeklyVolumeData = useMemo(() => {
+    if (!sessions?.length) return [];
+    const weekMap: Record<string, { week: string; reps: number; sets: number }> = {};
+    sessions.forEach((s) => {
+      const d = new Date(s.startedAt);
+      const isoWeek = getISOWeek(d);
+      const isoYear = getISOWeekYear(d);
+      const key = `${isoYear}-W${String(isoWeek).padStart(2, "0")}`;
+      // Label: start of that week
+      const dayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1; // Mon=0
+      const monday = new Date(d);
+      monday.setDate(d.getDate() - dayOfWeek);
+      const label = format(monday, "MMM d");
+      if (!weekMap[key]) weekMap[key] = { week: label, reps: 0, sets: 0 };
+      weekMap[key].reps += s.totalReps ?? 0;
+      weekMap[key].sets += s.sets ?? 1;
+    });
+    return Object.entries(weekMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, v]) => v)
+      .slice(-12);
+  }, [sessions]);
+
+  // ── Skill predictions ─────────────────────────────────────────────────────
+  const skillPredictions = useMemo(() => {
+    if (!sessions?.length) return [];
+    const masteredIds = new Set(skillTimeline.map((s) => s.id));
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const predictions: {
+      node: typeof ALL_SKILL_NODES[number];
+      completed: number;
+      total: number;
+      pct: number;
+      weeksRemaining: number;
+      estimatedDate: Date;
+    }[] = [];
+
+    for (const node of ALL_SKILL_NODES) {
+      if (masteredIds.has(node.id)) continue;
+      // Skip if primary prerequisite not yet mastered
+      if (node.prerequisiteId && !masteredIds.has(node.prerequisiteId)) continue;
+
+      const req = node.masteryRequirement;
+
+      // Count qualifying sessions for this node
+      const qualifying = (sessions ?? []).filter(
+        (s) =>
+          node.exercises.some(
+            (e) => e.toLowerCase() === (s.exerciseName ?? "").toLowerCase(),
+          ) &&
+          (s.totalReps ?? 0) >= req.minReps &&
+          (s.avgFormScore ?? 0) >= req.minFormScore &&
+          s.completedAt !== null,
+      );
+
+      const completed = qualifying.length;
+      const remaining = Math.max(0, req.minQualifyingSessions - completed);
+      if (remaining === 0) continue; // technically mastered but not in timeline yet
+
+      // Exercise-specific recent rate (last 30 days)
+      const recentEx = (sessions ?? []).filter(
+        (s) =>
+          node.exercises.some(
+            (e) => e.toLowerCase() === (s.exerciseName ?? "").toLowerCase(),
+          ) && new Date(s.startedAt) >= thirtyDaysAgo,
+      );
+      const exRate = recentEx.length / 4.3; // sessions/week for this exercise
+
+      // Fallback: overall rate / node's exercise count
+      const overallRate =
+        (sessions ?? []).filter((s) => new Date(s.startedAt) >= thirtyDaysAgo).length / 4.3;
+      const effectiveRate = exRate > 0 ? exRate : overallRate / Math.max(1, node.exercises.length);
+
+      if (effectiveRate <= 0.05) continue; // barely training — skip
+
+      const weeksRemaining = Math.max(1, Math.ceil(remaining / effectiveRate));
+      const estimatedDate = new Date();
+      estimatedDate.setDate(estimatedDate.getDate() + weeksRemaining * 7);
+
+      predictions.push({
+        node,
+        completed,
+        total: req.minQualifyingSessions,
+        pct: Math.min(99, Math.round((completed / req.minQualifyingSessions) * 100)),
+        weeksRemaining,
+        estimatedDate,
+      });
+    }
+
+    return predictions.sort((a, b) => a.weeksRemaining - b.weeksRemaining).slice(0, 5);
+  }, [sessions, skillTimeline]);
 
   // ── Paywall overlay for free users ───────────────────────────────────────
   const paywallOverlay = !isPro && (
@@ -800,6 +937,238 @@ export function Progress() {
           )}
         </CardContent>
       </Card>
+      {/* ── Consistency Calendar ─────────────────────────────────────────── */}
+      <Card className={glassCardClass}>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-primary" style={{ filter: "drop-shadow(0 0 5px #22c55e)" }} />
+                Workout Consistency
+              </CardTitle>
+              <CardDescription>Last 12 weeks — each cell is one day</CardDescription>
+            </div>
+            <div className="text-right shrink-0">
+              <div className="text-2xl font-bold font-mono text-primary" style={{ textShadow: "0 0 10px #22c55e" }}>
+                {totalWorkoutDays}
+              </div>
+              <div className="text-xs text-muted-foreground">active days</div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Day-of-week labels */}
+          <div className="flex gap-1 mb-1 ml-0" style={{ paddingLeft: 0 }}>
+            {/* spacer for week columns */}
+            {calendarGrid.map((_, wi) => (
+              <div key={wi} className="flex flex-col gap-1" style={{ flex: 1 }}>
+                {wi === 0 && (
+                  <div className="flex flex-col gap-0.5">
+                    {["M", "T", "W", "T", "F", "S", "S"].map((d, di) => (
+                      <div key={di} style={{ height: 11, fontSize: 8, color: "rgba(100,116,139,0.5)", fontWeight: 700, textAlign: "center" }}>
+                        {d}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar grid — 12 columns (weeks) × 7 rows (days) */}
+          <div style={{ display: "flex", gap: 4, alignItems: "flex-start" }}>
+            {/* Day-of-week labels */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 3, marginRight: 2, flexShrink: 0 }}>
+              {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+                <div key={i} style={{ height: 13, width: 12, fontSize: 8, color: "rgba(100,116,139,0.5)", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            {/* Week columns */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+              {/* Month labels */}
+              <div style={{ display: "flex", gap: 3 }}>
+                {calendarGrid.map((week, wi) => (
+                  <div key={wi} style={{ flex: 1, fontSize: 8, color: "rgba(100,116,139,0.6)", fontWeight: 700, textAlign: "center", minWidth: 0, overflow: "hidden" }}>
+                    {calendarMonthLabels[wi] ?? ""}
+                  </div>
+                ))}
+              </div>
+
+              {/* Day cells — 7 rows */}
+              {[0, 1, 2, 3, 4, 5, 6].map((dayIdx) => (
+                <div key={dayIdx} style={{ display: "flex", gap: 3 }}>
+                  {calendarGrid.map((week, wi) => {
+                    const cell = week[dayIdx];
+                    if (!cell) return <div key={wi} style={{ flex: 1, aspectRatio: "1" }} />;
+                    const count = cell.count;
+                    const bg =
+                      count === 0
+                        ? "rgba(255,255,255,0.04)"
+                        : count === 1
+                          ? "rgba(34,197,94,0.25)"
+                          : count === 2
+                            ? "rgba(34,197,94,0.55)"
+                            : "rgba(34,197,94,0.9)";
+                    const glow = count > 0 ? `0 0 ${count * 4}px rgba(34,197,94,${count * 0.2})` : "none";
+                    return (
+                      <div
+                        key={wi}
+                        title={`${format(cell.date, "MMM d")}: ${count} session${count !== 1 ? "s" : ""}`}
+                        style={{
+                          flex: 1,
+                          aspectRatio: "1",
+                          borderRadius: 3,
+                          background: bg,
+                          boxShadow: glow,
+                          border: cell.isToday ? "1px solid rgba(34,197,94,0.8)" : "1px solid rgba(255,255,255,0.04)",
+                          transition: "background 0.2s",
+                          minWidth: 0,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Legend */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, justifyContent: "flex-end" }}>
+            <span style={{ fontSize: 9, color: "rgba(100,116,139,0.6)", fontWeight: 600 }}>Less</span>
+            {[0, 1, 2, 3].map((n) => (
+              <div
+                key={n}
+                style={{
+                  width: 11, height: 11, borderRadius: 2,
+                  background: n === 0 ? "rgba(255,255,255,0.04)" : `rgba(34,197,94,${n * 0.3})`,
+                  border: "1px solid rgba(255,255,255,0.05)",
+                }}
+              />
+            ))}
+            <span style={{ fontSize: 9, color: "rgba(100,116,139,0.6)", fontWeight: 600 }}>More</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Weekly Volume ─────────────────────────────────────────────────── */}
+      <Card className={glassCardClass}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Flame className="w-4 h-4 text-orange-400" style={{ filter: "drop-shadow(0 0 5px #fb923c)" }} />
+            Weekly Volume
+          </CardTitle>
+          <CardDescription>Total reps and sets logged per week (last 12 weeks)</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[220px] w-full mt-2">
+            {weeklyVolumeData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyVolumeData} barGap={4}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis dataKey="week" stroke="#888" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis yAxisId="reps" stroke="#888" fontSize={11} tickLine={false} axisLine={false} />
+                  <YAxis yAxisId="sets" orientation="right" stroke="#888" fontSize={11} tickLine={false} axisLine={false} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", borderRadius: 8 }}
+                    itemStyle={{ color: "hsl(var(--foreground))" }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+                  <Bar yAxisId="reps" dataKey="reps" name="Total Reps" fill="#22c55e" opacity={0.85} radius={[4, 4, 0, 0]}
+                    style={{ filter: "drop-shadow(0 0 4px rgba(34,197,94,0.4))" }} />
+                  <Bar yAxisId="sets" dataKey="sets" name="Sets" fill="#60a5fa" opacity={0.6} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+                Complete a few sessions to see your weekly volume here.
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Skill Predictions ────────────────────────────────────────────── */}
+      <Card className={glassCardClass}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-yellow-400" style={{ filter: "drop-shadow(0 0 5px #facc15)" }} />
+            Skill Predictions
+          </CardTitle>
+          <CardDescription>
+            Based on your training frequency, here's when you're on track to master your next skills
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {skillPredictions.length > 0 ? (
+            <div className="space-y-4">
+              {skillPredictions.map(({ node, completed, total, pct, weeksRemaining, estimatedDate }) => {
+                const color = BRANCH_COLORS[node.branch] ?? "#22c55e";
+                const isClose = weeksRemaining <= 2;
+                return (
+                  <div key={node.id} className="space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0"
+                          style={{ color, background: `${color}18`, border: `1px solid ${color}30` }}
+                        >
+                          {node.branch}
+                        </span>
+                        <span className="text-sm font-semibold truncate">{node.title}</span>
+                        {isClose && (
+                          <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-yellow-400/15 text-yellow-400 border border-yellow-400/30 shrink-0 animate-pulse">
+                            Almost!
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-xs font-bold text-muted-foreground">
+                          {weeksRemaining === 1 ? "~1 week" : `~${weeksRemaining} weeks`}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground/60">
+                          {format(estimatedDate, "MMM d, yyyy")}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="relative h-2 rounded-full overflow-hidden bg-white/[0.05]">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                        style={{
+                          width: `${pct}%`,
+                          background: `linear-gradient(90deg, ${color}60, ${color})`,
+                          boxShadow: `0 0 8px ${color}60`,
+                        }}
+                      />
+                    </div>
+
+                    <div className="flex justify-between text-[10px] text-muted-foreground/60">
+                      <span>{completed} / {total} qualifying sessions</span>
+                      <span>{pct}% there</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : skillTimeline.length > 0 ? (
+            <div className="text-center py-10 text-muted-foreground">
+              <Zap className="w-8 h-8 mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium">All available skills mastered!</p>
+              <p className="text-xs mt-1 opacity-60">Keep training to maintain your edge.</p>
+            </div>
+          ) : (
+            <div className="text-center py-10 text-muted-foreground">
+              <Zap className="w-8 h-8 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">Complete more AI-verified sessions to unlock predictions.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
     </div>
     </div>{/* end blur wrapper */}
     {paywallOverlay}
