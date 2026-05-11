@@ -194,7 +194,10 @@ router.get(
     const myRank = myIndex >= 0 ? myIndex + 1 : null;
     const myEntry = myIndex >= 0 ? ranked[myIndex] : null;
 
-    const entries = ranked.slice(0, 100).map((u, i) => ({
+    // Friends tab shows every friend; global/national are capped at Top 100
+    const topN = type === "friends" ? ranked.length : 100;
+
+    const entries = ranked.slice(0, topN).map((u, i) => ({
       rank: i + 1,
       userId: u.id,
       username: u.username,
@@ -211,6 +214,7 @@ router.get(
       myRank,
       myPoints: myEntry?.masteryPoints ?? 0,
       myMasteredSkills: myEntry?.masteredSkills ?? 0,
+      leaderPoints: ranked[0]?.masteryPoints ?? 0,
       country: type === "national" ? country : null,
     });
   },

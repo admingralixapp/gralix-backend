@@ -2,14 +2,11 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Show } from "@clerk/react";
 import {
-  Trophy, Globe, Users, Flag, Star, Dumbbell, LogIn, ShieldCheck, ChevronDown, ChevronUp, Zap, BadgeCheck,
+  Trophy, Globe, Users, Flag, Star, Dumbbell, LogIn, ShieldCheck, ChevronDown, ChevronUp, Zap, TrendingUp,
 } from "lucide-react";
 import { useLeaderboard, useMyProfile } from "@/lib/social";
 import type { LeaderboardEntry } from "@/lib/social";
 import { getBadge } from "@/lib/badge-status";
-import {
-  DIFFICULTY_WEIGHTS, getDifficultyTier, TIER_COLOR, type DifficultyTier,
-} from "@/lib/exercise-registry";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
@@ -145,15 +142,48 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
 
 // ─── Move Value Guide ─────────────────────────────────────────────────────────
 
-const TIER_ORDER: DifficultyTier[] = ["Elite", "Advanced", "Intermediate", "Beginner"];
-
-const EXERCISES_BY_TIER = TIER_ORDER.map((tier) => ({
-  tier,
-  color: TIER_COLOR[tier],
-  exercises: Object.entries(DIFFICULTY_WEIGHTS)
-    .filter(([, w]) => getDifficultyTier(w) === tier)
-    .sort(([, a], [, b]) => b - a),
-}));
+const TIER_DEFS = [
+  {
+    label: "Elite",
+    multiplier: "10.0×",
+    color: "#eab308",
+    bg: "rgba(234,179,8,0.08)",
+    border: "rgba(234,179,8,0.22)",
+    emoji: "🏆",
+    desc: "The most taxing skills — Muscle-Ups, Planche, Human Flag and more.",
+    examples: "Muscle-Up, Planche Push-Up, Human Flag",
+  },
+  {
+    label: "Advanced",
+    multiplier: "5.0×",
+    color: "#f97316",
+    bg: "rgba(249,115,22,0.08)",
+    border: "rgba(249,115,22,0.22)",
+    emoji: "🔥",
+    desc: "High-level movements — Pistol Squats, Archer Pull-Ups, L-Sit.",
+    examples: "Pistol Squat, Archer Pull-Up, L-Sit",
+  },
+  {
+    label: "Intermediate",
+    multiplier: "3.0×",
+    color: "#3b82f6",
+    bg: "rgba(59,130,246,0.08)",
+    border: "rgba(59,130,246,0.22)",
+    emoji: "💪",
+    desc: "Foundational strength moves — Diamond Push-Ups, Chin-Ups, Dips.",
+    examples: "Diamond Push-Up, Chin-Up, Dips",
+  },
+  {
+    label: "Basic",
+    multiplier: "1.0×",
+    color: "#6b7280",
+    bg: "rgba(107,114,128,0.08)",
+    border: "rgba(107,114,128,0.22)",
+    emoji: "🌱",
+    desc: "Introductory movements and holds — Push-Ups, Negatives, Plank.",
+    examples: "Push-Up, Pull-Up Negative, Plank",
+  },
+] as const;
 
 function MoveValueGuide() {
   const { t } = useTranslation();
@@ -176,60 +206,56 @@ function MoveValueGuide() {
       </button>
 
       {open && (
-        <div className="px-4 pb-4 border-t border-border">
-          <p className="text-[11px] text-muted-foreground mt-3 mb-4 leading-relaxed">
-            {t("leaderboard.moveValueDesc")}
-          </p>
+        <div className="px-4 pb-4 border-t border-border space-y-4">
 
-          <div className="space-y-4">
-            {EXERCISES_BY_TIER.map(({ tier, color, exercises }) => (
-              <div key={tier}>
-                {/* Tier header */}
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest"
-                    style={{ color }}>
-                    {tier}
-                  </span>
-                  <div className="flex-1 h-px" style={{ backgroundColor: color, opacity: 0.25 }} />
-                  <span className="text-[10px] font-bold tabular-nums" style={{ color }}>
-                    {exercises[0]?.[1].toFixed(1)}×
+          {/* ── How it works ── */}
+          <div className="mt-3 rounded-xl p-3.5 border border-primary/20 bg-primary/5">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-bold text-primary uppercase tracking-widest">
+                {t("leaderboard.howItWorks", { defaultValue: "How it works" })}
+              </span>
+            </div>
+            <p className="text-[12px] font-mono font-semibold text-foreground">
+              Points = (Tier Multiplier) × (Reps or Seconds) × (AI Form Score %)
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+              {t("leaderboard.moveValueDesc")}
+            </p>
+          </div>
+
+          {/* ── Tier cards ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {TIER_DEFS.map((tier) => (
+              <div
+                key={tier.label}
+                className="rounded-xl p-3 flex flex-col gap-1"
+                style={{ background: tier.bg, border: `1px solid ${tier.border}` }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm leading-none">{tier.emoji}</span>
+                    <span className="text-xs font-black uppercase tracking-widest" style={{ color: tier.color }}>
+                      {tier.label}
+                    </span>
+                  </div>
+                  <span className="text-sm font-black tabular-nums" style={{ color: tier.color }}>
+                    {tier.multiplier}
                   </span>
                 </div>
-
-                {/* Exercise rows */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-                  {exercises.map(([name, weight]) => {
-                    const isStatic = ["Plank", "Tuck Front Lever", "Straddle Front Lever",
-                      "Full Front Lever", "Dragon Flag", "Human Flag",
-                      "Hollow Body Hold", "Tuck L-Sit"].includes(name);
-                    return (
-                      <div key={name}
-                        className="flex items-center justify-between rounded-lg px-2.5 py-1.5 gap-2"
-                        style={{ backgroundColor: `${color}0d`, border: `1px solid ${color}20` }}>
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="text-[10px] shrink-0" title={isStatic ? "Hold (pts/sec)" : "Rep-based"}>
-                            {isStatic ? "⏱" : "💪"}
-                          </span>
-                          <span className="text-[11px] font-medium truncate">{name}</span>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <span className="text-[11px] font-bold tabular-nums" style={{ color }}>
-                            {weight.toFixed(1)}
-                          </span>
-                          <span className="text-[9px] text-muted-foreground">
-                            {isStatic ? t("leaderboard.ptsSec") : t("leaderboard.ptsRep")}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  {tier.desc}
+                </p>
+                <p className="text-[10px] text-muted-foreground/60 leading-none mt-0.5">
+                  e.g. {tier.examples}
+                </p>
               </div>
             ))}
           </div>
 
-          <p className="text-[10px] text-muted-foreground mt-3 pt-3 border-t border-border/50">
-            {t("leaderboard.exampleCalc", { defaultValue: 'Example: 10 Muscle-Up reps at 90% form = 10 × 10.0 × 0.9 = 90 pts' })}
+          {/* ── Example calculation ── */}
+          <p className="text-[10px] text-muted-foreground pt-2 border-t border-border/50">
+            {t("leaderboard.exampleCalc", { defaultValue: "Example: 10 Muscle-Up reps at 90% form = 10 × 10.0 × 0.9 = 90 pts" })}
           </p>
         </div>
       )}
@@ -355,13 +381,18 @@ export function Leaderboard() {
         {!isLoading && !error && data && data.entries.length > 0 && (
           <div className="mx-6 rounded-xl border border-border bg-card overflow-hidden">
             {/* Column header */}
-            <div className="hidden sm:flex items-center gap-3 px-4 py-2 border-b border-border bg-secondary/30">
+            <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-secondary/30">
               <div className="w-8" />
               <div className="w-8" />
               <div className="flex-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 {t("leaderboard.athlete")}
               </div>
-              <div className="w-36 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">
+              {tab !== "friends" && (
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider text-amber-400 bg-amber-400/10 border border-amber-400/25 shrink-0">
+                  Top 100
+                </span>
+              )}
+              <div className="w-36 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right hidden sm:block">
                 {t("leaderboard.totalPoints")}
               </div>
             </div>
@@ -391,51 +422,68 @@ export function Leaderboard() {
         </div>
       </div>
 
-      {/* ── Sticky rank bar ── */}
-      <div className="fixed bottom-[80px] md:bottom-0 left-0 md:left-64 right-0 z-30">
-        <div className="bg-card/95 backdrop-blur-sm border-t border-border px-5 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-              <Trophy className="w-4 h-4 text-primary" />
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">{t("leaderboard.yourRank")}</div>
-              <div className="font-bold text-sm leading-tight">
-                {data?.myRank != null ? `#${data.myRank}` : "—"}
-                {data?.myRank === 1 && " 🥇"}
-                {data?.myRank === 2 && " 🥈"}
-                {data?.myRank === 3 && " 🥉"}
+      {/* ── Sticky rank bar — only shown when user is outside top 100 on global/national ── */}
+      {data && tab !== "friends" && (data.myRank == null || data.myRank > 100) && (
+        <div className="fixed bottom-[80px] md:bottom-0 left-0 md:left-64 right-0 z-30">
+          <div className="bg-card/95 backdrop-blur-sm border-t border-border px-5 py-3 flex items-center justify-between gap-3">
+            {/* Rank + label */}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                <Trophy className="w-4 h-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[10px] text-muted-foreground leading-none mb-0.5">
+                  {t("leaderboard.yourRank")}
+                </div>
+                <div className="font-bold text-sm leading-tight tabular-nums">
+                  {data.myRank != null ? `#${data.myRank}` : t("leaderboard.unranked", { defaultValue: "Unranked" })}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-6 text-sm">
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">{t("leaderboard.points")}</div>
-              <div className="font-bold text-primary tabular-nums">
-                {(data?.myPoints ?? 0).toLocaleString()}
+            {/* Points + gap to leader */}
+            <div className="flex items-center gap-5 text-sm">
+              <div className="text-center">
+                <div className="text-[10px] text-muted-foreground leading-none mb-0.5">
+                  {t("leaderboard.points")}
+                </div>
+                <div className="font-bold text-primary tabular-nums text-sm">
+                  {(data.myPoints).toLocaleString()}
+                </div>
               </div>
+              {data.leaderPoints > 0 && (
+                <div className="text-center">
+                  <div className="text-[10px] text-muted-foreground leading-none mb-0.5">
+                    {t("leaderboard.behindLeader", { defaultValue: "Behind #1" })}
+                  </div>
+                  <div className="font-bold tabular-nums text-sm text-rose-400">
+                    −{Math.max(0, data.leaderPoints - data.myPoints).toLocaleString()}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">{t("leaderboard.skills")}</div>
-              <div className="font-bold tabular-nums">{data?.myMasteredSkills ?? 0}</div>
-            </div>
-          </div>
 
-          {/* Mini progress bar — soft 10k reference */}
-          <div className="flex-1 max-w-[120px] hidden md:block">
-            <div className="h-2 bg-secondary rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full transition-all"
-                style={{ width: `${Math.min(100, ((data?.myPoints ?? 0) / BAR_REF) * 100)}%` }}
-              />
+            {/* Progress bar toward leader */}
+            <div className="flex-1 max-w-[100px] hidden sm:block">
+              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all"
+                  style={{
+                    width: data.leaderPoints > 0
+                      ? `${Math.min(100, (data.myPoints / data.leaderPoints) * 100)}%`
+                      : "0%",
+                  }}
+                />
+              </div>
+              <p className="text-[9px] text-muted-foreground text-right mt-0.5 tabular-nums">
+                {data.leaderPoints > 0
+                  ? `${Math.round((data.myPoints / data.leaderPoints) * 100)}% of leader`
+                  : "—"}
+              </p>
             </div>
-            <p className="text-[9px] text-muted-foreground text-right mt-0.5 tabular-nums">
-              {Math.round(Math.min(100, ((data?.myPoints ?? 0) / BAR_REF) * 100))}%
-            </p>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

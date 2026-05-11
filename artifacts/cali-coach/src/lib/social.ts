@@ -396,6 +396,7 @@ export interface LeaderboardData {
   myRank: number | null;
   myPoints: number;
   myMasteredSkills: number;
+  leaderPoints: number;
   country?: string | null;
 }
 
@@ -410,6 +411,7 @@ export function useLeaderboard(tab: "global" | "national" | "friends") {
         myRank: null,
         myPoints: 0,
         myMasteredSkills: 0,
+        leaderPoints: 0,
         country: null,
       }));
     },
