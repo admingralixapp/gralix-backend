@@ -14,10 +14,12 @@ import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSp
 import { getWorkoutPhrase } from "@/lib/cue-translations";
 import { useTranslation } from "react-i18next";
 import { getRestDuration, type RestDuration, REST_DURATION_OPTIONS } from "@/lib/workout-settings";
-import { getVoiceCues, getCameraFacing, getMirrorVideo, getVoiceProfile } from "@/lib/workout-preferences";
+import { getVoiceCues, getCameraFacing, getMirrorVideo, getVoiceProfile, getFlavorMode } from "@/lib/workout-preferences";
 import {
   getPhaseTransitionCue,
   getMilestoneCue,
+  getMotivationalCue,
+  getFlavorCue,
   toneFromScore,
   DESCEND_PACER_CUES,
   ASCEND_PACER_CUE,
@@ -583,6 +585,7 @@ export function Workout() {
   const [setsLog,    setSetsLog]    = useState<Array<{ reps: number; holdSec: number }>>([]);
   const setStartRepCountRef  = useRef(0);
   const setStartHoldSecRef   = useRef(0);
+  const flavorCueFiredThisSetRef = useRef(false);
 
   // ── Rest timer ─────────────────────────────────────────────────────────────
   const [isResting,   setIsResting]   = useState(false);
@@ -1138,13 +1141,20 @@ export function Workout() {
           duration > stateRef.current.avgRepDurationMs * 1.6 &&
           newRepCount >= 3;
 
+        const isFirstRepOfSet = (newRepCount - setStartRepCountRef.current) === 1;
+
         if (repQuality === "incomplete") {
           speak(getWorkoutPhrase("Incomplete rep — go deeper next time", i18n.language), "firm");
         } else if (isFatiguing) {
           const milestone = getMilestoneCue();
           speak(getWorkoutPhrase(milestone.text, i18n.language), milestone.tone);
         } else if (newRepCount % 5 === 0) {
-          speak(getWorkoutPhrase("{n} reps. Keep it up!", i18n.language).replace("{n}", String(newRepCount)), "encouraging");
+          const motivational = getMotivationalCue(exercise.name);
+          speak(getWorkoutPhrase(motivational.text, i18n.language), motivational.tone);
+        } else if (isFirstRepOfSet && !flavorCueFiredThisSetRef.current && getFlavorMode()) {
+          const flavor = getFlavorCue(exercise.name);
+          speak(getWorkoutPhrase(flavor.text, i18n.language), flavor.tone);
+          flavorCueFiredThisSetRef.current = true;
         } else {
           speak(getWorkoutPhrase("Good rep", i18n.language), "neutral");
         }
@@ -1915,6 +1925,8 @@ export function Workout() {
     stateRef.current.lastHoldSpeakSec = -1;
     stateRef.current.bestSyncPct      = 0;
     stateRef.current.lastSyncDropMs   = 0;
+
+    flavorCueFiredThisSetRef.current = false;
 
     frozenDetectedRef.current   = false;
     frozenCheckRef.current      = { lastTime: -1, sinceMs: 0 };

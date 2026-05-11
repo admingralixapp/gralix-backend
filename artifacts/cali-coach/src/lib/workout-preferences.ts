@@ -10,6 +10,7 @@ const VOICE_CUES_KEY    = "calicoach_voice_cues_v1";
 const CAMERA_FACING_KEY = "calicoach_camera_facing_v1";
 const MIRROR_VIDEO_KEY  = "calicoach_mirror_video_v1";
 const VOICE_PROFILE_KEY = "calicoach_voice_profile_v1";
+const FLAVOR_MODE_KEY   = "calicoach_flavor_mode_v1";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -92,4 +93,24 @@ export function getVoiceProfile(): string {
 
 export function setVoiceProfile(profileId: string): void {
   try { localStorage.setItem(VOICE_PROFILE_KEY, profileId); } catch {}
+}
+
+// ─── Flavor Mode ──────────────────────────────────────────────────────────────
+
+/**
+ * Whether Tier 3 flavor/goofy cues are enabled.
+ * When true, one lighthearted cue fires on the first rep of each set.
+ * Default: true
+ */
+export function getFlavorMode(): boolean {
+  try {
+    const raw = localStorage.getItem(FLAVOR_MODE_KEY);
+    return raw === null ? true : raw !== "false";
+  } catch {
+    return true;
+  }
+}
+
+export function setFlavorMode(enabled: boolean): void {
+  try { localStorage.setItem(FLAVOR_MODE_KEY, String(enabled)); } catch {}
 }

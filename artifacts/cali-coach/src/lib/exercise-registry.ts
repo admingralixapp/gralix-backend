@@ -17,6 +17,8 @@
  *   - totalReps saved to DB represents seconds held (integer)
  */
 
+import { pickFormCue } from "./form-cues";
+
 // ─── MediaPipe landmark indices ───────────────────────────────────────────────
 export const LM = {
   NOSE: 0,
@@ -153,7 +155,7 @@ const WALL_PUSH_UP: ExerciseConfig = {
     const rightElbow = calcAngle(lm[LM.RIGHT_SHOULDER], lm[LM.RIGHT_ELBOW], lm[LM.RIGHT_WRIST]);
     const symmetryPenalty = clamp(Math.abs(rightElbow - elbowAngle) * 0.5, 0, 20);
     const formScore = clamp(100 - symmetryPenalty, 0, 100);
-    const audioCue = formScore < 70 ? "Keep your elbows pointed down, not flaring" : null;
+    const audioCue = formScore < 70 ? pickFormCue("Wall Push-Up", "elbows_flaring") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -186,8 +188,8 @@ const INCLINE_PUSH_UP: ExerciseConfig = {
     let audioCue: string | null = null;
     if (formScore < 60) {
       audioCue = hipMid.y < shoulderMid.y
-        ? "Keep your hips down — straight line from head to heels"
-        : "Hips are dropping — tighten your core";
+        ? pickFormCue("Incline Push-Up", "hips_too_high")
+        : pickFormCue("Incline Push-Up", "hips_sagging");
     }
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
@@ -221,8 +223,8 @@ const KNEE_PUSH_UP: ExerciseConfig = {
     let audioCue: string | null = null;
     if (formScore < 60) {
       audioCue = hipMid.y < shoulderMid.y
-        ? "Lower your hips — keep a straight line from shoulder to knee"
-        : "Hips sagging — squeeze your glutes";
+        ? pickFormCue("Knee Push-Up", "hips_too_high")
+        : pickFormCue("Knee Push-Up", "hips_sagging");
     }
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
@@ -268,11 +270,11 @@ const PUSH_UP: ExerciseConfig = {
     let audioCue: string | null = null;
     if (formScore < 60) {
       if (flarePenalty > bodyPenalty * 0.6) {
-        audioCue = "Elbows are flaring — tuck them in";
+        audioCue = pickFormCue("Push-Up", "elbows_flaring");
       } else if (hipMid.y > ankleMid.y * 0.98) {
-        audioCue = "Hips are sagging — squeeze your core";
+        audioCue = pickFormCue("Push-Up", "hips_sagging");
       } else {
-        audioCue = "Straight line — head to heels";
+        audioCue = pickFormCue("Push-Up", "no_rigid_body");
       }
     }
     return { newPhase, repCounted, repQuality, formScore, audioCue };
@@ -308,8 +310,8 @@ const DIAMOND_PUSH_UP: ExerciseConfig = {
     const bodyPenalty = clamp(Math.max(0, 180 - bodyAngle) * 2, 0, 40);
     const formScore = clamp(100 - flarePenalty - bodyPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (flarePenalty > bodyPenalty && formScore < 65) audioCue = "Keep elbows tucked — they should graze your sides";
-    else if (formScore < 60) audioCue = "Hold the plank — core tight";
+    if (flarePenalty > bodyPenalty && formScore < 65) audioCue = pickFormCue("Diamond Push-Up", "elbows_flaring");
+    else if (formScore < 60) audioCue = pickFormCue("Diamond Push-Up", "core_loose");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -345,7 +347,7 @@ const HANDSTAND_PUSH_UP: ExerciseConfig = {
     const hipMidX = midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]).x;
     const archPenalty = clamp(Math.abs(wristMidX - hipMidX) * 120, 0, 40);
     const formScore = clamp(100 - archPenalty, 0, 100);
-    const audioCue = formScore < 65 ? "Stack your hips over your wrists — tighten your core" : null;
+    const audioCue = formScore < 65 ? pickFormCue("Handstand Push-Up", "stack_over_wrists") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -377,7 +379,7 @@ const SCAPULAR_SHRUGS: ExerciseConfig = {
     const elbowAngle = calcAngle(lm[LM.LEFT_WRIST], lm[LM.LEFT_ELBOW], lm[LM.LEFT_SHOULDER]);
     const bendPenalty = clamp((160 - elbowAngle) * 1.5, 0, 40);
     const formScore = clamp(100 - bendPenalty, 0, 100);
-    const audioCue = formScore < 65 ? "Keep arms straight — only move your shoulder blades" : null;
+    const audioCue = formScore < 65 ? pickFormCue("Scapular Shrugs", "arms_bent") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -407,7 +409,7 @@ const AUSTRALIAN_ROWS: ExerciseConfig = {
     const ankleMid = midpoint(lm[LM.LEFT_ANKLE], lm[LM.RIGHT_ANKLE]);
     const bodyAngle = calcAngle(shoulderMid, hipMid, ankleMid);
     const formScore = clamp(100 - Math.max(0, 180 - bodyAngle) * 2.5, 0, 100);
-    const audioCue = formScore < 60 ? "Keep your hips up — rigid body from head to heels" : null;
+    const audioCue = formScore < 60 ? pickFormCue("Australian Rows", "hips_sagging") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -438,7 +440,7 @@ const NEGATIVE_PULL_UPS: ExerciseConfig = {
     const shMidX = midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]).x;
     const swingPenalty = clamp(Math.abs(hipMidX - shMidX) * 100, 0, 30);
     const formScore = clamp(100 - swingPenalty, 0, 100);
-    const audioCue = formScore < 65 ? "Control the descent — no swinging" : null;
+    const audioCue = formScore < 65 ? pickFormCue("Negative Pull-Ups", "swinging") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -479,11 +481,11 @@ const PULL_UP: ExerciseConfig = {
       // Chin-over-bar check: at "top" phase, nose should be clearly above wrist level
       const chinOverBar = noseY < wristY - 0.04;
       if (phase === "top" && !chinOverBar) {
-        audioCue = "Get your chin over the bar";
+        audioCue = pickFormCue("Pull-Up", "chin_not_over_bar");
       } else if (swingPenalty > symmetryPenalty) {
-        audioCue = "Stop the swinging — use your back";
+        audioCue = pickFormCue("Pull-Up", "swinging");
       } else {
-        audioCue = "Pull evenly — engage your lats";
+        audioCue = pickFormCue("Pull-Up", "pull_evenly");
       }
     }
     return { newPhase, repCounted, repQuality, formScore, audioCue };
@@ -520,7 +522,7 @@ const EXPLOSIVE_PULL_UP: ExerciseConfig = {
     const swingPenalty = clamp(Math.abs(hipMidX - shMidX) * 80, 0, 25);
     const formScore = clamp(100 - swingPenalty, 0, 100);
 
-    const audioCue = formScore < 65 ? "Pull from the lats — less swing, more power" : null;
+    const audioCue = formScore < 65 ? pickFormCue("Explosive Pull-Up", "swinging") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -566,8 +568,8 @@ const MUSCLE_UP: ExerciseConfig = {
     let audioCue: string | null = null;
     if (formScore < 65) {
       audioCue = elbowAngle < 120
-        ? "Drive through — press all the way to lockout"
-        : "Less swing — use your lats to initiate";
+        ? pickFormCue("Muscle-Up", "no_full_extension")
+        : pickFormCue("Muscle-Up", "swinging");
     }
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
@@ -613,11 +615,9 @@ const TUCK_FRONT_LEVER: ExerciseConfig = {
     const formScore = clamp(100 - tiltPenalty - elbowPenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (!isElbowsExtended) audioCue = "Lock your elbows out — arms fully straight";
+    if (!isElbowsExtended) audioCue = pickFormCue("Tuck Front Lever", "arms_bent");
     else if (!isBodyHorizontal) {
-      audioCue = shoulderMid.y > hipMid.y
-        ? "Lift your hips — body should be horizontal"
-        : "Lower your hips — body should be horizontal";
+      audioCue = pickFormCue("Tuck Front Lever", "body_not_horizontal");
     }
 
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
@@ -653,11 +653,9 @@ const STRADDLE_FRONT_LEVER: ExerciseConfig = {
     const formScore = clamp(100 - tiltPenalty - elbowPenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (!isElbowsExtended) audioCue = "Extend your arms fully — elbows locked";
+    if (!isElbowsExtended) audioCue = pickFormCue("Straddle Front Lever", "arms_bent");
     else if (!isBodyHorizontal) {
-      audioCue = shoulderMid.y > hipMid.y
-        ? "Raise the hips — fight to keep them level"
-        : "Drop the hips — match shoulder height";
+      audioCue = pickFormCue("Straddle Front Lever", "body_not_horizontal");
     }
 
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
@@ -694,8 +692,8 @@ const FULL_FRONT_LEVER: ExerciseConfig = {
     const formScore = clamp(100 - tiltPenalty - elbowPenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (!isElbowsExtended) audioCue = "Fully lock out your elbows";
-    else if (!isBodyHorizontal) audioCue = "Body must be perfectly horizontal — squeeze everything";
+    if (!isElbowsExtended) audioCue = pickFormCue("Full Front Lever", "arms_bent");
+    else if (!isBodyHorizontal) audioCue = pickFormCue("Full Front Lever", "body_not_horizontal");
 
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
@@ -739,10 +737,10 @@ const DRAGON_FLAG: ExerciseConfig = {
     let audioCue: string | null = null;
     if (!isBodyStraight) {
       audioCue = bodyAngle < 170
-        ? "Don't pike — keep a rigid straight line from shoulder to ankle"
-        : "Don't arch — squeeze abs and glutes";
+        ? pickFormCue("Dragon Flag", "dont_pike")
+        : pickFormCue("Dragon Flag", "squeeze_abs");
     } else if (!isBodyHorizontal) {
-      audioCue = "Hold it horizontal — fight gravity";
+      audioCue = pickFormCue("Dragon Flag", "body_not_horizontal");
     }
 
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
@@ -787,9 +785,9 @@ const HUMAN_FLAG: ExerciseConfig = {
     const formScore = clamp(100 - tiltPenalty - straightPenalty - armPenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (!isArmsExtended) audioCue = "Lock out both arms — push and pull with max tension";
-    else if (!isBodyHorizontal) audioCue = "Drive the hips up — body should be level";
-    else if (!isBodyStraight) audioCue = "Squeeze your core — body straight as a board";
+    if (!isArmsExtended) audioCue = pickFormCue("Human Flag", "arms_bent");
+    else if (!isBodyHorizontal) audioCue = pickFormCue("Human Flag", "body_not_horizontal");
+    else if (!isBodyStraight) audioCue = pickFormCue("Human Flag", "no_rigid_body");
 
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
@@ -824,7 +822,7 @@ const ASSISTED_SQUAT: ExerciseConfig = {
     );
     const torsoPenalty = clamp((90 - torsoAngle) * 1.5, 0, 40);
     const formScore = clamp(100 - torsoPenalty, 0, 100);
-    const audioCue = formScore < 60 ? "Chest up — use your support and sit back" : null;
+    const audioCue = formScore < 60 ? pickFormCue("Assisted Squat", "chest_dropping") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -872,16 +870,16 @@ const SQUAT: ExerciseConfig = {
 
     let audioCue: string | null = null;
     if (repQuality === "incomplete") {
-      audioCue = "Go deeper — hips must reach knee level";
+      audioCue = pickFormCue("Squat", "not_deep_enough");
     } else if (formScore < 60) {
       if (heelRise) {
-        audioCue = "Weight on your heels — don't let them rise";
+        audioCue = pickFormCue("Squat", "heels_rising");
       } else if (forwardLean) {
-        audioCue = "Chest up — don't lean forward";
+        audioCue = pickFormCue("Squat", "chest_dropping");
       } else if (kneePenalty > torsoPenalty) {
-        audioCue = "Knees out — don't let them cave inward";
+        audioCue = pickFormCue("Squat", "knees_caving");
       } else {
-        audioCue = "Keep your chest up and spine neutral";
+        audioCue = pickFormCue("Squat", "core_loose");
       }
     }
     return { newPhase, repCounted, repQuality, formScore, audioCue };
@@ -922,8 +920,8 @@ const ARCHER_SQUAT: ExerciseConfig = {
     );
     const formScore = clamp(100 - extPenalty - torsoPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (extPenalty > torsoPenalty && formScore < 65) audioCue = "Straighten the extended leg — lock that knee out";
-    else if (formScore < 60) audioCue = "Sink lower into the working leg";
+    if (extPenalty > torsoPenalty && formScore < 65) audioCue = pickFormCue("Archer Squat", "one_arm_bent");
+    else if (formScore < 60) audioCue = pickFormCue("Archer Squat", "not_deep_enough");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -962,8 +960,8 @@ const PISTOL_SQUAT: ExerciseConfig = {
     );
     const formScore = clamp(100 - freeLegPenalty - torsoPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (freeLegPenalty > 0 && formScore < 70) audioCue = "Extend your free leg forward — don't let it touch the ground";
-    else if (formScore < 60) audioCue = "Sit all the way down — full depth pistol";
+    if (freeLegPenalty > 0 && formScore < 70) audioCue = pickFormCue("Pistol Squat", "free_leg_down");
+    else if (formScore < 60) audioCue = pickFormCue("Pistol Squat", "not_deep_enough");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1010,7 +1008,7 @@ const NORDIC_CURLS: ExerciseConfig = {
     const formScore = clamp(100 - hipBreakPenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (formScore < 60) audioCue = "Don't break at the hips — lower as a rigid plank from knees to shoulders";
+    if (formScore < 60) audioCue = pickFormCue("Nordic Curls", "no_rigid_body");
 
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
@@ -1043,9 +1041,9 @@ const PLANK: ExerciseConfig = {
     const isHoldActive = inZone(bodyAngle, 180, 10);
 
     let audioCue: string | null = null;
-    if (hipAbove) audioCue = "Keep your hips down — squeeze your glutes";
-    else if (hipBelow) audioCue = "Raise your hips — body should be straight";
-    else if (formScore < 70) audioCue = "Hold your core tight";
+    if (hipAbove) audioCue = pickFormCue("Plank", "hips_too_high");
+    else if (hipBelow) audioCue = pickFormCue("Plank", "hips_sagging");
+    else if (formScore < 70) audioCue = pickFormCue("Plank", "core_loose");
 
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
@@ -1075,7 +1073,7 @@ const DIP: ExerciseConfig = {
     const hipMid = midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]);
     const bodyLean = Math.abs(shoulderMid.x - hipMid.x) * 100;
     const formScore = clamp(100 - Math.max(0, bodyLean - 5) * 2, 0, 100);
-    const audioCue = formScore < 60 ? "Control the descent — elbows tucked" : null;
+    const audioCue = formScore < 60 ? pickFormCue("Dip", "elbows_flaring") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1106,7 +1104,7 @@ const LUNGE: ExerciseConfig = {
       midpoint(lm[LM.LEFT_KNEE], lm[LM.RIGHT_KNEE]),
     );
     const formScore = clamp(torsoAngle - 20, 0, 100);
-    const audioCue = formScore < 60 ? "Torso upright — don't lean forward" : null;
+    const audioCue = formScore < 60 ? pickFormCue("Lunge", "chest_dropping") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1132,7 +1130,7 @@ const BURPEE: ExerciseConfig = {
     }
 
     const formScore = clamp(hipAngle > 140 ? 90 : hipAngle, 0, 100);
-    const audioCue = formScore < 60 ? "Explode up — full extension at the top" : null;
+    const audioCue = formScore < 60 ? pickFormCue("Burpee", "no_full_extension") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1171,9 +1169,9 @@ const CHEST_TO_BAR_PULL_UP: ExerciseConfig = {
     const formScore    = clamp(80 + depthBonus - swingPenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (phase === "top" && !chestClear) audioCue = "Drive your chest to the bar — pull higher";
-    else if (swingPenalty > 15) audioCue = "Control the swing — pull straight up";
-    else if (phase === "bottom" && elbowAngle < 150) audioCue = "Full dead hang — lock out your elbows";
+    if (phase === "top" && !chestClear) audioCue = pickFormCue("Chest-to-Bar Pull-Up", "chest_to_bar_cue");
+    else if (swingPenalty > 15) audioCue = pickFormCue("Chest-to-Bar Pull-Up", "swinging");
+    else if (phase === "bottom" && elbowAngle < 150) audioCue = pickFormCue("Chest-to-Bar Pull-Up", "dead_hang_required");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1214,9 +1212,9 @@ const ARCHER_PULL_UP: ExerciseConfig = {
     const formScore = clamp(100 - extPenalty - swingPenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (extPenalty > 20) audioCue = "Keep the extended arm locked out — straight as a rod";
-    else if (swingPenalty > 15) audioCue = "Shift your weight fully onto the working arm";
-    else if (formScore < 65) audioCue = "Pull your elbow to your hip on the working side";
+    if (extPenalty > 20) audioCue = pickFormCue("Archer Pull-Up", "one_arm_bent");
+    else if (swingPenalty > 15) audioCue = pickFormCue("Archer Pull-Up", "swinging");
+    else if (formScore < 65) audioCue = pickFormCue("Archer Pull-Up", "no_full_extension");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1253,8 +1251,8 @@ const PIKE_PUSH_UP: ExerciseConfig = {
     const formScore    = clamp(100 - hipPenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (hipPenalty > 20) audioCue = "Pike your hips higher — form that inverted V shape";
-    else if (formScore < 65) audioCue = "Lower your head between your hands";
+    if (hipPenalty > 20) audioCue = pickFormCue("Pike Push-Up", "hips_too_high");
+    else if (formScore < 65) audioCue = pickFormCue("Pike Push-Up", "not_deep_enough");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1291,8 +1289,8 @@ const ELEVATED_PIKE_PUSH_UP: ExerciseConfig = {
     const formScore    = clamp(100 - hipPenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (hipPenalty > 25) audioCue = "Keep hips elevated — this loads your shoulders";
-    else if (formScore < 65) audioCue = "Lower until your head nearly touches the floor";
+    if (hipPenalty > 25) audioCue = pickFormCue("Elevated Pike Push-Up", "hips_too_high");
+    else if (formScore < 65) audioCue = pickFormCue("Elevated Pike Push-Up", "not_deep_enough");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1336,9 +1334,9 @@ const HOLLOW_BODY_HOLD: ExerciseConfig = {
     const formScore   = clamp(50 + elevationScore - tiltPenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (!anklesElevated)    audioCue = "Raise your legs — keep them straight and together";
-    else if (!shouldersElevated) audioCue = "Curl your shoulders off the floor — reach arms forward";
-    else if (!isHorizontal) audioCue = "Keep your body long and horizontal — squeeze your core";
+    if (!anklesElevated)    audioCue = pickFormCue("Hollow Body Hold", "free_leg_down");
+    else if (!shouldersElevated) audioCue = pickFormCue("Hollow Body Hold", "no_rigid_body");
+    else if (!isHorizontal) audioCue = pickFormCue("Hollow Body Hold", "core_loose");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -1376,9 +1374,9 @@ const TUCK_L_SIT: ExerciseConfig = {
     const formScore      = clamp(100 - hipLiftPenalty - elbowPenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (!elbowsExtended)  audioCue = "Lock out your arms — press down through your palms";
-    else if (!hipsElevated) audioCue = "Push the floor away — lift your hips off the surface";
-    else if (!kneesTucked)  audioCue = "Tuck your knees tight to your chest";
+    if (!elbowsExtended)  audioCue = pickFormCue("Tuck L-Sit", "arms_bent");
+    else if (!hipsElevated) audioCue = pickFormCue("Tuck L-Sit", "no_shoulder_depression");
+    else if (!kneesTucked)  audioCue = pickFormCue("Tuck L-Sit", "tuck_knees");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -1417,8 +1415,8 @@ const BULGARIAN_SPLIT_SQUAT: ExerciseConfig = {
     const formScore    = clamp(100 - torsoPenalty - kneePenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (kneePenalty > torsoPenalty && formScore < 65) audioCue = "Keep your front knee tracking over your toes";
-    else if (formScore < 60) audioCue = "Torso upright — sink straight down into the squat";
+    if (kneePenalty > torsoPenalty && formScore < 65) audioCue = pickFormCue("Bulgarian Split Squat", "knees_caving");
+    else if (formScore < 60) audioCue = pickFormCue("Bulgarian Split Squat", "chest_dropping");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1461,9 +1459,9 @@ const SHRIMP_SQUAT: ExerciseConfig = {
     const formScore = clamp(100 - balancePenalty - torsoPenalty, 0, 100);
 
     let audioCue: string | null = null;
-    if (repQuality === "incomplete")         audioCue = "Go deeper — full depth shrimp squat";
-    else if (balancePenalty > 20 && formScore < 65) audioCue = "Stay balanced — keep your hip over your ankle";
-    else if (formScore < 60)                 audioCue = "Control the descent — slow and steady";
+    if (repQuality === "incomplete")         audioCue = pickFormCue("Shrimp Squat", "not_deep_enough");
+    else if (balancePenalty > 20 && formScore < 65) audioCue = pickFormCue("Shrimp Squat", "balance");
+    else if (formScore < 60)                 audioCue = pickFormCue("Shrimp Squat", "control_descent");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1497,8 +1495,8 @@ const ARCHER_PUSH_UP: ExerciseConfig = {
     const bodyPenalty = clamp(Math.abs(180 - bodyAngle) * 2, 0, 30);
     const formScore   = clamp(100 - extPenalty - bodyPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (extPenalty > 20) audioCue = "Lock out the extended arm — straight all the way";
-    else if (formScore < 65) audioCue = "Stay rigid — lower with control";
+    if (extPenalty > 20) audioCue = pickFormCue("Archer Push-Up", "one_arm_bent");
+    else if (formScore < 65) audioCue = pickFormCue("Archer Push-Up", "no_rigid_body");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1530,7 +1528,7 @@ const PSEUDO_PLANCHE_PUSH_UP: ExerciseConfig = {
     const bodyAngle    = calcAngle(shoulderMid, hipMid, ankleMid);
     const bodyPenalty  = clamp(Math.abs(180 - bodyAngle) * 2, 0, 40);
     const formScore    = clamp(100 - leanPenalty - bodyPenalty, 0, 100);
-    const audioCue = formScore < 65 ? "Lean forward — shoulders over your rotated hands" : null;
+    const audioCue = formScore < 65 ? pickFormCue("Pseudo Planche Push-Up", "no_lean_forward") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1558,8 +1556,8 @@ const HANDSTAND: ExerciseConfig = {
     const anklePenalty = clamp(ankleDrift * 150, 0, 30);
     const formScore    = clamp(100 - hipPenalty - anklePenalty * 0.5, 0, 100);
     let audioCue: string | null = null;
-    if (hipDrift > 0.10) audioCue = "Stack your hips directly over your wrists";
-    else if (!isHoldActive) audioCue = "Push the floor away — engage your shoulders";
+    if (hipDrift > 0.10) audioCue = pickFormCue("Handstand", "stack_over_wrists");
+    else if (!isHoldActive) audioCue = pickFormCue("Handstand", "no_shoulder_depression");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -1587,8 +1585,8 @@ const PLANCHE_LEAN: ExerciseConfig = {
     const leanPenalty  = clamp(leanOffset * 200, 0, 40);
     const formScore    = clamp(100 - bodyPenalty - leanPenalty * 0.5, 0, 100);
     let audioCue: string | null = null;
-    if (!isStraight) audioCue = "Rigid plank — no hip pike or sag";
-    else if (!isLeaning) audioCue = "Lean forward — shoulders over your wrists";
+    if (!isStraight) audioCue = pickFormCue("Planche Lean", "no_rigid_body");
+    else if (!isLeaning) audioCue = pickFormCue("Planche Lean", "no_lean_forward");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -1615,8 +1613,8 @@ const TUCK_PLANCHE: ExerciseConfig = {
     const elbowPenalty = clamp((155 - avgElbow) * 1.2, 0, 40);
     const formScore    = clamp(100 - hipPenalty - elbowPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (!isElbowsExtended) audioCue = "Lock your elbows — push the floor away";
-    else if (!hipsElevated) audioCue = "Lean forward further — pull your hips off the floor";
+    if (!isElbowsExtended) audioCue = pickFormCue("Tuck Planche", "arms_bent");
+    else if (!hipsElevated) audioCue = pickFormCue("Tuck Planche", "no_lean_forward");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -1645,8 +1643,8 @@ const STRADDLE_PLANCHE: ExerciseConfig = {
     const elbowPenalty = clamp((160 - avgElbow) * 1.3, 0, 40);
     const formScore    = clamp(100 - tiltPenalty - elbowPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (!isElbowsExtended) audioCue = "Elbows locked — push the floor away with maximum force";
-    else if (!isBodyHorizontal) audioCue = "Lean more forward — hips need to be level";
+    if (!isElbowsExtended) audioCue = pickFormCue("Straddle Planche", "arms_bent");
+    else if (!isBodyHorizontal) audioCue = pickFormCue("Straddle Planche", "body_not_horizontal");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -1675,8 +1673,8 @@ const PLANCHE: ExerciseConfig = {
     const elbowPenalty = clamp((160 - avgElbow) * 1.5, 0, 40);
     const formScore    = clamp(100 - tiltPenalty - elbowPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (!isElbowsExtended) audioCue = "Lock out elbows — maximum push";
-    else if (!isBodyHorizontal) audioCue = "Body must be perfectly horizontal — squeeze everything";
+    if (!isElbowsExtended) audioCue = pickFormCue("Planche", "arms_bent");
+    else if (!isBodyHorizontal) audioCue = pickFormCue("Planche", "body_not_horizontal");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -1704,8 +1702,8 @@ const SIDE_PLANK: ExerciseConfig = {
     const sagPenalty  = clamp(Math.max(0, hipSag) * 200, 0, 40);
     const formScore   = clamp(100 - bodyPenalty - sagPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (!isHipElevated) audioCue = "Lift those hips — body straight from head to feet";
-    else if (!isBodyStraight) audioCue = "Don't pike — keep a rigid straight line";
+    if (!isHipElevated) audioCue = pickFormCue("Side Plank", "hips_down");
+    else if (!isBodyStraight) audioCue = pickFormCue("Side Plank", "dont_pike");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -1731,7 +1729,7 @@ const DEAD_BUG: ExerciseConfig = {
     const hipDiff     = Math.abs(lm[LM.LEFT_HIP].y - lm[LM.RIGHT_HIP].y);
     const rockPenalty = clamp(hipDiff * 200, 0, 40);
     const formScore   = clamp(100 - rockPenalty, 0, 100);
-    const audioCue    = rockPenalty > 20 ? "Don't rock your hips — brace your lower back" : null;
+    const audioCue    = rockPenalty > 20 ? pickFormCue("Dead Bug", "dont_rock") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1760,7 +1758,7 @@ const SUPERMAN: ExerciseConfig = {
     const ankleRaise      = hipMid.y - ankleMid.y;
     const symmetryPenalty = clamp(Math.abs(shoulderRaise - ankleRaise) * 200, 0, 40);
     const formScore       = clamp(100 - symmetryPenalty, 0, 100);
-    const audioCue = formScore < 65 ? "Lift chest and legs together — squeeze your glutes" : null;
+    const audioCue = formScore < 65 ? pickFormCue("Superman", "lift_symmetrically") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1790,7 +1788,7 @@ const DRAGON_FLAG_NEGATIVE: ExerciseConfig = {
     const bodyAngle       = calcAngle(shoulderMid, hipMid, ankleMid);
     const straightPenalty = clamp(Math.abs(180 - bodyAngle) * 2.5, 0, 50);
     const formScore       = clamp(100 - straightPenalty, 0, 100);
-    const audioCue = formScore < 65 ? "Don't pike! Keep a rigid straight line from shoulder to feet" : null;
+    const audioCue = formScore < 65 ? pickFormCue("Dragon Flag Negative", "dont_pike") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1816,8 +1814,8 @@ const ACTIVE_HANG: ExerciseConfig = {
     const elbowPenalty      = clamp((160 - elbowAngle) * 1.5, 0, 40);
     const formScore         = clamp(50 + depressionScore - elbowPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (!isElbowsExtended) audioCue = "Lock your elbows — straight arms";
-    else if (!isShoulderActive) audioCue = "Depress your scapula — pull shoulders down from your ears";
+    if (!isElbowsExtended) audioCue = pickFormCue("Active Hang", "arms_bent");
+    else if (!isShoulderActive) audioCue = pickFormCue("Active Hang", "no_shoulder_depression");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -1846,7 +1844,7 @@ const HANGING_KNEE_TUCK: ExerciseConfig = {
     const swingPenalty = clamp(Math.abs(hipMid.x - shoulderMid.x) * 80, 0, 30);
     const tuckedBonus  = kneesAboveHips ? 20 : 0;
     const formScore    = clamp(80 + tuckedBonus - swingPenalty, 0, 100);
-    const audioCue = swingPenalty > 15 ? "Control the swing — use your core to tuck" : null;
+    const audioCue = swingPenalty > 15 ? pickFormCue("Hanging Knee Tuck", "swinging") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1877,8 +1875,8 @@ const HANGING_LEG_RAISE: ExerciseConfig = {
     const swingPenalty = clamp(Math.abs(hipMid.x - shoulderMid.x) * 80, 0, 25);
     const formScore    = clamp(100 - swingPenalty - bentPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (kneeAngle < 150) audioCue = "Keep your legs straight — no bending at the knee";
-    else if (swingPenalty > 15) audioCue = "No swinging — slow and controlled";
+    if (kneeAngle < 150) audioCue = pickFormCue("Hanging Leg Raise", "legs_straight");
+    else if (swingPenalty > 15) audioCue = pickFormCue("Hanging Leg Raise", "swinging");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1908,7 +1906,7 @@ const TOES_TO_BAR: ExerciseConfig = {
     const swingPenalty    = clamp(Math.abs(hipMid.x - shoulderMid.x) * 80, 0, 30);
     const completionBonus = toesTouchingBar ? 20 : 0;
     const formScore       = clamp(80 + completionBonus - swingPenalty, 0, 100);
-    const audioCue = swingPenalty > 15 ? "Control the swing — less kip" : null;
+    const audioCue = swingPenalty > 15 ? pickFormCue("Toes to Bar", "swinging") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1937,7 +1935,7 @@ const WINDSHIELD_WIPER: ExerciseConfig = {
     const hipsElevated = hipMid.y <= shoulderMid.y + 0.05;
     const dropPenalty  = hipsElevated ? 0 : 30;
     const formScore    = clamp(100 - dropPenalty, 0, 100);
-    const audioCue = !hipsElevated ? "Keep your hips up — don't let them drop" : null;
+    const audioCue = !hipsElevated ? pickFormCue("Windshield Wiper", "hips_down") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -1965,8 +1963,8 @@ const TUCKED_HUMAN_FLAG: ExerciseConfig = {
     const armPenalty   = clamp((140 - Math.min(leftElbow, rightElbow)) * 0.8, 0, 30);
     const formScore    = clamp(100 - tiltPenalty - armPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (!isArmsExtended) audioCue = "Lock out both arms — push and pull with max tension";
-    else if (!isBodyHorizontal) audioCue = "Drive your hips level with your shoulders";
+    if (!isArmsExtended) audioCue = pickFormCue("Tucked Human Flag", "arms_bent");
+    else if (!isBodyHorizontal) audioCue = pickFormCue("Tucked Human Flag", "body_not_horizontal");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -1994,8 +1992,8 @@ const ONE_LEG_HUMAN_FLAG: ExerciseConfig = {
     const armPenalty  = clamp((145 - Math.min(leftElbow, rightElbow)), 0, 35);
     const formScore   = clamp(100 - tiltPenalty - armPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (!isArmsExtended) audioCue = "Extend both arms fully — push and pull harder";
-    else if (!isBodyHorizontal) audioCue = "Fight to stay level — keep your hips up";
+    if (!isArmsExtended) audioCue = pickFormCue("One-Leg Human Flag", "arms_bent");
+    else if (!isBodyHorizontal) audioCue = pickFormCue("One-Leg Human Flag", "body_not_horizontal");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -2019,8 +2017,8 @@ const PIKE_STRETCH: ExerciseConfig = {
     const isHoldActive = prongDiff < 0.25 && kneeAngle > 150;
     const formScore   = clamp(40 + depthScore - kneePenalty, 0, 100);
     let audioCue: string | null = null;
-    if (kneeAngle < 150) audioCue = "Straighten your knees — don't bend them to reach";
-    else if (prongDiff > 0.25) audioCue = "Fold deeper — reach your chest toward your legs";
+    if (kneeAngle < 150) audioCue = pickFormCue("Pike Stretch", "legs_straight");
+    else if (prongDiff > 0.25) audioCue = pickFormCue("Pike Stretch", "not_deep_enough");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -2048,7 +2046,7 @@ const L_SIT_COMPRESSION: ExerciseConfig = {
     const torsoLean      = Math.abs(shoulderMid.x - hipMid.x);
     const roundingPenalty = clamp(torsoLean * 150, 0, 40);
     const formScore      = clamp(100 - roundingPenalty, 0, 100);
-    const audioCue = roundingPenalty > 20 ? "Sit tall — don't collapse your spine" : null;
+    const audioCue = roundingPenalty > 20 ? pickFormCue("L-Sit Compression", "sit_tall") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -2078,9 +2076,9 @@ const L_SIT: ExerciseConfig = {
     const elbowPenalty   = clamp((150 - avgElbow) * 1.2, 0, 30);
     const formScore      = clamp(100 - hipLiftPenalty - legDropPenalty - elbowPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (!elbowsExtended) audioCue = "Lock your elbows — press the surface away";
-    else if (!hipsElevated) audioCue = "Push harder — lift your hips off the surface";
-    else if (!legHorizontal) audioCue = "Drive your legs parallel — compress harder";
+    if (!elbowsExtended) audioCue = pickFormCue("L-Sit", "arms_bent");
+    else if (!hipsElevated) audioCue = pickFormCue("L-Sit", "no_shoulder_depression");
+    else if (!legHorizontal) audioCue = pickFormCue("L-Sit", "legs_horizontal");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -2106,7 +2104,7 @@ const STEP_UP: ExerciseConfig = {
     const kneeDrift   = Math.abs(lm[LM.LEFT_KNEE].x - lm[LM.LEFT_ANKLE].x) * 100;
     const kneePenalty = clamp(kneeDrift, 0, 40);
     const formScore   = clamp(100 - kneePenalty, 0, 100);
-    const audioCue = kneePenalty > 20 ? "Drive your knee out — track over your toes" : null;
+    const audioCue = kneePenalty > 20 ? pickFormCue("Step-Up", "knees_caving") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -2132,7 +2130,7 @@ const ASSISTED_PISTOL_SQUAT: ExerciseConfig = {
     const freeAnkleElevated = lm[LM.RIGHT_ANKLE].y < lm[LM.RIGHT_HIP].y + 0.1;
     const freePenalty = freeAnkleElevated ? 0 : 20;
     const formScore   = clamp(100 - freePenalty, 0, 100);
-    const audioCue = !freeAnkleElevated ? "Extend your free leg forward — keep it off the ground" : null;
+    const audioCue = !freeAnkleElevated ? pickFormCue("Assisted Pistol Squat", "free_leg_down") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -2166,9 +2164,9 @@ const CLOSE_STANCE_SQUAT: ExerciseConfig = {
     const torsoPenalty = clamp((90 - torsoAngle) * 1.2, 0, 40);
     const formScore    = clamp(100 - stancePenalty - torsoPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (repQuality === "incomplete") audioCue = "Go deeper — full depth required";
-    else if (stancePenalty > 15) audioCue = "Bring your feet together — close stance";
-    else if (formScore < 65) audioCue = "Chest up — sit back into it";
+    if (repQuality === "incomplete") audioCue = pickFormCue("Close-Stance Squat", "not_deep_enough");
+    else if (stancePenalty > 15) audioCue = pickFormCue("Close-Stance Squat", "core_loose");
+    else if (formScore < 65) audioCue = pickFormCue("Close-Stance Squat", "chest_dropping");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -2199,7 +2197,7 @@ const TYPEWRITER_PULL_UP: ExerciseConfig = {
     const lateralBonus = elbowDiff > 30 ? 10 : 0;
     const swingPenalty = clamp(Math.abs(midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]).x - midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]).x) * 80, 0, 25);
     const formScore    = clamp(90 + lateralBonus - swingPenalty, 0, 100);
-    const audioCue = swingPenalty > 15 ? "No swinging — shift laterally with arms, not hips" : null;
+    const audioCue = swingPenalty > 15 ? pickFormCue("Typewriter Pull-Up", "swinging") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -2226,8 +2224,8 @@ const RING_SUPPORT_HOLD: ExerciseConfig = {
     const elbowPenalty = clamp((155 - avgElbow) * 1.2, 0, 40);
     const formScore    = clamp(100 - hipPenalty - elbowPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (!isElbowsExtended) audioCue = "Lock your elbows — straight arms";
-    else if (!hipsElevated) audioCue = "Push down on the rings — lift your body up";
+    if (!isElbowsExtended) audioCue = pickFormCue("Ring Support Hold", "arms_bent");
+    else if (!hipsElevated) audioCue = pickFormCue("Ring Support Hold", "no_shoulder_depression");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -2258,8 +2256,8 @@ const RING_PULL_UP: ExerciseConfig = {
     const swingPenalty = clamp(Math.abs(midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]).x - midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]).x) * 80, 0, 20);
     const formScore    = clamp(100 - asymmetry - swingPenalty, 0, 100);
     let audioCue: string | null = null;
-    if (asymmetry > 15) audioCue = "Pull evenly on both rings";
-    else if (swingPenalty > 12) audioCue = "Control the swing — strict reps";
+    if (asymmetry > 15) audioCue = pickFormCue("Ring Pull-Up", "pull_evenly");
+    else if (swingPenalty > 12) audioCue = pickFormCue("Ring Pull-Up", "swinging");
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -2287,7 +2285,7 @@ const RING_MUSCLE_UP: ExerciseConfig = {
     const lockScore    = clamp((elbowAngle / 160) * 70, 0, 70);
     const swingPenalty = clamp(Math.abs(midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]).x - midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]).x) * 80, 0, 30);
     const formScore    = clamp(lockScore + 30 - swingPenalty, 0, 100);
-    const audioCue = formScore < 65 ? "Drive through the transition — press to lockout" : null;
+    const audioCue = formScore < 65 ? pickFormCue("Ring Muscle-Up", "no_full_extension") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -2314,7 +2312,7 @@ const RING_DIP: ExerciseConfig = {
     const rightElbow = calcAngle(lm[LM.RIGHT_SHOULDER], lm[LM.RIGHT_ELBOW], lm[LM.RIGHT_WRIST]);
     const asymmetry  = clamp(Math.abs(leftElbow - rightElbow) * 0.6, 0, 30);
     const formScore  = clamp(100 - asymmetry, 0, 100);
-    const audioCue = asymmetry > 20 ? "Press evenly on both rings" : formScore < 65 ? "Control the descent — elbows back" : null;
+    const audioCue = asymmetry > 20 ? pickFormCue("Ring Dip", "press_evenly") : formScore < 65 ? pickFormCue("Ring Dip", "elbows_flaring") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -2341,7 +2339,7 @@ const WEIGHTED_PULL_UP: ExerciseConfig = {
     }
     const swingPenalty = clamp(Math.abs(midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]).x - midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]).x) * 100, 0, 30);
     const formScore    = clamp(100 - swingPenalty, 0, 100);
-    const audioCue = formScore < 65 ? "Stop swinging — strict pull, straight up" : null;
+    const audioCue = formScore < 65 ? pickFormCue("Weighted Pull-Up", "swinging") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -2369,7 +2367,7 @@ const WEIGHTED_MUSCLE_UP: ExerciseConfig = {
     const lockScore    = clamp((elbowAngle / 160) * 70, 0, 70);
     const swingPenalty = clamp(Math.abs(midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]).x - midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]).x) * 80, 0, 30);
     const formScore    = clamp(lockScore + 30 - swingPenalty, 0, 100);
-    const audioCue = formScore < 65 ? "Full lockout — press to the top under load" : null;
+    const audioCue = formScore < 65 ? pickFormCue("Weighted Muscle-Up", "no_full_extension") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
@@ -2396,7 +2394,7 @@ const WEIGHTED_DIP: ExerciseConfig = {
     const hipMid      = midpoint(lm[LM.LEFT_HIP], lm[LM.RIGHT_HIP]);
     const bodyLean    = Math.abs(shoulderMid.x - hipMid.x) * 100;
     const formScore   = clamp(100 - Math.max(0, bodyLean - 5) * 2, 0, 100);
-    const audioCue = formScore < 60 ? "Control the descent — elbows tucked under load" : null;
+    const audioCue = formScore < 60 ? pickFormCue("Weighted Dip", "elbows_flaring") : null;
     return { newPhase, repCounted, repQuality, formScore, audioCue };
   },
 };
