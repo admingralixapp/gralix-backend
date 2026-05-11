@@ -43,7 +43,7 @@ const BRANCH_STYLES: Record<Branch, { label: string; bg: string; text: string; b
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function History() {
-  const { data: sessions, isLoading } = useListSessions();
+  const { data: sessions, isLoading, isError } = useListSessions();
   const { t } = useTranslation();
 
   return (
@@ -58,6 +58,14 @@ export function History() {
           {[1, 2, 3].map(i => (
             <Skeleton key={i} className="h-24 w-full" />
           ))}
+        </div>
+      ) : isError ? (
+        <div className="text-center py-20 border border-dashed border-red-500/30 rounded-lg">
+          <Calendar className="w-12 h-12 text-red-400/40 mx-auto mb-4" />
+          <p className="font-semibold text-red-400 mb-1">Couldn't load your workouts</p>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+            Something went wrong fetching your history. Please try refreshing the page.
+          </p>
         </div>
       ) : sessions?.length === 0 ? (
         <div className="text-center py-20 border border-dashed rounded-lg">

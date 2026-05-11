@@ -318,8 +318,6 @@ export function SessionResults({
   const skillUnlocked = !!newlyMasteredNode;
 
   // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleViewSession = () => navigate(`/session/${sessionId}`);
-
   const handleContinue = () => {
     if (newlyUnlockedNode) {
       // Navigate to the next skill's exercise
@@ -451,15 +449,8 @@ export function SessionResults({
 
             {/* Actions */}
             <div className="flex gap-3 pt-1">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={handleViewSession}
-              >
-                {t("session.viewSession")}
-              </Button>
-              <Button className="flex-1 font-bold" onClick={handleContinue}>
-                {newlyUnlockedNode ? t("session.trainNext") : t("session.continue")}
+              <Button className="w-full font-bold" onClick={handleContinue}>
+                {newlyUnlockedNode ? t("session.trainNext") : t("history.title")}
               </Button>
             </div>
 
