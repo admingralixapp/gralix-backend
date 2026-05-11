@@ -22,6 +22,10 @@ export const sessionsTable = pgTable("sessions", {
   rpe:          integer("rpe"),
   /** true = AI-coached and not flagged for frozen frame; false = manual or detected static image */
   isVerified:   boolean("is_verified").notNull().default(true),
+  /** "workout" for sessions from the Workout tab; "mobility" reserved for future use */
+  source:       varchar("source", { length: 16 }).notNull().default("workout"),
+  /** Number of sets completed in this session */
+  sets:         integer("sets"),
 });
 
 export const insertSessionSchema = createInsertSchema(sessionsTable).omit({

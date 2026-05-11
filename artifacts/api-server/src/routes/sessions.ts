@@ -81,10 +81,12 @@ router.get("/sessions", async (req, res) => {
       logType: sessionsTable.logType,
       rpe: sessionsTable.rpe,
       isVerified: sessionsTable.isVerified,
+      source: sessionsTable.source,
+      sets: sessionsTable.sets,
     })
     .from(sessionsTable)
     .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
-    .where(whereClause)
+    .where(and(whereClause, eq(sessionsTable.source, "workout")))
     .orderBy(desc(sessionsTable.startedAt))
     .limit(limit ?? 20)
     .offset(offset ?? 0);
@@ -135,6 +137,8 @@ router.get("/sessions/:id", async (req, res) => {
       logType: sessionsTable.logType,
       rpe: sessionsTable.rpe,
       isVerified: sessionsTable.isVerified,
+      source: sessionsTable.source,
+      sets: sessionsTable.sets,
     })
     .from(sessionsTable)
     .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
@@ -164,6 +168,7 @@ router.patch("/sessions/:id", async (req, res) => {
   if (body.notes !== undefined) updateData.notes = body.notes;
   if (body.rpe !== undefined) updateData.rpe = body.rpe;
   if (body.isVerified !== undefined) updateData.isVerified = body.isVerified;
+  if (body.sets !== undefined) updateData.sets = body.sets;
 
   const [updated] = await db
     .update(sessionsTable)

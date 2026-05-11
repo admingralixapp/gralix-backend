@@ -499,6 +499,14 @@ components:
           type: boolean
           description: "true = AI-coached and not flagged as static image; false = manual or frozen-frame detected"
           default: true
+        source:
+          type: string
+          description: "'workout' for Workout-tab sessions; 'mobility' reserved for future use"
+          default: "workout"
+        sets:
+          type: integer
+          nullable: true
+          description: "Number of sets completed in this session"
       required:
         - id
         - exerciseId
@@ -511,6 +519,7 @@ components:
         - logType
         - rpe
         - isVerified
+        - source
 
     SessionWithReps:
       allOf:
@@ -556,6 +565,10 @@ components:
           nullable: true
         isVerified:
           type: boolean
+        sets:
+          type: integer
+          nullable: true
+          description: "Number of sets completed"
 
     Rep:
       type: object

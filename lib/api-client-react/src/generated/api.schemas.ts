@@ -67,6 +67,10 @@ export interface Session {
   rpe: number | null;
   /** true = AI-coached and not flagged as static image; false = manual or frozen-frame detected */
   isVerified: boolean;
+  /** 'workout' for Workout-tab sessions; 'mobility' reserved for future use */
+  source: string;
+  /** Number of sets completed in this session */
+  sets?: number | null;
 }
 
 export interface Rep {
@@ -97,6 +101,8 @@ export interface UpdateSessionBody {
   notes?: string | null;
   rpe?: number | null;
   isVerified?: boolean;
+  /** Number of sets completed */
+  sets?: number | null;
 }
 
 export interface CreateRepBody {

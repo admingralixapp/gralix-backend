@@ -105,6 +105,7 @@ export const ListSessionsQueryParams = zod.object({
 
 export const listSessionsResponseLogTypeDefault = `ai`;
 export const listSessionsResponseIsVerifiedDefault = true;
+export const listSessionsResponseSourceDefault = `workout`;
 
 export const ListSessionsResponseItem = zod.object({
   id: zod.number(),
@@ -131,6 +132,16 @@ export const ListSessionsResponseItem = zod.object({
     .describe(
       "true = AI-coached and not flagged as static image; false = manual or frozen-frame detected",
     ),
+  source: zod
+    .string()
+    .default(listSessionsResponseSourceDefault)
+    .describe(
+      "'workout' for Workout-tab sessions; 'mobility' reserved for future use",
+    ),
+  sets: zod
+    .number()
+    .nullish()
+    .describe("Number of sets completed in this session"),
 });
 export const ListSessionsResponse = zod.array(ListSessionsResponseItem);
 
@@ -152,6 +163,7 @@ export const GetSessionParams = zod.object({
 
 export const getSessionResponseOneLogTypeDefault = `ai`;
 export const getSessionResponseOneIsVerifiedDefault = true;
+export const getSessionResponseOneSourceDefault = `workout`;
 
 export const GetSessionResponse = zod
   .object({
@@ -179,6 +191,16 @@ export const GetSessionResponse = zod
       .describe(
         "true = AI-coached and not flagged as static image; false = manual or frozen-frame detected",
       ),
+    source: zod
+      .string()
+      .default(getSessionResponseOneSourceDefault)
+      .describe(
+        "'workout' for Workout-tab sessions; 'mobility' reserved for future use",
+      ),
+    sets: zod
+      .number()
+      .nullish()
+      .describe("Number of sets completed in this session"),
   })
   .and(
     zod.object({
@@ -210,10 +232,12 @@ export const UpdateSessionBody = zod.object({
   notes: zod.string().nullish(),
   rpe: zod.number().nullish(),
   isVerified: zod.boolean().optional(),
+  sets: zod.number().nullish().describe("Number of sets completed"),
 });
 
 export const updateSessionResponseLogTypeDefault = `ai`;
 export const updateSessionResponseIsVerifiedDefault = true;
+export const updateSessionResponseSourceDefault = `workout`;
 
 export const UpdateSessionResponse = zod.object({
   id: zod.number(),
@@ -240,6 +264,16 @@ export const UpdateSessionResponse = zod.object({
     .describe(
       "true = AI-coached and not flagged as static image; false = manual or frozen-frame detected",
     ),
+  source: zod
+    .string()
+    .default(updateSessionResponseSourceDefault)
+    .describe(
+      "'workout' for Workout-tab sessions; 'mobility' reserved for future use",
+    ),
+  sets: zod
+    .number()
+    .nullish()
+    .describe("Number of sets completed in this session"),
 });
 
 /**

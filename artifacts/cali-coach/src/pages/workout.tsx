@@ -1652,6 +1652,7 @@ export function Workout() {
           completedAt:  new Date().toISOString(),
           totalReps:    finalReps,
           avgFormScore: finalFormScore,
+          sets:         currentSet,
           ...(frozenDetectedRef.current ? { isVerified: false } : {}),
         },
       }) as unknown as {
@@ -1954,6 +1955,7 @@ export function Workout() {
           totalReps:   manualReps,
           rpe:         manualRpe ?? undefined,
           isVerified:  false,
+          sets:        1,
         },
       });
 
@@ -2031,6 +2033,7 @@ export function Workout() {
           completedAt:  new Date().toISOString(),
           totalReps:    repCount,
           avgFormScore: finalFormScore,
+          sets:         totalSets,
         },
       });
 
