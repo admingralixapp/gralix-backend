@@ -10,7 +10,7 @@
  * IMPORTANT: every id here must exactly match a key in the backend
  * VOICE_PROFILES record in artifacts/api-server/src/lib/voiceProfiles.ts.
  * A mismatch causes the backend to fall back to the "classic" profile
- * (isFree=true, empty voiceId) which results in silence or browser TTS.
+ * (isFree=true) voices now use ElevenLabs eleven_multilingual_v2 like Pro voices.
  */
 
 export interface VoiceProfileMeta {
@@ -22,18 +22,18 @@ export interface VoiceProfileMeta {
 }
 
 export const VOICE_PROFILE_LIST: VoiceProfileMeta[] = [
-  // ── Free tier ─────────────────────────────────────────────────────────────
+  // ── Free tier — ElevenLabs AI voices ──────────────────────────────────────
   {
     id: "classic",
-    label: "Classic Male",
-    description: "Clear, encouraging — browser voice",
+    label: "AI Male Coach",
+    description: "Clear, powerful — ElevenLabs AI · multilingual",
     emoji: "🏋️",
     isFree: true,
   },
   {
     id: "classic_female",
-    label: "Classic Female",
-    description: "Warm, supportive — browser voice",
+    label: "AI Female Coach",
+    description: "Warm, engaging — ElevenLabs AI · multilingual",
     emoji: "👩‍🏫",
     isFree: true,
   },

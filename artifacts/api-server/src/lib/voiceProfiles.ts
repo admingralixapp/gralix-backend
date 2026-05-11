@@ -24,23 +24,23 @@ export interface VoiceProfile {
 
 export const VOICE_PROFILES: Record<string, VoiceProfile> = {
 
-  // ── Free tier — browser TTS only ─────────────────────────────────────────
+  // ── Free tier — ElevenLabs AI voices (eleven_multilingual_v2) ─────────────
   classic: {
     id: "classic",
-    label: "Classic Male",
+    label: "AI Male Coach",
     isFree: true,
-    voiceId: "",
-    voiceSettings: { stability: 0.45, similarity_boost: 0.82, style: 0.00, use_speaker_boost: true },
+    voiceId: "7WggD3IoWTIPT19PNyrW",
+    voiceSettings: { stability: 0.50, similarity_boost: 0.85, style: 0.05, use_speaker_boost: true },
     systemPrompt:
       "You are a clear, encouraging professional fitness coach. Generate a single concise, motivating coaching cue. Friendly but focused. Max 15 words.",
   },
 
   classic_female: {
     id: "classic_female",
-    label: "Classic Female",
+    label: "AI Female Coach",
     isFree: true,
-    voiceId: "",
-    voiceSettings: { stability: 0.45, similarity_boost: 0.82, style: 0.00, use_speaker_boost: true },
+    voiceId: "qmzV4HKbcUWCnzV4CaHW",
+    voiceSettings: { stability: 0.50, similarity_boost: 0.85, style: 0.05, use_speaker_boost: true },
     systemPrompt:
       "You are a warm, encouraging professional female fitness coach. Generate a single concise, motivating coaching cue. Supportive but focused. Max 15 words.",
   },

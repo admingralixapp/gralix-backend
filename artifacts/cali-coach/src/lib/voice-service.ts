@@ -31,12 +31,15 @@ let _activeProfileId: string = "classic";
 
 export function setActiveVoiceProfile(profileId: string): void {
   _activeProfileId = profileId;
-  console.log(`[CaliCoach Voice] Active profile set → "${profileId}" (free: ${FREE_VOICE_PROFILES.has(profileId)})`);
+  console.log(`[CaliCoach Voice] Active profile set → "${profileId}"`);
 }
 
 // ─── Free-tier profiles (browser Web Speech only) ────────────────────────────
+// classic and classic_female now use ElevenLabs, so they are NOT in this set.
+// Only add a profile here if it genuinely has no ElevenLabs voice ID and must
+// fall back to the browser Web Speech API.
 
-const FREE_VOICE_PROFILES = new Set(["classic", "classic_female"]);
+const FREE_VOICE_PROFILES = new Set<string>([]);
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -360,6 +363,8 @@ export function speakCue(
  */
 export function testCoachVoice(profileId: string, label?: string): Promise<void> {
   const SAMPLE_CUES: Record<string, string> = {
+    classic:        "Keep your core tight and drive through that rep — great work, keep it up!",
+    classic_female: "Stay focused, breathe through the movement — you're doing amazing!",
     sergeant:       "Get those hips up, recruit! You're sagging like a wet noodle!",
     sensei:         "The body follows the mind — align your core, find stillness.",
     cyborg:         "Hip angle deviation detected: 12 degrees below optimal. Correct now.",

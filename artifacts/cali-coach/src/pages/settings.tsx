@@ -595,11 +595,56 @@ export function Settings() {
 
           <div className="h-px bg-white/[0.07]" />
 
-          {/* AI Coach Personality */}
+          {/* Coach Voice Gender — Male / Female toggle */}
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                <span className="text-base leading-none">🎙️</span>
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-foreground">
+                  {t("settings.coachVoice", { defaultValue: "Coach Voice" })}
+                </div>
+                <div className="text-[11px] text-muted-foreground">
+                  {t("settings.coachVoiceDesc", { defaultValue: "ElevenLabs AI · eleven_multilingual_v2" })}
+                </div>
+              </div>
+            </div>
+            <div
+              className="flex rounded-xl overflow-hidden border border-white/10 p-0.5 gap-0.5"
+              style={{ background: "rgba(255,255,255,0.04)" }}
+            >
+              {(["classic", "classic_female"] as const).map((id) => {
+                const isMale  = id === "classic";
+                const active  = voiceProfileId === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => handleVoiceProfileChange(id)}
+                    className={[
+                      "flex-1 flex items-center justify-center gap-2 text-sm font-semibold py-2.5 rounded-[9px] transition-all duration-200",
+                      active
+                        ? "bg-primary text-black shadow-md"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06]",
+                    ].join(" ")}
+                  >
+                    <span className="text-base leading-none">{isMale ? "🏋️" : "👩‍🏫"}</span>
+                    {isMale
+                      ? t("settings.voiceMale",   { defaultValue: "Male" })
+                      : t("settings.voiceFemale", { defaultValue: "Female" })}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="h-px bg-white/[0.07]" />
+
+          {/* AI Coach Personality — unlocked Pro profiles only */}
           <div>
             <div className="flex items-center gap-3 mb-3">
               <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center shrink-0">
-                <span className="text-base leading-none">🎙️</span>
+                <span className="text-base leading-none">⚡</span>
               </div>
               <div>
                 <div className="text-sm font-semibold text-foreground">{t("settings.coachPersonality")}</div>
@@ -608,50 +653,58 @@ export function Settings() {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              {VOICE_PROFILE_LIST.filter((p) =>
-                p.isFree || (profile?.inventory ?? []).includes(p.id),
-              ).map((p) => {
-                const active = voiceProfileId === p.id;
+            {(() => {
+              const unlockedPro = VOICE_PROFILE_LIST.filter(
+                (p) => !p.isFree && (profile?.inventory ?? []).includes(p.id),
+              );
+              if (unlockedPro.length === 0) {
                 return (
-                  <button
-                    key={p.id}
-                    onClick={() => handleVoiceProfileChange(p.id)}
-                    className={[
-                      "flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all duration-150",
-                      active
-                        ? "border-primary/60 bg-primary/10 text-foreground"
-                        : "border-white/8 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground",
-                    ].join(" ")}
-                  >
-                    <span className="text-base shrink-0 leading-none">{p.emoji}</span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1 min-w-0">
-                        <span className={["text-xs font-semibold truncate", active ? "text-primary" : ""].join(" ")}>
-                          {t(`settings.voice_${p.id}_label`)}
-                        </span>
-                        <span
-                          className="shrink-0 text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wide leading-none"
-                          style={
-                            p.isFree
-                              ? { background: "rgba(132,204,22,0.15)", color: "#84cc16" }
-                              : { background: "rgba(139,92,246,0.18)", color: "#c084fc" }
-                          }
-                        >
-                          {p.isFree ? t("common.free") : t("common.pro")}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-muted-foreground/70 truncate leading-tight mt-0.5">
-                        {t(`settings.voice_${p.id}_desc`)}
-                      </div>
-                    </div>
-                    {active && (
-                      <div className="ml-auto shrink-0 w-1.5 h-1.5 rounded-full bg-primary" />
-                    )}
-                  </button>
+                  <p className="text-xs text-muted-foreground text-center py-3 border border-dashed border-white/10 rounded-xl">
+                    {t("settings.noProPersonalities", { defaultValue: "Unlock AI personalities in the Shop." })}
+                  </p>
                 );
-              })}
-            </div>
+              }
+              return (
+                <div className="grid grid-cols-2 gap-1.5">
+                  {unlockedPro.map((p) => {
+                    const active = voiceProfileId === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => handleVoiceProfileChange(p.id)}
+                        className={[
+                          "flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all duration-150",
+                          active
+                            ? "border-primary/60 bg-primary/10 text-foreground"
+                            : "border-white/8 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground",
+                        ].join(" ")}
+                      >
+                        <span className="text-base shrink-0 leading-none">{p.emoji}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1 min-w-0">
+                            <span className={["text-xs font-semibold truncate", active ? "text-primary" : ""].join(" ")}>
+                              {t(`settings.voice_${p.id}_label`)}
+                            </span>
+                            <span
+                              className="shrink-0 text-[8px] font-black px-1 py-0.5 rounded uppercase tracking-wide leading-none"
+                              style={{ background: "rgba(139,92,246,0.18)", color: "#c084fc" }}
+                            >
+                              {t("common.pro")}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-muted-foreground/70 truncate leading-tight mt-0.5">
+                            {t(`settings.voice_${p.id}_desc`)}
+                          </div>
+                        </div>
+                        {active && (
+                          <div className="ml-auto shrink-0 w-1.5 h-1.5 rounded-full bg-primary" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
 
           <div className="h-px bg-white/[0.07]" />
