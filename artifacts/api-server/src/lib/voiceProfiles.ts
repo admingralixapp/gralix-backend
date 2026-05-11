@@ -1,11 +1,10 @@
 /**
  * voiceProfiles — AI coaching personality definitions.
  *
- * Free ElevenLabs profiles (george, sarah) — no Pro required, ElevenLabs-backed.
- * Legacy free profiles (classic, classic_female) — browser Web Speech API only.
- * Pro profiles — ElevenLabs + LLM personality injection.
+ * Every paid profile has a confirmed ElevenLabs voice ID.
+ * Free profiles (classic, classic_female) use browser Web Speech API — voiceId is empty.
  *
- * DO NOT use window.speechSynthesis for ElevenLabs profiles.
+ * DO NOT use window.speechSynthesis for paid profiles.
  * If ElevenLabs fails, log the error and return silence — never fall back to browser TTS.
  */
 
@@ -25,28 +24,7 @@ export interface VoiceProfile {
 
 export const VOICE_PROFILES: Record<string, VoiceProfile> = {
 
-  // ── Free tier — ElevenLabs multilingual (no Pro required) ────────────────
-  george: {
-    id: "george",
-    label: "George",
-    isFree: true,
-    voiceId: "7WggD3IoWTIPT19PNyrW",
-    voiceSettings: { stability: 0.55, similarity_boost: 0.82, style: 0.05, use_speaker_boost: true },
-    systemPrompt:
-      "You are George, a clear, encouraging professional male fitness coach. Generate a single concise, motivating coaching cue. Friendly, energetic, and focused. Max 15 words.",
-  },
-
-  sarah: {
-    id: "sarah",
-    label: "Sarah",
-    isFree: true,
-    voiceId: "qmzV4HKbcUWCnzV4CaHW",
-    voiceSettings: { stability: 0.55, similarity_boost: 0.82, style: 0.05, use_speaker_boost: true },
-    systemPrompt:
-      "You are Sarah, a warm, encouraging professional female fitness coach. Generate a single concise, motivating coaching cue. Supportive, positive, and focused. Max 15 words.",
-  },
-
-  // ── Legacy free tier — browser TTS only ──────────────────────────────────
+  // ── Free tier — browser TTS only ─────────────────────────────────────────
   classic: {
     id: "classic",
     label: "Classic Male",

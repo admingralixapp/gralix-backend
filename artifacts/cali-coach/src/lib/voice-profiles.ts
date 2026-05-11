@@ -4,9 +4,8 @@
  * Mirrors the backend voiceProfiles but only the fields the frontend needs
  * (no API keys / ElevenLabs voice IDs are exposed to the client).
  *
- * isFree = true, non-empty voiceId → ElevenLabs multilingual (George, Sarah)
- * isFree = true, empty voiceId    → browser Web Speech API (classic, classic_female)
- * isFree = false                  → ElevenLabs + LLM personality injection (Pro)
+ * isFree = true  → browser Web Speech API (no ElevenLabs call, no cost)
+ * isFree = false → ElevenLabs + LLM personality injection (Pro feature)
  *
  * IMPORTANT: every id here must exactly match a key in the backend
  * VOICE_PROFILES record in artifacts/api-server/src/lib/voiceProfiles.ts.
@@ -23,23 +22,7 @@ export interface VoiceProfileMeta {
 }
 
 export const VOICE_PROFILE_LIST: VoiceProfileMeta[] = [
-  // ── Free tier — ElevenLabs multilingual (George & Sarah) ─────────────────
-  {
-    id: "george",
-    label: "George",
-    description: "Clear, energetic male coach — ElevenLabs AI",
-    emoji: "👨‍🏫",
-    isFree: true,
-  },
-  {
-    id: "sarah",
-    label: "Sarah",
-    description: "Warm, supportive female coach — ElevenLabs AI",
-    emoji: "👩‍🏫",
-    isFree: true,
-  },
-
-  // ── Legacy free tier — browser TTS ───────────────────────────────────────
+  // ── Free tier ─────────────────────────────────────────────────────────────
   {
     id: "classic",
     label: "Classic Male",
@@ -51,7 +34,7 @@ export const VOICE_PROFILE_LIST: VoiceProfileMeta[] = [
     id: "classic_female",
     label: "Classic Female",
     description: "Warm, supportive — browser voice",
-    emoji: "🗣️",
+    emoji: "👩‍🏫",
     isFree: true,
   },
 
