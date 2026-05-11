@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
-import { db, sessionsTable, repsTable, exercisesTable } from "@workspace/db";
+import { getAuth } from "@clerk/express";
+import { db, sessionsTable, repsTable, exercisesTable, usersTable } from "@workspace/db";
 import {
   GetProgressSummaryResponse,
   GetProgressByExerciseResponse,
@@ -8,9 +9,37 @@ import {
   GetRecentSessionsQueryParams,
   GetRecentSessionsResponse,
 } from "@workspace/api-zod";
-import { eq, desc, sql, and, gte } from "drizzle-orm";
+import { eq, desc, sql, and, gte, or, isNull } from "drizzle-orm";
 
 const router: IRouter = Router();
+
+// ─── Helper: resolve DB user from Clerk auth ──────────────────────────────────
+
+async function resolveUser(req: Parameters<typeof getAuth>[0]) {
+  const auth = getAuth(req as any);
+  if (!auth?.userId) return { clerkId: null, userId: null };
+  const clerkId = auth.userId;
+  const [user] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.clerkId, clerkId));
+  return { clerkId, userId: user?.id ?? null };
+}
+
+// Build the user-scoped WHERE condition (same logic as GET /api/sessions).
+// Returns sql`1 = 0` for unauthenticated requests (safe default — no data leak).
+function buildUserWhere(clerkId: string | null, userId: number | null) {
+  const conditions = [];
+  if (userId !== null) conditions.push(eq(sessionsTable.userId, userId));
+  if (clerkId) conditions.push(and(isNull(sessionsTable.userId), eq(sessionsTable.clerkId, clerkId)));
+  // Migration fallback: sessions created before clerkId was tracked
+  if (userId !== null || clerkId) {
+    conditions.push(and(isNull(sessionsTable.userId), isNull(sessionsTable.clerkId)));
+  }
+  if (conditions.length === 0) return sql`1 = 0`;
+  if (conditions.length === 1) return conditions[0]!;
+  return or(...(conditions as [typeof conditions[0], ...typeof conditions]));
+}
 
 router.get("/progress/summary", async (_req, res) => {
   const [totals] = await db
@@ -122,8 +151,16 @@ router.get("/progress/timeline", async (req, res) => {
   res.json(GetProgressTimelineResponse.parse(rows));
 });
 
+// ─── GET /api/progress/recent-sessions ───────────────────────────────────────
+// Returns sessions for the authenticated user, ordered newest first.
+// Uses the same user-resolution logic as GET /api/sessions so the History
+// tab and Dashboard always show the same data for the same user.
+
 router.get("/progress/recent-sessions", async (req, res) => {
   const { limit } = GetRecentSessionsQueryParams.parse(req.query);
+  const { clerkId, userId } = await resolveUser(req);
+  const userWhere = buildUserWhere(clerkId, userId);
+
   const rows = await db
     .select({
       id: sessionsTable.id,
@@ -133,6 +170,7 @@ router.get("/progress/recent-sessions", async (req, res) => {
       totalReps: sessionsTable.totalReps,
       avgFormScore: sessionsTable.avgFormScore,
       logType: sessionsTable.logType,
+      isVerified: sessionsTable.isVerified,
       durationMinutes: sql<number | null>`
         case when ${sessionsTable.completedAt} is not null
         then (extract(epoch from (${sessionsTable.completedAt} - ${sessionsTable.startedAt})) / 60)::float
@@ -141,9 +179,11 @@ router.get("/progress/recent-sessions", async (req, res) => {
     })
     .from(sessionsTable)
     .innerJoin(exercisesTable, eq(sessionsTable.exerciseId, exercisesTable.id))
+    .where(and(userWhere, eq(sessionsTable.source, "workout")))
     .orderBy(desc(sessionsTable.startedAt))
-    .limit(limit ?? 5);
+    .limit(limit);
 
+  res.set("Cache-Control", "no-store");
   res.json(GetRecentSessionsResponse.parse(rows));
 });
 
