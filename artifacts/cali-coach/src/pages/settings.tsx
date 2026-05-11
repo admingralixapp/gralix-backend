@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
 import {
   Bell, Shield, LogOut, User, CheckCircle2, BellOff, HardDrive, Trash2, Video,
@@ -1032,6 +1032,35 @@ export function Settings() {
             <LogOut className="w-4 h-4" />
             {t("settings.signOut")}
           </button>
+        </div>
+      </section>
+
+      {/* ── Legal ─────────────────────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader icon={<Shield className="w-4 h-4" />} label="Legal" />
+        <div className="rounded-xl border border-border bg-card p-5 flex flex-col gap-3">
+          <Link
+            href="/terms"
+            className="flex items-center justify-between group py-1"
+          >
+            <span className="text-sm font-medium group-hover:text-primary transition-colors">
+              Terms of Service
+            </span>
+            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+          </Link>
+          <div className="border-t border-border" />
+          <Link
+            href="/privacy"
+            className="flex items-center justify-between group py-1"
+          >
+            <span className="text-sm font-medium group-hover:text-primary transition-colors">
+              Privacy Policy
+            </span>
+            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+          </Link>
+          <p className="text-xs text-muted-foreground/60 pt-1 border-t border-border">
+            CaliCoach · v1.0 · Last updated May 2026
+          </p>
         </div>
       </section>
 

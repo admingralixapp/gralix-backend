@@ -33,6 +33,8 @@ import { ShopPage } from "@/pages/shop";
 import { SignInPage } from "@/pages/sign-in";
 import { SignUpPage } from "@/pages/sign-up";
 import { Landing } from "@/pages/landing";
+import { TermsPage } from "@/pages/terms";
+import { PrivacyPage } from "@/pages/privacy";
 import { MobilityPage } from "@/pages/mobility";
 import { DailyTasksPage } from "@/pages/daily-tasks";
 import { BodyCalibration } from "@/pages/body-calibration";
@@ -264,6 +266,8 @@ function AppRouter() {
                     <Route path="/calibration" component={BodyCalibration} />
                     <Route path="/mobility">{() => <MobilityPage />}</Route>
                     <Route path="/daily-tasks" component={DailyTasksPage} />
+                    <Route path="/terms" component={TermsPage} />
+                    <Route path="/privacy" component={PrivacyPage} />
                     <Route component={NotFound} />
                   </Switch>
                 </Layout>

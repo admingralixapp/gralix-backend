@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Activity, Users, Eye, Lock } from "lucide-react";
+import { Activity, Users, Lock } from "lucide-react";
 
 export function Landing() {
   return (
@@ -58,6 +58,18 @@ export function Landing() {
               Sign In
             </Link>
           </div>
+
+          {/* Legal micro-links */}
+          <p className="mt-4 text-xs text-muted-foreground">
+            By signing up you agree to our{" "}
+            <Link href="/terms" className="underline underline-offset-2 hover:text-foreground transition-colors">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground transition-colors">
+              Privacy Policy
+            </Link>.
+          </p>
         </div>
 
         {/* Feature cards */}
