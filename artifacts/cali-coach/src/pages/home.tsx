@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   ChevronRight,
   PenLine,
+  Clock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,35 @@ import { SkillMap } from "@/components/skill-map";
 import { SocialFeed } from "@/components/social-feed";
 import { useMobilityStatus, useNotificationScheduler } from "@/lib/use-mobility";
 import { GOAL_LABELS, type MobilityGoal } from "@/lib/mobility-service";
+import { useLeaderboard } from "@/lib/social";
 import { useTranslation } from "react-i18next";
+import { useState, useEffect, useRef } from "react";
+
+// ─── Countdown helpers ────────────────────────────────────────────────────────
+
+function getNextWeeklyReset(): Date {
+  const now = new Date();
+  const day = now.getUTCDay();
+  const daysUntil = day === 0 ? 7 : 7 - day;
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntil, 23, 59, 59, 0),
+  );
+}
+
+function useWeeklyCountdown() {
+  const target = getNextWeeklyReset();
+  const [ms, setMs] = useState(() => target.getTime() - Date.now());
+  const ref = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    ref.current = setInterval(() => setMs(target.getTime() - Date.now()), 1000);
+    return () => { if (ref.current) clearInterval(ref.current); };
+  }, [target]);
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const d = Math.floor(total / 86400);
+  const h = Math.floor(total / 3600) % 24;
+  const m = Math.floor(total / 60) % 60;
+  return { d, h, m };
+}
 
 function StatCard({
   icon,
@@ -66,12 +95,34 @@ export function Home() {
   const mobilityGoal = (mobilityStatus?.settings.mobilityGoal ?? "general") as MobilityGoal;
   const goalLabel = GOAL_LABELS[mobilityGoal];
 
+  const leaderboard = useLeaderboard("global", "weekly");
+  const myRank = leaderboard.data?.myRank ?? null;
+  const weeklyCountdown = useWeeklyCountdown();
+
+  const countdownParts: string[] = [];
+  if (weeklyCountdown.d > 0) countdownParts.push(`${weeklyCountdown.d}d`);
+  if (weeklyCountdown.h > 0 || weeklyCountdown.d > 0) countdownParts.push(`${weeklyCountdown.h}h`);
+  countdownParts.push(`${weeklyCountdown.m}m`);
+
   return (
     <div className="p-6 md:p-8 space-y-8">
       <header className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">{t("dashboard.title")}</h1>
           <p className="text-muted-foreground mt-1 font-light opacity-80">{t("dashboard.welcomeBack")}</p>
+          {/* Time Remaining badge — visible when user has a rank */}
+          {myRank != null && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 border border-primary/20 text-primary">
+                <Trophy className="w-3 h-3" />
+                #{myRank} this week
+              </span>
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                <Clock className="w-3 h-3" />
+                {countdownParts.join(" ")} left
+              </span>
+            </div>
+          )}
         </div>
         <Button asChild size="lg" className="font-extrabold">
           <Link href="/workout">

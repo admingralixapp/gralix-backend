@@ -398,23 +398,74 @@ export interface LeaderboardData {
   myMasteredSkills: number;
   leaderPoints: number;
   country?: string | null;
+  periodType?: "weekly" | "monthly";
+  periodStart?: string | null;
 }
 
-export function useLeaderboard(tab: "global" | "national" | "friends") {
+export interface LeaderboardResetInfo {
+  weeklyPeriodStart: string;
+  monthlyPeriodStart: string;
+  weeklyNextReset: string;
+  monthlyNextReset: string;
+}
+
+export interface LeaderboardSnapshot {
+  id: number;
+  periodType: "weekly" | "monthly";
+  periodStart: string;
+  periodEnd: string;
+  entries: LeaderboardEntry[];
+  createdAt: string;
+}
+
+export function useLeaderboard(
+  tab: "global" | "national" | "friends",
+  period: "weekly" | "monthly" = "weekly",
+) {
   const { getToken } = useAuth();
   return useQuery<LeaderboardData>({
-    queryKey: ["/api/leaderboard", tab],
+    queryKey: ["/api/leaderboard", tab, period],
     queryFn: async () => {
       const token = await getToken();
-      return apiFetchAuth<LeaderboardData>(`/api/leaderboard/${tab}`, token).catch(() => ({
+      return apiFetchAuth<LeaderboardData>(
+        `/api/leaderboard/${tab}?period=${period}`,
+        token,
+      ).catch(() => ({
         entries: [],
         myRank: null,
         myPoints: 0,
         myMasteredSkills: 0,
         leaderPoints: 0,
         country: null,
+        periodType: period,
+        periodStart: null,
       }));
     },
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
+export function useLeaderboardResetInfo() {
+  return useQuery<LeaderboardResetInfo>({
+    queryKey: ["/api/leaderboard/reset-info"],
+    queryFn: () => apiFetch<LeaderboardResetInfo>("/api/leaderboard/reset-info"),
+    staleTime: 30_000,
+    retry: false,
+  });
+}
+
+export function useLeaderboardHistory(
+  tab: "global" | "national" | "friends",
+  periodType: "weekly" | "monthly" = "weekly",
+  limit = 5,
+) {
+  return useQuery<{ snapshots: LeaderboardSnapshot[] }>({
+    queryKey: ["/api/leaderboard", tab, "history", periodType, limit],
+    queryFn: () =>
+      apiFetch<{ snapshots: LeaderboardSnapshot[] }>(
+        `/api/leaderboard/${tab}/history?periodType=${periodType}&limit=${limit}`,
+      ),
     staleTime: 60_000,
     retry: false,
   });

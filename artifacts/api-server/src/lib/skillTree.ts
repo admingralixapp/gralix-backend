@@ -261,23 +261,33 @@ export interface MasteredSkillInfo {
  * Compute a user's leaderboard score from their session history.
  *
  * points (leaderboard):
- *   Sum of (difficultyWeight × reps × formScore/100) for every AI-Verified set.
+ *   Sum of (difficultyWeight × reps × formScore/100) for every AI-Verified set
+ *   completed on or after `periodStart` (if provided; otherwise all-time).
  *   Manual logs contribute 0 leaderboard points.
  *
  * masteredCount (secondary sort, Skill Tree XP):
- *   Counted from ALL sessions (verified + manual) — manual logs still count
- *   toward skill mastery as before.
+ *   Counted from ALL sessions (verified + manual) regardless of periodStart —
+ *   mastery is a cumulative lifetime achievement.
  */
-export function computeMasteryPoints(sessions: SessionRow[]): {
+export function computeMasteryPoints(
+  sessions: SessionRow[],
+  periodStart?: Date,
+): {
   points: number;
   masteredCount: number;
 } {
-  // ── Performance Points (verified only) ──
+  // ── Performance Points (verified only, current period only) ──
   let points = 0;
   for (const s of sessions) {
     // Skip unverified / manual logs
     if (s.isVerified === false) continue;
     if (s.completedAt == null) continue;
+    // Skip sessions that predate the current competitive period
+    if (periodStart != null) {
+      const completedAt =
+        s.completedAt instanceof Date ? s.completedAt : new Date(s.completedAt);
+      if (completedAt < periodStart) continue;
+    }
     const reps      = s.totalReps ?? 0;
     const form      = s.avgFormScore ?? 0;
     const weight    = getDifficultyWeight(s.exerciseName);

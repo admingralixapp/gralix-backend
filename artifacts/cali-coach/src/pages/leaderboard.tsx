@@ -1,11 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { Show } from "@clerk/react";
 import {
-  Trophy, Globe, Users, Flag, Star, Dumbbell, LogIn, ShieldCheck, ChevronDown, ChevronUp, Zap, TrendingUp,
+  Trophy, Globe, Users, Flag, Star, Dumbbell, LogIn, ShieldCheck, ChevronDown, ChevronUp,
+  Zap, TrendingUp, Clock, History, CalendarClock, Medal, ChevronRight,
 } from "lucide-react";
-import { useLeaderboard, useMyProfile } from "@/lib/social";
-import type { LeaderboardEntry } from "@/lib/social";
+import {
+  useLeaderboard,
+  useMyProfile,
+  useLeaderboardResetInfo,
+  useLeaderboardHistory,
+} from "@/lib/social";
+import type { LeaderboardEntry, LeaderboardSnapshot } from "@/lib/social";
 import { getBadge } from "@/lib/badge-status";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
@@ -27,7 +33,6 @@ const MEDAL: Record<number, { icon: string; color: string }> = {
   3: { icon: "🥉", color: "text-amber-600" },
 };
 
-/** Soft reference for bar width at 10 000 pts — purely cosmetic, no cap. */
 const BAR_REF = 10_000;
 
 function PointsBar({ points }: { points: number }) {
@@ -47,6 +52,90 @@ function PointsBar({ points }: { points: number }) {
   );
 }
 
+// ─── Countdown helpers ────────────────────────────────────────────────────────
+
+function getNextWeeklyReset(): Date {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0 = Sunday
+  const daysUntil = day === 0 ? 7 : 7 - day;
+  return new Date(
+    Date.UTC(
+      now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntil,
+      23, 59, 59, 0,
+    ),
+  );
+}
+
+function getNextMonthlyReset(): Date {
+  const now = new Date();
+  const lastDayCurr = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 0),
+  );
+  if (lastDayCurr > now) return lastDayCurr;
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 2, 0, 23, 59, 59, 0),
+  );
+}
+
+interface Countdown { d: number; h: number; m: number; s: number }
+
+function msToCountdown(ms: number): Countdown {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const s = total % 60;
+  const m = Math.floor(total / 60) % 60;
+  const h = Math.floor(total / 3600) % 24;
+  const d = Math.floor(total / 86400);
+  return { d, h, m, s };
+}
+
+function useCountdown(targetDate: Date): Countdown {
+  const [remaining, setRemaining] = useState(() => targetDate.getTime() - Date.now());
+  const ref = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    ref.current = setInterval(() => {
+      setRemaining(targetDate.getTime() - Date.now());
+    }, 1000);
+    return () => { if (ref.current) clearInterval(ref.current); };
+  }, [targetDate]);
+
+  return msToCountdown(remaining);
+}
+
+// ─── CountdownBadge ───────────────────────────────────────────────────────────
+
+function CountdownBadge({
+  label,
+  targetDate,
+  color,
+}: {
+  label: string;
+  targetDate: Date;
+  color: string;
+}) {
+  const { d, h, m } = useCountdown(targetDate);
+  const parts: string[] = [];
+  if (d > 0) parts.push(`${d}d`);
+  if (h > 0 || d > 0) parts.push(`${h}h`);
+  parts.push(`${m}m`);
+
+  return (
+    <div
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border"
+      style={{
+        background: `${color}12`,
+        borderColor: `${color}30`,
+        color,
+      }}
+    >
+      <Clock className="w-3 h-3 shrink-0" />
+      <span className="whitespace-nowrap">
+        {label}: {parts.join(" ")}
+      </span>
+    </div>
+  );
+}
+
 // ─── LeaderboardRow ───────────────────────────────────────────────────────────
 
 function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolean }) {
@@ -60,7 +149,6 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
         isMe && "bg-primary/5 hover:bg-primary/10",
       )}
     >
-      {/* Rank */}
       <div className="w-8 shrink-0 text-center">
         {medal ? (
           <span className="text-lg leading-none">{medal.icon}</span>
@@ -69,7 +157,6 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
         )}
       </div>
 
-      {/* Avatar */}
       {entry.avatarUrl ? (
         <img src={entry.avatarUrl} alt={entry.displayName}
           className="w-8 h-8 rounded-full object-cover shrink-0" />
@@ -79,7 +166,6 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
         </div>
       )}
 
-      {/* Name + country */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className={cn("text-sm font-medium truncate", isMe && "text-primary")}>
@@ -128,15 +214,119 @@ function LeaderboardRow({ entry, isMe }: { entry: LeaderboardEntry; isMe: boolea
         </div>
       </div>
 
-      {/* Points bar (desktop) */}
       <div className="w-36 shrink-0 hidden sm:block">
         <PointsBar points={entry.masteryPoints} />
       </div>
-      {/* Points (mobile) */}
       <span className="text-sm font-bold text-primary tabular-nums sm:hidden shrink-0">
         {entry.masteryPoints.toLocaleString()}
       </span>
     </Link>
+  );
+}
+
+// ─── HistoryPanel ─────────────────────────────────────────────────────────────
+
+function HistoryPanel({
+  tab,
+  periodType,
+}: {
+  tab: "global" | "national" | "friends";
+  periodType: "weekly" | "monthly";
+}) {
+  const { data, isLoading } = useLeaderboardHistory(tab, periodType, 5);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  if (isLoading) {
+    return (
+      <div className="p-8 flex justify-center">
+        <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  const snapshots = data?.snapshots ?? [];
+  if (snapshots.length === 0) {
+    return (
+      <div className="p-8 text-center text-sm text-muted-foreground">
+        <History className="w-8 h-8 mx-auto mb-2 opacity-30" />
+        No previous winners yet — check back after the first reset!
+      </div>
+    );
+  }
+
+  return (
+    <div className="divide-y divide-border">
+      {snapshots.map((snap: LeaderboardSnapshot) => {
+        const isOpen = expandedId === snap.id;
+        const winner = snap.entries[0];
+        const start = new Date(snap.periodStart);
+        const end = new Date(snap.periodEnd);
+        const fmt = (d: Date) =>
+          d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        const label = `${fmt(start)} – ${fmt(end)}`;
+
+        return (
+          <div key={snap.id}>
+            <button
+              onClick={() => setExpandedId(isOpen ? null : snap.id)}
+              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/30 transition-colors text-left"
+            >
+              <Medal className="w-4 h-4 text-yellow-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-muted-foreground">{label}</div>
+                {winner ? (
+                  <div className="text-sm font-semibold flex items-center gap-1.5 mt-0.5">
+                    <span>🥇</span>
+                    <span className="truncate">{winner.displayName}</span>
+                    <span className="text-primary font-bold tabular-nums ml-auto shrink-0">
+                      {winner.masteryPoints.toLocaleString()} pts
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">No entries</div>
+                )}
+              </div>
+              <ChevronRight
+                className={cn(
+                  "w-4 h-4 text-muted-foreground transition-transform shrink-0",
+                  isOpen && "rotate-90",
+                )}
+              />
+            </button>
+
+            {isOpen && (
+              <div className="px-4 pb-3 bg-secondary/10">
+                {snap.entries.slice(0, 10).map((e: LeaderboardEntry) => (
+                  <Link
+                    key={e.userId}
+                    href={`/profile/${e.username}`}
+                    className="flex items-center gap-3 py-2 hover:opacity-80 transition-opacity"
+                  >
+                    <div className="w-6 text-center text-sm">
+                      {e.rank <= 3 ? MEDAL[e.rank]?.icon : (
+                        <span className="text-xs font-bold text-muted-foreground">{e.rank}</span>
+                      )}
+                    </div>
+                    {e.avatarUrl ? (
+                      <img src={e.avatarUrl} alt={e.displayName}
+                        className="w-6 h-6 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                        {e.displayName[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    <span className="flex-1 text-sm truncate">{e.displayName}</span>
+                    <span className="text-xs font-bold text-primary tabular-nums shrink-0">
+                      {e.masteryPoints.toLocaleString()} pts
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -207,8 +397,6 @@ function MoveValueGuide() {
 
       {open && (
         <div className="px-4 pb-4 border-t border-border space-y-4">
-
-          {/* ── How it works ── */}
           <div className="mt-3 rounded-xl p-3.5 border border-primary/20 bg-primary/5">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-3.5 h-3.5 text-primary" />
@@ -224,7 +412,6 @@ function MoveValueGuide() {
             </p>
           </div>
 
-          {/* ── Tier cards ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {TIER_DEFS.map((tier) => (
               <div
@@ -243,9 +430,7 @@ function MoveValueGuide() {
                     {tier.multiplier}
                   </span>
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-snug">
-                  {tier.desc}
-                </p>
+                <p className="text-[11px] text-muted-foreground leading-snug">{tier.desc}</p>
                 <p className="text-[10px] text-muted-foreground/60 leading-none mt-0.5">
                   e.g. {tier.examples}
                 </p>
@@ -253,7 +438,6 @@ function MoveValueGuide() {
             ))}
           </div>
 
-          {/* ── Example calculation ── */}
           <p className="text-[10px] text-muted-foreground pt-2 border-t border-border/50">
             {t("leaderboard.exampleCalc", { defaultValue: "Example: 10 Muscle-Up reps at 90% form = 10 × 10.0 × 0.9 = 90 pts" })}
           </p>
@@ -270,8 +454,14 @@ type Tab = "global" | "national" | "friends";
 export function Leaderboard() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("global");
+  const [period, setPeriod] = useState<"weekly" | "monthly">("weekly");
+  const [showHistory, setShowHistory] = useState(false);
+
   const { data: myProfile } = useMyProfile();
-  const { data, isLoading, error } = useLeaderboard(tab);
+  const { data, isLoading, error } = useLeaderboard(tab, period);
+
+  const weeklyTarget = getNextWeeklyReset();
+  const monthlyTarget = getNextMonthlyReset();
 
   const myUserId = myProfile?.id;
   const hasCountry = tab !== "national" || data?.country != null || isLoading;
@@ -285,17 +475,66 @@ export function Leaderboard() {
   return (
     <>
       <div className="pb-28 md:pb-24">
-        {/* Header */}
+        {/* ── Header ─────────────────────────────────────────────────── */}
         <div className="p-6 pb-4">
           <h1 className="text-2xl font-bold flex items-center gap-2 mb-1">
             <Trophy className="w-6 h-6 text-yellow-400" />
             {t("leaderboard.title")}
           </h1>
-          <p className="text-xs text-muted-foreground mb-5">
+          <p className="text-xs text-muted-foreground mb-4">
             {t("leaderboard.subtitle")}
           </p>
 
-          {/* Tabs */}
+          {/* ── Countdown timers ─────────────────────────────────────── */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <CountdownBadge
+              label="Weekly Reset in"
+              targetDate={weeklyTarget}
+              color="#22c55e"
+            />
+            <CountdownBadge
+              label="Monthly Reset in"
+              targetDate={monthlyTarget}
+              color="#a855f7"
+            />
+          </div>
+
+          {/* ── Period toggle (Weekly / Monthly) ─────────────────────── */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex gap-0.5 p-0.5 rounded-lg bg-secondary text-xs font-semibold">
+              {(["weekly", "monthly"] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => { setPeriod(p); setShowHistory(false); }}
+                  className={cn(
+                    "flex items-center gap-1 px-3 py-1.5 rounded-md transition-all capitalize",
+                    period === p
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <CalendarClock className="w-3 h-3" />
+                  {p}
+                </button>
+              ))}
+            </div>
+
+            {/* History toggle */}
+            <button
+              onClick={() => setShowHistory((v) => !v)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all",
+                showHistory
+                  ? "bg-amber-400/10 border-amber-400/30 text-amber-400"
+                  : "border-border text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <History className="w-3 h-3" />
+              Previous Winners
+            </button>
+          </div>
+
+          {/* ── Tab bar ──────────────────────────────────────────────── */}
           <div className="flex gap-1 p-1 rounded-xl bg-secondary w-fit">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button
@@ -318,7 +557,20 @@ export function Leaderboard() {
           </div>
         </div>
 
-        {/* Friends auth gate */}
+        {/* ── History panel ─────────────────────────────────────────── */}
+        {showHistory && (
+          <div className="mx-6 mb-4 rounded-xl border border-amber-400/25 bg-card overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-amber-400/5">
+              <History className="w-4 h-4 text-amber-400" />
+              <span className="text-sm font-semibold text-amber-400">
+                Previous {period === "weekly" ? "Weekly" : "Monthly"} Winners
+              </span>
+            </div>
+            <HistoryPanel tab={tab} periodType={period} />
+          </div>
+        )}
+
+        {/* ── Friends auth gate ─────────────────────────────────────── */}
         {tab === "friends" && (
           <Show when="signed-out">
             <div className="mx-6 rounded-xl border border-border bg-card p-10 text-center">
@@ -338,7 +590,7 @@ export function Leaderboard() {
           </Show>
         )}
 
-        {/* National — country not detected */}
+        {/* ── National — country not detected ──────────────────────── */}
         {tab === "national" && !isLoading && !data?.country && (
           <div className="mx-6 rounded-xl border border-border bg-card p-10 text-center">
             <Flag className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
@@ -351,21 +603,21 @@ export function Leaderboard() {
           </div>
         )}
 
-        {/* Loading */}
+        {/* ── Loading ───────────────────────────────────────────────── */}
         {isLoading && (
           <div className="mx-6 rounded-xl border border-border bg-card p-12 flex items-center justify-center">
             <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           </div>
         )}
 
-        {/* Error */}
+        {/* ── Error ────────────────────────────────────────────────── */}
         {!isLoading && error && (
           <div className="mx-6 rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
             {t("leaderboard.failedToLoad")}
           </div>
         )}
 
-        {/* Empty */}
+        {/* ── Empty ────────────────────────────────────────────────── */}
         {!isLoading && !error && data && hasCountry && data.entries.length === 0 && (
           <div className="mx-6 rounded-xl border border-border bg-card p-10 text-center">
             <Star className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
@@ -374,10 +626,15 @@ export function Leaderboard() {
                 ? t("leaderboard.noFriendsEmpty")
                 : t("leaderboard.noAthletesRegion")}
             </p>
+            {data.periodStart && (
+              <p className="text-xs text-muted-foreground mt-2 opacity-60">
+                Period started {new Date(data.periodStart).toLocaleDateString()}
+              </p>
+            )}
           </div>
         )}
 
-        {/* Leaderboard list */}
+        {/* ── Leaderboard list ─────────────────────────────────────── */}
         {!isLoading && !error && data && data.entries.length > 0 && (
           <div className="mx-6 rounded-xl border border-border bg-card overflow-hidden">
             {/* Column header */}
@@ -407,10 +664,10 @@ export function Leaderboard() {
           </div>
         )}
 
-        {/* Move Value Guide */}
+        {/* ── Move Value Guide ─────────────────────────────────────── */}
         <MoveValueGuide />
 
-        {/* Disclaimer */}
+        {/* ── Disclaimer ───────────────────────────────────────────── */}
         <div className="text-center mt-4 px-6 space-y-1">
           <p className="text-xs text-amber-400/80 flex items-center justify-center gap-1.5">
             <ShieldCheck className="w-3 h-3 shrink-0" />
@@ -426,7 +683,6 @@ export function Leaderboard() {
       {data && tab !== "friends" && (data.myRank == null || data.myRank > 100) && (
         <div className="fixed bottom-[80px] md:bottom-0 left-0 md:left-64 right-0 z-30">
           <div className="bg-card/95 backdrop-blur-sm border-t border-border px-5 py-3 flex items-center justify-between gap-3">
-            {/* Rank + label */}
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
                 <Trophy className="w-4 h-4 text-primary" />
@@ -441,7 +697,6 @@ export function Leaderboard() {
               </div>
             </div>
 
-            {/* Points + gap to leader */}
             <div className="flex items-center gap-5 text-sm">
               <div className="text-center">
                 <div className="text-[10px] text-muted-foreground leading-none mb-0.5">
@@ -463,7 +718,6 @@ export function Leaderboard() {
               )}
             </div>
 
-            {/* Progress bar toward leader */}
             <div className="flex-1 max-w-[100px] hidden sm:block">
               <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <div

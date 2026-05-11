@@ -6,3 +6,4 @@ export * from "./friend-requests";
 export * from "./shoutouts";
 export * from "./mobility";
 export * from "./feed-posts";
+export * from "./leaderboard";

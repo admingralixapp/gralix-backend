@@ -10,6 +10,7 @@ import {
 } from "./middlewares/clerkProxyMiddleware";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { startResetScheduler } from "./lib/leaderboardReset";
 
 const app: Express = express();
 
@@ -48,5 +49,8 @@ app.use(
 );
 
 app.use("/api", router);
+
+// Start competitive reset scheduler (non-blocking background task)
+startResetScheduler();
 
 export default app;
