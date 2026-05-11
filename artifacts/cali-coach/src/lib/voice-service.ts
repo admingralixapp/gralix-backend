@@ -360,6 +360,8 @@ export function speakCue(
  */
 export function testCoachVoice(profileId: string, label?: string): Promise<void> {
   const SAMPLE_CUES: Record<string, string> = {
+    george:         "Great work! Keep your core tight and drive through every rep with power.",
+    sarah:          "You're doing amazing — stay focused, breathe, and trust the process.",
     sergeant:       "Get those hips up, recruit! You're sagging like a wet noodle!",
     sensei:         "The body follows the mind — align your core, find stillness.",
     cyborg:         "Hip angle deviation detected: 12 degrees below optimal. Correct now.",
