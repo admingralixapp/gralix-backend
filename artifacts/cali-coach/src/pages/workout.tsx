@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLocation, useSearch } from "wouter";
-import { useListExercises, useListSessions, useCreateSession, useUpdateSession, useCreateRep, useGetCalibration, getListSessionsQueryKey } from "@workspace/api-client-react";
+import { useListExercises, useListSessions, useCreateSession, useUpdateSession, useCreateRep, useGetCalibration, getListSessionsQueryKey, getGetRecentSessionsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-vision";
 import { Button } from "@/components/ui/button";
@@ -1696,8 +1696,9 @@ export function Workout() {
 
       console.log("Save successful!", sessionResult);
 
-      // Immediately refresh History so the new entry is visible when the user lands there
+      // Immediately refresh History and Dashboard so the new entry is visible
       void queryClient.refetchQueries({ queryKey: getListSessionsQueryKey() });
+      void queryClient.invalidateQueries({ queryKey: getGetRecentSessionsQueryKey() });
 
       // Show milestone badge toasts for newly earned category badges
       const milestones = sessionResult?.newBadges ?? [];
@@ -2003,6 +2004,7 @@ export function Workout() {
       });
       console.log("Save successful!", manualResult);
       void queryClient.refetchQueries({ queryKey: getListSessionsQueryKey() });
+      void queryClient.invalidateQueries({ queryKey: getGetRecentSessionsQueryKey() });
 
       const newSession: SessionSummary = {
         exerciseName,
@@ -2085,6 +2087,7 @@ export function Workout() {
       });
       console.log("Save successful!", testResult);
       void queryClient.refetchQueries({ queryKey: getListSessionsQueryKey() });
+      void queryClient.invalidateQueries({ queryKey: getGetRecentSessionsQueryKey() });
 
       const exerciseName = exercise?.name ?? "Exercise";
       const newSession: SessionSummary = {
