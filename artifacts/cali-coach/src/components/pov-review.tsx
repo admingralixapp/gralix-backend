@@ -388,90 +388,100 @@ export function PovReview({
       </div>
 
       {/* ── Main panels ─────────────────────────────────────────────────────── */}
-      <div className="flex-1 grid grid-cols-2 gap-px bg-white/[0.06] min-h-0">
+      {/*
+          Mobile  (< sm): single column, each panel full-width with 16:9 aspect
+                          ratio; the wrapper scrolls so both panels are reachable.
+          Desktop (≥ sm): side-by-side grid that fills the remaining height.
+      */}
+      <div className="flex-1 overflow-y-auto min-h-0 sm:overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 sm:gap-px sm:bg-white/[0.06] sm:h-full">
 
-        {/* Left — User form video */}
-        <div className="relative bg-black flex flex-col min-h-0">
-          <div className="px-4 py-2 flex items-center gap-2 shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-white/35">
-              Your Form
-            </span>
-            {significant.length > 0 && (
-              <span className="text-[10px] text-red-400/70 ml-auto">
-                {significant.length} deviation{significant.length > 1 ? "s" : ""} highlighted
+          {/* Top / Left — User form video */}
+          <div className="relative bg-black flex flex-col">
+            <div className="px-4 py-2 flex items-center gap-2 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/35">
+                Your Form
               </span>
-            )}
+              {significant.length > 0 && (
+                <span className="text-[10px] text-red-400/70 ml-auto">
+                  {significant.length} deviation{significant.length > 1 ? "s" : ""} highlighted
+                </span>
+              )}
+            </div>
+
+            {/* Video area: 16:9 on mobile, fills remaining height on desktop */}
+            <div className="relative aspect-video sm:aspect-auto sm:flex-1 overflow-hidden">
+              {videoError ? (
+                <div className="absolute inset-0 flex items-center justify-center text-white/20 text-sm">
+                  Clip unavailable
+                </div>
+              ) : (
+                <>
+                  <video
+                    ref={videoRef}
+                    className="absolute inset-0 w-full h-full object-contain"
+                    loop
+                    playsInline
+                  />
+                  <canvas
+                    ref={overlayRef}
+                    className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                  />
+                  <button
+                    onClick={togglePlay}
+                    className="absolute bottom-3 right-3 bg-black/70 hover:bg-black/90 rounded-full p-2 text-white transition-colors"
+                  >
+                    {isPlaying
+                      ? <Pause className="w-3.5 h-3.5" />
+                      : <Play  className="w-3.5 h-3.5" />}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="flex-1 relative overflow-hidden">
-            {videoError ? (
-              <div className="absolute inset-0 flex items-center justify-center text-white/20 text-sm">
-                Clip unavailable
+          {/* Bottom / Right — Pro Ghost */}
+          <div className="relative bg-[#03090f] flex flex-col border-t border-white/[0.06] sm:border-t-0">
+            <div className="px-4 py-2 flex items-center gap-2 shrink-0">
+              <Ghost className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-300/50">
+                Pro Ghost — Ideal Form
+              </span>
+              {/* Overlay opacity slider */}
+              <div className="ml-auto flex items-center gap-1.5">
+                <Eye className="w-3 h-3 text-white/25 shrink-0" />
+                <input
+                  type="range"
+                  min={0.1}
+                  max={1}
+                  step={0.05}
+                  value={ghostOpacity}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    setGhostOpacityState(v);
+                    setGhostOpacity(v);
+                  }}
+                  title={`Overlay opacity: ${Math.round(ghostOpacity * 100)}%`}
+                  className="w-16 h-1 accent-cyan-400 cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
+                />
               </div>
-            ) : (
-              <>
-                <video
-                  ref={videoRef}
-                  className="absolute inset-0 w-full h-full object-contain"
-                  loop
-                  playsInline
-                />
-                <canvas
-                  ref={overlayRef}
-                  className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                />
-                <button
-                  onClick={togglePlay}
-                  className="absolute bottom-3 right-3 bg-black/70 hover:bg-black/90 rounded-full p-2 text-white transition-colors"
-                >
-                  {isPlaying
-                    ? <Pause className="w-3.5 h-3.5" />
-                    : <Play  className="w-3.5 h-3.5" />}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
+            </div>
 
-        {/* Right — Pro Ghost */}
-        <div className="relative bg-[#03090f] flex flex-col min-h-0">
-          <div className="px-4 py-2 flex items-center gap-2 shrink-0">
-            <Ghost className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-300/50">
-              Pro Ghost — Ideal Form
-            </span>
-            {/* Overlay opacity slider */}
-            <div className="ml-auto flex items-center gap-1.5">
-              <Eye className="w-3 h-3 text-white/25 shrink-0" />
-              <input
-                type="range"
-                min={0.1}
-                max={1}
-                step={0.05}
-                value={ghostOpacity}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value);
-                  setGhostOpacityState(v);
-                  setGhostOpacity(v);
-                }}
-                title={`Overlay opacity: ${Math.round(ghostOpacity * 100)}%`}
-                className="w-16 h-1 accent-cyan-400 cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
+            {/* Ghost canvas: 16:9 on mobile, fills remaining height on desktop */}
+            <div className="relative aspect-video sm:aspect-auto sm:flex-1 overflow-hidden">
+              <canvas
+                ref={ghostRef}
+                className="absolute inset-0 w-full h-full object-contain transition-opacity"
+                style={{ transform: "scaleX(-1)", opacity: ghostOpacity }}
               />
+              <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-black/50 rounded-full px-3 py-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                <span className="text-[10px] font-semibold text-cyan-300">Perfect sync target</span>
+              </div>
             </div>
           </div>
 
-          <div className="flex-1 relative overflow-hidden">
-            <canvas
-              ref={ghostRef}
-              className="absolute inset-0 w-full h-full object-contain transition-opacity"
-              style={{ transform: "scaleX(-1)", opacity: ghostOpacity }}
-            />
-            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-black/50 rounded-full px-3 py-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-              <span className="text-[10px] font-semibold text-cyan-300">Perfect sync target</span>
-            </div>
-          </div>
         </div>
       </div>
 
