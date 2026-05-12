@@ -1058,38 +1058,40 @@ export const POSE_LIBRARY: Record<PoseType, PoseSet> = {
 const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
 
   // ── WRIST EXTENSION STRETCH ───────────────────────────────────────────────
-  // Side view. Kneeling, palms flat on floor with fingers pointing back toward
-  // knees. Leaning progressively forward increases wrist extension.
+  // Side view. Kneeling (person faces RIGHT). Floor line at y=67.
+  // START: kneeling upright, elbows BENT, hands already touching floor (y=67).
+  // MID:   body leans forward, arms STRAIGHT, palms flat, fingers toward knees.
+  // END:   hips sink BACK toward heels — hands stay LOCKED at MID positions.
   "Wrist Extension Stretch": [
-    { // START — kneeling upright; hands hovering ABOVE the floor line (y=67)
-      head: { cx: 66, cy: 12, r: 6 },
+    { // START — kneeling upright; elbows BENT; hands ON floor line (y=67)
+      head: { cx: 68, cy: 11, r: 6 },
       lines: [
-        [[62, 18], [50, 44]],                              // spine (upright)
-        [[56, 26], [62, 40], [64, 56]],                    // R-arm — hand at y=56 (above floor)
-        [[56, 26], [50, 36], [46, 50]],                    // L-arm — hand at y=50 (above floor)
-        [[50, 44], [44, 60], [28, 67]],                    // R-leg — shin ends ON floor y=67
-        [[50, 44], [50, 60], [34, 67]],                    // L-leg — shin ends ON floor y=67
+        [[64, 17], [54, 44]],                              // spine (upright kneeling)
+        [[58, 25], [70, 44], [62, 67]],                    // near arm: shoulder→BENT elbow→hand at floor
+        [[58, 25], [72, 46], [68, 67]],                    // far arm: shoulder→bent elbow→hand at floor
+        [[54, 44], [44, 60], [28, 67]],                    // near shin on floor
+        [[54, 44], [46, 60], [32, 67]],                    // far shin on floor
       ],
     },
-    { // MID — body leans forward; hands TOUCH floor line (both locked at y=67)
-      head: { cx: 80, cy: 22, r: 6 },
+    { // MID — body leans forward; arms STRAIGHT; palms flat (fingers toward knees)
+      head: { cx: 80, cy: 20, r: 6 },
       lines: [
-        [[76, 26], [60, 34], [42, 44]],                    // spine (forward tilt)
-        [[60, 34], [60, 50], [60, 67]],                    // L-arm — hand LOCKED to floor y=67
-        [[60, 34], [68, 50], [68, 67]],                    // R-arm — hand LOCKED to floor y=67
-        [[42, 44], [36, 60], [20, 67]],                    // R-leg — still on floor
-        [[42, 44], [42, 60], [26, 67]],                    // L-leg
+        [[76, 24], [62, 32], [44, 44]],                    // spine (forward lean)
+        [[62, 32], [62, 50], [62, 67]],                    // near arm STRAIGHT — hand LOCKED [62,67]
+        [[62, 32], [65, 50], [68, 67]],                    // far arm STRAIGHT  — hand LOCKED [68,67]
+        [[44, 44], [34, 60], [18, 67]],                    // near shin
+        [[44, 44], [36, 60], [22, 67]],                    // far shin
       ],
-      muscleGlow: { cx: 64, cy: 55, rx: 16, ry: 10 },
+      muscleGlow: { cx: 64, cy: 56, rx: 16, ry: 10 },
     },
-    { // END — hips shift BACK; hands remain at EXACT same floor coords as MID
-      head: { cx: 84, cy: 28, r: 6 },
+    { // END — hips sink BACK toward heels; hands LOCKED at EXACT MID coords
+      head: { cx: 62, cy: 17, r: 6 },
       lines: [
-        [[80, 32], [64, 38], [40, 52]],                    // spine (hips back — y=52 vs y=44 in MID)
-        [[64, 38], [62, 52], [60, 67]],                    // L-arm — endpoint [60,67] IDENTICAL to MID
-        [[64, 38], [70, 52], [68, 67]],                    // R-arm — endpoint [68,67] IDENTICAL to MID
-        [[40, 52], [32, 64], [14, 67]],                    // R-leg — adjusted for hip shift
-        [[40, 52], [38, 64], [20, 67]],                    // L-leg
+        [[58, 23], [50, 50]],                              // spine more upright (hips back, y=50 vs y=44)
+        [[52, 32], [57, 50], [62, 67]],                    // near arm steeper angle — endpoint [62,67] LOCKED
+        [[52, 32], [60, 50], [68, 67]],                    // far arm steeper angle  — endpoint [68,67] LOCKED
+        [[50, 50], [38, 62], [22, 67]],                    // near shin (adjusted for hip shift)
+        [[50, 50], [34, 62], [16, 67]],                    // far shin
       ],
     },
   ],
@@ -1132,149 +1134,157 @@ const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
   ],
 
   // ── SHOULDER DISLOCATES ───────────────────────────────────────────────────
-  // Side view. Standing. The band/towel arcs from waist-front → straight
-  // overhead → lower-back-rear, showing the full shoulder circle.
+  // Side view (person faces RIGHT). Standing. Band/towel traces a full 180°
+  // arc: hands at hips FRONT → straight OVERHEAD → hands at hips BACK.
+  // Arms sweep together; both shown slightly staggered for depth.
   "Shoulder Dislocates": [
-    { // START — arms in FRONT at hip level, holding band (12→6 o'clock front)
+    { // START — hands at hip level IN FRONT (6 o'clock position, arms hanging forward)
       head: { cx: 50, cy: 10, r: 7 },
       lines: [
-        [[50, 17], [50, 50]],
-        [[50, 23], [60, 32], [66, 46], [64, 56]],          // leading arm forward-down
-        [[50, 23], [58, 30], [62, 44], [60, 54]],          // trailing arm (overlapping, same direction)
-        [[50, 50], [44, 68], [42, 88]],
-        [[50, 50], [56, 68], [58, 88]],
+        [[50, 17], [50, 52]],                              // spine (upright)
+        [[50, 24], [60, 36], [66, 50], [64, 60]],          // near arm: shoulder→forward sweep→front-hip
+        [[50, 24], [58, 34], [62, 48], [60, 58]],          // far arm (slightly inward, same arc)
+        [[50, 52], [44, 70], [42, 90]],
+        [[50, 52], [56, 70], [58, 90]],
       ],
     },
-    { // MID — arms STRAIGHT OVERHEAD at 12 o'clock (arms fully extended up)
+    { // MID — arms STRAIGHT OVERHEAD (12 o'clock); spine stays perfectly upright
       head: { cx: 50, cy: 10, r: 7 },
       lines: [
-        [[50, 17], [50, 50]],
-        [[50, 22], [54, 10], [56, 0]],                     // leading arm straight overhead
-        [[50, 22], [46, 10], [44, 0]],                     // trailing arm overhead (slight spread)
-        [[50, 50], [44, 68], [42, 88]],
-        [[50, 50], [56, 68], [58, 88]],
+        [[50, 17], [50, 52]],
+        [[50, 22], [52, 10], [54, 2]],                     // near arm: straight up, slight spread
+        [[50, 22], [48, 10], [46, 2]],                     // far arm: straight up
+        [[50, 52], [44, 70], [42, 90]],
+        [[50, 52], [56, 70], [58, 90]],
       ],
-      muscleGlow: { cx: 50, cy: 20, rx: 20, ry: 8 },
+      muscleGlow: { cx: 50, cy: 20, rx: 22, ry: 9 },
     },
-    { // END — arms BEHIND BACK at hip level (band passed all the way through)
+    { // END — hands at hip level BEHIND BACK (6 o'clock rear; full 180° arc complete)
       head: { cx: 50, cy: 10, r: 7 },
       lines: [
-        [[50, 17], [50, 50]],
-        [[50, 23], [40, 32], [34, 46], [32, 58]],          // leading arm now behind-down
-        [[50, 23], [42, 30], [36, 44], [34, 56]],          // trailing arm behind-down
-        [[50, 50], [44, 68], [42, 88]],
-        [[50, 50], [56, 68], [58, 88]],
+        [[50, 17], [50, 52]],
+        [[50, 24], [40, 36], [34, 50], [32, 60]],          // near arm: behind-down arc
+        [[50, 24], [42, 34], [36, 48], [34, 58]],          // far arm: behind-down
+        [[50, 52], [44, 70], [42, 90]],
+        [[50, 52], [56, 70], [58, 90]],
       ],
     },
   ],
 
   // ── HANGING LAT STRETCH ───────────────────────────────────────────────────
-  // Front view. Hanging from a bar. Scapulae progressively depress; the final
-  // frame adds a gentle lateral lean to open one lat at a time.
+  // Side view (person faces RIGHT). Overhead bar at y=8.
+  // START: standing upright, arms reaching up toward bar (pre-grip).
+  // MID:   hands LOCKED on bar, dead hang — body elongates vertically.
+  // END:   hips sink BACK creating a lateral C-curve side-body stretch.
   "Hanging Lat Stretch": [
-    { // START — passive dead hang, shoulders shrugged up (elevated/passive)
+    { // START — standing, arms reaching UP toward bar (not yet gripping)
+      head: { cx: 50, cy: 14, r: 6 },
+      lines: [
+        [[50, 20], [50, 54]],                              // spine (standing upright)
+        [[50, 26], [46, 16], [44, 10]],                    // near arm: reaching toward bar at y=8
+        [[50, 26], [54, 16], [56, 10]],                    // far arm: reaching up
+        [[50, 54], [44, 72], [42, 90]],                    // near leg
+        [[50, 54], [56, 72], [58, 90]],                    // far leg
+      ],
+    },
+    { // MID — dead hang, hands LOCKED on bar (y=8); body hangs straight down
       head: { cx: 50, cy: 30, r: 6 },
       lines: [
-        [[50, 24], [36, 24], [28, 10]],                    // L-arm to bar
-        [[50, 24], [64, 24], [72, 10]],                    // R-arm to bar
-        [[50, 24], [50, 58]],                              // torso
-        [[50, 58], [44, 76], [42, 94]],
-        [[50, 58], [56, 76], [58, 94]],
+        [[50, 24], [46, 16], [44, 8]],                     // near arm LOCKED to bar [44,8]
+        [[50, 24], [54, 16], [56, 8]],                     // far arm LOCKED to bar [56,8]
+        [[50, 24], [50, 62]],                              // torso hanging straight
+        [[50, 62], [44, 80], [42, 96]],                    // near leg dangling
+        [[50, 62], [56, 80], [58, 96]],                    // far leg dangling
       ],
+      muscleGlow: { cx: 50, cy: 42, rx: 16, ry: 16 },
     },
-    { // MID — scapulae actively DEPRESSED; body drops in the shoulder socket
-      head: { cx: 50, cy: 38, r: 6 },
+    { // END — hips sink BACK (left); body curves into C-shape; hands LOCKED on bar
+      head: { cx: 46, cy: 30, r: 6 },
       lines: [
-        [[50, 32], [36, 20], [28, 8]],                     // L-arm (shoulder now lower)
-        [[50, 32], [64, 20], [72, 8]],                     // R-arm
-        [[50, 32], [50, 66]],                              // torso elongated
-        [[50, 66], [44, 82], [42, 96]],
-        [[50, 66], [56, 82], [58, 96]],
-      ],
-      muscleGlow: { cx: 50, cy: 46, rx: 18, ry: 14 },
-    },
-    { // END — slight lateral lean left to emphasise one lat
-      head: { cx: 44, cy: 36, r: 6 },
-      lines: [
-        [[50, 30], [36, 20], [28, 8]],                     // L-arm (bar stays fixed)
-        [[50, 30], [64, 20], [72, 8]],                     // R-arm
-        [[46, 30], [38, 62]],                              // torso leans left
-        [[38, 62], [30, 78], [28, 94]],
-        [[38, 62], [52, 76], [58, 90]],
+        [[48, 24], [44, 16], [44, 8]],                     // near arm — endpoint [44,8] LOCKED
+        [[48, 24], [54, 16], [56, 8]],                     // far arm  — endpoint [56,8] LOCKED
+        [[44, 30], [38, 58]],                              // torso arcs LEFT (hips sinking back)
+        [[38, 58], [30, 78], [26, 96]],                    // near leg: hips back, leg trails behind
+        [[38, 58], [48, 76], [52, 94]],                    // far leg
       ],
     },
   ],
 
   // ── DOORFRAME CHEST OPENER ────────────────────────────────────────────────
-  // Front view. Forearms planted on vertical door-frame at 90°; body leans
-  // progressively forward to open chest and anterior shoulders.
+  // Side view (person faces RIGHT toward wall at x=94).
+  // Single-arm version: one arm in a 90° L on the frame; torso rotates away.
+  // START: arm held in L-shape (upper arm horizontal, forearm vertical, pre-press).
+  // MID:   forearm PRESSED against wall — elbow [86,24] & wrist [88,8] LOCKED.
+  // END:   torso steps/rotates AWAY (LEFT) — shoulder moves; locked arm stays.
   "Doorframe Chest Opener": [
-    { // START — standing, arms at sides (about to step into doorway)
-      head: { cx: 50, cy: 10, r: 7 },
+    { // START — arm poised in 90° L-shape, body facing right (not yet pressing wall)
+      head: { cx: 64, cy: 10, r: 7 },
       lines: [
-        [[50, 17], [50, 50]],
-        [[50, 23], [36, 32], [28, 46]],
-        [[50, 23], [64, 32], [72, 46]],
-        [[50, 50], [44, 68], [42, 88]],
-        [[50, 50], [56, 68], [58, 88]],
-      ],
-    },
-    { // MID — arms wide at 90°, forearms on frame, chest starting to lean through
-      head: { cx: 50, cy: 12, r: 7 },
-      lines: [
-        [[50, 19], [50, 52]],
-        [[50, 24], [28, 24], [14, 24], [14, 40]],          // L-arm out to frame, forearm down
-        [[50, 24], [72, 24], [86, 24], [86, 40]],          // R-arm out to frame, forearm down
+        [[60, 17], [50, 52]],                              // spine (upright, facing right)
+        [[56, 24], [82, 24], [84, 8]],                     // arm: upper-arm horizontal → forearm UP (the L)
+        [[56, 24], [42, 32], [34, 48]],                    // other arm relaxed at side
         [[50, 52], [44, 70], [42, 90]],
         [[50, 52], [56, 70], [58, 90]],
       ],
-      muscleGlow: { cx: 50, cy: 28, rx: 26, ry: 10 },
     },
-    { // END — body leaning further forward through the frame (deeper chest stretch)
-      head: { cx: 52, cy: 14, r: 7 },
+    { // MID — forearm AGAINST frame; elbow [86,24] & wrist [88,8] are LOCKED anchors
+      head: { cx: 64, cy: 10, r: 7 },
       lines: [
-        [[52, 21], [52, 54]],
-        [[52, 26], [28, 26], [12, 26], [12, 44]],
-        [[52, 26], [76, 26], [92, 26], [92, 44]],
-        [[52, 54], [46, 72], [44, 92]],
-        [[52, 54], [58, 72], [60, 92]],
+        [[60, 17], [50, 52]],
+        [[56, 24], [86, 24], [88, 8]],                     // arm: elbow LOCKED [86,24], wrist LOCKED [88,8]
+        [[56, 24], [40, 32], [32, 48]],
+        [[50, 52], [44, 70], [42, 90]],
+        [[50, 52], [56, 70], [58, 90]],
+      ],
+      muscleGlow: { cx: 54, cy: 26, rx: 20, ry: 9 },
+    },
+    { // END — torso rotates AWAY (steps LEFT); shoulder moves but arm stays on wall
+      head: { cx: 52, cy: 11, r: 7 },
+      lines: [
+        [[48, 18], [40, 54]],                              // spine shifted LEFT (body rotated away)
+        [[46, 26], [86, 24], [88, 8]],                     // shoulder moved to [46,26]; elbow/wrist LOCKED
+        [[46, 26], [32, 34], [24, 50]],
+        [[40, 54], [34, 72], [32, 92]],
+        [[40, 54], [46, 72], [48, 92]],
       ],
     },
   ],
 
   // ── LOW LUNGE HIP FLEXOR ──────────────────────────────────────────────────
-  // Side view. Deep low lunge — back knee on ground, front knee at 90°, hips
-  // pushed forward and down to stretch the hip flexors.
+  // Side view (person faces RIGHT). Floor at y=88.
+  // START: 90/90 kneeling — both knees at 90°, back knee on floor, torso tall.
+  // MID:   hands braced on front knee, upright torso over the lunge.
+  // END:   hips DRIVE FORWARD and DOWN — front knee past ankle; deeper stretch.
   "Low Lunge Hip Flexor": [
-    { // START — standing, feet together (about to step into lunge)
-      head: { cx: 50, cy: 10, r: 6 },
+    { // START — 90/90 kneeling: front knee 90°, back knee on floor, arms at sides
+      head: { cx: 58, cy: 11, r: 6 },
       lines: [
-        [[50, 16], [50, 48]],
-        [[50, 22], [36, 30], [28, 44]],
-        [[50, 22], [64, 30], [72, 44]],
-        [[50, 48], [44, 66], [42, 86]],
-        [[50, 48], [56, 66], [58, 86]],
+        [[54, 17], [52, 52]],                              // spine (tall, upright)
+        [[52, 28], [66, 30], [76, 36]],                    // near arm relaxed at hip
+        [[52, 28], [38, 34], [28, 44]],                    // far arm at side
+        [[52, 52], [68, 66], [72, 88]],                    // front (R) leg: hip→knee(90°)→foot on floor
+        [[52, 52], [34, 68], [24, 88]],                    // back (L) leg: hip→back-knee on floor
       ],
     },
-    { // MID — low lunge: front (R) knee at 90°, back (L) knee on ground, torso upright
-      head: { cx: 58, cy: 12, r: 6 },
+    { // MID — hands ON front knee; torso upright; back shin flat on floor behind
+      head: { cx: 60, cy: 11, r: 6 },
       lines: [
-        [[58, 18], [56, 50]],                              // torso upright, hips forward
-        [[56, 26], [66, 26], [76, 26]],                    // arms resting on front knee
-        [[56, 26], [44, 28], [34, 28]],                    // L-arm at hip
-        [[56, 50], [70, 64], [74, 82], [66, 94]],          // front (R) leg: hip→knee 90°→ankle→foot
-        [[56, 50], [46, 64], [30, 70], [14, 70]],          // back (L) leg: hip→knee on ground→shin flat
+        [[56, 17], [54, 52]],                              // spine upright
+        [[54, 28], [68, 36], [70, 52]],                    // near arm: hand BRACED on front knee
+        [[54, 28], [40, 36], [42, 52]],                    // far arm: other hand on knee
+        [[54, 52], [70, 66], [74, 88]],                    // front (R) leg: hip→knee→foot
+        [[54, 52], [36, 68], [22, 88]],                    // back (L) leg: hip→back-knee on floor
       ],
-      muscleGlow: { cx: 42, cy: 64, rx: 16, ry: 14 },
+      muscleGlow: { cx: 38, cy: 68, rx: 16, ry: 14 },
     },
-    { // END — hips pushed further forward, front knee past ankle (deeper stretch)
-      head: { cx: 62, cy: 12, r: 6 },
+    { // END — hips drive FORWARD and DOWN; front knee passes over ankle; deeper psoas
+      head: { cx: 64, cy: 12, r: 6 },
       lines: [
-        [[62, 18], [58, 50]],
-        [[58, 26], [72, 24], [82, 22]],
-        [[58, 26], [44, 26], [32, 24]],
-        [[58, 50], [74, 64], [78, 82], [70, 94]],
-        [[58, 50], [44, 64], [26, 70], [10, 70]],
+        [[60, 18], [58, 54]],                              // spine (slight forward lean; hips lower)
+        [[58, 28], [74, 34], [80, 48]],                    // near arm: hands reaching to more-forward knee
+        [[58, 28], [44, 34], [46, 50]],                    // far arm: other hand
+        [[58, 54], [76, 68], [78, 92]],                    // front (R) leg: knee driven forward past ankle
+        [[58, 54], [38, 72], [24, 88]],                    // back (L) leg: hip forward stretches psoas
       ],
     },
   ],
