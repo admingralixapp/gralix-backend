@@ -315,17 +315,20 @@ export function AnimLabPage() {
   }, [isPlaying]);
 
   const onSvgMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
-    if (!dragRef.current || !svgRef.current) return;
+    // Capture the ref value synchronously — the setFrames updater runs
+    // asynchronously and dragRef.current may be null by then (cleared by pointerup).
+    const drag = dragRef.current;
+    if (!drag || !svgRef.current) return;
     const [nx, ny] = svgPoint(e, svgRef.current);
     const fi = activeFameRef.current;
     setFrames(prev => {
       const next = [...prev] as [PoseData, PoseData, PoseData];
       const frame = cloneFrame(prev[fi]);
-      if (dragRef.current!.isHead) {
+      if (drag.isHead) {
         frame.head.cx = nx;
         frame.head.cy = ny;
       } else {
-        for (const { lineIdx, pointIdx } of dragRef.current!.indices) {
+        for (const { lineIdx, pointIdx } of drag.indices) {
           frame.lines[lineIdx][pointIdx] = [nx, ny];
         }
       }
