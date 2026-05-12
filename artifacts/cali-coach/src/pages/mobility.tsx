@@ -1114,6 +1114,11 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
     if (onDismiss) {
       onDismiss();
     } else {
+      // Must reset pageState here — MobilityPage is embedded inside TrainingHub
+      // at /training, so setLocation only changes search params and never
+      // remounts the component. Without this, the active player stays rendered
+      // at z-index 9999 and the Exit button appears dead.
+      setPageState("ready");
       setLocation("/training?tab=daily");
     }
   }
@@ -1329,11 +1334,18 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
         >
           {onDismiss ? (
             <Button size="lg" className="w-full font-bold" onClick={onDismiss}>
-              Back to Daily Tasks
+              Back to Daily
             </Button>
           ) : (
-            <Button size="lg" className="w-full font-bold" asChild>
-              <Link href="/training?tab=daily">Back to Daily</Link>
+            <Button
+              size="lg"
+              className="w-full font-bold"
+              onClick={() => {
+                setPageState("ready");
+                setLocation("/training?tab=daily");
+              }}
+            >
+              Back to Daily
             </Button>
           )}
           <Button size="lg" variant="outline" className="w-full" onClick={startSession}>
