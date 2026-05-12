@@ -8,7 +8,9 @@ import {
   Show,
   useClerk,
   useUser,
+  useAuth,
 } from "@clerk/react";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { purgeExpiredClips } from "@/lib/clip-store";
 import { UploadManagerProvider } from "@/lib/upload-manager";
 import { dark } from "@clerk/themes";
@@ -195,6 +197,20 @@ function ProfileSync() {
 }
 
 // ---------------------------------------------------------------------------
+// Registers the Clerk bearer token with the shared API fetch client so that
+// every generated hook (useListSessions, useGetRecentSessions, etc.) sends an
+// Authorization header.  Must live inside <ClerkProvider>.
+// ---------------------------------------------------------------------------
+function ClerkApiAuthSync() {
+  const { getToken } = useAuth();
+  useEffect(() => {
+    setAuthTokenGetter(() => getToken());
+    return () => setAuthTokenGetter(null);
+  }, [getToken]);
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Invalidates the React Query cache when the signed-in user changes
 // ---------------------------------------------------------------------------
 function ClerkQueryClientCacheInvalidator() {
@@ -263,6 +279,7 @@ function AppRouter() {
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
       <QueryClientProvider client={queryClient}>
+        <ClerkApiAuthSync />
         <RTLDirectionSync />
         <LangSync />
         <ClerkQueryClientCacheInvalidator />
