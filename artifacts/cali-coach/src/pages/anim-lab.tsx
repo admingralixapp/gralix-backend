@@ -43,13 +43,34 @@ function findMatching(pose: PoseData, tx: number, ty: number) {
   return out;
 }
 
-function uniqueJoints(pose: PoseData): { x: number; y: number }[] {
+type JointInfo = { x: number; y: number; isHinge: boolean };
+
+/**
+ * Returns all unique joint positions for the pose.
+ * `isHinge = true` marks the intermediate points of multi-point lines —
+ * these are ELBOWS (middle of arm chains) and KNEES (middle of leg chains).
+ * Endpoint joints are shoulders, wrists, hips and ankles.
+ */
+function uniqueJoints(pose: PoseData): JointInfo[] {
+  // Collect keys for every intermediate (hinge) point in multi-point lines
+  const hingeKeys = new Set<string>();
+  pose.lines.forEach(line => {
+    if (line.length >= 3) {
+      for (let i = 1; i < line.length - 1; i++) {
+        hingeKeys.add(`${line[i][0]},${line[i][1]}`);
+      }
+    }
+  });
+
   const seen = new Set<string>();
-  const out: { x: number; y: number }[] = [];
+  const out: JointInfo[] = [];
   pose.lines.forEach(line =>
     line.forEach(([x, y]) => {
       const k = `${x},${y}`;
-      if (!seen.has(k)) { seen.add(k); out.push({ x, y }); }
+      if (!seen.has(k)) {
+        seen.add(k);
+        out.push({ x, y, isHinge: hingeKeys.has(k) });
+      }
     })
   );
   return out;
@@ -434,7 +455,7 @@ export function AnimLabPage() {
         </select>
 
         <span style={{ fontSize: 11, color: mutedText, marginLeft: 4 }}>
-          Drag joints • Tab = switch frame • Save = write to source • HMR reloads skeleton live
+          Drag joints • <span style={{ color: "#22d3ee" }}>Cyan = elbow/knee</span> • Tab = switch frame • Save = write to source
         </span>
 
         <Link
@@ -540,17 +561,32 @@ export function AnimLabPage() {
               {/* Active skeleton */}
               <LiveSkeleton pose={activePose} color={FRAME_COLORS[displayFrame]} />
 
-              {/* Draggable joint handles */}
-              {!isPlaying && joints.map(({ x, y }) => (
-                <circle
-                  key={`${x},${y}`}
-                  cx={x} cy={y} r={4.2}
-                  fill={FRAME_COLORS[activeFrame]}
-                  stroke="#0b1120" strokeWidth={1.5}
-                  filter="url(#jglow)"
-                  style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
-                  onPointerDown={e => onJointDown(e, x, y)}
-                />
+              {/* Draggable joint handles
+                  - Cyan (#22d3ee) = hinge joints → ELBOWS (mid of arm chain) & KNEES (mid of leg chain)
+                  - Frame colour   = endpoint joints → shoulders, wrists, hips, ankles */}
+              {!isPlaying && joints.map(({ x, y, isHinge }) => (
+                <g key={`${x},${y}`}>
+                  {isHinge && (
+                    /* Extra outer ring for elbow/knee to make them extra prominent */
+                    <circle
+                      cx={x} cy={y} r={7}
+                      fill="none"
+                      stroke="#22d3ee" strokeWidth={1}
+                      opacity={0.35}
+                      style={{ pointerEvents: "none" }}
+                    />
+                  )}
+                  <circle
+                    cx={x} cy={y}
+                    r={isHinge ? 5 : 4.2}
+                    fill={isHinge ? "#22d3ee" : FRAME_COLORS[activeFrame]}
+                    stroke={isHinge ? "#0e7490" : "#0b1120"}
+                    strokeWidth={1.5}
+                    filter="url(#jglow)"
+                    style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
+                    onPointerDown={e => onJointDown(e, x, y)}
+                  />
+                </g>
               ))}
 
               {/* Head drag handle */}
@@ -607,6 +643,28 @@ export function AnimLabPage() {
             >
               <RotateCcw size={12} /> Reset
             </button>
+          </div>
+
+          {/* Joint colour legend */}
+          <div style={{
+            display: "flex", gap: 14, alignItems: "center", marginTop: 8,
+            padding: "6px 12px", borderRadius: 8,
+            background: "#080e1a", border: "1px solid #1e293b",
+            fontSize: 10.5, color: mutedText,
+          }}>
+            <span style={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Joints:</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <svg width={11} height={11}><circle cx={5.5} cy={5.5} r={5.5} fill={FRAME_COLORS[activeFrame]} /></svg>
+              Shoulder / Wrist / Hip / Ankle
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <svg width={13} height={13}>
+                <circle cx={6.5} cy={6.5} r={6.5} fill="none" stroke="#22d3ee" strokeWidth={1} opacity={0.4} />
+                <circle cx={6.5} cy={6.5} r={5} fill="#22d3ee" />
+              </svg>
+              <span style={{ color: "#22d3ee", fontWeight: 600 }}>Elbow / Knee</span>
+              — drag to bend arm or leg
+            </span>
           </div>
         </div>
 
