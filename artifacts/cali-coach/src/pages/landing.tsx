@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Activity, Users, Lock } from "lucide-react";
+import { TOTAL_SKILL_COUNT } from "@/lib/skill-tree";
 
 export function Landing() {
   return (
@@ -78,7 +79,7 @@ export function Landing() {
             {
               icon: Activity,
               title: "Skill Tree",
-              desc: "Unlock 24 skills across 4 progressive branches — including static holds and explosive moves.",
+              desc: `Unlock ${TOTAL_SKILL_COUNT} skills across 4 progressive branches — including static holds and explosive moves.`,
             },
             {
               icon: Users,
