@@ -1138,35 +1138,40 @@ const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
   // arc: hands at hips FRONT → straight OVERHEAD → hands at hips BACK.
   // Arms sweep together; both shown slightly staggered for depth.
   "Shoulder Dislocates": [
-    { // START — hands at hip level IN FRONT (6 o'clock position, arms hanging forward)
+    { // START
       head: { cx: 50, cy: 10, r: 7 },
       lines: [
-        [[50, 17], [50, 52]],                              // spine (upright)
-        [[50, 24], [60, 36], [66, 50], [64, 60]],          // near arm: shoulder→forward sweep→front-hip
-        [[50, 24], [58, 34], [62, 48], [60, 58]],          // far arm (slightly inward, same arc)
-        [[50, 52], [44, 70], [42, 90]],
-        [[50, 52], [56, 70], [58, 90]],
+        [[50,17],[50,52]],
+        [[50,22],[40,40],[35,60]],
+        [[50,22],[60,40],[65,60]],
+        [[50,52],[43,70]],
+        [[50,52],[57,70]],
+        [[43,70],[40,90]],
+        [[57,70],[60,90]],
       ],
     },
-    { // MID — arms STRAIGHT OVERHEAD (12 o'clock); spine stays perfectly upright
+    { // MID
       head: { cx: 50, cy: 10, r: 7 },
       lines: [
-        [[50, 17], [50, 52]],
-        [[50, 22], [52, 10], [54, 2]],                     // near arm: straight up, slight spread
-        [[50, 22], [48, 10], [46, 2]],                     // far arm: straight up
-        [[50, 52], [44, 70], [42, 90]],
-        [[50, 52], [56, 70], [58, 90]],
+        [[50,17],[50,52]],
+        [[50,22],[38,38],[30,58]],
+        [[50,22],[62,38],[70,58]],
+        [[50,52],[43,70]],
+        [[50,52],[57,70]],
+        [[43,70],[40,90]],
+        [[57,70],[60,90]],
       ],
-      muscleGlow: { cx: 50, cy: 20, rx: 22, ry: 9 },
     },
-    { // END — hands at hip level BEHIND BACK (6 o'clock rear; full 180° arc complete)
+    { // END
       head: { cx: 50, cy: 10, r: 7 },
       lines: [
-        [[50, 17], [50, 52]],
-        [[50, 24], [40, 36], [34, 50], [32, 60]],          // near arm: behind-down arc
-        [[50, 24], [42, 34], [36, 48], [34, 58]],          // far arm: behind-down
-        [[50, 52], [44, 70], [42, 90]],
-        [[50, 52], [56, 70], [58, 90]],
+        [[50,17],[50,52]],
+        [[50,22],[40,40],[35,60]],
+        [[50,22],[60,40],[65,60]],
+        [[50,52],[43,70]],
+        [[50,52],[57,70]],
+        [[43,70],[40,90]],
+        [[57,70],[60,90]],
       ],
     },
   ],
@@ -2338,4 +2343,8 @@ export function getExerciseIntensity(exerciseName: string): ExerciseIntensity {
   if (STRENUOUS_SET.has(exerciseName)) return "strenuous";
   if (RELAXED_SET.has(exerciseName))   return "relaxed";
   return "neutral";
+}
+
+export function getMobilityExerciseNames(): string[] {
+  return Object.keys(MOBILITY_POSE_LIBRARY);
 }

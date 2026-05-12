@@ -12,6 +12,7 @@ import storageRouter from "./storage";
 import ttsRouter from "./tts";
 import mobilityRouter from "./mobility";
 import calibrationRouter from "./calibration";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(repsRouter);
 router.use(progressRouter);
 router.use(mobilityRouter);
 router.use(calibrationRouter);
+router.use(adminRouter);
 
 export default router;
