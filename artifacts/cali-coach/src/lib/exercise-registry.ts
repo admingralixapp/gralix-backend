@@ -2602,3 +2602,55 @@ export function getExerciseConfig(name: string): ExerciseConfig | null {
   );
   return key ? EXERCISE_REGISTRY[key] : null;
 }
+
+// ── Visibility Guard — required landmark sets by movement category ─────────
+// All indices follow the MediaPipe 33-keypoint model.
+
+const PUSH_REQUIRED_LM = [
+  LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER,
+  LM.LEFT_ELBOW,    LM.RIGHT_ELBOW,
+  LM.LEFT_WRIST,    LM.RIGHT_WRIST,
+  LM.LEFT_HIP,      LM.RIGHT_HIP,
+] as const;
+
+const LEG_REQUIRED_LM = [
+  LM.LEFT_HIP,   LM.RIGHT_HIP,
+  LM.LEFT_KNEE,  LM.RIGHT_KNEE,
+  LM.LEFT_ANKLE, LM.RIGHT_ANKLE,
+] as const;
+
+const CORE_REQUIRED_LM = [
+  LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER,
+  LM.LEFT_HIP,      LM.RIGHT_HIP,
+] as const;
+
+/**
+ * Returns the MediaPipe landmark indices that must all meet the visibility
+ * threshold (default 0.65) before rep counting and Ghost Sync activate.
+ * Used by the Visibility Guard in the workout page.
+ */
+export function getRequiredLandmarks(exerciseName: string): readonly number[] {
+  const n = exerciseName.toLowerCase();
+
+  if (
+    n.includes("squat")   || n.includes("lunge")   || n.includes("pistol") ||
+    n.includes("knee")    || n.includes("jump")     || n.includes("calf")   ||
+    n.includes("nordic")  || n.includes("ankle")    || n.includes("glute")  ||
+    n.includes("leg raise")
+  ) {
+    return LEG_REQUIRED_LM;
+  }
+
+  if (
+    n.includes("push")      || n.includes("dip")       || n.includes("handstand") ||
+    n.includes("planche")   || n.includes("press")     || n.includes("tricep")    ||
+    n.includes("burpee")    || n.includes("pull")       || n.includes("chin")      ||
+    n.includes("row")       || n.includes("curl")       || n.includes("bicep")     ||
+    n.includes("lever")     || n.includes("hang")       || n.includes("muscle up") ||
+    n.includes("muscle-up")
+  ) {
+    return PUSH_REQUIRED_LM;
+  }
+
+  return CORE_REQUIRED_LM;
+}

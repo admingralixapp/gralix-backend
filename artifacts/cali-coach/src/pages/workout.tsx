@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMyProfile } from "@/lib/social";
-import { getExerciseConfig, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
+import { getExerciseConfig, getRequiredLandmarks, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
 import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile, getAudioContext, CUE_PRIORITY } from "@/lib/voice-service";
 import { getWorkoutPhrase } from "@/lib/cue-translations";
 import { useTranslation } from "react-i18next";
@@ -574,6 +574,8 @@ export function Workout() {
   const [isInActiveZone, setIsInActiveZone] = useState(false);
   const [formScore, setFormScore] = useState(100);
   const [syncPct, setSyncPct] = useState(100);
+  /** true while all required landmarks for the current exercise are visible */
+  const [bodyVisible, setBodyVisible] = useState(true);
   const [isModelLoading, setIsModelLoading] = useState(false);
   const [isSavingTest, setIsSavingTest] = useState(false);
   const [isManualLog, setIsManualLog] = useState(false);
@@ -637,6 +639,12 @@ export function Workout() {
   const requestRef         = useRef<number>(0);
   const lastVideoTimeRef   = useRef<number>(-1);
   const workoutStartMsRef  = useRef<number>(0);
+  /** Ref mirror of bodyVisible for use in worker callbacks (avoids stale closure). */
+  const bodyVisibleRef         = useRef(true);
+  /** Consecutive frames where ≥1 required landmark is below the visibility threshold. */
+  const lowVisFramesRef        = useRef(0);
+  /** Timestamp of the last "step back" voice cue so it doesn't fire too often. */
+  const lastStepBackCueMsRef   = useRef(0);
 
   const stateRef = useRef({
     phase:              "up" as Phase,
@@ -713,7 +721,7 @@ export function Workout() {
 
   // ── "Stay in frame" cue cooldown ─────────────────────────────────────────
   /** Date.now() of the last "stay in frame" voice cue — 8 s cooldown. */
-  const lastInFrameCueMsRef = useRef(0);
+  const lastInFrameCueMsRef = useRef(0); // kept for backwards compat — superseded by lastStepBackCueMsRef
 
   // ── Smoothing + detection-rate control ───────────────────────────────────
   const smootherRef       = useRef(new PoseSmoother());
@@ -1066,7 +1074,7 @@ export function Workout() {
     }
 
     if (output.isStatic) {
-      const holdNow = output.isHoldActive === true && synced;
+      const holdNow = output.isHoldActive === true && synced && bodyVisibleRef.current;
 
       if (holdNow && stateRef.current.lastHoldTickMs > 0) {
         const delta   = (now - stateRef.current.lastHoldTickMs) / 1000;
@@ -1101,7 +1109,7 @@ export function Workout() {
     } else {
       const { repCounted, repQuality, audioCue } = output;
 
-      if (repCounted && synced) {
+      if (repCounted && synced && bodyVisibleRef.current) {
         const newRepCount = stateRef.current.repCount + 1;
         stateRef.current.repCount  = newRepCount;
         setReps(newRepCount);
@@ -1320,29 +1328,38 @@ export function Workout() {
       if (results.landmarks?.length > 0) {
         const raw    = results.landmarks[0];
 
-        // ── Visibility / "stay in frame" coaching ────────────────────────
-        // Key landmarks: shoulders (11,12), elbows (13,14), wrists (15,16),
-        // hips (23,24).  If ≥4 of these drop below 0.5 visibility the user
-        // is likely out of frame or in poor lighting.  One gentle cue fires
-        // at most every 8 seconds so it never drowns out form coaching.
-        if (stateRef.current.sessionId !== 0) {
-          const KEY_LM_INDICES = [11, 12, 13, 14, 15, 16, 23, 24];
-          const lowVisCount = KEY_LM_INDICES.filter(
-            idx => (raw[idx]?.visibility ?? 1) < 0.5,
-          ).length;
-          const nowMs = Date.now();
-          if (lowVisCount >= 4 && nowMs - lastInFrameCueMsRef.current > 8000) {
-            lastInFrameCueMsRef.current = nowMs;
-            const inFrameCues = [
-              getWorkoutPhrase("Try to stay in frame.", i18n.language),
-              getWorkoutPhrase("Step back so your full body is visible.", i18n.language),
-              getWorkoutPhrase("Check your lighting — I'm losing track.", i18n.language),
-            ];
-            voiceSpeak(
-              inFrameCues[Math.floor(Math.random() * inFrameCues.length)]!,
-              "neutral",
-              CUE_PRIORITY.PHASE,
-            );
+        // ── Visibility Guard ──────────────────────────────────────────────
+        // Check that every landmark required for the current exercise is
+        // visible above the 0.65 threshold.  Uses 4-frame temporal smoothing
+        // so a single bad detection doesn't falsely freeze the counter.
+        {
+          const exerciseNameNow = exercises?.find(e => e.id.toString() === selectedExerciseId)?.name ?? "";
+          const requiredLMs     = getRequiredLandmarks(exerciseNameNow);
+          const anyLow          = requiredLMs.some(idx => (raw[idx]?.visibility ?? 1) < 0.65);
+
+          if (anyLow) {
+            lowVisFramesRef.current = Math.min(lowVisFramesRef.current + 1, 8);
+          } else {
+            lowVisFramesRef.current = Math.max(lowVisFramesRef.current - 1, 0);
+          }
+
+          const nowVisible = lowVisFramesRef.current < 4;
+          if (nowVisible !== bodyVisibleRef.current) {
+            bodyVisibleRef.current = nowVisible;
+            setBodyVisible(nowVisible);
+          }
+
+          // Fire a step-back cue at most once every 8 s when body leaves frame
+          if (!nowVisible && stateRef.current.sessionId !== 0) {
+            const nowMs = Date.now();
+            if (nowMs - lastStepBackCueMsRef.current > 8000) {
+              lastStepBackCueMsRef.current = nowMs;
+              voiceSpeak(
+                getWorkoutPhrase("Step back so your full body is visible.", i18n.language),
+                "neutral",
+                CUE_PRIORITY.PHASE,
+              );
+            }
           }
         }
 
@@ -1386,6 +1403,12 @@ export function Workout() {
         if (ghostConfig) {
           const phaseConfig = getPhaseConfig(ghostConfig, currentPhase);
           currentSyncPct    = calcSyncPct(smoothed, phasedGhost, phaseConfig.keyLandmarks);
+        }
+
+        // Visibility Guard interlock: freeze Ghost Sync at 0% when body is not
+        // fully in frame so 'Locked In' never activates.
+        if (!bodyVisibleRef.current) {
+          currentSyncPct = 0;
         }
 
         // Rotate buffers: prev ← curr ← new
@@ -2512,6 +2535,34 @@ export function Workout() {
             className={`absolute inset-0 w-full h-full object-cover pointer-events-none${mirrorVideo ? " -scale-x-100" : ""}`}
           />
 
+          {/* Visibility Guard — "Step Back" warning overlay */}
+          {isWorkoutActive && !bodyVisible && (
+            <div className="absolute inset-x-0 top-0 z-30 flex justify-center pt-4 pointer-events-none select-none">
+              <div
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+                style={{
+                  background: "rgba(239,68,68,0.85)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  backdropFilter: "blur(6px)",
+                  boxShadow: "0 0 18px 4px rgba(239,68,68,0.5)",
+                }}
+              >
+                <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Step Back — Body Not Fully Visible
+              </div>
+            </div>
+          )}
+
+          {/* Border glow override when body is not visible */}
+          {isWorkoutActive && !bodyVisible && (
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ boxShadow: "inset 0 0 0 5px rgba(239,68,68,0.7)" }}
+            />
+          )}
+
           {/* Camera-initializing spinner */}
           {isCameraInitializing && (
             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none select-none">
@@ -2525,8 +2576,8 @@ export function Workout() {
             </div>
           )}
 
-          {/* Border glow */}
-          {isWorkoutActive && (
+          {/* Border glow — suppressed when Visibility Guard is active (red glow takes over) */}
+          {isWorkoutActive && bodyVisible && (
             <div
               className="absolute inset-0 pointer-events-none transition-all duration-300"
               style={{
