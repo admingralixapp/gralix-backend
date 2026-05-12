@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, CheckCircle2, Flame, Pause, Play, SkipForward, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Flame, Pause, Pencil, Play, SkipForward, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
@@ -22,8 +22,12 @@ import {
 import {
   useMobilityStatus,
   useCompleteMobility,
+  useUpdateMobilitySettings,
   useNotificationScheduler,
 } from "@/lib/use-mobility";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Questionnaire } from "@/components/mobility-questionnaire";
 
 // ─── Circular Countdown Timer ────────────────────────────────────────────────
 
@@ -975,29 +979,69 @@ function readCachedPrefs(): CachedPrefs | null {
   try { const r = localStorage.getItem(LS_PREFS_KEY); return r ? JSON.parse(r) as CachedPrefs : null; }
   catch { return null; }
 }
+function writeLocalPrefs(p: CachedPrefs): void {
+  try { localStorage.setItem(LS_PREFS_KEY, JSON.stringify(p)); } catch { /* storage full */ }
+}
 
 export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () => void; autoStart?: boolean } = {}) {
   const [, setLocation] = useLocation();
-  const { data: status } = useMobilityStatus();
+  const { data: status, isLoading: statusLoading } = useMobilityStatus();
   const completeMobility = useCompleteMobility();
+  const updateSettings   = useUpdateMobilitySettings();
+  const { toast }        = useToast();
 
   useNotificationScheduler(status);
 
-  const cached = readCachedPrefs();
-  const goal = ((status?.settings.mobilityGoal ?? cached?.mobilityGoal ?? "general")) as MobilityGoal;
-  const goalLabel = GOAL_LABELS[goal] ?? goal;
+  // ── Optimistic local preferences ─────────────────────────────────────────
+  // Initialised instantly from localStorage; overwritten once server data loads.
+  const [localPrefs, setLocalPrefs] = useState<CachedPrefs>(() => {
+    const c = readCachedPrefs();
+    return c ?? { mobilityGoal: "general", stiffnessAreas: "", dailyTimeMinutes: 10 };
+  });
 
-  const rawAreas = status?.settings.stiffnessAreas ?? cached?.stiffnessAreas ?? "";
-  const areasArray = rawAreas ? (rawAreas.split(",").filter(Boolean) as StiffnessArea[]) : [];
-  const dailyTimeMinutes = status?.settings.dailyTimeMinutes ?? cached?.dailyTimeMinutes ?? 10;
+  // Sync server data into localPrefs (server is authoritative)
+  useEffect(() => {
+    if (!status?.settings) return;
+    const synced: CachedPrefs = {
+      mobilityGoal:     status.settings.mobilityGoal     ?? "general",
+      stiffnessAreas:   status.settings.stiffnessAreas   ?? "",
+      dailyTimeMinutes: status.settings.dailyTimeMinutes  ?? 10,
+    };
+    setLocalPrefs(synced);
+    writeLocalPrefs(synced);
+  }, [
+    status?.settings.mobilityGoal,
+    status?.settings.stiffnessAreas,
+    status?.settings.dailyTimeMinutes,
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const goal             = localPrefs.mobilityGoal as MobilityGoal;
+  const goalLabel        = GOAL_LABELS[goal] ?? goal;
+  const rawAreas         = localPrefs.stiffnessAreas;
+  const areasArray       = rawAreas ? (rawAreas.split(",").filter(Boolean) as StiffnessArea[]) : [];
+  const dailyTimeMinutes = localPrefs.dailyTimeMinutes;
 
   const routine = getTasksForPreferences(goal, areasArray, dailyTimeMinutes);
 
-  const [pageState, setPageState] = useState<PageState>(autoStart ? "active" : "ready");
-  const [stretchIndex, setStretchIndex] = useState(0);
-  const [secondsLeft, setSecondsLeft] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [finalStreak, setFinalStreak] = useState<number | null>(null);
+  const [pageState,        setPageState]        = useState<PageState>(autoStart ? "active" : "ready");
+  const [stretchIndex,     setStretchIndex]     = useState(0);
+  const [secondsLeft,      setSecondsLeft]      = useState(0);
+  const [paused,           setPaused]           = useState(false);
+  const [finalStreak,      setFinalStreak]      = useState<number | null>(null);
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false);
+
+  function handleSavePreferences(newGoal: string, newAreas: string[], newTime: number) {
+    const newPrefs: CachedPrefs = {
+      mobilityGoal:     newGoal,
+      stiffnessAreas:   newAreas.join(","),
+      dailyTimeMinutes: newTime,
+    };
+    setLocalPrefs(newPrefs);
+    writeLocalPrefs(newPrefs);
+    setShowQuestionnaire(false);
+    toast({ title: "Goals Updated!", description: "Your routine has been personalised." });
+    updateSettings.mutate(newPrefs);
+  }
 
   const currentStretch: Stretch | undefined = routine[stretchIndex];
 
@@ -1077,74 +1121,134 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
   // ── READY STATE ──────────────────────────────────────────────────────────
   if (pageState === "ready") {
     return (
-      <div className="p-6 max-w-lg mx-auto space-y-6">
-        <div className="flex items-center gap-3">
-          {onDismiss ? (
-            <Button variant="ghost" size="icon" onClick={onDismiss} className="shrink-0">
-              <X className="w-5 h-5" />
-            </Button>
-          ) : (
-            <Button variant="ghost" size="icon" asChild className="shrink-0">
-              <Link href="/">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-            </Button>
-          )}
-          <div>
-            <h1 className="text-2xl font-bold">Daily Mobility</h1>
-            <p className="text-sm text-muted-foreground">Goal: {goalLabel}</p>
+      <>
+        <div className="p-5 max-w-lg mx-auto space-y-5 pb-8">
+
+          {/* Page header */}
+          <div className="flex items-start justify-between pt-1">
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight">Daily Mobility</h1>
+              <p className="text-sm text-muted-foreground font-light opacity-80 mt-0.5">
+                Your personalised daily routine
+              </p>
+            </div>
+            {(status?.currentStreak ?? 0) > 0 && (
+              <div className="flex items-center gap-1.5 bg-orange-500/10 text-orange-400 rounded-full px-3 py-1 text-sm font-semibold shrink-0">
+                <Flame className="w-4 h-4" />
+                {status?.currentStreak} day streak
+              </div>
+            )}
           </div>
-          {(status?.currentStreak ?? 0) > 0 && (
-            <div className="ml-auto flex items-center gap-1.5 bg-orange-500/10 text-orange-400 rounded-full px-3 py-1 text-sm font-semibold">
-              <Flame className="w-4 h-4" />
-              {status?.currentStreak} day streak
+
+          {/* ── Current Goal card — always visible on load ── */}
+          {statusLoading ? (
+            <div className="glass-card p-4 space-y-3">
+              <Skeleton className="h-3 w-20 rounded-full" />
+              <Skeleton className="h-6 w-40 rounded-lg" />
+              <div className="border-t border-border/50 pt-3 flex gap-3">
+                <Skeleton className="h-3 w-24 rounded-full" />
+                <Skeleton className="h-3 w-32 rounded-full" />
+              </div>
+            </div>
+          ) : (
+            <div className="glass-card p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">
+                    Current Goal
+                  </div>
+                  <div className="font-extrabold text-lg leading-tight">{goalLabel}</div>
+                  {areasArray.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {areasArray.map(a => (
+                        <span
+                          key={a}
+                          className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
+                        >
+                          {a}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowQuestionnaire(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-colors shrink-0"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  Update Goals
+                </button>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground border-t border-border/50 pt-3">
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  {dailyTimeMinutes} min per day
+                </span>
+                <span>·</span>
+                <span>{routine.length} exercises · ~{routineDurationMinutes(routine)} min</span>
+              </div>
             </div>
           )}
-        </div>
 
-        {status?.completedToday && (
-          <div className="flex items-center gap-2 p-4 rounded-xl bg-primary/10 border border-primary/30 text-primary">
-            <CheckCircle2 className="w-5 h-5 shrink-0" />
-            <span className="text-sm font-medium">
-              You've already completed today's session — well done!
-            </span>
-          </div>
-        )}
+          {/* Completed today banner */}
+          {status?.completedToday && (
+            <div className="flex items-center gap-2 p-4 rounded-xl bg-primary/10 border border-primary/30 text-primary">
+              <CheckCircle2 className="w-5 h-5 shrink-0" />
+              <span className="text-sm font-medium">
+                You've already completed today's session — well done!
+              </span>
+            </div>
+          )}
 
-        <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>{routine.length} stretches</span>
-            <span>~{routineDurationMinutes(routine)} min total</span>
-          </div>
+          {/* Stretch list + CTA */}
+          <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>{routine.length} stretches</span>
+              <span>~{routineDurationMinutes(routine)} min total</span>
+            </div>
 
-          <div className="space-y-3">
-            {routine.map((stretch, i) => (
-              <div
-                key={stretch.id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50"
-              >
-                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
-                  {i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm truncate">{stretch.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {stretch.targetMuscles.slice(0, 2).join(" · ")}
+            <div className="space-y-3">
+              {routine.map((stretch, i) => (
+                <div
+                  key={stretch.id}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50"
+                >
+                  <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{stretch.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {stretch.targetMuscles.slice(0, 2).join(" · ")}
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted-foreground font-mono shrink-0">
+                    {stretch.durationSeconds}s
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground font-mono shrink-0">
-                  {stretch.durationSeconds}s
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          <Button onClick={startSession} className="w-full font-bold" size="lg">
-            <Play className="w-5 h-5 mr-2" />
-            {status?.completedToday ? "Repeat Session" : "Begin Session"}
-          </Button>
+            <Button onClick={startSession} className="w-full font-bold" size="lg">
+              <Play className="w-5 h-5 mr-2" />
+              {status?.completedToday ? "Repeat Session" : "Begin Session"}
+            </Button>
+          </div>
         </div>
-      </div>
+
+        {/* Questionnaire modal */}
+        <AnimatePresence>
+          {showQuestionnaire && (
+            <Questionnaire
+              initialGoal={goal}
+              initialAreas={areasArray}
+              initialTime={dailyTimeMinutes}
+              onSave={handleSavePreferences}
+              onClose={() => setShowQuestionnaire(false)}
+            />
+          )}
+        </AnimatePresence>
+      </>
     );
   }
 
