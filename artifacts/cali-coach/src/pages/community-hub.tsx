@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trophy, Users, UserPlus } from "lucide-react";
+import { Trophy, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Leaderboard } from "./leaderboard";
@@ -44,19 +44,7 @@ export function CommunityHub() {
           </button>
         </div>
 
-        {/* Add Friend button — always in top-right, switches to friends tab */}
-        <button
-          onClick={() => setTab("friends")}
-          className="mr-3 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0"
-          style={{
-            background: "rgba(34,197,94,0.12)",
-            border: "1px solid rgba(34,197,94,0.3)",
-            color: "#22c55e",
-          }}
-        >
-          <UserPlus className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{t("friends.addFriend", "Add Friend")}</span>
-        </button>
+
       </div>
 
       <div className="flex-1">
