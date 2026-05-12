@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearch } from "wouter";
 import { Activity, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
@@ -8,8 +9,10 @@ import { MobilityPage } from "./mobility";
 type Tab = "workout" | "mobility";
 
 export function TrainingHub() {
-  const { t } = useTranslation();
-  const [tab, setTab] = useState<Tab>("workout");
+  const { t }  = useTranslation();
+  const search = useSearch();
+  const initialTab: Tab = new URLSearchParams(search).get("tab") === "daily" ? "mobility" : "workout";
+  const [tab, setTab] = useState<Tab>(initialTab);
 
   return (
     <div className="flex flex-col min-h-full">

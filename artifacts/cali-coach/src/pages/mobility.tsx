@@ -1114,7 +1114,7 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
     if (onDismiss) {
       onDismiss();
     } else {
-      setLocation("/daily-tasks");
+      setLocation("/training?tab=daily");
     }
   }
 
@@ -1333,7 +1333,7 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
             </Button>
           ) : (
             <Button size="lg" className="w-full font-bold" asChild>
-              <Link href="/daily-tasks">Back to Daily Tasks</Link>
+              <Link href="/training?tab=daily">Back to Daily</Link>
             </Button>
           )}
           <Button size="lg" variant="outline" className="w-full" onClick={startSession}>

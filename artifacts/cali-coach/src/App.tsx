@@ -37,7 +37,6 @@ import { TermsPage } from "@/pages/terms";
 import { PrivacyPage } from "@/pages/privacy";
 import { MobilityPage } from "@/pages/mobility";
 import { AnimLabPage } from "@/pages/anim-lab";
-import { DailyTasksPage } from "@/pages/daily-tasks";
 import { BodyCalibration } from "@/pages/body-calibration";
 import { TrainingHub } from "@/pages/training-hub";
 import { MasteryHub } from "@/pages/mastery-hub";
@@ -301,7 +300,6 @@ function AppRouter() {
                     <Route path="/shop" component={ShopPage} />
                     <Route path="/calibration" component={BodyCalibration} />
                     <Route path="/mobility">{() => <MobilityPage />}</Route>
-                    <Route path="/daily-tasks" component={DailyTasksPage} />
                     <Route path="/terms" component={TermsPage} />
                     <Route path="/privacy" component={PrivacyPage} />
                     <Route component={NotFound} />
