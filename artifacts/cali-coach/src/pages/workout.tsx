@@ -42,6 +42,7 @@ import {
 import { evaluateSkillTree, ALL_SKILL_NODES, type EvaluatedSkill, type SessionSummary } from "@/lib/skill-tree";
 import { SessionResults, type SessionResultsProps } from "@/components/session-results";
 import { PovReview }                                from "@/components/pov-review";
+import { AnalyzingOverlay }                         from "@/components/analyzing-overlay";
 import { RepRecorder, type BestRepData, type RepReviewPayload } from "@/lib/rep-recorder";
 import {
   getGhostConfig,
@@ -583,6 +584,15 @@ export function Workout() {
   const [manualRpe, setManualRpe] = useState<number | null>(null);
   const [isSavingManual, setIsSavingManual] = useState(false);
   const [isEnding,       setIsEnding]       = useState(false);
+
+  // ── Analyzing overlay ──────────────────────────────────────────────────────
+  const [analyzingVisible,  setAnalyzingVisible]  = useState(false);
+  const [analyzingApiDone,  setAnalyzingApiDone]  = useState(false);
+  const [pendingResult, setPendingResult] = useState<
+    | { type: "session"; results: Omit<SessionResultsProps, "onClose"> }
+    | { type: "pov"; payload: RepReviewPayload; results: Omit<SessionResultsProps, "onClose"> }
+    | null
+  >(null);
 
   // ── Multi-set tracking ─────────────────────────────────────────────────────
   const [totalSets,  setTotalSets]  = useState(3);
@@ -1645,6 +1655,8 @@ export function Workout() {
     if (isEndingRef.current) return;
     isEndingRef.current = true;
     setIsEnding(true);
+    setAnalyzingVisible(true);
+    setAnalyzingApiDone(false);
 
     // Stop the rest timer immediately so it can't fire during the async save.
     if (restIntervalRef.current) {
@@ -1767,18 +1779,22 @@ export function Workout() {
       if (recorder && !isStatic && finalReps > 0) {
         const reviewPayload = await recorder.stopAsync(exerciseName);
         if (reviewPayload) {
-          setPovReview({ payload: reviewPayload, results: resultsProps });
-          return; // Session results shown after the user dismisses POV review
+          setPendingResult({ type: "pov", payload: reviewPayload, results: resultsProps });
+        } else {
+          recorder?.destroy();
+          setPendingResult({ type: "session", results: resultsProps });
         }
       } else {
         recorder?.destroy();
+        setPendingResult({ type: "session", results: resultsProps });
       }
 
-      // No recording available → go straight to session results
-      setSessionResults(resultsProps);
+      // Signal the analyzing overlay that the API work is complete
+      setAnalyzingApiDone(true);
     } catch (error) {
       console.error("Database Save Failed:", error);
       recorder?.destroy();
+      setAnalyzingVisible(false);
       toast({ title: "Save error", description: "Failed to save session. Please try again.", variant: "destructive" });
     } finally {
       isEndingRef.current = false;
@@ -1999,6 +2015,8 @@ export function Workout() {
       return;
     }
     setIsSavingManual(true);
+    setAnalyzingVisible(true);
+    setAnalyzingApiDone(false);
     try {
       console.log("Attempting to save workout...", { exerciseId: selectedExerciseId, type: "manual", reps: manualReps });
       const session = await createSession.mutateAsync({
@@ -2040,17 +2058,22 @@ export function Workout() {
       setIsManualLog(false);
       setManualReps(10);
       setManualRpe(null);
-      setSessionResults({
-        exerciseName,
-        totalReps:    manualReps,
-        avgFormScore: null,
-        sessionId:    session.id,
-        bestSyncPct:  undefined,
-        prevEvaluated,
-        nextEvaluated,
+      setPendingResult({
+        type: "session",
+        results: {
+          exerciseName,
+          totalReps:    manualReps,
+          avgFormScore: null,
+          sessionId:    session.id,
+          bestSyncPct:  undefined,
+          prevEvaluated,
+          nextEvaluated,
+        },
       });
+      setAnalyzingApiDone(true);
     } catch (error) {
       console.error("Database Save Failed:", error);
+      setAnalyzingVisible(false);
       toast({ title: "Error", description: "Could not save workout.", variant: "destructive" });
     } finally {
       setIsSavingManual(false);
@@ -2064,6 +2087,8 @@ export function Workout() {
       return;
     }
     setIsSavingTest(true);
+    setAnalyzingVisible(true);
+    setAnalyzingApiDone(false);
     try {
       console.log("Attempting to save workout...", { exerciseId: selectedExerciseId, type: "test" });
       const session = await createSession.mutateAsync({
@@ -2121,22 +2146,39 @@ export function Workout() {
       };
       const nextEvaluated = evaluateSkillTree([...history, newSession]);
 
-      setSessionResults({
-        exerciseName,
-        totalReps:    repCount,
-        avgFormScore: finalFormScore,
-        sessionId:    session.id,
-        bestSyncPct:  undefined,
-        prevEvaluated,
-        nextEvaluated,
+      setPendingResult({
+        type: "session",
+        results: {
+          exerciseName,
+          totalReps:    repCount,
+          avgFormScore: finalFormScore,
+          sessionId:    session.id,
+          bestSyncPct:  undefined,
+          prevEvaluated,
+          nextEvaluated,
+        },
       });
+      setAnalyzingApiDone(true);
     } catch (error) {
       console.error("Database Save Failed:", error);
+      setAnalyzingVisible(false);
       toast({ title: "Error", description: "Could not save test workout.", variant: "destructive" });
     } finally {
       setIsSavingTest(false);
     }
   };
+
+  // ── Analyzing overlay completion — hand off to the correct results screen ──
+  const handleAnalyzingComplete = useCallback(() => {
+    setAnalyzingVisible(false);
+    setAnalyzingApiDone(false);
+    if (pendingResult?.type === "pov") {
+      setPovReview({ payload: pendingResult.payload, results: pendingResult.results });
+    } else if (pendingResult?.type === "session") {
+      setSessionResults(pendingResult.results);
+    }
+    setPendingResult(null);
+  }, [pendingResult]);
 
   // ── Keep handler refs current (runs every render — no hooks violation) ────────
   handleEndSetRef.current       = handleEndSet;
@@ -2280,6 +2322,13 @@ export function Workout() {
 
   return (
     <div className="bg-black text-white min-h-full">
+
+      {/* ── Analyzing Performance overlay ───────────────────────────────────── */}
+      <AnalyzingOverlay
+        visible={analyzingVisible}
+        apiDone={analyzingApiDone}
+        onComplete={handleAnalyzingComplete}
+      />
 
       {/* ── POV Review — fixed overlay, covers nav bar ──────────────────────── */}
       {povReview && (
@@ -2772,7 +2821,7 @@ export function Workout() {
                   disabled={isEnding}
                   className="text-xs text-white/25 hover:text-white/50 transition-colors disabled:opacity-40 disabled:pointer-events-none"
                 >
-                  {isEnding ? t("workout.saving") : t("workout.endWorkout")}
+                  {t("workout.endWorkout")}
                 </button>
               </div>
             </div>
@@ -2799,7 +2848,7 @@ export function Workout() {
                   onClick={handleStop}
                   disabled={isEnding}
                 >
-                  {isEnding ? t("workout.saving") : t("workout.endWorkoutEarly")}
+                  {t("workout.endWorkoutEarly")}
                 </button>
               )}
             </div>
