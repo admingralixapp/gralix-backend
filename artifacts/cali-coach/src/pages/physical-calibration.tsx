@@ -210,15 +210,14 @@ export function PhysicalCalibration() {
   async function handleSave() {
     setSaving(true);
     try {
-      const updatedProfile = await updatePhysical.mutateAsync({
+      await updatePhysical.mutateAsync({
         heightCm,
         weightKg,
         primaryGoal:   goal ?? "strength",
         targetSkillId: goal === "skill" ? targetSkillId : null,
       });
-      // Store the user's own DB id as the flag value so the tour is user-scoped
-      // and can never leak to a different account on the same device.
-      localStorage.setItem("calicoach_tour_pending", String(updatedProfile.id));
+      // Profile query is invalidated by the mutation's onSuccess — the
+      // OnboardingTour watches hasCompletedOnboarding from the DB directly.
       setLocation("/");
     } finally {
       setSaving(false);
@@ -533,15 +532,6 @@ export function PhysicalCalibration() {
             )}
           </div>
 
-          {/* Skip link */}
-          {step === 0 && (
-            <button
-              onClick={() => setLocation("/")}
-              className="w-full text-center text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors pt-1"
-            >
-              Skip for now — I'll set this up later
-            </button>
-          )}
         </div>
       </div>
     </div>

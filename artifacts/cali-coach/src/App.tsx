@@ -242,11 +242,14 @@ function ClerkQueryClientCacheInvalidator() {
 }
 
 // ---------------------------------------------------------------------------
-// Redirect new users (profile exists but no primaryGoal) to physical calibration
+// Redirect users who haven't completed physical calibration
+// Calibration is considered done only when ALL THREE physical fields are set.
 // ---------------------------------------------------------------------------
 const EXCLUDED_FROM_GUARD = new Set([
   "/physical-calibration",
+  "/calibration",
   "/sign-in", "/sign-up",
+  "/sso-callback",
   "/terms", "/privacy",
 ]);
 
@@ -257,10 +260,12 @@ function PhysicalCalibrationGuard() {
 
   useEffect(() => {
     if (!isLoaded || isLoading || !isSignedIn) return;
-    if (profile === null || profile === undefined) return; // no profile yet
-    if (profile.primaryGoal) return; // already calibrated
+    if (!profile) return; // profile not yet created — ProfileSync will handle it
 
-    // Don't redirect if on excluded paths or physical-calibration itself
+    // Calibration is complete only when ALL three physical fields are present
+    const calibrated = !!(profile.heightCm && profile.weightKg && profile.primaryGoal);
+    if (calibrated) return;
+
     const cleanPath = location.split("?")[0]!;
     if (EXCLUDED_FROM_GUARD.has(cleanPath)) return;
     if (cleanPath.startsWith("/sign-")) return;

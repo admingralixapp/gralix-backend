@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
+import { useUser } from "@clerk/react";
 import {
   X,
   Crown,
@@ -13,8 +14,18 @@ import { useCompleteOnboarding, useMyProfile } from "@/lib/social";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const TOUR_LS_KEY = "calicoach_tour_pending";
 const PAD = 14;
+
+// Pages where the tour must never appear (calibration wizard, auth flows, etc.)
+const TOUR_EXCLUDED_PATHS = [
+  "/physical-calibration",
+  "/calibration",
+  "/sign-in",
+  "/sign-up",
+  "/sso-callback",
+  "/terms",
+  "/privacy",
+];
 
 // ── Tour step definitions ─────────────────────────────────────────────────────
 
@@ -505,20 +516,41 @@ export function OnboardingTour() {
   const [showProModal, setShowProModal] = useState(false);
   const [targetRect,   setTargetRect]   = useState<SpotRect | null>(null);
   const completeOnboarding = useCompleteOnboarding();
+  const { isSignedIn } = useUser();
+  const [location]    = useLocation();
 
-  // Read the current user's DB profile so the trigger check is user-scoped.
-  // The localStorage flag stores the user's numeric DB id as its value, so it
-  // can never accidentally fire for a different account on the same device.
+  // Read the current user's DB profile.
+  // The tour fires whenever the DB flag hasCompletedOnboarding is false AND
+  // physical calibration is already done (the guard handles the calibration
+  // redirect separately). This is reliable across devices and sessions.
   const { data: profile } = useMyProfile();
 
-  // Fire up when the freshly-loaded profile matches the stored tour flag
+  // Trigger: fire the tour when the DB says onboarding isn't complete yet,
+  // but only after physical calibration is done and not on excluded pages.
   useEffect(() => {
-    if (!profile?.id) return;
-    const flagValue = localStorage.getItem(TOUR_LS_KEY);
-    if (flagValue !== String(profile.id)) return;
+    if (!isSignedIn || !profile) return;
+    if (profile.hasCompletedOnboarding) return; // already done — never show again
+
+    // Physical calibration must be complete before showing the tour
+    // (PhysicalCalibrationGuard redirects to /physical-calibration otherwise)
+    if (!profile.heightCm || !profile.weightKg || !profile.primaryGoal) return;
+
+    // Never show on auth / calibration pages
+    const cleanPath = location.split("?")[0]!;
+    if (TOUR_EXCLUDED_PATHS.some((p) => cleanPath.startsWith(p))) return;
+
     const timer = setTimeout(() => setActive(true), 900);
     return () => clearTimeout(timer);
-  }, [profile?.id]);
+  }, [isSignedIn, profile, location]);
+
+  // If the user navigates to a calibration page mid-tour, dismiss the tour
+  useEffect(() => {
+    if (!active) return;
+    const cleanPath = location.split("?")[0]!;
+    if (TOUR_EXCLUDED_PATHS.some((p) => cleanPath.startsWith(p))) {
+      setActive(false);
+    }
+  }, [active, location]);
 
   // Re-measure the spotlight target whenever the active step changes
   useEffect(() => {
@@ -543,7 +575,8 @@ export function OnboardingTour() {
   }, [active, stepIndex]);
 
   const markDone = useCallback(async () => {
-    localStorage.removeItem(TOUR_LS_KEY);
+    // Mark onboarding complete in the DB — the mutation's onSuccess invalidates
+    // the profile query so hasCompletedOnboarding refreshes to true app-wide.
     try { await completeOnboarding.mutateAsync(); } catch { /* best-effort */ }
   }, [completeOnboarding]);
 
