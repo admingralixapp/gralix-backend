@@ -560,9 +560,11 @@ function ProfileContent() {
                   <div className="rounded-lg bg-secondary/30 p-3">
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Primary Goal</div>
                     <div className="text-sm font-semibold">
-                      {myProfile?.primaryGoal
-                        ? GOAL_LABELS[myProfile.primaryGoal] ?? myProfile.primaryGoal
-                        : <span className="text-muted-foreground">—</span>}
+                      {myProfile?.primaryGoal === "skill" && myProfile?.targetSkillId
+                        ? ALL_SKILL_NODES.find(n => n.id === myProfile.targetSkillId)?.title ?? myProfile.targetSkillId
+                        : myProfile?.primaryGoal
+                          ? GOAL_LABELS[myProfile.primaryGoal] ?? myProfile.primaryGoal
+                          : <span className="text-muted-foreground">—</span>}
                     </div>
                   </div>
                   <div className="rounded-lg bg-secondary/30 p-3">
