@@ -4,7 +4,11 @@ import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-
 import { useSaveCalibration } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { getCameraFacing } from "@/lib/workout-preferences";
-import { Activity, CheckCircle2, RefreshCw, ArrowLeft, Ruler } from "lucide-react";
+import { useMyProfile } from "@/lib/social";
+import {
+  Activity, CheckCircle2, RefreshCw, ArrowLeft, Ruler,
+  Smartphone, MoveVertical, PersonStanding,
+} from "lucide-react";
 
 // ── Landmark indices ───────────────────────────────────────────────────────────
 const LM_NOSE  = 0;
@@ -17,7 +21,7 @@ const LM_R_HI  = 24;
 const LM_L_AN  = 27;
 const LM_R_AN  = 28;
 
-const CALIB_VIS       = 0.5;
+const CALIB_VIS        = 0.5;
 const HOLD_DURATION_MS = 3000;
 
 type Landmark = { x: number; y: number; z?: number; visibility?: number };
@@ -68,12 +72,76 @@ function TPoseSilhouette({ detected }: { detected: boolean }) {
   );
 }
 
+// ── Biomechanics computation ───────────────────────────────────────────────────
+
+interface RawCapture {
+  wingspan: number; height: number; shoulderWidth: number;
+  torsoLength: number; legLength: number;
+}
+
+interface Biometrics {
+  wingspanCm:      number;
+  shoulderWidthCm: number;
+  torsoLengthCm:   number;
+  legLengthCm:     number;
+  apeIndex:        number;
+  apeLabel:        string;
+  apeInsight:      string;
+  mechTip:         string;
+}
+
+function computeBiometrics(raw: RawCapture, userHeightCm: number): Biometrics {
+  // Use the user's known height as the master scale.
+  // raw.height is the nose→ankle normalised distance — treat it as 1:1 with
+  // the user's real height so every other measurement scales proportionally.
+  const scale = userHeightCm / raw.height; // cm per normalised unit
+
+  const wingspanCm      = Math.round(raw.wingspan      * scale);
+  const shoulderWidthCm = Math.round(raw.shoulderWidth * scale);
+  const torsoLengthCm   = Math.round(raw.torsoLength   * scale);
+  const legLengthCm     = Math.round(raw.legLength     * scale);
+
+  // Ape Index = wingspan / height
+  const apeIndex = parseFloat((raw.wingspan / raw.height).toFixed(2));
+  const apeLabel = apeIndex > 1.02
+    ? "Positive Ape Index"
+    : apeIndex < 0.98
+      ? "Negative Ape Index"
+      : "Neutral Ape Index";
+  const apeInsight = apeIndex > 1.02
+    ? `${apeIndex} — Your wingspan exceeds your height. Longer reach gives a mechanical advantage for pulling movements (muscle-ups, front lever, pull-ups).`
+    : apeIndex < 0.98
+      ? `${apeIndex} — Your height exceeds your wingspan. Shorter levers reduce rotational torque — a mechanical advantage for pushing skills (planche, handstand push-up).`
+      : `${apeIndex} — Balanced proportions. You have no strong bias toward push or pull mechanics.`;
+
+  // Torso vs leg mechanical advantage tip
+  const torsoRatio = torsoLengthCm / userHeightCm;
+  const mechTip = torsoRatio < 0.30
+    ? "Short torso gives a lower centre of gravity — excellent for planche holds and handstand balance."
+    : torsoRatio > 0.38
+      ? "Longer torso shifts your mass higher — prioritise hollow-body strength and scapular control for planche progressions."
+      : "Balanced torso-to-leg ratio. Your proportions suit both pushing and pulling skill paths.";
+
+  return { wingspanCm, shoulderWidthCm, torsoLengthCm, legLengthCm, apeIndex, apeLabel, apeInsight, mechTip };
+}
+
+// ── Setup tips shown before / during detection ────────────────────────────────
+
+const SETUP_TIPS = [
+  { icon: Smartphone,      text: "Place phone at hip height" },
+  { icon: MoveVertical,    text: "Keep phone perfectly vertical — no tilt" },
+  { icon: PersonStanding,  text: "Stand 2–3 metres back until your whole body is green" },
+];
+
 type CalibPhase = "loading" | "detecting" | "holding" | "done" | "saved";
 
 export function BodyCalibration() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const saveCalibration = useSaveCalibration();
+  const { data: profile } = useMyProfile();
+
+  const userHeightCm = profile?.heightCm ?? null;
 
   const [phase,     setPhase]     = useState<CalibPhase>("loading");
   const [countdown, setCountdown] = useState(3);
@@ -85,10 +153,7 @@ export function BodyCalibration() {
   const frameRef      = useRef<number>(0);
   const holdStartRef  = useRef<number>(0);
   const lastTimeRef   = useRef<number>(-1);
-  const capturedRef   = useRef<{
-    wingspan: number; height: number; shoulderWidth: number;
-    torsoLength: number; legLength: number;
-  } | null>(null);
+  const capturedRef   = useRef<RawCapture | null>(null);
   const streamRef     = useRef<MediaStream | null>(null);
 
   // ── Load MediaPipe ──────────────────────────────────────────────────────────
@@ -164,7 +229,7 @@ export function BodyCalibration() {
         }
 
         if (results.landmarks?.length > 0) {
-          const landmarks = results.landmarks[0];
+          const landmarks = results.landmarks[0]!;
           const du = new DrawingUtils(ctx);
           du.drawLandmarks(landmarks, { radius: 4, color: "#22c55e", lineWidth: 2 });
           du.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS, { color: "#22c55e", lineWidth: 2 });
@@ -180,12 +245,11 @@ export function BodyCalibration() {
             setPhase("holding");
 
             if (elapsed >= HOLD_DURATION_MS) {
-              // ── Capture body proportions ─────────────────────────────────
-              const L_SH = landmarks[LM_L_SH], R_SH = landmarks[LM_R_SH];
-              const L_WR = landmarks[LM_L_WR], R_WR = landmarks[LM_R_WR];
-              const L_HI = landmarks[LM_L_HI], R_HI = landmarks[LM_R_HI];
-              const L_AN = landmarks[LM_L_AN], R_AN = landmarks[LM_R_AN];
-              const NOSE = landmarks[LM_NOSE];
+              const L_SH = landmarks[LM_L_SH]!, R_SH = landmarks[LM_R_SH]!;
+              const L_WR = landmarks[LM_L_WR]!, R_WR = landmarks[LM_R_WR]!;
+              const L_HI = landmarks[LM_L_HI]!, R_HI = landmarks[LM_R_HI]!;
+              const L_AN = landmarks[LM_L_AN]!, R_AN = landmarks[LM_R_AN]!;
+              const NOSE = landmarks[LM_NOSE]!;
 
               const midSH = { x: (L_SH.x + R_SH.x) / 2, y: (L_SH.y + R_SH.y) / 2 };
               const midHI = { x: (L_HI.x + R_HI.x) / 2, y: (L_HI.y + R_HI.y) / 2 };
@@ -255,6 +319,18 @@ export function BodyCalibration() {
 
   const detected = phase === "holding" || phase === "done";
 
+  // Derive real-world biometrics only when we have both the capture and the user's height
+  const bio = (phase === "done" || phase === "saved") && capturedRef.current && userHeightCm
+    ? computeBiometrics(capturedRef.current, userHeightCm)
+    : null;
+
+  // Helpers for unit display
+  function fmt(cm: number) {
+    const ft  = Math.floor(cm / 30.48);
+    const inch = Math.round((cm / 2.54) % 12);
+    return `${cm} cm  ·  ${ft}'${inch}"`;
+  }
+
   return (
     <div className="min-h-full bg-black text-white flex flex-col">
 
@@ -274,7 +350,7 @@ export function BodyCalibration() {
 
       {/* ── Saved confirmation ──────────────────────────────────────────────── */}
       {phase === "saved" ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-8 text-center">
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-5 text-center">
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center"
             style={{ background: "rgba(34,197,94,0.15)", border: "2px solid rgba(34,197,94,0.5)" }}
@@ -282,11 +358,39 @@ export function BodyCalibration() {
             <CheckCircle2 className="w-10 h-10 text-primary" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-primary mb-2">Calibrated!</h2>
-            <p className="text-sm text-white/60 leading-relaxed max-w-xs">
-              Your body proportions have been saved. Workouts will now start immediately — no more T-Pose required.
+            <h2 className="text-2xl font-black text-primary mb-1">Calibrated!</h2>
+            <p className="text-sm text-white/60 leading-relaxed max-w-xs mx-auto">
+              Your biomechanical profile has been saved. Workouts will now start immediately — no more T-Pose required.
             </p>
           </div>
+
+          {/* Show compact bio summary on saved screen */}
+          {bio && (
+            <div
+              className="w-full max-w-sm rounded-2xl p-4 space-y-3 text-left"
+              style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)" }}
+            >
+              <p className="text-xs font-bold uppercase tracking-widest text-primary/80">Your Biomechanical Profile</p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {[
+                  ["Wingspan",      `${bio.wingspanCm} cm`],
+                  ["Shoulder Width",`${bio.shoulderWidthCm} cm`],
+                  ["Torso Length",  `${bio.torsoLengthCm} cm`],
+                  ["Leg Length",    `${bio.legLengthCm} cm`],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex justify-between gap-2 bg-white/5 rounded-lg px-3 py-2">
+                    <span className="text-white/50">{label}</span>
+                    <span className="font-mono text-white/80 font-semibold">{value}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white/5 rounded-lg px-3 py-2 text-xs text-white/70">
+                <span className="text-primary font-bold">{bio.apeLabel}:</span>{" "}
+                {bio.apeInsight}
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col gap-3 w-full max-w-xs">
             <button
               onClick={() => setLocation("/workout")}
@@ -306,7 +410,7 @@ export function BodyCalibration() {
       ) : (
         <>
           {/* ── Camera + overlay ─────────────────────────────────────────── */}
-          <div className="relative flex-1 overflow-hidden bg-zinc-900" style={{ minHeight: 400 }}>
+          <div className="relative flex-1 overflow-hidden bg-zinc-900" style={{ minHeight: 340 }}>
             <video
               ref={videoRef}
               className="absolute inset-0 w-full h-full object-cover -scale-x-100"
@@ -323,19 +427,38 @@ export function BodyCalibration() {
               <TPoseSilhouette detected={detected} />
             )}
 
-            {/* Top instruction banner */}
-            {(phase === "detecting" || phase === "holding") && (
-              <div className="absolute top-0 inset-x-0 flex justify-center pt-5 pointer-events-none">
+            {/* Setup tips — shown during detecting phase */}
+            {phase === "detecting" && (
+              <div className="absolute top-3 inset-x-3 pointer-events-none">
                 <div
-                  className="px-5 py-3 rounded-2xl text-center backdrop-blur-sm"
-                  style={{ background: "rgba(0,0,0,0.70)", border: "1px solid rgba(255,255,255,0.12)" }}
+                  className="rounded-2xl px-4 py-3 space-y-2"
+                  style={{ background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.10)", backdropFilter: "blur(10px)" }}
                 >
-                  <p className="text-sm font-semibold text-white/90">
+                  {SETUP_TIPS.map(({ icon: Icon, text }) => (
+                    <div key={text} className="flex items-center gap-2.5 text-xs text-white/75">
+                      <Icon className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span>{text}</span>
+                    </div>
+                  ))}
+                  <div
+                    className="mt-2 pt-2 text-center text-xs font-semibold text-white/90"
+                    style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
+                  >
                     Stand in a T-Pose — arms fully outstretched
-                  </p>
-                  <p className="text-xs text-white/50 mt-0.5">
-                    Keep your full body visible including feet
-                  </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Holding banner */}
+            {phase === "holding" && (
+              <div className="absolute top-3 inset-x-3 pointer-events-none flex justify-center">
+                <div
+                  className="px-5 py-2.5 rounded-2xl text-sm font-semibold text-center"
+                  style={{ background: "rgba(0,0,0,0.70)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(10px)" }}
+                >
+                  <p className="text-white/90 font-bold">T-Pose detected — hold still</p>
+                  <p className="text-white/50 text-xs mt-0.5">Keep your full body visible including feet</p>
                 </div>
               </div>
             )}
@@ -375,39 +498,87 @@ export function BodyCalibration() {
             </div>
           </div>
 
-          {/* ── Done panel ───────────────────────────────────────────────── */}
+          {/* ── Biomechanical Profile panel ───────────────────────────────── */}
           {phase === "done" && capturedRef.current && (
-            <div className="px-5 py-5 space-y-4">
-              <div className="rounded-xl border border-primary/30 bg-primary/8 p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                  <span className="text-sm font-bold text-primary">Proportions Captured</span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-white/60">
-                  <div className="flex justify-between">
-                    <span>Wingspan</span>
-                    <span className="font-mono text-white/80">{(capturedRef.current.wingspan * 100).toFixed(1)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Height</span>
-                    <span className="font-mono text-white/80">{(capturedRef.current.height * 100).toFixed(1)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Shoulder width</span>
-                    <span className="font-mono text-white/80">{(capturedRef.current.shoulderWidth * 100).toFixed(1)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Torso length</span>
-                    <span className="font-mono text-white/80">{(capturedRef.current.torsoLength * 100).toFixed(1)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Leg length</span>
-                    <span className="font-mono text-white/80">{(capturedRef.current.legLength * 100).toFixed(1)}%</span>
-                  </div>
-                </div>
+            <div className="px-4 py-4 space-y-3 overflow-y-auto">
+
+              {/* Heading */}
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-sm font-bold text-primary">Biomechanical Profile</span>
               </div>
 
-              <div className="flex gap-3">
+              {bio ? (
+                <>
+                  {/* Measurements grid */}
+                  <div
+                    className="rounded-xl p-4 space-y-2.5"
+                    style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.18)" }}
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">Measurements</p>
+                    {[
+                      ["Wingspan",      fmt(bio.wingspanCm)],
+                      ["Shoulder Width",`${bio.shoulderWidthCm} cm`],
+                      ["Torso Length",  `${bio.torsoLengthCm} cm`],
+                      ["Leg Length",    `${bio.legLengthCm} cm`],
+                    ].map(([label, value]) => (
+                      <div key={label} className="flex justify-between items-center text-xs">
+                        <span className="text-white/55">{label}</span>
+                        <span className="font-mono text-white/90 font-semibold">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Ape Index card */}
+                  <div
+                    className="rounded-xl p-4 space-y-1.5"
+                    style={{
+                      background: bio.apeIndex >= 1.0
+                        ? "rgba(6,182,212,0.07)"
+                        : "rgba(168,85,247,0.07)",
+                      border: `1px solid ${bio.apeIndex >= 1.0 ? "rgba(6,182,212,0.25)" : "rgba(168,85,247,0.25)"}`,
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Ape Index</p>
+                      <span
+                        className="text-xs font-bold px-2 py-0.5 rounded-full"
+                        style={{
+                          background: bio.apeIndex >= 1.0 ? "rgba(6,182,212,0.15)" : "rgba(168,85,247,0.15)",
+                          color: bio.apeIndex >= 1.0 ? "#22d3ee" : "#c084fc",
+                        }}
+                      >
+                        {bio.apeLabel}
+                      </span>
+                    </div>
+                    <p className="text-xs text-white/65 leading-relaxed">{bio.apeInsight}</p>
+                  </div>
+
+                  {/* Mechanical Advantage tip */}
+                  <div
+                    className="rounded-xl p-4 space-y-1.5"
+                    style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.2)" }}
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400/60">Mechanical Advantage</p>
+                    <p className="text-xs text-white/65 leading-relaxed">{bio.mechTip}</p>
+                  </div>
+                </>
+              ) : (
+                /* Fallback if height not available (shouldn't happen after physical calibration) */
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs text-white/60">
+                  {(["wingspan", "height", "shoulderWidth", "torsoLength", "legLength"] as const).map(key => (
+                    <div key={key} className="flex justify-between">
+                      <span className="capitalize">{key.replace(/([A-Z])/g, " $1")}</span>
+                      <span className="font-mono text-white/80">
+                        {(capturedRef.current![key] * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex gap-3 pt-1">
                 <button
                   onClick={handleRetry}
                   className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-white/15 text-white/70 font-semibold text-sm hover:bg-white/[0.06] transition-colors"
@@ -423,7 +594,7 @@ export function BodyCalibration() {
                   {isSaving ? (
                     <><div className="w-4 h-4 rounded-full border-2 border-black border-t-transparent animate-spin" />Saving…</>
                   ) : (
-                    <><CheckCircle2 className="w-4 h-4" />Save Calibration</>
+                    <><CheckCircle2 className="w-4 h-4" />Save Profile</>
                   )}
                 </button>
               </div>
