@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { isRTL } from "@/i18n/languages";
 import {
   ClerkProvider,
+  AuthenticateWithRedirectCallback,
   SignIn,
   SignUp,
   Show,
@@ -335,6 +336,7 @@ function AppRouter() {
                     <Route path="/" component={HomeRoute} />
                     <Route path="/sign-in/*?" component={SignInPage} />
                     <Route path="/sign-up/*?" component={SignUpPage} />
+                    <Route path="/sso-callback">{() => <AuthenticateWithRedirectCallback />}</Route>
                     {/* ── Hub routes (new consolidated tabs) ─────────── */}
                     <Route path="/training" component={TrainingHub} />
                     <Route path="/mastery" component={MasteryHub} />
