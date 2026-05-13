@@ -25,7 +25,12 @@ import {
   Target,
   Save,
   Search,
+  Info,
+  Microscope,
+  ChevronDown,
+  Zap,
 } from "lucide-react";
+import { getApeInsight, getTorsoLegInsight, getMechanicalEdge } from "@/lib/bio-insights";
 import { useLocation } from "wouter";
 import {
   useFriendProfile,
@@ -163,6 +168,10 @@ function ProfileContent() {
   const [bioTargetSkillId,  setBioTargetSkillId]  = useState<string>("");
   const [skillSearch,       setSkillSearch]       = useState("");
   const updatePhysical = useUpdatePhysicalStats();
+
+  // Bio insight toggle state
+  const [apeInsightOpen,    setApeInsightOpen]    = useState(false);
+  const [torsoInsightOpen,  setTorsoInsightOpen]  = useState(false);
 
   // Post management state
   const [menuPostId,  setMenuPostId]  = useState<number | null>(null);
@@ -330,6 +339,23 @@ function ProfileContent() {
   const legLengthCm = scaleFactor && calData
     ? Math.round(calData.legLength * scaleFactor)
     : null;
+
+  // ── Bio insight computations ────────────────────────────────────────────────
+  const targetNode = myProfile?.targetSkillId
+    ? (ALL_SKILL_NODES.find(n => n.id === myProfile.targetSkillId) ?? null)
+    : null;
+  const apeInsight = apeIndex !== null ? getApeInsight(apeIndex) : null;
+  const torsoLegInsight = (torsoLengthCm !== null && legLengthCm !== null)
+    ? getTorsoLegInsight(torsoLengthCm, legLengthCm)
+    : null;
+  const mechanicalEdge = getMechanicalEdge({
+    heightCm:      myProfile?.heightCm ?? null,
+    weightKg:      myProfile?.weightKg ?? null,
+    apeIndex,
+    torsoLengthCm,
+    legLengthCm,
+    targetNode,
+  });
 
   const GOAL_LABELS: Record<string, string> = {
     mobility: "Mobility & Flexibility",
@@ -542,21 +568,25 @@ function ProfileContent() {
                 <Ruler className="w-4 h-4 text-primary" />
                 Biomechanical
               </h2>
-              <div className="rounded-xl border border-border bg-card p-5">
-                {/* Stats grid */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+
+                {/* ── Stats grid ─────────────────────────────────────── */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Height */}
                   <div className="rounded-lg bg-secondary/30 p-3">
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Height</div>
                     <div className="text-base font-bold">
                       {myProfile?.heightCm ? `${Math.round(myProfile.heightCm)} cm` : <span className="text-muted-foreground text-sm">—</span>}
                     </div>
                   </div>
+                  {/* Weight */}
                   <div className="rounded-lg bg-secondary/30 p-3">
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Weight</div>
                     <div className="text-base font-bold">
                       {myProfile?.weightKg ? `${Math.round(myProfile.weightKg * 10) / 10} kg` : <span className="text-muted-foreground text-sm">—</span>}
                     </div>
                   </div>
+                  {/* Primary Goal */}
                   <div className="rounded-lg bg-secondary/30 p-3">
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Primary Goal</div>
                     <div className="text-sm font-semibold">
@@ -567,51 +597,105 @@ function ProfileContent() {
                           : <span className="text-muted-foreground">—</span>}
                     </div>
                   </div>
+                  {/* Ape Index — with insight toggle */}
                   <div className="rounded-lg bg-secondary/30 p-3">
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Ape Index</div>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Ape Index</div>
+                      {apeInsight && (
+                        <button
+                          type="button"
+                          onClick={() => setApeInsightOpen(v => !v)}
+                          className="flex items-center gap-0.5 text-[9px] font-semibold transition-colors"
+                          style={{ color: apeInsightOpen ? "#22c55e" : "rgba(255,255,255,0.3)" }}
+                        >
+                          <Info className="w-3 h-3" />
+                          <ChevronDown className={`w-3 h-3 transition-transform ${apeInsightOpen ? "rotate-180" : ""}`} />
+                        </button>
+                      )}
+                    </div>
                     <div className="text-base font-bold">
                       {apeIndex !== null
-                        ? <span className={apeIndex > 1 ? "text-primary" : apeIndex < 1 ? "text-amber-400" : ""}>{apeIndex > 0 ? `+${((apeIndex - 1) * 100).toFixed(0)}` : apeIndex}</span>
+                        ? <span className={apeIndex > 1.02 ? "text-primary" : apeIndex < 0.98 ? "text-amber-400" : ""}>
+                            {apeIndex > 1 ? `+${((apeIndex - 1) * 100).toFixed(0)}` : apeIndex < 1 ? `${((apeIndex - 1) * 100).toFixed(0)}` : "0"}
+                          </span>
                         : <span className="text-muted-foreground text-sm">—</span>}
                     </div>
                     {apeIndex !== null && (
                       <div className="text-[10px] text-muted-foreground mt-0.5">
-                        {apeIndex > 1.02 ? "Gorilla reach" : apeIndex < 0.98 ? "Proportionate" : "Balanced"}
+                        {apeIndex > 1.02 ? "Gorilla reach" : apeIndex < 0.98 ? "Compact levers" : "Balanced"}
+                      </div>
+                    )}
+                    {/* Expandable insight */}
+                    {apeInsight && apeInsightOpen && (
+                      <div
+                        className="mt-2 rounded-lg p-2.5 text-[11px] leading-relaxed"
+                        style={{
+                          background: "rgba(34,197,94,0.07)",
+                          border: "1px solid rgba(34,197,94,0.2)",
+                          color: "rgba(255,255,255,0.7)",
+                        }}
+                      >
+                        <span className="font-bold text-primary block mb-0.5">{apeInsight.headline}</span>
+                        {apeInsight.detail}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Calibration ratios */}
-                {(torsoLengthCm !== null || legLengthCm !== null) && (
-                  <div className="mb-4">
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Calibration Ratios</div>
-                    <div className="space-y-2">
-                      {torsoLengthCm !== null && legLengthCm !== null && (
-                        <>
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="w-20 text-muted-foreground text-xs">Torso</span>
-                            <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
-                              <div
-                                className="h-full bg-blue-500 rounded-full"
-                                style={{ width: `${Math.min(100, (torsoLengthCm / (torsoLengthCm + legLengthCm)) * 100)}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-mono w-12 text-right">{torsoLengthCm} cm</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="w-20 text-muted-foreground text-xs">Legs</span>
-                            <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
-                              <div
-                                className="h-full bg-emerald-500 rounded-full"
-                                style={{ width: `${Math.min(100, (legLengthCm / (torsoLengthCm + legLengthCm)) * 100)}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-mono w-12 text-right">{legLengthCm} cm</span>
-                          </div>
-                        </>
+                {/* ── Calibration Ratios — with insight toggle ────────── */}
+                {torsoLengthCm !== null && legLengthCm !== null && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Calibration Ratios</div>
+                      {torsoLegInsight && (
+                        <button
+                          type="button"
+                          onClick={() => setTorsoInsightOpen(v => !v)}
+                          className="flex items-center gap-0.5 text-[9px] font-semibold transition-colors"
+                          style={{ color: torsoInsightOpen ? "#22c55e" : "rgba(255,255,255,0.3)" }}
+                        >
+                          <Info className="w-3 h-3" />
+                          <span className="ml-0.5">View Insight</span>
+                          <ChevronDown className={`w-3 h-3 transition-transform ${torsoInsightOpen ? "rotate-180" : ""}`} />
+                        </button>
                       )}
                     </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="w-20 text-muted-foreground text-xs">Torso</span>
+                        <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 rounded-full"
+                            style={{ width: `${Math.min(100, (torsoLengthCm / (torsoLengthCm + legLengthCm)) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-mono w-12 text-right">{torsoLengthCm} cm</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="w-20 text-muted-foreground text-xs">Legs</span>
+                        <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
+                          <div
+                            className="h-full bg-emerald-500 rounded-full"
+                            style={{ width: `${Math.min(100, (legLengthCm / (torsoLengthCm + legLengthCm)) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-mono w-12 text-right">{legLengthCm} cm</span>
+                      </div>
+                    </div>
+                    {/* Expandable torso/leg insight */}
+                    {torsoLegInsight && torsoInsightOpen && (
+                      <div
+                        className="mt-2 rounded-lg p-2.5 text-[11px] leading-relaxed"
+                        style={{
+                          background: "rgba(34,197,94,0.07)",
+                          border: "1px solid rgba(34,197,94,0.2)",
+                          color: "rgba(255,255,255,0.7)",
+                        }}
+                      >
+                        <span className="font-bold text-primary block mb-0.5">{torsoLegInsight.headline}</span>
+                        {torsoLegInsight.detail}
+                      </div>
+                    )}
                     {calData?.capturedAt && (
                       <div className="text-[10px] text-muted-foreground mt-2">
                         Calibrated {new Date(calData.capturedAt).toLocaleDateString()}
@@ -620,7 +704,77 @@ function ProfileContent() {
                   </div>
                 )}
 
-                {/* Action buttons */}
+                {/* ── Your Mechanical Edge ────────────────────────────── */}
+                {(apeIndex !== null || torsoLengthCm !== null) && (
+                  <div
+                    className="rounded-xl p-4"
+                    style={{
+                      background: "linear-gradient(145deg, rgba(34,197,94,0.08) 0%, rgba(10,15,26,0.6) 100%)",
+                      border: "1px solid rgba(34,197,94,0.25)",
+                      backdropFilter: "blur(12px)",
+                      boxShadow: "0 0 20px rgba(34,197,94,0.06), inset 0 1px 0 rgba(34,197,94,0.08)",
+                    }}
+                  >
+                    {/* Header */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div
+                        className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+                        style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)" }}
+                      >
+                        <Microscope className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <span
+                        className="text-[10px] font-black uppercase tracking-[0.15em]"
+                        style={{ color: "#22c55e" }}
+                      >
+                        Your Mechanical Edge
+                      </span>
+                    </div>
+
+                    {/* Archetype badge */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span
+                        className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
+                        style={{
+                          background: `${mechanicalEdge.accentColor}18`,
+                          border: `1px solid ${mechanicalEdge.accentColor}40`,
+                          color: mechanicalEdge.accentColor,
+                          boxShadow: `0 0 8px ${mechanicalEdge.accentColor}30`,
+                        }}
+                      >
+                        <Zap className="w-2.5 h-2.5" />
+                        {mechanicalEdge.archetype}
+                      </span>
+                      {targetNode && (
+                        <span className="text-[10px] text-white/30">→ {targetNode.title}</span>
+                      )}
+                    </div>
+
+                    {/* Biomech fact */}
+                    <p className="text-[12px] text-white/75 leading-relaxed mb-2">
+                      {mechanicalEdge.biomechFact}
+                    </p>
+
+                    {/* Recommendation */}
+                    <div
+                      className="rounded-lg px-3 py-2 text-[11px] leading-relaxed"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        borderLeft: `2px solid ${mechanicalEdge.accentColor}60`,
+                      }}
+                    >
+                      <span
+                        className="text-[9px] font-black uppercase tracking-wider block mb-1"
+                        style={{ color: mechanicalEdge.accentColor }}
+                      >
+                        Recommendation
+                      </span>
+                      <span className="text-white/60">{mechanicalEdge.recommendation}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Action buttons ──────────────────────────────────── */}
                 <div className="flex gap-2 flex-wrap">
                   <button
                     onClick={openBioEdit}
