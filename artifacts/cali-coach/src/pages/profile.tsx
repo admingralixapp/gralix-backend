@@ -1,6 +1,7 @@
 import { useParams, Link } from "wouter";
 import { Show } from "@clerk/react";
 import React, { useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -996,7 +997,7 @@ function ProfileContent() {
       )}
 
       {/* ── Edit Specs modal ─────────────────────────────────────────────── */}
-      {bioEditOpen && (
+      {bioEditOpen && createPortal(
         <>
           {/* Backdrop */}
           <div
@@ -1172,7 +1173,8 @@ function ProfileContent() {
               </button>
             </div>
           </div>
-        </>
+        </>,
+        document.body,
       )}
 
       {/* ── Edit caption modal ────────────────────────────────────────────── */}
