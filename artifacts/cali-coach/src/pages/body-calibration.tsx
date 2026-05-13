@@ -25,6 +25,19 @@ const HOLD_DURATION_MS = 3000;
 type Landmark = { x: number; y: number; z?: number; visibility?: number };
 function dist(a: Landmark, b: Landmark) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
+// Returns the angle (degrees) the arm makes from horizontal.
+// For 'left': wrist should be to the left of shoulder (lower x in MediaPipe space).
+// For 'right': wrist should be to the right.
+// Returns 90 if the arm is going the wrong direction (not outstretched).
+function armAngleDeg(shoulder: Landmark, wrist: Landmark, side: "left" | "right"): number {
+  const dy = wrist.y - shoulder.y;
+  const dx = side === "left"
+    ? shoulder.x - wrist.x  // positive when wrist is to the left of shoulder
+    : wrist.x - shoulder.x; // positive when wrist is to the right of shoulder
+  if (dx <= 0) return 90;   // arm folded inward — reject immediately
+  return Math.abs(Math.atan2(dy, dx) * (180 / Math.PI));
+}
+
 function detectTPose(lms: Landmark[]): boolean {
   const L_SH = lms[LM_L_SH], R_SH = lms[LM_R_SH];
   const L_WR = lms[LM_L_WR], R_WR = lms[LM_R_WR];
@@ -33,32 +46,94 @@ function detectTPose(lms: Landmark[]): boolean {
   const NOSE = lms[LM_NOSE];
   const keys = [L_SH, R_SH, L_WR, R_WR, L_HI, R_HI, L_AN, R_AN, NOSE];
   if (keys.some(lm => !lm || (lm.visibility ?? 1) < CALIB_VIS)) return false;
-  if (Math.abs(L_WR!.y - L_SH!.y) > 0.12) return false;
-  if (Math.abs(R_WR!.y - R_SH!.y) > 0.12) return false;
+  // ±5° from horizontal for both arms
+  if (armAngleDeg(L_SH!, L_WR!, "left")  > 5) return false;
+  if (armAngleDeg(R_SH!, R_WR!, "right") > 5) return false;
+  // Wrist span must exceed shoulder span by ≥40% (arms truly outstretched)
   if (dist(R_WR!, L_WR!) < dist(R_SH!, L_SH!) * 1.4) return false;
+  // Ankles must be below hips (standing, not crouching)
   if (L_AN!.y < L_HI!.y + 0.05 || R_AN!.y < R_HI!.y + 0.05) return false;
   return true;
 }
 
-// ── T-Pose silhouette ─────────────────────────────────────────────────────────
-function TPoseSilhouette({ detected }: { detected: boolean }) {
-  const c = detected ? "#22c55e" : "rgba(255,255,255,0.28)";
+// ── Ghost Guide — static, anatomically correct T-Pose target ─────────────────
+// Arms are STRICTLY HORIZONTAL: all arm joints share the same y-coordinate (54).
+// Path: L-wrist(2,54)→L-elbow(10,54)→L-shoulder(22,54)→R-shoulder(98,54)→R-elbow(110,54)→R-wrist(118,54)
+function TPoseGhostGuide({ aligned }: { aligned: boolean }) {
+  const bone  = aligned ? "rgba(34,197,94,0.60)" : "rgba(255,255,255,0.18)";
+  const joint = aligned ? "#22c55e"              : "rgba(255,255,255,0.38)";
+  const glow  = aligned ? "drop-shadow(0 0 14px rgba(34,197,94,0.80))" : undefined;
+  const sw = 3.5; // strokeWidth
+  const jR = 3.2; // joint dot radius
+
+  // Joints — (x,y) for every labelled body point
+  const J = {
+    head:  [60, 16] as const,
+    neck:  [60, 28] as const,
+    // Arm joints — ALL at y=54 for perfectly horizontal arms
+    lwr:   [2,  54] as const,
+    lel:   [10, 54] as const,
+    lsh:   [22, 54] as const,
+    rsh:   [98, 54] as const,
+    rel:   [110,54] as const,
+    rwr:   [118,54] as const,
+    // Torso
+    mid:   [60, 54] as const, // shoulder midpoint
+    lhi:   [44,132] as const,
+    rhi:   [76,132] as const,
+    hip:   [60,132] as const, // hip midpoint
+    // Legs
+    lkn:   [38,182] as const,
+    rkn:   [82,182] as const,
+    lan:   [34,232] as const,
+    ran:   [86,232] as const,
+  };
+
+  const bones: Array<[readonly [number,number], readonly [number,number]]> = [
+    // Head + neck
+    [J.neck,  J.mid ],
+    // Left arm — all at y=54 → strictly horizontal
+    [J.lwr, J.lel], [J.lel, J.lsh],
+    // Right arm — all at y=54 → strictly horizontal
+    [J.rsh, J.rel], [J.rel, J.rwr],
+    // Shoulder crossbar
+    [J.lsh, J.rsh],
+    // Torso
+    [J.mid, J.hip],
+    // Hip crossbar
+    [J.lhi, J.rhi],
+    // Left leg
+    [J.lhi, J.lkn], [J.lkn, J.lan],
+    // Right leg
+    [J.rhi, J.rkn], [J.rkn, J.ran],
+  ];
+
+  const dots = [J.lwr, J.lel, J.lsh, J.rsh, J.rel, J.rwr,
+                 J.lhi, J.rhi, J.lkn, J.rkn, J.lan, J.ran];
+
   return (
     <svg
       viewBox="0 0 120 240"
       className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none"
-      style={{ height: "72%", filter: detected ? "drop-shadow(0 0 16px #22c55e)" : undefined }}
+      style={{ height: "74%", filter: glow }}
       aria-hidden
     >
-      <circle cx="60" cy="14" r="12" fill="none" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="60" y1="26" x2="60" y2="42"  stroke={c} strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="4"  y1="60" x2="116" y2="60" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="60" y1="42" x2="60" y2="136" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="4"  y1="60" x2="4"   y2="100" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="116" y1="60" x2="116" y2="100" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="40" y1="136" x2="80" y2="136" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="40" y1="136" x2="30" y2="230" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="80" y1="136" x2="90" y2="230" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
+      {/* Head */}
+      <circle cx={J.head[0]} cy={J.head[1]} r="10"
+        fill="none" stroke={bone} strokeWidth={sw} strokeLinecap="round" />
+
+      {/* Bones */}
+      {bones.map(([a, b], i) => (
+        <line key={i}
+          x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]}
+          stroke={bone} strokeWidth={sw} strokeLinecap="round"
+        />
+      ))}
+
+      {/* Joint dots */}
+      {dots.map(([cx, cy], i) => (
+        <circle key={i} cx={cx} cy={cy} r={jR} fill={joint} />
+      ))}
     </svg>
   );
 }
@@ -224,11 +299,16 @@ export function BodyCalibration() {
 
         if (results.landmarks?.length > 0) {
           const lmarks = results.landmarks[0]!;
-          const du = new DrawingUtils(ctx);
-          du.drawLandmarks(lmarks, { radius: 4, color: "#22c55e", lineWidth: 2 });
-          du.drawConnectors(lmarks, PoseLandmarker.POSE_CONNECTIONS, { color: "#22c55e", lineWidth: 2 });
 
+          // Detect alignment FIRST — only draw the live skeleton when aligned
+          // so the ghost guide remains the sole visual target until the user matches it.
           const inTPose = detectTPose(lmarks);
+          if (inTPose) {
+            const du = new DrawingUtils(ctx);
+            du.drawLandmarks(lmarks, { radius: 4, color: "#22c55e", lineWidth: 2 });
+            du.drawConnectors(lmarks, PoseLandmarker.POSE_CONNECTIONS, { color: "#22c55e", lineWidth: 2 });
+          }
+
           const now = Date.now();
 
           if (inTPose) {
@@ -359,7 +439,7 @@ export function BodyCalibration() {
 
             {/* T-pose silhouette */}
             {(phase === "detecting" || phase === "holding") && (
-              <TPoseSilhouette detected={phase === "holding"} />
+              <TPoseGhostGuide aligned={phase === "holding"} />
             )}
 
             {/* ── Setup tips & instruction card (top) ── */}
