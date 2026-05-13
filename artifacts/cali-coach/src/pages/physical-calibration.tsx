@@ -226,8 +226,8 @@ export function PhysicalCalibration() {
       await qc.refetchQueries({ queryKey: ["/api/users/me"] });
 
       // 3. Profile is now up-to-date in cache → guard sees calibrated = true →
-      //    no redirect → user lands on dashboard and the tour fires.
-      setLocation("/");
+      //    proceed to body calibration (step 2 of onboarding).
+      setLocation("/calibration");
     } finally {
       setSaving(false);
     }
