@@ -50,6 +50,8 @@ export interface Exercise {
   keyJoints: string[];
   difficulty: ExerciseDifficulty;
   coachingCues: string[];
+  /** Exercise category (e.g. push, pull, core, legs, Mobility & Prehab) */
+  category?: string | null;
 }
 
 export interface Session {

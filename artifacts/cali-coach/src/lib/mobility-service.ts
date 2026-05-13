@@ -17,6 +17,11 @@ export interface Stretch {
   why: string;
   /** Visual pose type for the Ghost Mode overlay */
   pose: GhostPose;
+  /**
+   * Strength exercises this mobility drill directly prepares you for.
+   * Used to power the "Recommended Warm-up" section on exercise detail cards.
+   */
+  warmupFor?: string[];
 }
 
 export type GhostPose =
@@ -297,6 +302,7 @@ const STRETCHES: Record<string, Stretch> = {
       "Arms stay locked out throughout. Think 'push the floor, then pinch the blades' — two distinct positions.",
     why: "Trains the active scapular control needed to keep a hollow body line in a handstand.",
     pose: "kneeling-forward",
+    warmupFor: ["Push-Up", "Diamond Push-Up", "Pike Push-Up", "Handstand Push-Up", "Pull-Up", "Muscle-Up", "Dip", "Ring Dip"],
   },
 
   puppyPoseFloor: {
@@ -362,6 +368,7 @@ const STRETCHES: Record<string, Stretch> = {
       "Keep elbows shoulder-width — don't let them flare. Let gravity pull your chest down, don't force it.",
     why: "Removes lat and triceps tightness that pulls your arms forward and breaks the handstand line.",
     pose: "kneeling-forward",
+    warmupFor: ["Muscle-Up", "Pull-Up", "Chest-to-Bar Pull-Up", "Archer Pull-Up", "Explosive Pull-Up"],
   },
 
   // ── Muscle-Up / Pull Path ───────────────────────────────────────────────
@@ -541,6 +548,7 @@ const STRETCHES: Record<string, Stretch> = {
       "Keep your weight centred — don't lean to one side to compensate. Rotate from the hip, not the lower back. Do 8–10 slow switches.",
     why: "Develops the hip internal and external rotation range needed to keep the pistol squat upright and balanced.",
     pose: "wide-seated",
+    warmupFor: ["Squat", "Pistol Squat", "Archer Squat", "L-Sit", "Tuck L-Sit", "Full Planche"],
   },
 
   deepSquatInternalRotation: {
@@ -677,6 +685,38 @@ const STRETCHES: Record<string, Stretch> = {
       "The movement comes from your mid-back arching, not your lower back. Keep glutes engaged.",
     why: "Restores thoracic extension so you can engage your full posterior chain in the front lever hold.",
     pose: "kneeling-backward",
+  },
+
+  // ── NEW: Wrist Rock Flow ─────────────────────────────────────────────────
+
+  wristRockFlow: {
+    id: "wristRockFlow",
+    name: "Wrist Rock Flow",
+    durationSeconds: 60,
+    targetMuscles: ["Wrist Extensors", "Wrist Flexors", "Forearm Tendons", "Carpal Ligaments"],
+    description:
+      "Kneel on all-fours with palms flat, fingers pointing forward. Slowly rock forward so the wrist bends into full extension, then rock backward to flex the wrist. Flow through the full range — 10 slow rocks each direction.",
+    coachingCue:
+      "Move like water — no bouncing or forcing. Feel the entire wrist joint loading evenly through the rock cycle.",
+    why: "Wrist tendons adapt far more slowly than muscles. This flow conditions the connective tissue needed for push-up depth and handstand loading.",
+    pose: "kneeling-forward",
+    warmupFor: ["Push-Up", "Diamond Push-Up", "Pike Push-Up", "Elevated Pike Push-Up", "Handstand", "Handstand Push-Up", "Planche"],
+  },
+
+  // ── NEW: Cat-Cow & Jefferson Curl ─────────────────────────────────────────
+
+  catCowJeffersonCurl: {
+    id: "catCowJeffersonCurl",
+    name: "Cat-Cow & Jefferson Curl",
+    durationSeconds: 90,
+    targetMuscles: ["Thoracic Spine", "Lumbar Spine", "Erector Spinae", "Hamstrings", "Glutes"],
+    description:
+      "Part 1 (Cat-Cow, 45 s): On all-fours, inhale and arch your back (cow), then exhale and round it fully (cat). Slow, controlled breath-driven movement. Part 2 (Jefferson Curl, 45 s): Stand on a step or block. With a light weight or bodyweight, chin to chest, curl vertebra-by-vertebra down toward the floor, then slowly uncurl back up.",
+    coachingCue:
+      "Cat-Cow: let your breath lead the movement. Jefferson Curl: articulate every single vertebra — don't rush the descent or ascent.",
+    why: "Builds active spinal flexion control and hamstring length needed for L-Sits, Dragon Flags, and healthy back loading in all core work.",
+    pose: "kneeling-forward",
+    warmupFor: ["Dragon Flag", "L-Sit", "Tuck L-Sit", "Human Flag", "Ab Roller Rollout", "Hanging Leg Raises", "Tuck Planche"],
   },
 
 };
@@ -857,6 +897,16 @@ export function inferGoalFromSessions(exerciseNames: string[]): MobilityGoal {
   if (names.has("Push-Up") || names.has("Diamond Push-Up") || names.has("Dip"))
     return "push";
   return "general";
+}
+
+/**
+ * Returns every stretch whose `warmupFor` list includes the given exercise name.
+ * Used to populate the "Recommended Warm-up" section on exercise detail cards.
+ */
+export function getWarmupSuggestionsFor(exerciseName: string): Stretch[] {
+  return Object.values(STRETCHES).filter(
+    s => s.warmupFor?.includes(exerciseName),
+  );
 }
 
 /** Format seconds as M:SS */

@@ -10,6 +10,7 @@ export const exercisesTable = pgTable("exercises", {
   keyJoints: text("key_joints").array().notNull().default([]),
   difficulty: varchar("difficulty", { length: 20 }).notNull().default("beginner"),
   coachingCues: text("coaching_cues").array().notNull().default([]),
+  category: varchar("category", { length: 50 }),
 });
 
 export const insertExerciseSchema = createInsertSchema(exercisesTable).omit({ id: true });

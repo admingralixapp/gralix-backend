@@ -2109,6 +2109,88 @@ const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
     },
   ],
 
+  // ── Wrist Rock Flow ───────────────────────────────────────────────────────
+  // START: all-fours neutral wrist — figure kneeling, hands flat, wrists neutral
+  // MID:   wrist in full extension — body rocked forward, weight on fingertips
+  // END:   wrist in flexion — body rocked backward, fingers curled
+  "Wrist Rock Flow": [
+    {
+      // START — all-fours, neutral wrist position
+      head: { cx: 75, cy: 24, r: 6 },
+      lines: [
+        [[75, 30], [56, 38], [40, 48]],
+        [[40, 48], [26, 54]],
+        [[40, 48], [26, 50]],
+        [[56, 38], [54, 58], [52, 76]],
+        [[56, 38], [66, 58], [68, 76]],
+      ],
+    },
+    {
+      // MID — rocked forward, full wrist extension (weight over fingertips)
+      head: { cx: 80, cy: 20, r: 6 },
+      lines: [
+        [[80, 26], [60, 34], [42, 44]],
+        [[42, 44], [24, 52]],
+        [[42, 44], [22, 48]],
+        [[60, 34], [58, 56], [56, 76]],
+        [[60, 34], [70, 56], [72, 76]],
+      ],
+      muscleGlow: { cx: 36, cy: 50, rx: 14, ry: 8 },
+    },
+    {
+      // END — rocked backward, wrist in flexion / decompressed
+      head: { cx: 70, cy: 28, r: 6 },
+      lines: [
+        [[70, 34], [52, 42], [36, 52]],
+        [[36, 52], [28, 58]],
+        [[36, 52], [30, 54]],
+        [[52, 42], [50, 62], [48, 80]],
+        [[52, 42], [62, 62], [64, 80]],
+      ],
+    },
+  ],
+
+  // ── Cat-Cow & Jefferson Curl ──────────────────────────────────────────────
+  // START: all-fours neutral (table top)
+  // MID:   full cat (spine rounded upward)
+  // END:   Jefferson Curl bottom — spine fully flexed, hanging forward
+  "Cat-Cow & Jefferson Curl": [
+    {
+      // START — table-top / neutral spine
+      head: { cx: 76, cy: 26, r: 6 },
+      lines: [
+        [[76, 32], [56, 38], [38, 44]],
+        [[38, 44], [24, 50]],
+        [[38, 44], [22, 46]],
+        [[56, 38], [54, 58], [52, 78]],
+        [[56, 38], [66, 58], [68, 78]],
+      ],
+    },
+    {
+      // MID — full CAT: spine arched upward
+      head: { cx: 72, cy: 34, r: 6 },
+      lines: [
+        [[72, 40], [52, 30], [34, 38]],
+        [[34, 38], [22, 46]],
+        [[34, 38], [20, 42]],
+        [[52, 30], [50, 52], [48, 74]],
+        [[52, 30], [62, 52], [64, 74]],
+      ],
+      muscleGlow: { cx: 52, cy: 36, rx: 20, ry: 9 },
+    },
+    {
+      // END — Jefferson Curl bottom: spine fully flexed forward, head down
+      head: { cx: 50, cy: 64, r: 6 },
+      lines: [
+        [[50, 58], [50, 42], [50, 24]],
+        [[50, 58], [40, 72], [36, 88]],
+        [[50, 58], [60, 72], [64, 88]],
+        [[50, 24], [38, 36], [30, 52]],
+        [[50, 24], [62, 36], [70, 52]],
+      ],
+    },
+  ],
+
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2237,6 +2319,8 @@ const EXERCISE_POSE_MAP: Record<string, PoseType> = {
   "Wall Puppy Pose":          "wrist-kneeling",
   "First Knuckle Raises":     "wrist-kneeling",
   "Butcher's Block Stretch":  "wrist-kneeling",
+  "Wrist Rock Flow":          "wrist-kneeling",
+  "Cat-Cow & Jefferson Curl": "mobility",
   "German Hang (Passive)":    "german-hang",
   "Skin the Cat (Partial)":   "german-hang",
   "Deep Lat Foam Roll":       "prone",
@@ -2344,7 +2428,6 @@ export function getExerciseIntensity(exerciseName: string): ExerciseIntensity {
   if (RELAXED_SET.has(exerciseName))   return "relaxed";
   return "neutral";
 }
-
 export function getMobilityExerciseNames(): string[] {
   return Object.keys(MOBILITY_POSE_LIBRARY);
 }

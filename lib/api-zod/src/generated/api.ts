@@ -72,6 +72,12 @@ export const ListExercisesResponseItem = zod.object({
   keyJoints: zod.array(zod.string()),
   difficulty: zod.enum(["beginner", "intermediate", "advanced", "elite"]),
   coachingCues: zod.array(zod.string()),
+  category: zod
+    .string()
+    .nullish()
+    .describe(
+      "Exercise category (e.g. push, pull, core, legs, Mobility & Prehab)",
+    ),
 });
 export const ListExercisesResponse = zod.array(ListExercisesResponseItem);
 
@@ -90,6 +96,12 @@ export const GetExerciseResponse = zod.object({
   keyJoints: zod.array(zod.string()),
   difficulty: zod.enum(["beginner", "intermediate", "advanced", "elite"]),
   coachingCues: zod.array(zod.string()),
+  category: zod
+    .string()
+    .nullish()
+    .describe(
+      "Exercise category (e.g. push, pull, core, legs, Mobility & Prehab)",
+    ),
 });
 
 /**

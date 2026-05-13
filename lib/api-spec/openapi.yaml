@@ -454,6 +454,10 @@ components:
           type: array
           items:
             type: string
+        category:
+          type: string
+          description: Exercise category (e.g. push, pull, core, legs, Mobility & Prehab)
+          nullable: true
       required:
         - id
         - name
