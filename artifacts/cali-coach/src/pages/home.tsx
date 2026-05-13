@@ -33,7 +33,6 @@ import {
   Tooltip,
   XAxis,
 } from "recharts";
-import { ALL_SKILL_NODES } from "@/lib/skill-tree";
 
 // ─── Countdown helpers ────────────────────────────────────────────────────────
 
@@ -302,21 +301,6 @@ export function Home() {
   const myRank = leaderboard.data?.myRank ?? null;
   const weeklyCountdown = useWeeklyCountdown();
 
-  // ── Daily Prescription — target skill prerequisites ─────────────────────────
-  const targetNode = useMemo(() => {
-    if (profile?.primaryGoal !== "skill" || !profile?.targetSkillId) return null;
-    return ALL_SKILL_NODES.find(n => n.id === profile.targetSkillId) ?? null;
-  }, [profile?.primaryGoal, profile?.targetSkillId]);
-
-  const prescriptionFocus = useMemo(() => {
-    if (!targetNode) return [];
-    const ids = [targetNode.prerequisiteId, ...(targetNode.secondaryPrerequisiteIds ?? [])]
-      .filter((id): id is string => Boolean(id));
-    return ids
-      .map(id => ALL_SKILL_NODES.find(n => n.id === id))
-      .filter((n): n is NonNullable<typeof n> => n != null);
-  }, [targetNode]);
-
   const countdownParts: string[] = [];
   if (weeklyCountdown.d > 0) countdownParts.push(`${weeklyCountdown.d}d`);
   if (weeklyCountdown.h > 0 || weeklyCountdown.d > 0) countdownParts.push(`${weeklyCountdown.h}h`);
@@ -444,46 +428,6 @@ export function Home() {
           </div>
         </div>
       </Card>
-
-      {/* ── Daily Prescription ─────────────────────────────────── */}
-      {targetNode && prescriptionFocus.length > 0 && (
-        <Card className="border-border bg-card overflow-hidden">
-          <div className="flex items-stretch">
-            <div className="w-1 bg-gradient-to-b from-primary to-cyan-400 shrink-0" />
-            <div className="flex-1 p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Target className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-bold uppercase tracking-widest text-primary">
-                      Daily Prescription
-                    </span>
-                  </div>
-                  <p className="text-sm text-white/80 leading-snug">
-                    To unlock{" "}
-                    <span className="font-bold text-white">{targetNode.title}</span>
-                    {", "}today's focus is{" "}
-                    <span className="font-bold text-primary">
-                      {prescriptionFocus.map(n => n.title).join(" & ")}
-                    </span>.
-                  </p>
-                  {prescriptionFocus[0] && (
-                    <p className="text-[11px] text-white/35 mt-1">
-                      {prescriptionFocus[0].exercises.slice(0, 3).join(" · ")}
-                    </p>
-                  )}
-                </div>
-                <Button asChild size="sm" className="shrink-0">
-                  <Link href="/training">
-                    Train Now
-                    <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
 
       {/* ── Skill Map ─────────────────────────────────────────────── */}
       <Card className="border-border bg-card">

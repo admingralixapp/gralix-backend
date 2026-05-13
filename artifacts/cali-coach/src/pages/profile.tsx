@@ -318,9 +318,6 @@ function ProfileContent() {
 
   // ── Biomechanical computations (own profile only) ──────────────────────────
   const calData = myProfile?.calibrationData ?? null;
-  const targetBioNode = myProfile?.primaryGoal === "skill" && myProfile?.targetSkillId
-    ? ALL_SKILL_NODES.find(n => n.id === myProfile.targetSkillId) ?? null
-    : null;
   const apeIndex = calData
     ? parseFloat((calData.wingspan / calData.height).toFixed(2))
     : null;
@@ -619,50 +616,6 @@ function ProfileContent() {
                       <div className="text-[10px] text-muted-foreground mt-2">
                         Calibrated {new Date(calData.capturedAt).toLocaleDateString()}
                       </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Mechanical Breakdown */}
-                {(apeIndex !== null || torsoLengthCm !== null || targetBioNode) && (
-                  <div
-                    className="mb-4 rounded-lg p-3.5 space-y-2.5"
-                    style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.18)" }}
-                  >
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">
-                      Mechanical Breakdown
-                    </div>
-                    {apeIndex !== null && (
-                      <p className="text-xs text-white/70 leading-snug">
-                        <span className="font-semibold text-white">Reach — </span>
-                        {apeIndex > 1.04
-                          ? "Gorilla reach: long arms give pulling leverage. Front Levers, Muscle-Ups and Back Levers align naturally with your frame."
-                          : apeIndex < 0.96
-                          ? "Compact build: shorter reach shifts advantage to pushing. Planche and Handstand skills suit your proportions."
-                          : "Balanced proportions: no natural limb bias — form and tension quality are your primary performance levers."}
-                      </p>
-                    )}
-                    {torsoLengthCm !== null && legLengthCm !== null && (
-                      <p className="text-xs text-white/70 leading-snug">
-                        <span className="font-semibold text-white">Leverage — </span>
-                        {torsoLengthCm > legLengthCm
-                          ? "Longer torso raises your centre of mass. Invest extra time in L-sit compression and shoulder protraction to compensate."
-                          : "Longer legs lower your centre of mass — this helps Planche balance and Human Flag leverage naturally."}
-                      </p>
-                    )}
-                    {targetBioNode && (
-                      <p className="text-xs text-white/70 leading-snug">
-                        <span className="font-semibold text-white">
-                          {targetBioNode.title} —{" "}
-                        </span>
-                        {targetBioNode.branch === "PUSH"
-                          ? "Requires anterior chain strength. Wrist conditioning and scapular protraction are your critical limiters."
-                          : targetBioNode.branch === "PULL"
-                          ? "Scapular depression and lat activation are key. Hollow-body compression drills accelerate progression."
-                          : targetBioNode.branch === "CORE"
-                          ? "Hip flexor and spinal erector balance determines your ceiling. Daily compression work will unlock this fastest."
-                          : "Posterior chain strength and ankle mobility are the two primary gateways — track both to avoid plateaus."}
-                      </p>
                     )}
                   </div>
                 )}
