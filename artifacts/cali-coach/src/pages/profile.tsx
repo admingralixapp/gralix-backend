@@ -1017,6 +1017,7 @@ function ProfileContent() {
               display: "flex",
               flexDirection: "column",
             }}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header — never scrolls */}
             <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
@@ -1078,6 +1079,7 @@ function ProfileContent() {
                   {(["mobility", "strength", "skill"] as const).map((g) => (
                     <button
                       key={g}
+                      type="button"
                       onClick={() => { setBioGoal(g); if (g !== "skill") setBioTargetSkillId(""); setSkillSearch(""); }}
                       className={cn(
                         "flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors text-left",
@@ -1100,6 +1102,29 @@ function ProfileContent() {
                     Target Skill
                   </label>
 
+                  {/* Selected skill banner — always visible at the top */}
+                  {bioTargetSkillId ? (
+                    <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/30">
+                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                      <span className="text-sm font-semibold text-primary truncate">
+                        {ALL_SKILL_NODES.find(n => n.id === bioTargetSkillId)?.title ?? bioTargetSkillId}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setBioTargetSkillId("")}
+                        className="ml-auto shrink-0 text-muted-foreground hover:text-foreground"
+                        aria-label="Clear selection"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-lg bg-secondary/40 border border-dashed border-border text-xs text-muted-foreground">
+                      <Target className="w-3.5 h-3.5 shrink-0" />
+                      Tap a skill below to set your target
+                    </div>
+                  )}
+
                   {/* Search bar */}
                   <div className="relative mb-2">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
@@ -1107,13 +1132,13 @@ function ProfileContent() {
                       type="text"
                       value={skillSearch}
                       onChange={(e) => setSkillSearch(e.target.value)}
-                      placeholder="Search skills…"
+                      placeholder="Search skills… e.g. Planche, Muscle-up"
                       className="w-full pl-8 pr-3 py-2 rounded-lg border border-border bg-secondary/30 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
                     />
                   </div>
 
                   {/* Skill list */}
-                  <div className="rounded-xl border border-border overflow-hidden max-h-48 overflow-y-auto">
+                  <div className="rounded-xl border border-border divide-y divide-border/50 max-h-44 overflow-y-auto">
                     {filteredSkills.length === 0 ? (
                       <div className="p-3 text-center text-xs text-muted-foreground">No skills match your search</div>
                     ) : (
@@ -1122,15 +1147,20 @@ function ProfileContent() {
                         return (
                           <button
                             key={skill.id}
-                            onClick={() => setBioTargetSkillId(skill.id)}
+                            type="button"
+                            onClick={() => setBioTargetSkillId(selected ? "" : skill.id)}
                             className={cn(
-                              "w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left transition-colors border-b border-border/50 last:border-0",
+                              "w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left transition-colors",
                               selected
                                 ? "bg-primary/10 text-primary font-semibold"
-                                : "hover:bg-secondary/50",
+                                : "hover:bg-secondary/50 text-foreground",
                             )}
                           >
-                            <span className="truncate">{skill.title}</span>
+                            <CheckCircle2 className={cn(
+                              "w-4 h-4 shrink-0 transition-opacity",
+                              selected ? "opacity-100 text-primary" : "opacity-0",
+                            )} />
+                            <span className="flex-1 truncate">{skill.title}</span>
                             <span className={cn(
                               "shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase",
                               BRANCH_PILL[skill.branch] ?? "",
@@ -1142,14 +1172,6 @@ function ProfileContent() {
                       })
                     )}
                   </div>
-
-                  {/* Selected skill confirmation */}
-                  {bioTargetSkillId && (
-                    <div className="mt-2 flex items-center gap-1.5 text-xs text-primary">
-                      <Target className="w-3.5 h-3.5" />
-                      Target: <span className="font-semibold">{ALL_SKILL_NODES.find(n => n.id === bioTargetSkillId)?.title}</span>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
