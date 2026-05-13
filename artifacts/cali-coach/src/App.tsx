@@ -18,7 +18,7 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Layout } from "@/components/layout";
+import { Layout, clearUserSessionStorage } from "@/components/layout";
 import { Home } from "@/pages/home";
 import { Workout } from "@/pages/workout";
 import { History } from "@/pages/history";
@@ -227,7 +227,10 @@ function ClerkQueryClientCacheInvalidator() {
         prevUserIdRef.current !== undefined &&
         prevUserIdRef.current !== userId
       ) {
+        // Clear React Query cache so the new user gets fresh data
         qc.clear();
+        // Also purge user-specific localStorage so no cross-account bleed
+        clearUserSessionStorage();
       }
       prevUserIdRef.current = userId;
     });

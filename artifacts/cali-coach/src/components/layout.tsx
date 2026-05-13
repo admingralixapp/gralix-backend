@@ -88,6 +88,18 @@ function getNavIndex(path: string): number {
 
 // ─── UserSection ──────────────────────────────────────────────────────────────
 
+/** Keys that are user-specific and must be purged on every account switch/logout. */
+const USER_SESSION_LS_KEYS = [
+  "calicoach_tour_pending",
+  "calicoach_joint_readiness_v1",
+  "calicoach_body_weight_v1",
+  "calicoach_clips_v1",
+];
+
+export function clearUserSessionStorage() {
+  USER_SESSION_LS_KEYS.forEach((k) => localStorage.removeItem(k));
+}
+
 function UserSection() {
   const { t }              = useTranslation();
   const { user, isLoaded } = useUser();
@@ -96,6 +108,11 @@ function UserSection() {
   const { data: requests } = useFriendRequests();
   const [, setLocation]    = useLocation();
   void requests;
+
+  async function handleSignOut() {
+    clearUserSessionStorage();
+    await signOut();
+  }
 
   if (!isLoaded) return null;
 
@@ -130,7 +147,7 @@ function UserSection() {
             </div>
           </button>
           <button
-            onClick={() => signOut()}
+            onClick={handleSignOut}
             className="mt-2 w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />

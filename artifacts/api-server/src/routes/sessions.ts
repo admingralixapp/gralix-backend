@@ -52,15 +52,12 @@ router.get("/sessions", async (req, res) => {
   const { limit, offset } = ListSessionsQueryParams.parse(req.query);
   const { clerkId, userId } = await resolveUser(req);
 
-  // Build where clause: match by DB userId OR by clerkId (for pre-profile sessions)
-  // Also include fully-unclaimed (userId IS NULL AND clerkId IS NULL) as migration fallback
+  // Build where clause: match by DB userId OR by clerkId (for pre-profile sessions).
+  // The old null/null migration fallback has been removed — it caused every
+  // authenticated user to see sessions that had no owner, leaking data across accounts.
   const conditions = [];
   if (userId !== null) conditions.push(eq(sessionsTable.userId, userId));
   if (clerkId) conditions.push(and(isNull(sessionsTable.userId), eq(sessionsTable.clerkId, clerkId)));
-  // Migration fallback: sessions created before clerkId was tracked
-  if (userId !== null || clerkId) {
-    conditions.push(and(isNull(sessionsTable.userId), isNull(sessionsTable.clerkId)));
-  }
 
   const whereClause = conditions.length === 0
     ? sql`1 = 0` // unauthenticated → no sessions

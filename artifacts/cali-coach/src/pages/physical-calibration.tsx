@@ -210,13 +210,15 @@ export function PhysicalCalibration() {
   async function handleSave() {
     setSaving(true);
     try {
-      await updatePhysical.mutateAsync({
+      const updatedProfile = await updatePhysical.mutateAsync({
         heightCm,
         weightKg,
         primaryGoal:   goal ?? "strength",
         targetSkillId: goal === "skill" ? targetSkillId : null,
       });
-      localStorage.setItem("calicoach_tour_pending", "1");
+      // Store the user's own DB id as the flag value so the tour is user-scoped
+      // and can never leak to a different account on the same device.
+      localStorage.setItem("calicoach_tour_pending", String(updatedProfile.id));
       setLocation("/");
     } finally {
       setSaving(false);

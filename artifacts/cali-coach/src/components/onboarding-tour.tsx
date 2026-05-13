@@ -9,7 +9,7 @@ import {
   GitBranch,
   BarChart3,
 } from "lucide-react";
-import { useCompleteOnboarding } from "@/lib/social";
+import { useCompleteOnboarding, useMyProfile } from "@/lib/social";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -506,12 +506,19 @@ export function OnboardingTour() {
   const [targetRect,   setTargetRect]   = useState<SpotRect | null>(null);
   const completeOnboarding = useCompleteOnboarding();
 
-  // Fire up if the localStorage flag was set by the calibration wizard
+  // Read the current user's DB profile so the trigger check is user-scoped.
+  // The localStorage flag stores the user's numeric DB id as its value, so it
+  // can never accidentally fire for a different account on the same device.
+  const { data: profile } = useMyProfile();
+
+  // Fire up when the freshly-loaded profile matches the stored tour flag
   useEffect(() => {
-    if (localStorage.getItem(TOUR_LS_KEY) !== "1") return;
+    if (!profile?.id) return;
+    const flagValue = localStorage.getItem(TOUR_LS_KEY);
+    if (flagValue !== String(profile.id)) return;
     const timer = setTimeout(() => setActive(true), 900);
     return () => clearTimeout(timer);
-  }, []);
+  }, [profile?.id]);
 
   // Re-measure the spotlight target whenever the active step changes
   useEffect(() => {
