@@ -40,6 +40,7 @@ import { PrivacyPage } from "@/pages/privacy";
 import { MobilityPage } from "@/pages/mobility";
 import { AnimLabPage } from "@/pages/anim-lab";
 import { BodyCalibration } from "@/pages/body-calibration";
+import { PhysicalCalibration } from "@/pages/physical-calibration";
 import { TrainingHub } from "@/pages/training-hub";
 import { MasteryHub } from "@/pages/mastery-hub";
 import { CommunityHub } from "@/pages/community-hub";
@@ -236,6 +237,36 @@ function ClerkQueryClientCacheInvalidator() {
 }
 
 // ---------------------------------------------------------------------------
+// Redirect new users (profile exists but no primaryGoal) to physical calibration
+// ---------------------------------------------------------------------------
+const EXCLUDED_FROM_GUARD = new Set([
+  "/physical-calibration",
+  "/sign-in", "/sign-up",
+  "/terms", "/privacy",
+]);
+
+function PhysicalCalibrationGuard() {
+  const { isSignedIn, isLoaded } = useUser();
+  const { data: profile, isLoading } = useMyProfile();
+  const [location, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isLoaded || isLoading || !isSignedIn) return;
+    if (profile === null || profile === undefined) return; // no profile yet
+    if (profile.primaryGoal) return; // already calibrated
+
+    // Don't redirect if on excluded paths or physical-calibration itself
+    const cleanPath = location.split("?")[0]!;
+    if (EXCLUDED_FROM_GUARD.has(cleanPath)) return;
+    if (cleanPath.startsWith("/sign-")) return;
+
+    setLocation("/physical-calibration", { replace: true });
+  }, [isLoaded, isLoading, isSignedIn, profile, location, setLocation]);
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Home route: landing for signed-out, dashboard for signed-in
 // ---------------------------------------------------------------------------
 function HomeRoute() {
@@ -284,6 +315,7 @@ function AppRouter() {
         <LangSync />
         <ClerkQueryClientCacheInvalidator />
         <ProfileSync />
+        <PhysicalCalibrationGuard />
         <UploadManagerProvider>
           <TooltipProvider>
             <Switch>
@@ -316,6 +348,7 @@ function AppRouter() {
                     <Route path="/settings" component={Settings} />
                     <Route path="/shop" component={ShopPage} />
                     <Route path="/calibration" component={BodyCalibration} />
+                    <Route path="/physical-calibration" component={PhysicalCalibration} />
                     <Route path="/mobility">{() => <MobilityPage />}</Route>
                     <Route path="/terms" component={TermsPage} />
                     <Route path="/privacy" component={PrivacyPage} />

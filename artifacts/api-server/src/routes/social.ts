@@ -456,6 +456,49 @@ router.post(
 );
 
 // ---------------------------------------------------------------------------
+// PATCH /api/users/me/physical — save physical calibration (height, weight, goal, target skill)
+// ---------------------------------------------------------------------------
+router.patch(
+  "/users/me/physical",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const { heightCm, weightKg, primaryGoal, targetSkillId } = req.body as {
+      heightCm?:      number;
+      weightKg?:      number;
+      primaryGoal?:   string;
+      targetSkillId?: string | null;
+    };
+
+    const me = await getMe(clerkId);
+    if (!me) {
+      res.status(404).json({ error: "Profile not found" });
+      return;
+    }
+
+    const validGoals = ["mobility", "strength", "skill"];
+    if (primaryGoal !== undefined && !validGoals.includes(primaryGoal)) {
+      res.status(400).json({ error: "Invalid primaryGoal" });
+      return;
+    }
+
+    const updateFields: Partial<typeof usersTable.$inferSelect> = {};
+    if (heightCm !== undefined && heightCm > 0)  updateFields.heightCm      = heightCm;
+    if (weightKg !== undefined && weightKg > 0)  updateFields.weightKg      = weightKg;
+    if (primaryGoal !== undefined)               updateFields.primaryGoal   = primaryGoal;
+    if (targetSkillId !== undefined)             updateFields.targetSkillId = targetSkillId ?? null;
+
+    const [updated] = await db
+      .update(usersTable)
+      .set(updateFields)
+      .where(eq(usersTable.id, me.id))
+      .returning();
+
+    req.log.info({ userId: me.id, primaryGoal, targetSkillId }, "physical calibration saved");
+    res.json(updated);
+  },
+);
+
 // PUT /api/users/me — update username / displayName
 // ---------------------------------------------------------------------------
 router.put(

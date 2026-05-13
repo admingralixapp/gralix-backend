@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocalizedPrices } from "@/lib/locale";
 import { useLocation } from "wouter";
@@ -154,7 +154,7 @@ export function Progress() {
     return loadJointLogs().some((l) => l.date === today);
   });
 
-  // ── Body Weight state (for RSI) ───────────────────────────────────────────
+  // ── Body Weight state (profile DB value takes priority over localStorage) ──
   const [bodyWeight, setBodyWeight] = useState<number>(() => {
     const stored = localStorage.getItem(BODY_WEIGHT_KEY);
     return stored ? parseFloat(stored) : 0;
@@ -162,6 +162,14 @@ export function Progress() {
   const [bwInput, setBwInput] = useState<string>(
     () => localStorage.getItem(BODY_WEIGHT_KEY) ?? "",
   );
+
+  // Sync body weight from profile once it loads (DB value overrides localStorage)
+  useEffect(() => {
+    if (profile?.weightKg && profile.weightKg > 0) {
+      setBodyWeight(profile.weightKg);
+      setBwInput(String(Math.round(profile.weightKg * 10) / 10));
+    }
+  }, [profile?.weightKg]);
 
   // ── Form + Volume dual-axis ───────────────────────────────────────────────
   const formattedTimeline = useMemo(
@@ -365,8 +373,16 @@ export function Progress() {
       });
     }
 
-    return results.sort((a, b) => b.readiness - a.readiness).slice(0, 5);
-  }, [sessions, skillTimeline]);
+    // Pin the user's target skill to the front if it's in the list
+    const targetId = profile?.targetSkillId;
+    return results
+      .sort((a, b) => {
+        if (a.node.id === targetId) return -1;
+        if (b.node.id === targetId) return 1;
+        return b.readiness - a.readiness;
+      })
+      .slice(0, 5);
+  }, [sessions, skillTimeline, profile?.targetSkillId]);
 
   // ── Consistency calendar — last 84 days (12 × 7 grid) ────────────────────
   const { calendarGrid, calendarMonthLabels } = useMemo(() => {

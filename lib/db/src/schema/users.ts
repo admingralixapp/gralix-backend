@@ -7,6 +7,7 @@ import {
   jsonb,
   boolean,
   integer,
+  real,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -62,6 +63,16 @@ export const usersTable = pgTable("users", {
    * Drives voice-coaching tone and Ghost Skeleton colour in workouts.
    */
   activeAura: jsonb("active_aura").notNull().default({} as { packId?: string; voiceId?: string; skinId?: string }),
+  /**
+   * Physical calibration data — collected once during onboarding.
+   * Used to personalise the Progress Tab (RSI, Skill Readiness).
+   */
+  heightCm:      real("height_cm"),
+  weightKg:      real("weight_kg"),
+  /** "mobility" | "strength" | "skill" */
+  primaryGoal:   varchar("primary_goal",   { length: 32 }),
+  /** Skill-tree node ID the user wants to unlock, e.g. "push-oh-4" */
+  targetSkillId: varchar("target_skill_id", { length: 64 }),
   /**
    * Promo codes already redeemed by this user — prevents double-use.
    */

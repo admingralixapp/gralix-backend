@@ -55,6 +55,13 @@ export interface UserProfile {
   hasClaimedSigningBonus: boolean;
   /** BCP-47 locale code, e.g. "en-GB", "en-US", "fr". Null = not yet set. */
   preferredLanguage: string | null;
+  /** Physical calibration — null until the user completes onboarding. */
+  heightCm:      number | null;
+  weightKg:      number | null;
+  /** "mobility" | "strength" | "skill" — null until onboarding done. */
+  primaryGoal:   string | null;
+  /** Skill-tree node ID the user is targeting, e.g. "push-oh-4". */
+  targetSkillId: string | null;
   createdAt: string;
 }
 
@@ -162,6 +169,27 @@ export function useUpdatePrivacy() {
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
+  });
+}
+
+export function useUpdatePhysicalStats() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async (data: {
+      heightCm?:      number;
+      weightKg?:      number;
+      primaryGoal?:   string;
+      targetSkillId?: string | null;
+    }) => {
+      const token = await getToken();
+      return apiFetchAuth<UserProfile>("/api/users/me/physical", token, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
   });
 }
 
