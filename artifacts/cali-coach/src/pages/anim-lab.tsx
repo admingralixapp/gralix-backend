@@ -43,13 +43,19 @@ function findMatching(pose: PoseData, tx: number, ty: number) {
   return out;
 }
 
-type JointInfo = { x: number; y: number; isHinge: boolean };
+type JointInfo = {
+  x: number; y: number; isHinge: boolean;
+  /** Present only for the last point of each line — which line index to extend */
+  extendLineIdx?: number;
+};
 
 /**
  * Returns all unique joint positions for the pose.
  * `isHinge = true` marks the intermediate points of multi-point lines —
  * these are ELBOWS (middle of arm chains) and KNEES (middle of leg chains).
  * Endpoint joints are shoulders, wrists, hips and ankles.
+ * `extendLineIdx` is set on the LAST point of each line, indicating it can
+ * be extended with a new joint (wrist→hand, ankle→foot, etc.).
  */
 function uniqueJoints(pose: PoseData): JointInfo[] {
   // Collect keys for every intermediate (hinge) point in multi-point lines
@@ -62,6 +68,17 @@ function uniqueJoints(pose: PoseData): JointInfo[] {
     }
   });
 
+  // Map: "x,y" -> extendLineIdx for the LAST point of each line
+  const extendMap = new Map<string, number>();
+  pose.lines.forEach((line, li) => {
+    if (line.length >= 2) {
+      const [lx, ly] = line[line.length - 1];
+      const k = `${lx},${ly}`;
+      // Only tag if not already a hinge (i.e. it's a true terminal)
+      if (!hingeKeys.has(k)) extendMap.set(k, li);
+    }
+  });
+
   const seen = new Set<string>();
   const out: JointInfo[] = [];
   pose.lines.forEach(line =>
@@ -69,7 +86,11 @@ function uniqueJoints(pose: PoseData): JointInfo[] {
       const k = `${x},${y}`;
       if (!seen.has(k)) {
         seen.add(k);
-        out.push({ x, y, isHinge: hingeKeys.has(k) });
+        out.push({
+          x, y,
+          isHinge:       hingeKeys.has(k),
+          extendLineIdx: extendMap.get(k),
+        });
       }
     })
   );
@@ -358,6 +379,52 @@ export function AnimLabPage() {
     });
   }, []);
 
+  // ── Extend / remove joint helpers ───────────────────────────────────────
+
+  /**
+   * Append a new terminal joint to line `lineIdx` of the active frame.
+   * Direction is extrapolated from the last two points of that line.
+   * Length of the new segment equals the length of the last existing segment
+   * (clamped to 8–15 units) for a natural feel.
+   */
+  const extendLine = useCallback((lineIdx: number) => {
+    setFrames(prev => {
+      const next = [...prev] as [PoseData, PoseData, PoseData];
+      const frame = cloneFrame(prev[activeFameRef.current]);
+      const line = frame.lines[lineIdx];
+      if (line.length < 2) return prev;
+
+      const [ax, ay] = line[line.length - 2];
+      const [bx, by] = line[line.length - 1];
+      const dx = bx - ax;
+      const dy = by - ay;
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+      // New segment same length as last (clamp 8–15 units)
+      const seg = Math.min(15, Math.max(8, len));
+      const nx = Math.round((bx + (dx / len) * seg) * 2) / 2;
+      const ny = Math.round((by + (dy / len) * seg) * 2) / 2;
+
+      frame.lines[lineIdx] = [...line, [nx, ny]];
+      next[activeFameRef.current] = frame;
+      return next;
+    });
+  }, []);
+
+  /**
+   * Remove the last point from line `lineIdx` (minimum 2 points kept).
+   */
+  const trimLine = useCallback((lineIdx: number) => {
+    setFrames(prev => {
+      const next = [...prev] as [PoseData, PoseData, PoseData];
+      const frame = cloneFrame(prev[activeFameRef.current]);
+      if (frame.lines[lineIdx].length > 2) {
+        frame.lines[lineIdx] = frame.lines[lineIdx].slice(0, -1);
+      }
+      next[activeFameRef.current] = frame;
+      return next;
+    });
+  }, []);
+
   // ── Muscle glow helpers ──────────────────────────────────────────────────
 
   const updateGlowField = (field: "cx" | "cy" | "rx" | "ry", val: number) => {
@@ -455,7 +522,10 @@ export function AnimLabPage() {
         </select>
 
         <span style={{ fontSize: 11, color: mutedText, marginLeft: 4 }}>
-          Drag joints • <span style={{ color: "#22d3ee" }}>Cyan = elbow/knee</span> • Tab = switch frame • Save = write to source
+          Drag joints •{" "}
+          <span style={{ color: "#22d3ee" }}>Cyan = elbow/knee</span> •{" "}
+          <span style={{ color: "#22c55e" }}>⊕ = add joint (wrist/ankle/hand/foot)</span> •{" "}
+          <span style={{ color: "#f87171" }}>⊖ = remove tip</span>
         </span>
 
         <Link
@@ -562,32 +632,85 @@ export function AnimLabPage() {
               <LiveSkeleton pose={activePose} color={FRAME_COLORS[displayFrame]} />
 
               {/* Draggable joint handles
-                  - Cyan (#22d3ee) = hinge joints → ELBOWS (mid of arm chain) & KNEES (mid of leg chain)
-                  - Frame colour   = endpoint joints → shoulders, wrists, hips, ankles */}
-              {!isPlaying && joints.map(({ x, y, isHinge }) => (
-                <g key={`${x},${y}`}>
-                  {isHinge && (
-                    /* Extra outer ring for elbow/knee to make them extra prominent */
+                  - Cyan  (#22d3ee) = hinge joints → ELBOWS / KNEES (mid of chain)
+                  - Green / frame colour = endpoint joints (shoulders, wrists, hips, ankles)
+                  - "+" circle = extend this limb by adding a new joint beyond the tip
+                  - "−" circle = remove the tip joint (trim back one step) */}
+              {!isPlaying && joints.map(({ x, y, isHinge, extendLineIdx }) => {
+                // Direction vector for placing the +/- buttons relative to this joint.
+                // For terminals, use the last-segment direction; default to pointing up.
+                let btnDx = 0, btnDy = -1;
+                if (extendLineIdx !== undefined) {
+                  const line = activePose.lines[extendLineIdx];
+                  if (line.length >= 2) {
+                    const [ax, ay] = line[line.length - 2];
+                    const ddx = x - ax;
+                    const ddy = y - ay;
+                    const dlen = Math.sqrt(ddx * ddx + ddy * ddy) || 1;
+                    btnDx = ddx / dlen;
+                    btnDy = ddy / dlen;
+                  }
+                }
+                // Offset the +/- buttons 8 units beyond the joint tip
+                const btnX = Math.round((x + btnDx * 8) * 10) / 10;
+                const btnY = Math.round((y + btnDy * 8) * 10) / 10;
+                // "−" trim button is perpendicular, 6 units beside the joint
+                const perpX = Math.round((x - btnDy * 6) * 10) / 10;
+                const perpY = Math.round((y + btnDx * 6) * 10) / 10;
+
+                return (
+                  <g key={`${x},${y}`}>
+                    {isHinge && (
+                      <circle cx={x} cy={y} r={7}
+                        fill="none" stroke="#22d3ee" strokeWidth={1}
+                        opacity={0.35} style={{ pointerEvents: "none" }} />
+                    )}
+
+                    {/* Main draggable joint */}
                     <circle
-                      cx={x} cy={y} r={7}
-                      fill="none"
-                      stroke="#22d3ee" strokeWidth={1}
-                      opacity={0.35}
-                      style={{ pointerEvents: "none" }}
+                      cx={x} cy={y}
+                      r={isHinge ? 5 : 4.2}
+                      fill={isHinge ? "#22d3ee" : FRAME_COLORS[activeFrame]}
+                      stroke={isHinge ? "#0e7490" : "#0b1120"}
+                      strokeWidth={1.5}
+                      filter="url(#jglow)"
+                      style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
+                      onPointerDown={e => onJointDown(e, x, y)}
                     />
-                  )}
-                  <circle
-                    cx={x} cy={y}
-                    r={isHinge ? 5 : 4.2}
-                    fill={isHinge ? "#22d3ee" : FRAME_COLORS[activeFrame]}
-                    stroke={isHinge ? "#0e7490" : "#0b1120"}
-                    strokeWidth={1.5}
-                    filter="url(#jglow)"
-                    style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
-                    onPointerDown={e => onJointDown(e, x, y)}
-                  />
-                </g>
-              ))}
+
+                    {/* "+" Extend button — only on terminal (non-hinge) endpoints */}
+                    {!isHinge && extendLineIdx !== undefined && (
+                      <g
+                        style={{ cursor: "pointer" }}
+                        onClick={() => extendLine(extendLineIdx)}
+                      >
+                        {/* Button background */}
+                        <circle cx={btnX} cy={btnY} r={4.5}
+                          fill="#052e16" stroke="#22c55e" strokeWidth={1.2} opacity={0.92} />
+                        {/* "+" cross */}
+                        <line x1={btnX - 2} y1={btnY} x2={btnX + 2} y2={btnY}
+                          stroke="#22c55e" strokeWidth={1.2} strokeLinecap="round" />
+                        <line x1={btnX} y1={btnY - 2} x2={btnX} y2={btnY + 2}
+                          stroke="#22c55e" strokeWidth={1.2} strokeLinecap="round" />
+                      </g>
+                    )}
+
+                    {/* "−" Trim button — only on extendable terminals that have > 2 pts */}
+                    {!isHinge && extendLineIdx !== undefined &&
+                      activePose.lines[extendLineIdx].length > 2 && (
+                      <g
+                        style={{ cursor: "pointer" }}
+                        onClick={() => trimLine(extendLineIdx)}
+                      >
+                        <circle cx={perpX} cy={perpY} r={4.5}
+                          fill="#1c0505" stroke="#f87171" strokeWidth={1.2} opacity={0.92} />
+                        <line x1={perpX - 2} y1={perpY} x2={perpX + 2} y2={perpY}
+                          stroke="#f87171" strokeWidth={1.2} strokeLinecap="round" />
+                      </g>
+                    )}
+                  </g>
+                );
+              })}
 
               {/* Head drag handle */}
               {!isPlaying && (
@@ -655,7 +778,7 @@ export function AnimLabPage() {
             <span style={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Joints:</span>
             <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <svg width={11} height={11}><circle cx={5.5} cy={5.5} r={5.5} fill={FRAME_COLORS[activeFrame]} /></svg>
-              Shoulder / Wrist / Hip / Ankle
+              Shoulder / Hip (drag)
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <svg width={13} height={13}>
@@ -663,7 +786,22 @@ export function AnimLabPage() {
                 <circle cx={6.5} cy={6.5} r={5} fill="#22d3ee" />
               </svg>
               <span style={{ color: "#22d3ee", fontWeight: 600 }}>Elbow / Knee</span>
-              — drag to bend arm or leg
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <svg width={13} height={13}>
+                <circle cx={6.5} cy={6.5} r={4.5} fill="#052e16" stroke="#22c55e" strokeWidth={1.2} />
+                <line x1={4.5} y1={6.5} x2={8.5} y2={6.5} stroke="#22c55e" strokeWidth={1.2} strokeLinecap="round" />
+                <line x1={6.5} y1={4.5} x2={6.5} y2={8.5} stroke="#22c55e" strokeWidth={1.2} strokeLinecap="round" />
+              </svg>
+              <span style={{ color: "#22c55e", fontWeight: 600 }}>+ Add joint</span>
+              — wrist / ankle / hand / foot
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <svg width={13} height={13}>
+                <circle cx={6.5} cy={6.5} r={4.5} fill="#1c0505" stroke="#f87171" strokeWidth={1.2} />
+                <line x1={4.5} y1={6.5} x2={8.5} y2={6.5} stroke="#f87171" strokeWidth={1.2} strokeLinecap="round" />
+              </svg>
+              <span style={{ color: "#f87171", fontWeight: 600 }}>− Remove tip</span>
             </span>
           </div>
         </div>
