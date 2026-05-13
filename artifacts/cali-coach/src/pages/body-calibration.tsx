@@ -26,15 +26,18 @@ type Landmark = { x: number; y: number; z?: number; visibility?: number };
 function dist(a: Landmark, b: Landmark) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
 // Returns the angle (degrees) the arm makes from horizontal.
-// For 'left': wrist should be to the left of shoulder (lower x in MediaPipe space).
-// For 'right': wrist should be to the right.
-// Returns 90 if the arm is going the wrong direction (not outstretched).
+// MediaPipe landmark indices are from the PERSON's perspective, not the camera's.
+// "Left" landmarks (11,15) appear on the camera's RIGHT side → higher x.
+// "Right" landmarks (12,16) appear on the camera's LEFT side → lower x.
+// So when arms are outstretched:
+//   left wrist x  >  left shoulder x  (wrist further right in frame)
+//   right wrist x <  right shoulder x (wrist further left in frame)
 function armAngleDeg(shoulder: Landmark, wrist: Landmark, side: "left" | "right"): number {
   const dy = wrist.y - shoulder.y;
   const dx = side === "left"
-    ? shoulder.x - wrist.x  // positive when wrist is to the left of shoulder
-    : wrist.x - shoulder.x; // positive when wrist is to the right of shoulder
-  if (dx <= 0) return 90;   // arm folded inward — reject immediately
+    ? wrist.x - shoulder.x  // positive when left wrist is right of left shoulder ✓
+    : shoulder.x - wrist.x; // positive when right wrist is left of right shoulder ✓
+  if (dx <= 0) return 90;   // arm folded inward — reject
   return Math.abs(Math.atan2(dy, dx) * (180 / Math.PI));
 }
 
