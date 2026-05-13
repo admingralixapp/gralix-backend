@@ -285,9 +285,9 @@ export function ShopPage() {
           <div className="space-y-2.5 relative">
             {[
               { icon: "🎥", label: t("shop.whyProItem1Label"), description: t("shop.whyProItem1Desc") },
-              { icon: "💜", label: t("shop.whyProItem2Label"), description: t("shop.whyProItem2Desc") },
-              { icon: "🎁", label: t("shop.whyProItem3Label"), description: t("shop.whyProItem3Desc") },
               { icon: "📊", label: t("shop.whyProItem4Label"), description: t("shop.whyProItem4Desc") },
+              { icon: "🎁", label: t("shop.whyProItem3Label"), description: t("shop.whyProItem3Desc") },
+              { icon: "💜", label: t("shop.whyProItem2Label"), description: t("shop.whyProItem2Desc") },
             ].map(({ icon, label, description }) => (
               <div key={label} className="flex items-start gap-3">
                 <div
