@@ -15,8 +15,6 @@ import {
   Medal,
   Pencil,
   Camera,
-  MoreHorizontal,
-  Video,
   X,
   CheckCircle2,
   ShieldCheck,
@@ -40,7 +38,6 @@ import {
   useRespondToRequest,
   useUpdatePhysicalStats,
 } from "@/lib/social";
-import { useMyPosts, useDeletePost, useUpdatePost } from "@/lib/community-feed";
 import { evaluateSkillTree, ALL_SKILL_NODES, type SessionSummary } from "@/lib/skill-tree";
 import { getBadge } from "@/lib/badge-status";
 import { BadgeGallery } from "@/components/badge-gallery";
@@ -148,10 +145,6 @@ function ProfileContent() {
   const sendRequest    = useSendFriendRequest();
   const respondRequest = useRespondToRequest();
   const upsertProfile  = useUpsertProfile();
-  const deletePost     = useDeletePost();
-  const updatePost     = useUpdatePost();
-  const { data: myPosts } = useMyPosts();
-
   // Edit-profile modal state
   const [editOpen,     setEditOpen]     = useState(false);
   const [editName,     setEditName]     = useState("");
@@ -172,11 +165,6 @@ function ProfileContent() {
   // Bio insight toggle state
   const [apeInsightOpen,    setApeInsightOpen]    = useState(false);
   const [torsoInsightOpen,  setTorsoInsightOpen]  = useState(false);
-
-  // Post management state
-  const [menuPostId,  setMenuPostId]  = useState<number | null>(null);
-  const [editPostId,  setEditPostId]  = useState<number | null>(null);
-  const [editCaption, setEditCaption] = useState("");
 
   async function handleAvatarSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -927,118 +915,6 @@ function ProfileContent() {
             </div>
           )}
 
-          {/* ── My Posts ─────────────────────────────────────────────────── */}
-          {isOwnProfile && (
-            <section className="mt-4">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-                <Video className="w-4 h-4 text-primary" />
-                My Posts
-              </h2>
-
-              {(!myPosts || myPosts.length === 0) ? (
-                <div className="rounded-xl border border-border bg-card p-8 text-center">
-                  <Video className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-sm font-medium mb-1">No posts yet</p>
-                  <p className="text-xs text-muted-foreground">
-                    You haven't shared any workouts yet. Master a skill and share it with the community!
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3">
-                  {myPosts.map((post) => (
-                    <div
-                      key={post.id}
-                      className="rounded-xl border border-border bg-card overflow-hidden"
-                    >
-                      {/* Post header */}
-                      <div className="flex items-center justify-between px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold">{post.exerciseName}</span>
-                          {post.isAiVerified && (
-                            <span className="flex items-center gap-0.5 text-xs text-primary font-medium">
-                              <CheckCircle2 className="w-3 h-3" />
-                              AI Verified
-                            </span>
-                          )}
-                        </div>
-                        <div className="relative">
-                          <button
-                            onClick={() => setMenuPostId(menuPostId === post.id ? null : post.id)}
-                            className="p-1.5 rounded-lg hover:bg-secondary/60 transition-colors text-muted-foreground"
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </button>
-                          {menuPostId === post.id && (
-                            <div className="absolute right-0 top-full mt-1 w-36 rounded-lg border border-border bg-card shadow-xl z-10 overflow-hidden">
-                              <button
-                                onClick={() => {
-                                  setEditCaption(post.caption ?? "");
-                                  setEditPostId(post.id);
-                                  setMenuPostId(null);
-                                }}
-                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-secondary/60 transition-colors"
-                              >
-                                Edit Caption
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (!window.confirm("Delete this post? This cannot be undone.")) return;
-                                  deletePost.mutate(post.id, {
-                                    onSuccess: () => toast({ title: "Post deleted" }),
-                                    onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
-                                  });
-                                  setMenuPostId(null);
-                                }}
-                                className="w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Video */}
-                      {post.videoUrl && (
-                        <div className="aspect-video bg-black">
-                          <video
-                            src={post.videoUrl}
-                            className="w-full h-full object-cover"
-                            controls
-                            muted
-                            playsInline
-                            crossOrigin="anonymous"
-                            preload="metadata"
-                            onError={(e) => {
-                              const v = e.currentTarget;
-                              console.error("[MyPosts] video error", {
-                                src: v.src,
-                                networkState: v.networkState,
-                                readyState: v.readyState,
-                                errorCode: v.error?.code,
-                                errorMsg: v.error?.message,
-                              });
-                            }}
-                          />
-                        </div>
-                      )}
-
-                      {/* Caption + meta */}
-                      <div className="px-4 py-3">
-                        {post.caption && (
-                          <p className="text-sm mb-2">{post.caption}</p>
-                        )}
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>🔥 {post.likeCount} {post.likeCount === 1 ? "like" : "likes"}</span>
-                          <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
         </>
       )}
 
@@ -1355,54 +1231,6 @@ function ProfileContent() {
         document.body,
       )}
 
-      {/* ── Edit caption modal ────────────────────────────────────────────── */}
-      {editPostId !== null && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)" }}
-          onClick={(e) => { if (e.target === e.currentTarget) setEditPostId(null); }}
-        >
-          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Edit Caption</h2>
-              <button onClick={() => setEditPostId(null)} className="text-muted-foreground hover:text-foreground">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <textarea
-              value={editCaption}
-              onChange={(e) => setEditCaption(e.target.value)}
-              rows={4}
-              maxLength={500}
-              className="w-full px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-              placeholder="What was this workout like?"
-            />
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => {
-                  updatePost.mutate(
-                    { postId: editPostId, caption: editCaption },
-                    {
-                      onSuccess: () => { toast({ title: "Caption updated" }); setEditPostId(null); },
-                      onError: (err: Error) => toast({ title: err.message, variant: "destructive" }),
-                    },
-                  );
-                }}
-                disabled={updatePost.isPending}
-                className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
-              >
-                {updatePost.isPending ? "Saving…" : "Save"}
-              </button>
-              <button
-                onClick={() => setEditPostId(null)}
-                className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-secondary/50 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

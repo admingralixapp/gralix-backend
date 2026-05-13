@@ -9,16 +9,17 @@
  *  - Action buttons: View Session  /  Continue (or Train Next if a new skill unlocked)
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Trophy, Star, ChevronRight, Zap, Ghost, Video } from "lucide-react";
+import { Trophy, Star, ChevronRight, Zap, Ghost, Video, Download, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type EvaluatedSkill } from "@/lib/skill-tree";
 import { getExerciseConfig } from "@/lib/exercise-registry";
 import { useUpdateSession, getListSessionsQueryKey } from "@workspace/api-client-react";
 import { getClip } from "@/lib/clip-store";
+import { generateProgressCard, shareOrDownload } from "@/lib/progress-card";
 
 // ─── Thresholds ───────────────────────────────────────────────────────────────
 
@@ -323,11 +324,34 @@ export function SessionResults({
   // ── Async save + navigate ─────────────────────────────────────────────────
   const updateSession = useUpdateSession();
   const queryClient   = useQueryClient();
-  const [isSaving, setIsSaving]       = useState(false);
-  const [saveClip,  setSaveClip]      = useState(true);
+  const [isSaving,       setIsSaving]       = useState(false);
+  const [saveClip,       setSaveClip]       = useState(true);
+  const [cardGenerating, setCardGenerating] = useState(false);
 
   // Check whether an uploaded clip is already available in localStorage.
   const existingClip = getClip(sessionId);
+
+  const handleDownloadCard = useCallback(async () => {
+    setCardGenerating(true);
+    try {
+      const dataUrl = await generateProgressCard({
+        exerciseName:     exerciseName,
+        totalReps:        totalReps,
+        avgFormScore:     avgFormScore,
+        mechanicalBadge:  isPerfectSet ? "Perfect Set" : undefined,
+        isVerified:       true,
+      });
+      const filename = `calicoach-${exerciseName.replace(/\s+/g, "-").toLowerCase()}-card.jpg`;
+      await shareOrDownload(
+        dataUrl,
+        filename,
+        `My ${exerciseName} Performance — CaliCoach`,
+        "Show off your form! AI-analyzed workout. 🏋️ #CaliCoach",
+      );
+    } finally {
+      setCardGenerating(false);
+    }
+  }, [exerciseName, totalReps, avgFormScore, isPerfectSet]);
 
   const handleContinue = async () => {
     setIsSaving(true);
@@ -498,6 +522,33 @@ export function SessionResults({
                 </span>
               </button>
             )}
+
+            {/* ── Download Progress Card ─────────────────────────────── */}
+            <button
+              type="button"
+              onClick={handleDownloadCard}
+              disabled={cardGenerating}
+              className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-all disabled:opacity-60"
+              style={{
+                background:    "linear-gradient(135deg, rgba(34,197,94,0.14) 0%, rgba(34,197,94,0.07) 100%)",
+                border:        "1.5px solid rgba(34,197,94,0.35)",
+                color:         "#22c55e",
+                boxShadow:     "0 0 16px rgba(34,197,94,0.08)",
+                letterSpacing: "0.06em",
+              }}
+            >
+              {cardGenerating ? (
+                <>
+                  <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                  Generating…
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="w-4 h-4" />
+                  Download Progress Card
+                </>
+              )}
+            </button>
 
             {/* Actions */}
             <div className="flex gap-3 pt-1">

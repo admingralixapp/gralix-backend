@@ -1,19 +1,19 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useGetSession } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import {
-  ArrowLeft, Target, Activity, Clock, Video, Share2, Play, Pause,
-  ShieldCheck, Clock3,
+  ArrowLeft, Target, Activity, Clock, Video, Download, Play, Pause,
+  ShieldCheck, Clock3, Share2, CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import { getClip, daysUntilExpiry } from "@/lib/clip-store";
-import { ShareToFeedSheet } from "@/components/share-to-feed-sheet";
+import { useToast } from "@/hooks/use-toast";
 
 // ─── Inline video player ──────────────────────────────────────────────────────
 
@@ -21,7 +21,6 @@ function ClipPlayer({ objectPath }: { objectPath: string }) {
   const [playing, setPlaying] = useState(false);
   const videoRef = useState<HTMLVideoElement | null>(null);
 
-  // objectPath is like "/objects/uploads/xxx.webm" — prefix with /api/storage to serve it
   const src = objectPath.startsWith("http") ? objectPath : `/api/storage${objectPath}`;
 
   return (
@@ -54,6 +53,53 @@ function ClipPlayer({ objectPath }: { objectPath: string }) {
   );
 }
 
+// ─── Download / share clip helper ────────────────────────────────────────────
+
+function useClipDownload() {
+  const { toast } = useToast();
+
+  return useCallback(async (objectPath: string, exerciseName: string) => {
+    const src = objectPath.startsWith("http") ? objectPath : `/api/storage${objectPath}`;
+
+    try {
+      const res  = await fetch(src);
+      if (!res.ok) throw new Error("Could not fetch clip");
+      const blob = await res.blob();
+      const ext  = blob.type.includes("mp4") ? "mp4" : "webm";
+      const file = new File([blob], `calicoach-${exerciseName.replace(/\s+/g, "-").toLowerCase()}.${ext}`, { type: blob.type });
+
+      // Try Web Share API first (mobile / PWA)
+      if (typeof navigator.share === "function") {
+        try {
+          await navigator.share({
+            title: `My ${exerciseName} form — CaliCoach`,
+            text:  "Show off your form! Analyzed by AI. 🏋️ #CaliCoach",
+            files: [file],
+          });
+          return;
+        } catch {
+          // User cancelled or share not supported — fall through to download
+        }
+      }
+
+      // Fallback: direct download
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement("a");
+      a.href     = url;
+      a.download = file.name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      toast({
+        title: "Clip saved!",
+        description: "Show off your form — share your analyzed clip to social media.",
+      });
+    } catch {
+      toast({ title: "Could not download clip", variant: "destructive" });
+    }
+  }, [toast]);
+}
+
 // ─── SessionDetail ────────────────────────────────────────────────────────────
 
 export function SessionDetail() {
@@ -63,7 +109,8 @@ export function SessionDetail() {
   const { data: session, isLoading } = useGetSession(id, {
     query: { queryKey: [`/api/sessions/${id}`], enabled: !!id },
   });
-  const [showShare, setShowShare] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const downloadClip = useClipDownload();
 
   if (isLoading) {
     return <div className="p-8">Loading…</div>;
@@ -81,6 +128,13 @@ export function SessionDetail() {
         (new Date(session.completedAt).getTime() - new Date(session.startedAt).getTime()) / 60000,
       )} min`
     : "--";
+
+  const handleDownload = async () => {
+    if (!clip) return;
+    setDownloading(true);
+    await downloadClip(clip.objectPath, session.exerciseName);
+    setDownloading(false);
+  };
 
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
@@ -164,23 +218,52 @@ export function SessionDetail() {
                     {t("session.expiresInDays", { count: expires })}
                   </span>
                 )}
-                {session.isVerified && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
-                    onClick={() => setShowShare(true)}
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                    {t("session.shareToCommunity")}
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+                  onClick={handleDownload}
+                  disabled={downloading}
+                >
+                  {downloading
+                    ? <span className="w-3.5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                    : <Download className="w-3.5 h-3.5" />}
+                  {downloading ? "Preparing…" : "Download Clip"}
+                </Button>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <ClipPlayer objectPath={clip.objectPath} />
-            <p className="text-[11px] text-muted-foreground mt-2">
+            {/* Social share nudge */}
+            <div
+              className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              style={{
+                background: "linear-gradient(135deg, rgba(34,197,94,0.07), rgba(88,28,135,0.07))",
+                border:     "1px solid rgba(34,197,94,0.18)",
+              }}
+            >
+              <Share2 className="w-4 h-4 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-primary">Show off your form!</p>
+                <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+                  Share your AI-analyzed clip to Instagram Stories or TikTok.
+                </p>
+              </div>
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+                style={{
+                  background: "rgba(34,197,94,0.15)",
+                  border:     "1px solid rgba(34,197,94,0.30)",
+                  color:      "#22c55e",
+                }}
+              >
+                Share
+              </button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
               {t("session.loopsNote", { count: expires ?? 0 })}
             </p>
           </CardContent>
@@ -200,7 +283,10 @@ export function SessionDetail() {
       {session.reps.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>{t("session.formScoreByRep")}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-primary" />
+              {t("session.formScoreByRep")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
@@ -253,17 +339,6 @@ export function SessionDetail() {
             <p className="text-sm whitespace-pre-wrap">{session.notes}</p>
           </CardContent>
         </Card>
-      )}
-
-      {/* Share sheet — repost mode (existingObjectPath, no blob needed) */}
-      {showShare && clip && (
-        <ShareToFeedSheet
-          exerciseName={session.exerciseName}
-          isAiVerified={session.isVerified ?? false}
-          sessionId={id}
-          existingObjectPath={clip.objectPath}
-          onClose={() => setShowShare(false)}
-        />
       )}
     </div>
   );
