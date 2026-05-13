@@ -16,6 +16,8 @@ import {
   Crown,
   TrendingUp,
   Zap,
+  HeartPulse,
+  ChevronDown,
 } from "lucide-react";
 import { getDailyPrescription } from "@/lib/daily-prescription";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +29,8 @@ import { useMobilityStatus, useNotificationScheduler } from "@/lib/use-mobility"
 import { GOAL_LABELS, type MobilityGoal } from "@/lib/mobility-service";
 import { useLeaderboard, useMyProfile } from "@/lib/social";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { format as fmtDate } from "date-fns";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -284,6 +287,153 @@ function PerformanceTrendsCard({ isPro }: { isPro: boolean }) {
   );
 }
 
+// ─── Joint Readiness Quick-Log Widget ────────────────────────────────────────
+
+const JOINT_LS_KEY = "calicoach_joint_readiness_v1";
+
+interface JointLog { date: string; wrist: number; elbow: number; shoulder: number; }
+
+function loadJoints(): JointLog[] {
+  try { return JSON.parse(localStorage.getItem(JOINT_LS_KEY) ?? "[]"); }
+  catch { return []; }
+}
+
+function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () => void }) {
+  const today = fmtDate(new Date(), "yyyy-MM-dd");
+
+  const [logs,       setLogs]       = useState<JointLog[]>(loadJoints);
+  const [input,      setInput]      = useState({ wrist: 7, elbow: 7, shoulder: 7 });
+  const [todayDone,  setTodayDone]  = useState(() => loadJoints().some(l => l.date === today));
+  const [expanded,   setExpanded]   = useState(() => !loadJoints().some(l => l.date === today));
+
+  const avgLast7 = useMemo(() => {
+    const recent = logs.slice(-7);
+    if (!recent.length) return null;
+    const avg = recent.reduce((s, l) => s + (l.wrist + l.elbow + l.shoulder) / 3, 0) / recent.length;
+    return Math.round(avg * 10) / 10;
+  }, [logs]);
+
+  const comfortColor = avgLast7 === null ? "#888"
+    : avgLast7 >= 7 ? "#22c55e"
+    : avgLast7 >= 5 ? "#f59e0b"
+    : "#ef4444";
+
+  const handleLog = useCallback(() => {
+    const updated = [...logs.filter(l => l.date !== today), { date: today, ...input }].slice(-30);
+    setLogs(updated);
+    localStorage.setItem(JOINT_LS_KEY, JSON.stringify(updated));
+    setTodayDone(true);
+    setExpanded(false);
+  }, [logs, today, input]);
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{
+        border:     "1px solid rgba(245,158,11,0.3)",
+        background: "linear-gradient(145deg, rgba(245,158,11,0.05) 0%, rgba(10,15,26,0.95) 60%)",
+        boxShadow:  "0 0 20px rgba(245,158,11,0.06)",
+      }}
+    >
+      {/* Header row — always visible */}
+      <button
+        type="button"
+        onClick={() => setExpanded(v => !v)}
+        className="w-full flex items-center gap-3 px-5 pt-4 pb-3 text-left"
+      >
+        <div
+          className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)" }}
+        >
+          <HeartPulse className="w-4 h-4 text-amber-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-amber-400">Joint Readiness</span>
+            {todayDone && (
+              <span
+                className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e" }}
+              >
+                ✓ Logged
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-white/35 leading-none mt-0.5">
+            {todayDone ? "Today's check-in complete" : "Log today's joint comfort"}
+          </p>
+        </div>
+        {avgLast7 !== null && (
+          <div className="text-right shrink-0 mr-1">
+            <div className="text-xl font-black font-mono" style={{ color: comfortColor, textShadow: `0 0 8px ${comfortColor}` }}>
+              {avgLast7}
+            </div>
+            <div className="text-[9px] text-white/30">7-day avg</div>
+          </div>
+        )}
+        <ChevronDown
+          className="w-4 h-4 shrink-0 transition-transform"
+          style={{ color: "rgba(245,158,11,0.5)", transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
+        />
+      </button>
+
+      {/* Expandable sliders */}
+      {expanded && (
+        <div className="px-5 pb-4 space-y-3">
+          <div
+            className="rounded-xl p-4 space-y-3"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            {(["wrist", "elbow", "shoulder"] as const).map((joint) => (
+              <div key={joint} className="flex items-center gap-3">
+                <span className="w-16 text-xs capitalize text-white/40 shrink-0">{joint}</span>
+                <input
+                  type="range"
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={input[joint]}
+                  onChange={e => setInput(prev => ({ ...prev, [joint]: parseInt(e.target.value) }))}
+                  className="flex-1 h-1.5 cursor-pointer"
+                  style={{ accentColor: "#f59e0b" }}
+                />
+                <span
+                  className="w-5 text-sm font-bold font-mono text-right shrink-0"
+                  style={{
+                    color: input[joint] >= 7 ? "#22c55e" : input[joint] >= 5 ? "#f59e0b" : "#ef4444",
+                  }}
+                >
+                  {input[joint]}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleLog}
+              className="flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+              style={{
+                background: "linear-gradient(90deg, rgba(245,158,11,0.18), rgba(245,158,11,0.10))",
+                border:     "1px solid rgba(245,158,11,0.35)",
+                color:      "#f59e0b",
+              }}
+            >
+              {todayDone ? "Update Today" : "Log Today"}
+            </button>
+            <button
+              onClick={onNavigateProgress}
+              className="px-3 py-2 rounded-lg text-xs font-medium text-white/35 hover:text-white/60 transition-colors"
+              style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+            >
+              Full Chart →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Daily Prescription Card ──────────────────────────────────────────────────
 
 function DailyPrescriptionCard({
@@ -423,6 +573,7 @@ function DailyPrescriptionCard({
 
 export function Home() {
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
   const { data: summary, isLoading: loadingSummary } = useGetProgressSummary();
   const { data: recentSessions, isLoading: loadingSessions } = useGetRecentSessions({ limit: 5 });
   const { data: mobilityStatus, isLoading: loadingMobility } = useMobilityStatus();
@@ -478,6 +629,11 @@ export function Home() {
           exerciseStats={profile.exerciseStats ?? {}}
         />
       )}
+
+      {/* ── Joint Readiness Quick-Log ──────────────────────────────── */}
+      <JointReadinessWidget
+        onNavigateProgress={() => setLocation("/mastery?tab=progress")}
+      />
 
       {/* ── Stats Grid (5 cards) ───────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
