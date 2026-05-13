@@ -327,6 +327,29 @@ export function Settings() {
               {t("settings.viewProfile")}
             </button>
           )}
+
+          <div className="h-px bg-white/[0.07]" />
+
+          {/* Manage Physical Data */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center shrink-0">
+                <Ruler className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-foreground">Manage Physical Data</div>
+                <div className="text-[11px] text-muted-foreground">
+                  Height, weight, goal &amp; body recalibration
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => profile?.username && setLocation(`/profile/${profile.username}`)}
+              className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+            >
+              Open
+            </button>
+          </div>
         </div>
       </section>
 
@@ -795,28 +818,6 @@ export function Settings() {
             </button>
           </div>
 
-          <div className="h-px bg-white/[0.07]" />
-
-          {/* Body Calibration */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center shrink-0">
-                <Ruler className="w-4 h-4 text-emerald-400" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-foreground">{t("settings.bodyCalibration")}</div>
-                <div className="text-[11px] text-muted-foreground">
-                  {t("settings.recalibrateDesc")}
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setLocation("/calibration")}
-              className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
-            >
-              {t("settings.recalibrate")}
-            </button>
-          </div>
         </div>
       </section>
 

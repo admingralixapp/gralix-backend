@@ -19,6 +19,10 @@ import {
   X,
   CheckCircle2,
   ShieldCheck,
+  Ruler,
+  RefreshCw,
+  Target,
+  Save,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import {
@@ -27,6 +31,7 @@ import {
   useUpsertProfile,
   useSendFriendRequest,
   useRespondToRequest,
+  useUpdatePhysicalStats,
 } from "@/lib/social";
 import { useMyPosts, useDeletePost, useUpdatePost } from "@/lib/community-feed";
 import { evaluateSkillTree, type SessionSummary } from "@/lib/skill-tree";
@@ -147,6 +152,13 @@ function ProfileContent() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [localAvatarUrl,  setLocalAvatarUrl]  = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Bio edit modal state
+  const [bioEditOpen,  setBioEditOpen]  = useState(false);
+  const [bioHeight,    setBioHeight]    = useState("");
+  const [bioWeight,    setBioWeight]    = useState("");
+  const [bioGoal,      setBioGoal]      = useState<"mobility" | "strength" | "skill" | "">("");
+  const updatePhysical = useUpdatePhysicalStats();
 
   // Post management state
   const [menuPostId,  setMenuPostId]  = useState<number | null>(null);
@@ -299,6 +311,50 @@ function ProfileContent() {
 
   const isOwnProfile = !!myProfile && myProfile.id === user.id;
   const displayName = user.displayName || user.username || "Athlete";
+
+  // ── Biomechanical computations (own profile only) ──────────────────────────
+  const calData = myProfile?.calibrationData ?? null;
+  const apeIndex = calData
+    ? parseFloat((calData.wingspan / calData.height).toFixed(2))
+    : null;
+  const scaleFactor = calData && myProfile?.heightCm
+    ? myProfile.heightCm / calData.height
+    : null;
+  const torsoLengthCm = scaleFactor && calData
+    ? Math.round(calData.torsoLength * scaleFactor)
+    : null;
+  const legLengthCm = scaleFactor && calData
+    ? Math.round(calData.legLength * scaleFactor)
+    : null;
+
+  const GOAL_LABELS: Record<string, string> = {
+    mobility: "Mobility & Flexibility",
+    strength: "Strength & Power",
+    skill:    "Skill & Technique",
+  };
+
+  function openBioEdit() {
+    setBioHeight(myProfile?.heightCm ? String(Math.round(myProfile.heightCm)) : "");
+    setBioWeight(myProfile?.weightKg ? String(Math.round(myProfile.weightKg * 10) / 10) : "");
+    setBioGoal((myProfile?.primaryGoal as "mobility" | "strength" | "skill" | "") ?? "");
+    setBioEditOpen(true);
+  }
+
+  async function handleSaveSpecs() {
+    const h = parseFloat(bioHeight);
+    const w = parseFloat(bioWeight);
+    const payload: { heightCm?: number; weightKg?: number; primaryGoal?: string } = {};
+    if (!isNaN(h) && h > 0) payload.heightCm = h;
+    if (!isNaN(w) && w > 0) payload.weightKg = w;
+    if (bioGoal) payload.primaryGoal = bioGoal;
+    try {
+      await updatePhysical.mutateAsync(payload);
+      toast({ title: "Specs updated!" });
+      setBioEditOpen(false);
+    } catch {
+      toast({ title: "Failed to save", variant: "destructive" });
+    }
+  }
 
   return (
     <div className="p-6 max-w-2xl">
@@ -456,6 +512,110 @@ function ProfileContent() {
                 </p>
               </div>
             </div>
+          )}
+
+          {/* ── Biomechanical Section (own profile only) ─────────── */}
+          {isOwnProfile && (
+            <section className="mb-4">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-2">
+                <Ruler className="w-4 h-4 text-primary" />
+                Biomechanical
+              </h2>
+              <div className="rounded-xl border border-border bg-card p-5">
+                {/* Stats grid */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="rounded-lg bg-secondary/30 p-3">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Height</div>
+                    <div className="text-base font-bold">
+                      {myProfile?.heightCm ? `${Math.round(myProfile.heightCm)} cm` : <span className="text-muted-foreground text-sm">—</span>}
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-secondary/30 p-3">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Weight</div>
+                    <div className="text-base font-bold">
+                      {myProfile?.weightKg ? `${Math.round(myProfile.weightKg * 10) / 10} kg` : <span className="text-muted-foreground text-sm">—</span>}
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-secondary/30 p-3">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Primary Goal</div>
+                    <div className="text-sm font-semibold">
+                      {myProfile?.primaryGoal
+                        ? GOAL_LABELS[myProfile.primaryGoal] ?? myProfile.primaryGoal
+                        : <span className="text-muted-foreground">—</span>}
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-secondary/30 p-3">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Ape Index</div>
+                    <div className="text-base font-bold">
+                      {apeIndex !== null
+                        ? <span className={apeIndex > 1 ? "text-primary" : apeIndex < 1 ? "text-amber-400" : ""}>{apeIndex > 0 ? `+${((apeIndex - 1) * 100).toFixed(0)}` : apeIndex}</span>
+                        : <span className="text-muted-foreground text-sm">—</span>}
+                    </div>
+                    {apeIndex !== null && (
+                      <div className="text-[10px] text-muted-foreground mt-0.5">
+                        {apeIndex > 1.02 ? "Gorilla reach" : apeIndex < 0.98 ? "Proportionate" : "Balanced"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Calibration ratios */}
+                {(torsoLengthCm !== null || legLengthCm !== null) && (
+                  <div className="mb-4">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">Calibration Ratios</div>
+                    <div className="space-y-2">
+                      {torsoLengthCm !== null && legLengthCm !== null && (
+                        <>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="w-20 text-muted-foreground text-xs">Torso</span>
+                            <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
+                              <div
+                                className="h-full bg-blue-500 rounded-full"
+                                style={{ width: `${Math.min(100, (torsoLengthCm / (torsoLengthCm + legLengthCm)) * 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-mono w-12 text-right">{torsoLengthCm} cm</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="w-20 text-muted-foreground text-xs">Legs</span>
+                            <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
+                              <div
+                                className="h-full bg-emerald-500 rounded-full"
+                                style={{ width: `${Math.min(100, (legLengthCm / (torsoLengthCm + legLengthCm)) * 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-mono w-12 text-right">{legLengthCm} cm</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    {calData?.capturedAt && (
+                      <div className="text-[10px] text-muted-foreground mt-2">
+                        Calibrated {new Date(calData.capturedAt).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={openBioEdit}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-sm font-medium hover:bg-secondary/50 transition-colors"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Edit Specs
+                  </button>
+                  <button
+                    onClick={() => setLocation("/calibration")}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-primary/40 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Body Recalibration
+                  </button>
+                </div>
+              </div>
+            </section>
           )}
 
           {/* ── Mastery Gallery ───────────────────────────────────── */}
@@ -807,6 +967,105 @@ function ProfileContent() {
                 onClick={() => setEditOpen(false)}
                 disabled={upsertProfile.isPending}
                 className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-secondary/50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Specs modal ─────────────────────────────────────────────── */}
+      {bioEditOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setBioEditOpen(false); }}
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <Ruler className="w-5 h-5 text-primary" />
+                Edit Engine Specs
+              </h2>
+              <button onClick={() => setBioEditOpen(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Height */}
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+                  Height (cm)
+                </label>
+                <input
+                  type="number"
+                  min="100"
+                  max="250"
+                  step="1"
+                  value={bioHeight}
+                  onChange={(e) => setBioHeight(e.target.value)}
+                  placeholder="e.g. 175"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-secondary/30 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+                />
+              </div>
+
+              {/* Weight */}
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+                  Weight (kg)
+                </label>
+                <input
+                  type="number"
+                  min="30"
+                  max="300"
+                  step="0.1"
+                  value={bioWeight}
+                  onChange={(e) => setBioWeight(e.target.value)}
+                  placeholder="e.g. 75.0"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-secondary/30 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+                />
+              </div>
+
+              {/* Primary Goal */}
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+                  Primary Goal
+                </label>
+                <div className="grid grid-cols-1 gap-2">
+                  {(["mobility", "strength", "skill"] as const).map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => setBioGoal(g)}
+                      className={cn(
+                        "flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors text-left",
+                        bioGoal === g
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border hover:bg-secondary/50",
+                      )}
+                    >
+                      <Target className="w-4 h-4 shrink-0" />
+                      <span>{GOAL_LABELS[g]}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={handleSaveSpecs}
+                disabled={updatePhysical.isPending}
+                className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                {updatePhysical.isPending ? "Saving…" : "Save Specs"}
+              </button>
+              <button
+                onClick={() => setBioEditOpen(false)}
+                disabled={updatePhysical.isPending}
+                className="px-4 py-2.5 rounded-lg border border-border text-sm font-medium hover:bg-secondary/50 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>

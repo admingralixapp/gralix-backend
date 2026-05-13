@@ -64,6 +64,15 @@ export interface UserProfile {
   primaryGoal:   string | null;
   /** Skill-tree node ID the user is targeting, e.g. "push-oh-4". */
   targetSkillId: string | null;
+  /** Raw normalised body proportions from the T-Pose calibration scan. */
+  calibrationData: {
+    wingspan:      number;
+    height:        number;
+    shoulderWidth: number;
+    torsoLength:   number;
+    legLength:     number;
+    capturedAt:    string;
+  } | null;
   createdAt: string;
 }
 
