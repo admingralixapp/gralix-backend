@@ -46,9 +46,9 @@ function detectTPose(lms: Landmark[]): boolean {
   const NOSE = lms[LM_NOSE];
   const keys = [L_SH, R_SH, L_WR, R_WR, L_HI, R_HI, L_AN, R_AN, NOSE];
   if (keys.some(lm => !lm || (lm.visibility ?? 1) < CALIB_VIS)) return false;
-  // ±5° from horizontal for both arms
-  if (armAngleDeg(L_SH!, L_WR!, "left")  > 5) return false;
-  if (armAngleDeg(R_SH!, R_WR!, "right") > 5) return false;
+  // ±15° from horizontal for both arms
+  if (armAngleDeg(L_SH!, L_WR!, "left")  > 15) return false;
+  if (armAngleDeg(R_SH!, R_WR!, "right") > 15) return false;
   // Wrist span must exceed shoulder span by ≥40% (arms truly outstretched)
   if (dist(R_WR!, L_WR!) < dist(R_SH!, L_SH!) * 1.4) return false;
   // Ankles must be below hips (standing, not crouching)
