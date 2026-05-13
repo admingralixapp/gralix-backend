@@ -15,7 +15,9 @@ import {
   Clock,
   Crown,
   TrendingUp,
+  Zap,
 } from "lucide-react";
+import { getDailyPrescription } from "@/lib/daily-prescription";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -282,6 +284,141 @@ function PerformanceTrendsCard({ isPro }: { isPro: boolean }) {
   );
 }
 
+// ─── Daily Prescription Card ──────────────────────────────────────────────────
+
+function DailyPrescriptionCard({
+  targetSkillId,
+  exerciseStats,
+}: {
+  targetSkillId: string;
+  exerciseStats: Record<string, { total: number }>;
+}) {
+  const prescription = getDailyPrescription(targetSkillId, exerciseStats);
+  if (!prescription) return null;
+
+  const { targetNode, focusNode, readiness, requiredReps, totalReps, allMastered } = prescription;
+  const pct = Math.round(readiness * 100);
+  const workoutUrl = `/workout?exercise=${encodeURIComponent(focusNode.exercises[0])}`;
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden"
+      style={{
+        border: "1.5px solid rgba(34,197,94,0.5)",
+        boxShadow: "0 0 28px rgba(34,197,94,0.10), 0 0 0 1px rgba(34,197,94,0.06)",
+        background: "linear-gradient(145deg, rgba(34,197,94,0.07) 0%, rgba(10,15,26,0.95) 60%)",
+      }}
+    >
+      <div className="flex items-stretch">
+        {/* Neon green accent bar */}
+        <div
+          className="w-1 shrink-0"
+          style={{ background: "linear-gradient(180deg, #22c55e 0%, #4ade80 100%)" }}
+        />
+
+        <div className="flex-1 p-5">
+          {/* Label row */}
+          <div className="flex items-center gap-2 mb-2">
+            <div
+              className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+              style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)" }}
+            >
+              <Zap className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <span
+              className="text-[10px] font-black uppercase tracking-[0.16em]"
+              style={{ color: "#22c55e" }}
+            >
+              Today's Prescription
+            </span>
+          </div>
+
+          {/* Main message */}
+          {allMastered ? (
+            <p className="text-base font-bold leading-snug text-white/90">
+              You've mastered the full path to{" "}
+              <span className="text-primary">{targetNode.title}</span>! Keep
+              training to maintain your edge.
+            </p>
+          ) : focusNode.id === targetNode.id ? (
+            <p className="text-base font-bold leading-snug text-white/90">
+              Focus on{" "}
+              <span className="text-white">{focusNode.title}</span> today to
+              master your target —{" "}
+              <span className="text-primary">{targetNode.title}</span>.
+            </p>
+          ) : (
+            <p className="text-base font-bold leading-snug text-white/90">
+              To unlock{" "}
+              <span className="text-primary">{targetNode.title}</span>, focus
+              on <span className="text-white">{focusNode.title}</span> today.
+            </p>
+          )}
+
+          {/* Mastery requirement hint */}
+          <p className="text-[11px] text-white/35 mt-1 leading-snug">
+            {focusNode.masteryRequirement.description}
+          </p>
+
+          {/* Progress bar */}
+          <div className="mt-3 mb-4">
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-[11px] font-semibold text-white/50">
+                {focusNode.title} Readiness
+              </span>
+              <span
+                className="text-[11px] font-black tabular-nums"
+                style={{ color: pct >= 100 ? "#22c55e" : pct >= 50 ? "#86efac" : "#ffffff80" }}
+              >
+                {pct}%
+              </span>
+            </div>
+            <div
+              className="h-2 rounded-full overflow-hidden"
+              style={{ background: "rgba(255,255,255,0.07)" }}
+            >
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${pct}%`,
+                  background: pct >= 100
+                    ? "linear-gradient(90deg, #22c55e, #4ade80)"
+                    : "linear-gradient(90deg, #22c55e88, #22c55e)",
+                  boxShadow: pct > 0 ? "0 0 8px rgba(34,197,94,0.5)" : "none",
+                }}
+              />
+            </div>
+            {!allMastered && (
+              <p className="text-[10px] text-white/25 mt-1">
+                {totalReps} / {requiredReps} qualifying reps logged
+              </p>
+            )}
+          </div>
+
+          {/* CTA */}
+          <Button
+            asChild
+            size="sm"
+            className="font-bold w-full sm:w-auto"
+            style={{
+              background: "rgba(34,197,94,0.14)",
+              border: "1px solid rgba(34,197,94,0.4)",
+              color: "#22c55e",
+              boxShadow: "0 0 12px rgba(34,197,94,0.15)",
+            }}
+          >
+            <Link href={workoutUrl}>
+              <Dumbbell className="w-4 h-4 mr-1.5" />
+              Start Recommended Session
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Home page ────────────────────────────────────────────────────────────────
 
 export function Home() {
@@ -333,6 +470,14 @@ export function Home() {
           </Link>
         </Button>
       </header>
+
+      {/* ── Daily Prescription (only when user has a target skill) ─── */}
+      {profile?.targetSkillId && (
+        <DailyPrescriptionCard
+          targetSkillId={profile.targetSkillId}
+          exerciseStats={profile.exerciseStats ?? {}}
+        />
+      )}
 
       {/* ── Stats Grid (5 cards) ───────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">

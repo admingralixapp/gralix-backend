@@ -73,6 +73,8 @@ export interface UserProfile {
     legLength:     number;
     capturedAt:    string;
   } | null;
+  /** Per-exercise lifetime totals — same shape as PublicProfile.exerciseStats */
+  exerciseStats?: Record<string, { total: number }>;
   createdAt: string;
 }
 
