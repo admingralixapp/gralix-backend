@@ -23,6 +23,7 @@ import {
   RefreshCw,
   Target,
   Save,
+  Search,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import {
@@ -34,7 +35,7 @@ import {
   useUpdatePhysicalStats,
 } from "@/lib/social";
 import { useMyPosts, useDeletePost, useUpdatePost } from "@/lib/community-feed";
-import { evaluateSkillTree, type SessionSummary } from "@/lib/skill-tree";
+import { evaluateSkillTree, ALL_SKILL_NODES, type SessionSummary } from "@/lib/skill-tree";
 import { getBadge } from "@/lib/badge-status";
 import { BadgeGallery } from "@/components/badge-gallery";
 import { MasteryGallery } from "@/components/mastery-gallery";
@@ -154,10 +155,12 @@ function ProfileContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Bio edit modal state
-  const [bioEditOpen,  setBioEditOpen]  = useState(false);
-  const [bioHeight,    setBioHeight]    = useState("");
-  const [bioWeight,    setBioWeight]    = useState("");
-  const [bioGoal,      setBioGoal]      = useState<"mobility" | "strength" | "skill" | "">("");
+  const [bioEditOpen,       setBioEditOpen]       = useState(false);
+  const [bioHeight,         setBioHeight]         = useState("");
+  const [bioWeight,         setBioWeight]         = useState("");
+  const [bioGoal,           setBioGoal]           = useState<"mobility" | "strength" | "skill" | "">("");
+  const [bioTargetSkillId,  setBioTargetSkillId]  = useState<string>("");
+  const [skillSearch,       setSkillSearch]       = useState("");
   const updatePhysical = useUpdatePhysicalStats();
 
   // Post management state
@@ -337,16 +340,19 @@ function ProfileContent() {
     setBioHeight(myProfile?.heightCm ? String(Math.round(myProfile.heightCm)) : "");
     setBioWeight(myProfile?.weightKg ? String(Math.round(myProfile.weightKg * 10) / 10) : "");
     setBioGoal((myProfile?.primaryGoal as "mobility" | "strength" | "skill" | "") ?? "");
+    setBioTargetSkillId(myProfile?.targetSkillId ?? "");
+    setSkillSearch("");
     setBioEditOpen(true);
   }
 
   async function handleSaveSpecs() {
     const h = parseFloat(bioHeight);
     const w = parseFloat(bioWeight);
-    const payload: { heightCm?: number; weightKg?: number; primaryGoal?: string } = {};
+    const payload: { heightCm?: number; weightKg?: number; primaryGoal?: string; targetSkillId?: string | null } = {};
     if (!isNaN(h) && h > 0) payload.heightCm = h;
     if (!isNaN(w) && w > 0) payload.weightKg = w;
     if (bioGoal) payload.primaryGoal = bioGoal;
+    payload.targetSkillId = bioGoal === "skill" && bioTargetSkillId ? bioTargetSkillId : null;
     try {
       await updatePhysical.mutateAsync(payload);
       toast({ title: "Specs updated!" });
@@ -355,6 +361,20 @@ function ProfileContent() {
       toast({ title: "Failed to save", variant: "destructive" });
     }
   }
+
+  // Skill search — filter ALL_SKILL_NODES (non-equipment-specialty) by query
+  const filteredSkills = ALL_SKILL_NODES.filter((n) => {
+    if (n.equipmentSpecialty) return false;
+    if (!skillSearch.trim()) return true;
+    return n.title.toLowerCase().includes(skillSearch.toLowerCase());
+  });
+
+  const BRANCH_PILL: Record<string, string> = {
+    PUSH: "bg-orange-500/20 text-orange-400",
+    PULL: "bg-blue-500/20 text-blue-400",
+    CORE: "bg-violet-500/20 text-violet-400",
+    LEGS: "bg-emerald-500/20 text-emerald-400",
+  };
 
   return (
     <div className="p-6 max-w-2xl">
@@ -977,23 +997,43 @@ function ProfileContent() {
 
       {/* ── Edit Specs modal ─────────────────────────────────────────────── */}
       {bioEditOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)" }}
-          onClick={(e) => { if (e.target === e.currentTarget) setBioEditOpen(false); }}
-        >
-          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-5">
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            style={{ background: "rgba(0,0,0,0.70)", backdropFilter: "blur(4px)" }}
+            onClick={() => setBioEditOpen(false)}
+          />
+
+          {/* Modal — perfectly centred via transform */}
+          <div
+            className="fixed z-50 w-[calc(100vw-2rem)] max-w-sm rounded-2xl border border-border bg-card shadow-2xl"
+            style={{
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              maxHeight: "90dvh",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {/* Header — never scrolls */}
+            <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
               <h2 className="text-lg font-bold flex items-center gap-2">
                 <Ruler className="w-5 h-5 text-primary" />
                 Edit Engine Specs
               </h2>
-              <button onClick={() => setBioEditOpen(false)} className="text-muted-foreground hover:text-foreground">
+              <button
+                onClick={() => setBioEditOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+                aria-label="Close"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-4">
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto px-6 pb-2 space-y-4">
               {/* Height */}
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
@@ -1037,7 +1077,7 @@ function ProfileContent() {
                   {(["mobility", "strength", "skill"] as const).map((g) => (
                     <button
                       key={g}
-                      onClick={() => setBioGoal(g)}
+                      onClick={() => { setBioGoal(g); if (g !== "skill") setBioTargetSkillId(""); setSkillSearch(""); }}
                       className={cn(
                         "flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors text-left",
                         bioGoal === g
@@ -1051,12 +1091,73 @@ function ProfileContent() {
                   ))}
                 </div>
               </div>
+
+              {/* Skill picker — visible only when "skill" goal is selected */}
+              {bioGoal === "skill" && (
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+                    Target Skill
+                  </label>
+
+                  {/* Search bar */}
+                  <div className="relative mb-2">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                    <input
+                      type="text"
+                      value={skillSearch}
+                      onChange={(e) => setSkillSearch(e.target.value)}
+                      placeholder="Search skills…"
+                      className="w-full pl-8 pr-3 py-2 rounded-lg border border-border bg-secondary/30 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+                    />
+                  </div>
+
+                  {/* Skill list */}
+                  <div className="rounded-xl border border-border overflow-hidden max-h-48 overflow-y-auto">
+                    {filteredSkills.length === 0 ? (
+                      <div className="p-3 text-center text-xs text-muted-foreground">No skills match your search</div>
+                    ) : (
+                      filteredSkills.map((skill) => {
+                        const selected = bioTargetSkillId === skill.id;
+                        return (
+                          <button
+                            key={skill.id}
+                            onClick={() => setBioTargetSkillId(skill.id)}
+                            className={cn(
+                              "w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left transition-colors border-b border-border/50 last:border-0",
+                              selected
+                                ? "bg-primary/10 text-primary font-semibold"
+                                : "hover:bg-secondary/50",
+                            )}
+                          >
+                            <span className="truncate">{skill.title}</span>
+                            <span className={cn(
+                              "shrink-0 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase",
+                              BRANCH_PILL[skill.branch] ?? "",
+                            )}>
+                              {skill.branch}
+                            </span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Selected skill confirmation */}
+                  {bioTargetSkillId && (
+                    <div className="mt-2 flex items-center gap-1.5 text-xs text-primary">
+                      <Target className="w-3.5 h-3.5" />
+                      Target: <span className="font-semibold">{ALL_SKILL_NODES.find(n => n.id === bioTargetSkillId)?.title}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            <div className="flex gap-2 mt-6">
+            {/* Footer — never scrolls */}
+            <div className="flex gap-2 px-6 py-4 shrink-0 border-t border-border/50">
               <button
                 onClick={handleSaveSpecs}
-                disabled={updatePhysical.isPending}
+                disabled={updatePhysical.isPending || (bioGoal === "skill" && !bioTargetSkillId)}
                 className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
@@ -1071,7 +1172,7 @@ function ProfileContent() {
               </button>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* ── Edit caption modal ────────────────────────────────────────────── */}
