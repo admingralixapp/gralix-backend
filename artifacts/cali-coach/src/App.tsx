@@ -255,11 +255,14 @@ const EXCLUDED_FROM_GUARD = new Set([
 
 function PhysicalCalibrationGuard() {
   const { isSignedIn, isLoaded } = useUser();
-  const { data: profile, isLoading } = useMyProfile();
+  const { data: profile, isLoading, isFetching } = useMyProfile();
   const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!isLoaded || isLoading || !isSignedIn) return;
+    // Skip while Clerk or the profile query is still loading/refetching.
+    // isFetching covers background refetches triggered by cache invalidation —
+    // without this the guard fires on stale data right after calibration saves.
+    if (!isLoaded || isLoading || isFetching || !isSignedIn) return;
     if (!profile) return; // profile not yet created — ProfileSync will handle it
 
     // Calibration is complete only when ALL three physical fields are present
@@ -271,7 +274,7 @@ function PhysicalCalibrationGuard() {
     if (cleanPath.startsWith("/sign-")) return;
 
     setLocation("/physical-calibration", { replace: true });
-  }, [isLoaded, isLoading, isSignedIn, profile, location, setLocation]);
+  }, [isLoaded, isLoading, isFetching, isSignedIn, profile, location, setLocation]);
 
   return null;
 }

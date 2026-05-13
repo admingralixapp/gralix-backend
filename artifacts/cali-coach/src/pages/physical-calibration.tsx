@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import { useUpdatePhysicalStats } from "@/lib/social";
 import { ALL_SKILL_NODES } from "@/lib/skill-tree";
 import {
   Ruler, Weight, Target, Zap, Activity, ChevronRight, ChevronLeft,
-  Check, Dumbbell, Footprints,
+  Check, Dumbbell, Footprints, Loader2,
 } from "lucide-react";
 
 // ── Skill groups for the dropdown ──────────────────────────────────────────
@@ -186,6 +187,7 @@ function UnitInput({
 
 export function PhysicalCalibration() {
   const [, setLocation]    = useLocation();
+  const qc                 = useQueryClient();
   const updatePhysical     = useUpdatePhysicalStats();
 
   const [step,           setStep]          = useState(0);
@@ -210,14 +212,21 @@ export function PhysicalCalibration() {
   async function handleSave() {
     setSaving(true);
     try {
+      // 1. Persist physical data to the DB — mutation's onSuccess marks cache stale
       await updatePhysical.mutateAsync({
         heightCm,
         weightKg,
         primaryGoal:   goal ?? "strength",
         targetSkillId: goal === "skill" ? targetSkillId : null,
       });
-      // Profile query is invalidated by the mutation's onSuccess — the
-      // OnboardingTour watches hasCompletedOnboarding from the DB directly.
+
+      // 2. Force an immediate refetch so the cache reflects the new values
+      //    BEFORE we navigate. Without this await the PhysicalCalibrationGuard
+      //    reads the still-stale profile (heightCm = null) and loops back here.
+      await qc.refetchQueries({ queryKey: ["/api/users/me"] });
+
+      // 3. Profile is now up-to-date in cache → guard sees calibrated = true →
+      //    no redirect → user lands on dashboard and the tour fires.
       setLocation("/");
     } finally {
       setSaving(false);
@@ -527,7 +536,12 @@ export function PhysicalCalibration() {
                   boxShadow:  "0 4px 24px rgba(34,197,94,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
                 }}
               >
-                {saving ? "Saving…" : "Start Your Journey →"}
+                {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving…
+                </>
+              ) : "Start Your Journey →"}
               </button>
             )}
           </div>
