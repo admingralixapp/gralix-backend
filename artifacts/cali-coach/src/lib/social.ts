@@ -55,6 +55,8 @@ export interface UserProfile {
   hasClaimedSigningBonus: boolean;
   /** BCP-47 locale code, e.g. "en-GB", "en-US", "fr". Null = not yet set. */
   preferredLanguage: string | null;
+  /** True after the post-calibration guided tour has been completed. */
+  hasCompletedOnboarding?: boolean;
   /** Physical calibration — null until the user completes onboarding. */
   heightCm:      number | null;
   weightKg:      number | null;
@@ -188,6 +190,18 @@ export function useUpdatePhysicalStats() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+    },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
+  });
+}
+
+export function useCompleteOnboarding() {
+  const qc = useQueryClient();
+  const { getToken } = useAuth();
+  return useMutation({
+    mutationFn: async () => {
+      const token = await getToken();
+      return apiFetchAuth<{ ok: boolean }>("/api/users/me/onboarding", token, { method: "PATCH" });
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["/api/users/me"] }),
   });

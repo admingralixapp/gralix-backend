@@ -74,6 +74,11 @@ export const usersTable = pgTable("users", {
   /** Skill-tree node ID the user wants to unlock, e.g. "push-oh-4" */
   targetSkillId: varchar("target_skill_id", { length: 64 }),
   /**
+   * True after the user has seen the post-calibration guided tour + Pro upsell.
+   * Ensures the tour only runs once per user.
+   */
+  hasCompletedOnboarding: boolean("has_completed_onboarding").notNull().default(false),
+  /**
    * Promo codes already redeemed by this user — prevents double-use.
    */
   redeemedCodes: jsonb("redeemed_codes").notNull().default([] as string[]),

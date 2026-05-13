@@ -499,6 +499,24 @@ router.patch(
   },
 );
 
+// PATCH /api/users/me/onboarding — mark guided tour as completed (idempotent)
+// ---------------------------------------------------------------------------
+router.patch(
+  "/users/me/onboarding",
+  requireAuthMiddleware,
+  async (req: Request, res: Response) => {
+    const clerkId = (req as any).clerkId as string;
+    const me = await getMe(clerkId);
+    if (!me) { res.status(404).json({ error: "Profile not found" }); return; }
+    await db
+      .update(usersTable)
+      .set({ hasCompletedOnboarding: true })
+      .where(eq(usersTable.id, me.id));
+    req.log.info({ userId: me.id }, "onboarding marked complete");
+    res.json({ ok: true });
+  },
+);
+
 // PUT /api/users/me — update username / displayName
 // ---------------------------------------------------------------------------
 router.put(

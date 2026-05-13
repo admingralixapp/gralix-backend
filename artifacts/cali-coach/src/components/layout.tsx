@@ -271,9 +271,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {NAV_ITEMS.map((item) => {
             const Icon   = item.icon;
             const active = isActive(item.href);
+            const tourId = item.href === "/" ? "tour-desktop-home" : item.href === "/training" ? "tour-desktop-training" : item.href === "/mastery" ? "tour-desktop-mastery" : undefined;
             return (
               <button
                 key={item.href}
+                id={tourId}
                 onClick={() => navigateTo(item.href)}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-left",
@@ -320,9 +322,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {NAV_ITEMS.map((item) => {
             const Icon   = item.icon;
             const active = isActive(item.href);
+            const mobileTourId = item.href === "/" ? "tour-mobile-home" : item.href === "/training" ? "tour-mobile-training" : item.href === "/mastery" ? "tour-mobile-mastery" : undefined;
             return (
               <button
                 key={item.href}
+                id={mobileTourId}
                 ref={(el) => {
                   if (el) navItemRefs.current.set(item.href, el);
                   else navItemRefs.current.delete(item.href);

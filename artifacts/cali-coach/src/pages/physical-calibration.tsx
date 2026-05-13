@@ -216,6 +216,7 @@ export function PhysicalCalibration() {
         primaryGoal:   goal ?? "strength",
         targetSkillId: goal === "skill" ? targetSkillId : null,
       });
+      localStorage.setItem("calicoach_tour_pending", "1");
       setLocation("/");
     } finally {
       setSaving(false);

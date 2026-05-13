@@ -41,6 +41,7 @@ import { MobilityPage } from "@/pages/mobility";
 import { AnimLabPage } from "@/pages/anim-lab";
 import { BodyCalibration } from "@/pages/body-calibration";
 import { PhysicalCalibration } from "@/pages/physical-calibration";
+import { OnboardingTour } from "@/components/onboarding-tour";
 import { TrainingHub } from "@/pages/training-hub";
 import { MasteryHub } from "@/pages/mastery-hub";
 import { CommunityHub } from "@/pages/community-hub";
@@ -316,6 +317,7 @@ function AppRouter() {
         <ClerkQueryClientCacheInvalidator />
         <ProfileSync />
         <PhysicalCalibrationGuard />
+        <OnboardingTour />
         <UploadManagerProvider>
           <TooltipProvider>
             <Switch>
