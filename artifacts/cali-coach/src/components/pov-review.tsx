@@ -17,7 +17,7 @@
  * Video loops by default so users can analyse form repeatedly.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   SkipForward,
   Play,
@@ -29,6 +29,8 @@ import {
   History,
   CheckCircle2,
   Eye,
+  Download,
+  ImageDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { drawGhostSkeleton } from "@/lib/ghost-poses";
@@ -347,6 +349,94 @@ export function PovReview({
     setTimeout(() => setSaveState("saved"), 1_200);
   };
 
+  // ── Download raw clip ────────────────────────────────────────────────────
+  const handleDownloadClip = useCallback(() => {
+    if (!blobUrl.current) return;
+    const a = document.createElement("a");
+    a.href = blobUrl.current;
+    a.download = `calicoach-${exerciseName.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}.webm`;
+    a.click();
+  }, [exerciseName]);
+
+  // ── Export Progress Card (JPEG) ──────────────────────────────────────────
+  const handleExportProgressCard = useCallback(() => {
+    const W = 1080;
+    const H = 1350;
+    const canvas = document.createElement("canvas");
+    canvas.width  = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Dark background
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, "#030c18");
+    bg.addColorStop(1, "#060f1f");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Top accent glow bar
+    const bar = ctx.createLinearGradient(0, 0, W, 0);
+    bar.addColorStop(0,   "rgba(34,197,94,0)");
+    bar.addColorStop(0.5, "rgba(34,197,94,0.9)");
+    bar.addColorStop(1,   "rgba(34,197,94,0)");
+    ctx.fillStyle = bar;
+    ctx.fillRect(0, 0, W, 4);
+
+    // Ghost skeleton watermark (faint, centred in upper half)
+    if (ghostRef.current) {
+      const gh = ghostRef.current;
+      const scale  = Math.min(W / gh.width, (H * 0.52) / gh.height);
+      const gW = gh.width  * scale;
+      const gH = gh.height * scale;
+      ctx.globalAlpha = 0.22;
+      ctx.drawImage(gh, (W - gW) / 2, 60, gW, gH);
+      ctx.globalAlpha = 1;
+    }
+
+    // Sync score — large centred number
+    const cardSyncColor = bestRepData.syncPct >= 90 ? "#22c55e" : bestRepData.syncPct >= 70 ? "#f59e0b" : "#ef4444";
+    ctx.textAlign    = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle    = cardSyncColor;
+    ctx.font         = `bold ${Math.round(W * 0.22)}px system-ui,-apple-system,sans-serif`;
+    ctx.fillText(`${bestRepData.syncPct}%`, W / 2, H * 0.73);
+
+    // "GHOST SYNC" label
+    ctx.fillStyle = "rgba(255,255,255,0.38)";
+    ctx.font      = `600 ${Math.round(W * 0.038)}px system-ui,-apple-system,sans-serif`;
+    ctx.fillText("GHOST SYNC", W / 2, H * 0.79);
+
+    // Exercise name
+    ctx.fillStyle = "#ffffff";
+    ctx.font      = `bold ${Math.round(W * 0.058)}px system-ui,-apple-system,sans-serif`;
+    ctx.fillText(exerciseName.toUpperCase(), W / 2, H * 0.87);
+
+    // Rep badge
+    ctx.fillStyle = "rgba(255,255,255,0.32)";
+    ctx.font      = `500 ${Math.round(W * 0.032)}px system-ui,-apple-system,sans-serif`;
+    ctx.fillText(`Best Rep  #${bestRepData.repNumber}`, W / 2, H * 0.915);
+
+    // CaliCoach logo
+    ctx.fillStyle = "#22c55e";
+    ctx.font      = `800 ${Math.round(W * 0.042)}px system-ui,-apple-system,sans-serif`;
+    ctx.fillText("CALICOACH", W / 2, H * 0.965);
+
+    // Thin border
+    ctx.strokeStyle = "rgba(34,197,94,0.18)";
+    ctx.lineWidth   = 6;
+    ctx.strokeRect(3, 3, W - 6, H - 6);
+
+    canvas.toBlob((b) => {
+      if (!b) return;
+      const a  = document.createElement("a");
+      a.href   = URL.createObjectURL(b);
+      a.download = `calicoach-${exerciseName.toLowerCase().replace(/\s+/g, "-")}-card.jpg`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }, "image/jpeg", 0.93);
+  }, [exerciseName, bestRepData, ghostRef]);
+
   const syncColor =
     bestRepData.syncPct >= 90 ? "#86efac" :
     bestRepData.syncPct >= 75 ? "#fde047" : "#fca5a5";
@@ -586,6 +676,31 @@ export function PovReview({
           >
             <Share2 className="w-3.5 h-3.5" />
             Post to Feed
+          </Button>
+
+          {/* Export Progress Card (JPEG) */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportProgressCard}
+            className="border-violet-400/40 text-violet-300 hover:bg-violet-400/10 gap-1.5"
+            title="Save a branded 1080×1350 progress card to your device"
+          >
+            <ImageDown className="w-3.5 h-3.5" />
+            Progress Card
+          </Button>
+
+          {/* Download raw clip */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadClip}
+            disabled={!blobReady || videoError}
+            className="border-white/20 text-white/60 hover:bg-white/10 gap-1.5"
+            title="Download this workout clip as a .webm file"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Clip
           </Button>
 
           {/* Continue */}

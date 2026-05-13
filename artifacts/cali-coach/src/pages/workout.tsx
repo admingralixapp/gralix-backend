@@ -581,8 +581,18 @@ export function Workout() {
   const [isManualLog, setIsManualLog] = useState(false);
   const [manualReps, setManualReps] = useState(10);
   const [manualRpe, setManualRpe] = useState<number | null>(null);
-  const [isSavingManual, setIsSavingManual] = useState(false);
-  const [isEnding,       setIsEnding]       = useState(false);
+  const [isSavingManual,  setIsSavingManual]  = useState(false);
+  const [isEnding,        setIsEnding]        = useState(false);
+  const [analyzingStage,  setAnalyzingStage]  = useState(0);
+
+  // Cycle through biomechanics-analyzing stages while isEnding is true
+  useEffect(() => {
+    if (!isEnding) { setAnalyzingStage(0); return; }
+    setAnalyzingStage(0);
+    const t1 = setTimeout(() => setAnalyzingStage(1), 900);
+    const t2 = setTimeout(() => setAnalyzingStage(2), 1900);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [isEnding]);
 
   // ── Multi-set tracking ─────────────────────────────────────────────────────
   const [totalSets,  setTotalSets]  = useState(3);
@@ -3403,6 +3413,80 @@ export function Workout() {
 
         </div>
       )}
+
+      {/* ── Biomechanics Analyzing Overlay ─────────────────────────────────── */}
+      {isEnding && (() => {
+        const STAGES = [
+          "Extracting Skeletal Landmarks",
+          "Calculating Joint Angles",
+          "Generating Performance Score",
+        ];
+        const pcts = [28, 62, 90];
+        const label = STAGES[analyzingStage] ?? STAGES[2];
+        const pct   = pcts[analyzingStage]   ?? pcts[2];
+        return (
+          <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center select-none"
+            style={{ background: "rgba(2,6,18,0.97)", backdropFilter: "blur(8px)" }}
+          >
+            {/* Glowing orb */}
+            <div className="relative mb-8">
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center"
+                style={{
+                  background: "rgba(34,197,94,0.12)",
+                  border: "1.5px solid rgba(34,197,94,0.4)",
+                  boxShadow: "0 0 48px rgba(34,197,94,0.3), inset 0 0 24px rgba(34,197,94,0.08)",
+                }}
+              >
+                <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              </div>
+              <div
+                className="absolute inset-0 rounded-full blur-2xl opacity-20 animate-pulse"
+                style={{ background: "radial-gradient(circle, #22c55e 0%, transparent 70%)" }}
+              />
+            </div>
+
+            <p
+              className="text-lg font-bold text-white mb-1.5 tracking-tight"
+              style={{ textShadow: "0 0 20px rgba(34,197,94,0.4)" }}
+            >
+              Analyzing Your Biomechanics…
+            </p>
+            <p className="text-sm text-white/40 mb-8 font-mono">{label}</p>
+
+            {/* Progress bar */}
+            <div className="w-72 h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700 ease-out"
+                style={{
+                  width: `${pct}%`,
+                  background: "linear-gradient(90deg, #22c55e, #06b6d4)",
+                  boxShadow: "0 0 8px rgba(34,197,94,0.7)",
+                }}
+              />
+            </div>
+            <p className="text-[11px] text-white/20 mt-3 font-mono tabular-nums">{pct}%</p>
+
+            {/* Stage pills */}
+            <div className="flex gap-2 mt-8">
+              {STAGES.map((s, i) => (
+                <div
+                  key={s}
+                  className="px-3 py-1 rounded-full text-[10px] font-semibold transition-all duration-500"
+                  style={
+                    i <= analyzingStage
+                      ? { background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.4)", color: "#22c55e" }
+                      : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.2)" }
+                  }
+                >
+                  {i < analyzingStage ? "✓ " : ""}{i === 0 ? "Landmarks" : i === 1 ? "Angles" : "Score"}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
     </div>
   );
 }

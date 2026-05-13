@@ -26,7 +26,7 @@ import {
 } from "recharts";
 import {
   Target, TrendingUp, GitBranch, Crown, Zap, Check, Calendar,
-  Timer, Crosshair, Scale, Activity, Weight,
+  Timer, Crosshair, Scale, Activity, Weight, AlertTriangle,
 } from "lucide-react";
 import { format, getISOWeek, getISOWeekYear } from "date-fns";
 import {
@@ -419,13 +419,38 @@ export function Progress() {
     return keys.size;
   }, [sessions]);
 
-  // ── Joint Readiness chart data ────────────────────────────────────────────
+  // ── Daily reps map — date string → total reps logged that day ────────────
+  const dailyReps = useMemo(() => {
+    const map: Record<string, number> = {};
+    sessions?.forEach((s) => {
+      if (!s.startedAt) return;
+      const d = format(new Date(s.startedAt), "yyyy-MM-dd");
+      map[d] = (map[d] ?? 0) + (s.totalReps ?? 0);
+    });
+    return map;
+  }, [sessions]);
+
+  // ── Joint Readiness chart data (now includes daily volume) ───────────────
   const jointChartData = jointLogs.slice(-14).map((l) => ({
     date:     format(new Date(l.date), "MMM d"),
     Wrist:    l.wrist,
     Elbow:    l.elbow,
     Shoulder: l.shoulder,
+    Volume:   dailyReps[l.date] ?? 0,
   }));
+
+  // ── Deload alert — volume rising while comfort declining ─────────────────
+  const deloadAlert = useMemo(() => {
+    if (jointLogs.length < 6) return false;
+    const last3 = jointLogs.slice(-3);
+    const prev3 = jointLogs.slice(-6, -3);
+    const avgC = (logs: typeof jointLogs) =>
+      logs.reduce((s, l) => s + (l.wrist + l.elbow + l.shoulder) / 3, 0) / logs.length;
+    if (avgC(last3) >= avgC(prev3) - 0.5) return false;
+    const last3Vol = last3.reduce((s, l) => s + (dailyReps[l.date] ?? 0), 0);
+    const prev3Vol = prev3.reduce((s, l) => s + (dailyReps[l.date] ?? 0), 0);
+    return last3Vol > 0 && last3Vol > prev3Vol;
+  }, [jointLogs, dailyReps]);
 
   const avgJointReadiness = jointLogs.length > 0
     ? Math.round(
@@ -919,19 +944,55 @@ export function Progress() {
                 </button>
               </div>
 
-              {/* History chart */}
+              {/* Deload alert */}
+              {deloadAlert && (
+                <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3.5 py-3">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-amber-400">De-load Recommended</p>
+                    <p className="text-[11px] text-amber-300/70 mt-0.5 leading-snug">
+                      Volume is rising while joint comfort is declining. Consider a lighter session or active rest day to protect tendons.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* History chart — comfort (left axis) + volume (right axis) */}
               {jointChartData.length > 1 ? (
-                <div className="h-[200px] w-full">
+                <div className="h-[220px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={jointChartData}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                       <XAxis dataKey="date" stroke="#888" fontSize={10} tickLine={false} axisLine={false} />
-                      <YAxis domain={[1, 10]} stroke="#888" fontSize={11} tickLine={false} axisLine={false} ticks={[1, 3, 5, 7, 10]} />
-                      <Tooltip {...tooltipStyle} formatter={(v: number, name: string) => [`${v}/10`, name]} />
+                      <YAxis
+                        yAxisId="comfort"
+                        domain={[1, 10]}
+                        stroke="#888"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
+                        ticks={[1, 3, 5, 7, 10]}
+                      />
+                      <YAxis
+                        yAxisId="volume"
+                        orientation="right"
+                        stroke="#555"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v: number) => v > 0 ? `${v}r` : ""}
+                      />
+                      <Tooltip
+                        {...tooltipStyle}
+                        formatter={(v: number, name: string) =>
+                          name === "Volume" ? [`${v} reps`, "Volume"] : [`${v}/10`, name]
+                        }
+                      />
                       <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-                      <Line type="monotone" dataKey="Wrist"    stroke="#22c55e" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="Elbow"    stroke="#06b6d4" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="Shoulder" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                      <Bar yAxisId="volume" dataKey="Volume" fill="rgba(139,92,246,0.2)" radius={[2,2,0,0]} name="Volume" />
+                      <Line yAxisId="comfort" type="monotone" dataKey="Wrist"    stroke="#22c55e" strokeWidth={2} dot={false} />
+                      <Line yAxisId="comfort" type="monotone" dataKey="Elbow"    stroke="#06b6d4" strokeWidth={2} dot={false} />
+                      <Line yAxisId="comfort" type="monotone" dataKey="Shoulder" stroke="#f59e0b" strokeWidth={2} dot={false} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 </div>
