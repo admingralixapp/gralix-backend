@@ -110,7 +110,7 @@ const STRETCHES: Record<string, Stretch> = {
   wristExtension: {
     id: "wristExtension",
     name: "Wrist Extension Stretch",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Wrist Flexors", "Forearms"],
     description:
       "Kneel on the floor, place palms flat with fingers pointing back toward your knees. Gently lean back until you feel a stretch in the underside of your wrists.",
@@ -123,7 +123,7 @@ const STRETCHES: Record<string, Stretch> = {
   wristFlexion: {
     id: "wristFlexion",
     name: "Wrist Flexion Stretch",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Wrist Extensors", "Forearms"],
     description:
       "Extend one arm forward, palm facing down. Use your other hand to gently pull the fingers toward you. Keep the elbow straight. Switch at 30 s.",
@@ -136,7 +136,7 @@ const STRETCHES: Record<string, Stretch> = {
   shoulderDislocates: {
     id: "shoulderDislocates",
     name: "Shoulder Dislocates",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Shoulders", "Chest", "Lats"],
     description:
       "Hold a band or towel wider than shoulder-width. Keep arms straight and slowly pass the band overhead and behind your back, then return. Repeat slowly.",
@@ -149,7 +149,7 @@ const STRETCHES: Record<string, Stretch> = {
   latStretch: {
     id: "latStretch",
     name: "Hanging Lat Stretch",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Lats", "Thoracic Spine", "Shoulders"],
     description:
       "Hang from a pull-up bar with straight arms. Actively relax your shoulders and let your bodyweight decompress the spine and open the lats.",
@@ -162,7 +162,7 @@ const STRETCHES: Record<string, Stretch> = {
   chestOpener: {
     id: "chestOpener",
     name: "Doorframe Chest Opener",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Chest", "Anterior Shoulders", "Biceps"],
     description:
       "Stand in a doorway with your forearms on the frame at 90°. Lean your body forward gently until you feel a stretch across your chest and front shoulders.",
@@ -175,7 +175,7 @@ const STRETCHES: Record<string, Stretch> = {
   hipFlexorLunge: {
     id: "hipFlexorLunge",
     name: "Low Lunge Hip Flexor",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Hip Flexors", "Quads", "Psoas"],
     description:
       "Drop into a low lunge with your back knee on the ground. Push your hips forward and down while keeping your torso upright. Switch at 30 s.",
@@ -188,7 +188,7 @@ const STRETCHES: Record<string, Stretch> = {
   hamstring: {
     id: "hamstring",
     name: "Standing Hamstring Stretch",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Hamstrings", "Calves", "Lower Back"],
     description:
       "Stand with feet hip-width apart. Hinge at the hips with a neutral spine and reach toward the floor. Bend your knees slightly if needed at first.",
@@ -201,7 +201,7 @@ const STRETCHES: Record<string, Stretch> = {
   thoracicRotation: {
     id: "thoracicRotation",
     name: "Seated Thoracic Rotation",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Thoracic Spine", "Obliques", "Rotator Cuff"],
     description:
       "Sit cross-legged. Place one hand on your opposite knee and rotate your upper body, looking over your shoulder as far as comfortable. Switch at 30 s.",
@@ -214,7 +214,7 @@ const STRETCHES: Record<string, Stretch> = {
   pigeonPose: {
     id: "pigeonPose",
     name: "Pigeon Pose Hip Opener",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Hip External Rotators", "Glutes", "IT Band"],
     description:
       "From all-fours, bring one shin in front of you roughly parallel to your hands. Extend the other leg straight back. Fold forward over your front shin. Switch at 30 s.",
@@ -227,7 +227,7 @@ const STRETCHES: Record<string, Stretch> = {
   tricepsStretch: {
     id: "tricepsStretch",
     name: "Overhead Triceps Stretch",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Triceps", "Posterior Shoulder", "Lat"],
     description:
       "Raise one arm overhead, bend the elbow, and reach down your back. Use your other hand to gently press the elbow further. Switch sides at 30 s.",
@@ -240,7 +240,7 @@ const STRETCHES: Record<string, Stretch> = {
   pancake: {
     id: "pancake",
     name: "Pancake Stretch",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Hamstrings", "Hip Adductors", "Lower Back"],
     description:
       "Sit in a wide straddle. With a flat back, hinge forward from the hips and walk your hands out in front. Relax and let gravity pull you deeper.",
@@ -253,7 +253,7 @@ const STRETCHES: Record<string, Stretch> = {
   shoulderFlexion: {
     id: "shoulderFlexion",
     name: "Reverse Shoulder Flexion",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Anterior Deltoid", "Chest", "Biceps"],
     description:
       "Kneel with your back to a low surface. Place both hands behind you on the surface, fingers pointing away. Slowly lower your hips to open the front of your shoulders.",
@@ -266,7 +266,7 @@ const STRETCHES: Record<string, Stretch> = {
   ankleCircles: {
     id: "ankleCircles",
     name: "Ankle Mobility Circles",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Ankles", "Calves", "Achilles"],
     description:
       "Sit or stand on one foot. Lift the other foot and draw large slow circles with your toes — 10 clockwise, 10 counter-clockwise. Switch at 30 s.",
@@ -279,7 +279,7 @@ const STRETCHES: Record<string, Stretch> = {
   calfStretch: {
     id: "calfStretch",
     name: "Wall Calf Stretch",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Calves", "Achilles", "Ankles"],
     description:
       "Stand facing a wall with hands on it for support. Step one foot back and press the heel into the floor with a straight knee. Switch at 30 s.",
@@ -294,7 +294,7 @@ const STRETCHES: Record<string, Stretch> = {
   activeScapularShrugsFloor: {
     id: "activeScapularShrugsFloor",
     name: "Active Scapular Shrugs (Floor)",
-    durationSeconds: 45,
+    durationSeconds: 30,
     targetMuscles: ["Serratus Anterior", "Lower Trapezius", "Scapular Stabilisers"],
     description:
       "Start in a push-up plank with arms straight. Without bending the elbows, push the floor away to protract your scapulae (round the upper back), then let them retract fully. Alternate slowly.",
@@ -308,7 +308,7 @@ const STRETCHES: Record<string, Stretch> = {
   puppyPoseFloor: {
     id: "puppyPoseFloor",
     name: "Puppy Pose (Floor)",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Thoracic Spine", "Lats", "Shoulder Flexors"],
     description:
       "Start on all-fours. Walk your hands forward while keeping hips above your knees. Let your chest melt toward the floor and your arms stretch long overhead. Hold passively.",
@@ -321,7 +321,7 @@ const STRETCHES: Record<string, Stretch> = {
   wristCircles: {
     id: "wristCircles",
     name: "Wrist Circles (Closed Fist)",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Wrist Flexors", "Wrist Extensors", "Forearm Pronators"],
     description:
       "Make gentle fists and perform slow, large circles — 10 rotations clockwise, 10 counter-clockwise on each wrist. Then open the fists and repeat with splayed fingers.",
@@ -334,7 +334,7 @@ const STRETCHES: Record<string, Stretch> = {
   wallPuppyPose: {
     id: "wallPuppyPose",
     name: "Wall Puppy Pose",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Thoracic Spine", "Shoulder Flexors", "Lats"],
     description:
       "Stand an arm's length from the wall. Place both palms flat on the wall at shoulder height. Walk your feet back and hinge at the hips until your chest sinks toward the floor, arms straight.",
@@ -347,7 +347,7 @@ const STRETCHES: Record<string, Stretch> = {
   firstKnuckleRaises: {
     id: "firstKnuckleRaises",
     name: "First Knuckle Raises",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Wrist Flexors", "Finger Flexors", "Forearms"],
     description:
       "In a kneeling wrist extension position with palms flat, slowly raise your palms off the floor while keeping only your first knuckles down. Hold 2 s, lower, repeat.",
@@ -360,7 +360,7 @@ const STRETCHES: Record<string, Stretch> = {
   butchersBlock: {
     id: "butchersBlock",
     name: "Butcher's Block Stretch",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Triceps", "Lats", "Serratus"],
     description:
       "Kneel in front of a chair or bench. Place your elbows on the surface shoulder-width apart. Clasp hands behind your head and sink your chest toward the floor.",
@@ -376,7 +376,7 @@ const STRETCHES: Record<string, Stretch> = {
   sleeperStretch: {
     id: "sleeperStretch",
     name: "Shoulder Internal Rotation (Sleeper Stretch)",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Posterior Capsule", "External Rotators", "Infraspinatus"],
     description:
       "Lie on your side with your bottom arm at 90° (elbow bent, forearm pointing up). Use your top hand to gently press the forearm down toward the floor. Switch at 30 s.",
@@ -389,7 +389,7 @@ const STRETCHES: Record<string, Stretch> = {
   latSmashFloor: {
     id: "latSmashFloor",
     name: "Lat Smash (Floor)",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Lats", "Teres Major", "Thoracic Fascia"],
     description:
       "Lie on your back. Place a lacrosse ball or tennis ball under one armpit/lat area. Use your bodyweight to apply pressure and slowly sweep the arm overhead and back. Switch at 30 s.",
@@ -402,7 +402,7 @@ const STRETCHES: Record<string, Stretch> = {
   behindBackClasp: {
     id: "behindBackClasp",
     name: "Behind-the-Back Clasp",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Anterior Deltoid", "Pectoralis Minor", "Biceps"],
     description:
       "Stand tall. Clasp your hands behind your back with straight arms. Gently squeeze your shoulder blades together and lift your arms away from your body. Hold and breathe.",
@@ -417,7 +417,7 @@ const STRETCHES: Record<string, Stretch> = {
   germanHang: {
     id: "germanHang",
     name: "German Hang (Passive)",
-    durationSeconds: 45,
+    durationSeconds: 30,
     targetMuscles: ["Shoulder Extension", "Anterior Shoulder", "Biceps"],
     description:
       "Hang from a bar or rings with a false grip, then slowly rotate your body backward so your shoulders extend behind you. Keep arms straight. Hold passively.",
@@ -430,7 +430,7 @@ const STRETCHES: Record<string, Stretch> = {
   skinTheCat: {
     id: "skinTheCat",
     name: "Skin the Cat (Partial)",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Shoulders", "Scapular Stabilisers", "Lats"],
     description:
       "Hang from a bar or rings. Tuck your knees to your chest and slowly rotate your hips overhead and through, going as far as comfortable. Reverse slowly.",
@@ -443,7 +443,7 @@ const STRETCHES: Record<string, Stretch> = {
   deepLatStretch: {
     id: "deepLatStretch",
     name: "Deep Lat Foam Roll",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Lats", "Teres Major", "Thoracic Spine"],
     description:
       "Lie on your side on a foam roller with it under your armpit. Roll slowly from armpit to lower ribs, pausing on any tight spots for 5–10 s.",
@@ -458,7 +458,7 @@ const STRETCHES: Record<string, Stretch> = {
   backOfHandRocks: {
     id: "backOfHandRocks",
     name: "Back-of-Hand Rocks",
-    durationSeconds: 45,
+    durationSeconds: 30,
     targetMuscles: ["Wrist Extensors", "Forearm Dorsal Fascia", "Finger Extensors"],
     description:
       "Kneel and place the backs of your hands flat on the floor, fingers pointing toward your knees. Gently rock forward to load the wrist extension position. Hold 5 s, rock back. Repeat.",
@@ -471,7 +471,7 @@ const STRETCHES: Record<string, Stretch> = {
   plancheLeanActiveStretch: {
     id: "plancheLeanActiveStretch",
     name: "Planche Lean (Active Stretch)",
-    durationSeconds: 45,
+    durationSeconds: 30,
     targetMuscles: ["Serratus Anterior", "Wrists", "Shoulder Protractors"],
     description:
       "In a plank position with hands turned out slightly, lean your entire body forward until shoulders are directly over — or past — the wrists. Actively protract your scapulae. Hold 5 s, reset. Repeat.",
@@ -484,7 +484,7 @@ const STRETCHES: Record<string, Stretch> = {
   wristPalmPeels: {
     id: "wristPalmPeels",
     name: "Wrist Palm Peels",
-    durationSeconds: 45,
+    durationSeconds: 30,
     targetMuscles: ["Wrist Flexors", "Palm Fascia", "Finger Flexors"],
     description:
       "Place one palm flat on a wall at shoulder height, fingers pointing up. Use your other hand to gently peel the palm away from the wall starting at the base. Hold each position 3–5 s. Switch at 25 s.",
@@ -499,7 +499,7 @@ const STRETCHES: Record<string, Stretch> = {
   plancheLeans: {
     id: "plancheLeans",
     name: "Planche Leans",
-    durationSeconds: 45,
+    durationSeconds: 30,
     targetMuscles: ["Wrists", "Shoulder Protraction", "Serratus"],
     description:
       "Start in a push-up position. Lean your entire body forward so your shoulders pass in front of your wrists, keeping arms straight. Hold, then return. Repeat slowly.",
@@ -512,7 +512,7 @@ const STRETCHES: Record<string, Stretch> = {
   reverseTabletop: {
     id: "reverseTabletop",
     name: "Reverse Tabletop Stretch",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Anterior Deltoids", "Chest", "Wrist Extensors"],
     description:
       "Sit with knees bent, feet flat. Place hands behind you fingers pointing forward. Press hips up until body is parallel to the floor. Hold and breathe.",
@@ -525,7 +525,7 @@ const STRETCHES: Record<string, Stretch> = {
   fingerPulses: {
     id: "fingerPulses",
     name: "Finger Tendon Pulses",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Finger Flexors", "Wrist Tendons", "Forearms"],
     description:
       "Hold one hand out palm-up. With the other hand, gently bend each finger back individually to a comfortable stretch. Hold 5 s per finger, then do gentle pulse stretches.",
@@ -540,7 +540,7 @@ const STRETCHES: Record<string, Stretch> = {
   ninetyNineHipSwitches: {
     id: "ninetyNineHipSwitches",
     name: "90/90 Hip Switches",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Hip Internal Rotators", "Hip External Rotators", "Glutes"],
     description:
       "Sit on the floor with both legs bent at roughly 90°. Keeping your torso upright, rotate both knees to the opposite side and lower them toward the floor. 'Switch' sides in a controlled windshield-wiper motion.",
@@ -554,7 +554,7 @@ const STRETCHES: Record<string, Stretch> = {
   deepSquatInternalRotation: {
     id: "deepSquatInternalRotation",
     name: "Deep Squat Internal Rotation",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Hip Internal Rotators", "Adductors", "Glute Medius"],
     description:
       "Sink into a deep squat with feet shoulder-width, toes turned out slightly. Hold onto a door frame or post. From the bottom, drive one knee inward toward the floor while keeping the heel down. Switch sides at 30 s.",
@@ -567,7 +567,7 @@ const STRETCHES: Record<string, Stretch> = {
   couchStretch: {
     id: "couchStretch",
     name: "Couch Stretch (Wall-Assisted)",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Hip Flexors", "Rectus Femoris", "Quads"],
     description:
       "Kneel with one shin pressed against a wall, foot pointing up. Step the other foot forward into a lunge position. Push hips forward and down while keeping the torso upright. Switch at 30 s.",
@@ -582,7 +582,7 @@ const STRETCHES: Record<string, Stretch> = {
   ankleDorsiflexion: {
     id: "ankleDorsiflexion",
     name: "Weighted Ankle Dorsiflexion",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Ankle Dorsiflexors", "Achilles", "Tibialis Anterior"],
     description:
       "Stand facing a wall, foot 10 cm away. Drive your knee forward to touch the wall while keeping your heel flat. Add a light plate on the knee for extra load. Switch at 30 s.",
@@ -595,7 +595,7 @@ const STRETCHES: Record<string, Stretch> = {
   cossackSquats: {
     id: "cossackSquats",
     name: "Cossack Squats",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Hip Adductors", "Glutes", "Ankles"],
     description:
       "Stand with feet wide. Shift your weight to one side and squat down on that leg while extending the other straight out. Keep the squatting foot flat. Switch sides at 30 s.",
@@ -610,7 +610,7 @@ const STRETCHES: Record<string, Stretch> = {
   threadTheNeedle: {
     id: "threadTheNeedle",
     name: "Thread the Needle",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Thoracic Spine", "Posterior Shoulder", "Obliques"],
     description:
       "Start on all-fours. Slide one arm under your body along the floor as far as it will go, rotating your upper back. Let the shoulder and head rest on the floor. Switch at 30 s.",
@@ -623,7 +623,7 @@ const STRETCHES: Record<string, Stretch> = {
   cobraStretch: {
     id: "cobraStretch",
     name: "Cobra Stretch",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Abdominals", "Hip Flexors", "Lumbar Spine"],
     description:
       "Lie face-down with palms flat beside your chest. Straighten your arms to lift your chest off the floor, keeping your hips down and your lower back long. Hold and breathe.",
@@ -636,7 +636,7 @@ const STRETCHES: Record<string, Stretch> = {
   seatedLSitCompression: {
     id: "seatedLSitCompression",
     name: "Seated L-Sit Compression",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Hip Flexors", "Quads", "Abdominals"],
     description:
       "Sit on the floor with legs straight out in front. Place hands beside your hips and actively pull your legs off the floor as high as possible, keeping them straight. Hold 3–5 s, lower, repeat.",
@@ -651,7 +651,7 @@ const STRETCHES: Record<string, Stretch> = {
   scapularHangs: {
     id: "scapularHangs",
     name: "Active Scapular Hangs",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Serratus Anterior", "Lower Traps", "Scapular Retractors"],
     description:
       "Hang from a bar with straight arms. Without bending the elbows, alternately depress and elevate your shoulder blades — 'shrink' down, then 'reach' up. Slow and controlled.",
@@ -664,7 +664,7 @@ const STRETCHES: Record<string, Stretch> = {
   proneYRaises: {
     id: "proneYRaises",
     name: "Prone Y-Raises",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Lower Trapezius", "Posterior Deltoid", "Rhomboids"],
     description:
       "Lie face-down on the floor. Extend arms in a Y-shape (thumbs up). Squeeze your shoulder blades together and raise your arms as high as comfortable. Lower slowly. Repeat.",
@@ -677,7 +677,7 @@ const STRETCHES: Record<string, Stretch> = {
   thoracicBridge: {
     id: "thoracicBridge",
     name: "Thoracic Bridge",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Thoracic Spine", "Glutes", "Hip Extensors"],
     description:
       "Lie on your back with knees bent, feet flat. Press up into a glute bridge, then slowly walk hands overhead on the floor and try to press your chest through. Hold 5 s, lower.",
@@ -692,7 +692,7 @@ const STRETCHES: Record<string, Stretch> = {
   wristRockFlow: {
     id: "wristRockFlow",
     name: "Wrist Rock Flow",
-    durationSeconds: 60,
+    durationSeconds: 30,
     targetMuscles: ["Wrist Extensors", "Wrist Flexors", "Forearm Tendons", "Carpal Ligaments"],
     description:
       "Kneel on all-fours with palms flat, fingers pointing forward. Slowly rock forward so the wrist bends into full extension, then rock backward to flex the wrist. Flow through the full range — 10 slow rocks each direction.",
@@ -708,7 +708,7 @@ const STRETCHES: Record<string, Stretch> = {
   catCowJeffersonCurl: {
     id: "catCowJeffersonCurl",
     name: "Cat-Cow & Jefferson Curl",
-    durationSeconds: 90,
+    durationSeconds: 30,
     targetMuscles: ["Thoracic Spine", "Lumbar Spine", "Erector Spinae", "Hamstrings", "Glutes"],
     description:
       "Part 1 (Cat-Cow, 45 s): On all-fours, inhale and arch your back (cow), then exhale and round it fully (cat). Slow, controlled breath-driven movement. Part 2 (Jefferson Curl, 45 s): Stand on a step or block. With a light weight or bodyweight, chin to chest, curl vertebra-by-vertebra down toward the floor, then slowly uncurl back up.",
@@ -829,7 +829,7 @@ export function getRoutineForGoal(goal: MobilityGoal | string): Stretch[] {
  * Generate a personalized task list based on questionnaire preferences.
  * - Prioritises stretches that target the user's stiffness areas
  * - Trims to match the daily time commitment
- *   5 min → 3 stretches, 10 min → 5 stretches, 15 min → up to 8 stretches
+ *   5 min → 5 stretches, 10 min → 8 stretches, 15 min → 12 stretches
  */
 export function getTasksForPreferences(
   goal: MobilityGoal | string,
@@ -854,10 +854,10 @@ export function getTasksForPreferences(
   ];
 
   // Determine target count from time budget
-  let targetCount = 5;
-  if (dailyTimeMinutes <= 5)  targetCount = 3;
-  else if (dailyTimeMinutes <= 10) targetCount = 5;
-  else targetCount = 8;
+  let targetCount = 8;
+  if (dailyTimeMinutes <= 5)  targetCount = 5;
+  else if (dailyTimeMinutes <= 10) targetCount = 8;
+  else targetCount = 12;
 
   // If we need more than the base routine (15 min), pull stiffness + full library
   if (targetCount > sorted.length) {
