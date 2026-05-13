@@ -419,7 +419,7 @@ export function Home() {
               </div>
 
               <Button asChild size="sm" variant={mobilityStatus?.completedToday ? "outline" : "default"}>
-                <Link href="/training">
+                <Link href="/mobility">
                   {mobilityStatus?.completedToday ? t("dashboard.repeat") : t("dashboard.begin")}
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Link>
