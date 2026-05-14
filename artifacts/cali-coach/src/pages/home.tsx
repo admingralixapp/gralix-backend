@@ -291,25 +291,34 @@ function PerformanceTrendsCard({ isPro }: { isPro: boolean }) {
 
 const JOINT_LS_KEY = "calicoach_joint_readiness_v1";
 
-interface JointLog { date: string; wrist: number; elbow: number; shoulder: number; }
+const JOINTS = ["wrist", "elbow", "shoulder", "neck", "hips", "knee", "ankle"] as const;
+type JointKey = typeof JOINTS[number];
+type JointInput = Record<JointKey, number>;
+
+interface JointLog extends JointInput { date: string; }
 
 function loadJoints(): JointLog[] {
   try { return JSON.parse(localStorage.getItem(JOINT_LS_KEY) ?? "[]"); }
   catch { return []; }
 }
 
+const DEFAULT_INPUT: JointInput = { wrist: 7, elbow: 7, shoulder: 7, neck: 7, hips: 7, knee: 7, ankle: 7 };
+
 function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () => void }) {
   const today = fmtDate(new Date(), "yyyy-MM-dd");
 
   const [logs,       setLogs]       = useState<JointLog[]>(loadJoints);
-  const [input,      setInput]      = useState({ wrist: 7, elbow: 7, shoulder: 7 });
+  const [input,      setInput]      = useState<JointInput>(DEFAULT_INPUT);
   const [todayDone,  setTodayDone]  = useState(() => loadJoints().some(l => l.date === today));
   const [expanded,   setExpanded]   = useState(() => !loadJoints().some(l => l.date === today));
 
   const avgLast7 = useMemo(() => {
     const recent = logs.slice(-7);
     if (!recent.length) return null;
-    const avg = recent.reduce((s, l) => s + (l.wrist + l.elbow + l.shoulder) / 3, 0) / recent.length;
+    const avg = recent.reduce((s, l) => {
+      const vals = JOINTS.map(j => l[j] ?? 7);
+      return s + vals.reduce((a, b) => a + b, 0) / vals.length;
+    }, 0) / recent.length;
     return Math.round(avg * 10) / 10;
   }, [logs]);
 
@@ -384,7 +393,7 @@ function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () =
             className="rounded-xl p-4 space-y-3"
             style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
           >
-            {(["wrist", "elbow", "shoulder"] as const).map((joint) => (
+            {JOINTS.map((joint) => (
               <div key={joint} className="flex items-center gap-3">
                 <span className="w-16 text-xs capitalize text-white/40 shrink-0">{joint}</span>
                 <input
@@ -408,26 +417,17 @@ function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () =
               </div>
             ))}
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleLog}
-              className="flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
-              style={{
-                background: "linear-gradient(90deg, rgba(245,158,11,0.18), rgba(245,158,11,0.10))",
-                border:     "1px solid rgba(245,158,11,0.35)",
-                color:      "#f59e0b",
-              }}
-            >
-              {todayDone ? "Update Today" : "Log Today"}
-            </button>
-            <button
-              onClick={onNavigateProgress}
-              className="px-3 py-2 rounded-lg text-xs font-medium text-white/35 hover:text-white/60 transition-colors"
-              style={{ border: "1px solid rgba(255,255,255,0.08)" }}
-            >
-              Full Chart →
-            </button>
-          </div>
+          <button
+            onClick={handleLog}
+            className="w-full py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
+            style={{
+              background: "linear-gradient(90deg, rgba(245,158,11,0.18), rgba(245,158,11,0.10))",
+              border:     "1px solid rgba(245,158,11,0.35)",
+              color:      "#f59e0b",
+            }}
+          >
+            {todayDone ? "Update Today" : "Log Today"}
+          </button>
         </div>
       )}
     </div>
