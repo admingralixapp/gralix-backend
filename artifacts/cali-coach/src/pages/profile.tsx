@@ -392,7 +392,7 @@ function ProfileContent() {
   };
 
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="p-6 max-w-2xl mx-auto">
       {/* Back */}
       <Link
         href="/friends"
