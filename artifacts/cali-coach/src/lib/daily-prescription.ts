@@ -10,7 +10,7 @@
  * the user is to mastering each prerequisite.
  */
 
-import { ALL_SKILL_NODES, type SkillNode } from "./skill-tree";
+import { ALL_SKILL_NODES, type SkillNode, type EvaluatedSkill } from "./skill-tree";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -78,6 +78,47 @@ function buildPrerequisiteChain(targetId: string): SkillNode[] {
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
+
+/**
+ * Auto-selects the most advanced skill the user can currently train.
+ *
+ * Strategy:
+ *   1. Prefer "unlocked" (prerequisites met, not yet mastered) skills —
+ *      these are the frontier the user should push.
+ *   2. Among the frontier, pick the highest `level` node.  Ties broken by
+ *      whichever appears latest in ALL_SKILL_NODES (prerequisites-first order).
+ *   3. If every unlocked node is already mastered, fall back to the highest-
+ *      level mastered node so the card still shows useful content.
+ *   4. Returns null only when the evaluated list is empty.
+ */
+export function getSmartPrescription(
+  evaluated: EvaluatedSkill[],
+  exerciseStats: Record<string, { total: number }>,
+): PrescriptionResult | null {
+  if (evaluated.length === 0) return null;
+
+  const frontier = evaluated.filter((s) => s.status === "unlocked");
+
+  if (frontier.length > 0) {
+    // Most advanced = highest level; ties broken by position in the array
+    // (later = deeper in the tree, since ALL_SKILL_NODES is topo-sorted).
+    const target = frontier.reduce((best, n) => n.level >= best.level ? n : best);
+    return getDailyPrescription(target.id, exerciseStats);
+  }
+
+  // All reachable nodes are mastered — fall back to the most advanced mastered one.
+  const mastered = evaluated.filter((s) => s.status === "mastered");
+  if (mastered.length > 0) {
+    const target = mastered.reduce((best, n) => n.level >= best.level ? n : best);
+    return getDailyPrescription(target.id, exerciseStats);
+  }
+
+  // Only locked skills exist (no prerequisites met yet) — use the first Foundation node.
+  const fallback = evaluated.find((s) => s.prerequisiteId === null);
+  if (fallback) return getDailyPrescription(fallback.id, exerciseStats);
+
+  return null;
+}
 
 /**
  * Returns the single best exercise prescription for today, or null if the
