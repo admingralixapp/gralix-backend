@@ -74,30 +74,45 @@ async function updateWorldObjects(exerciseName: string, anchors: EnvAnchorPayloa
   const source = await readFile(POSES_FILE, "utf-8");
 
   const SENTINEL = "// <<<WORLD_OBJECTS_END>>>";
-  if (!source.includes(SENTINEL)) {
+  const SECTION_MARKER = "export const EXERCISE_WORLD_OBJECTS";
+
+  const sentinelIdx = source.indexOf(SENTINEL);
+  if (sentinelIdx === -1) {
     throw new Error("World objects sentinel not found in exercise-poses.ts");
   }
+  const sectionIdx = source.indexOf(SECTION_MARKER);
+  if (sectionIdx === -1) {
+    throw new Error("EXERCISE_WORLD_OBJECTS declaration not found in exercise-poses.ts");
+  }
+
+  // Scope all regex operations to ONLY the EXERCISE_WORLD_OBJECTS section,
+  // never touching MOBILITY_POSE_LIBRARY or any other part of the file.
+  const beforeSection = source.slice(0, sectionIdx);
+  const section      = source.slice(sectionIdx, sentinelIdx);
+  const suffix       = source.slice(sentinelIdx);   // starts with SENTINEL
 
   const escaped = exerciseName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const entryRe = new RegExp(`  "${escaped}": \\[[\\s\\S]*?\\n  \\],\\n`, "g");
 
-  let updated: string;
-
   if (anchors.length === 0) {
-    // Remove the entry if it exists
-    updated = source.replace(entryRe, "");
-  } else {
-    const newEntry = serializeWorldObjectsEntry(exerciseName, anchors);
-    if (entryRe.test(source)) {
-      entryRe.lastIndex = 0;
-      updated = source.replace(entryRe, `${newEntry}\n`);
-    } else {
-      // Insert before the sentinel
-      updated = source.replace(SENTINEL, `${newEntry}\n${SENTINEL}`);
-    }
+    // Remove the entry if it exists inside the section
+    const updatedSection = section.replace(entryRe, "");
+    await writeFile(POSES_FILE, beforeSection + updatedSection + suffix, "utf-8");
+    return;
   }
 
-  await writeFile(POSES_FILE, updated, "utf-8");
+  const newEntry = serializeWorldObjectsEntry(exerciseName, anchors);
+
+  if (entryRe.test(section)) {
+    // Update existing entry inside the section
+    entryRe.lastIndex = 0;
+    const updatedSection = section.replace(entryRe, `${newEntry}\n`);
+    await writeFile(POSES_FILE, beforeSection + updatedSection + suffix, "utf-8");
+  } else {
+    // No existing entry — insert new one immediately before the sentinel
+    const updatedSuffix = suffix.replace(SENTINEL, `${newEntry}\n${SENTINEL}`);
+    await writeFile(POSES_FILE, beforeSection + section + updatedSuffix, "utf-8");
+  }
 }
 
 // ── Router ────────────────────────────────────────────────────────────────────

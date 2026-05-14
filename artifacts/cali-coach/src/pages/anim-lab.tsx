@@ -325,7 +325,15 @@ export function AnimLabPage() {
 
   const initFrames = (name: string): [PoseData, PoseData, PoseData] => {
     const ps = getPoseSet(name);
-    return [cloneFrame(ps[0]), cloneFrame(ps[1]), cloneFrame(ps[2])];
+    // Guard: if any frame is undefined (e.g. during HMR module reload), fall back
+    // to the first defined frame so JSON.parse never receives undefined.
+    const fallback = ps[0] ?? ps[1] ?? ps[2];
+    if (!fallback) throw new Error(`No pose data found for exercise: "${name}"`);
+    return [
+      cloneFrame(ps[0] ?? fallback),
+      cloneFrame(ps[1] ?? fallback),
+      cloneFrame(ps[2] ?? fallback),
+    ];
   };
 
   const [frames, setFrames] = useState<[PoseData, PoseData, PoseData]>(() => initFrames(exercise));

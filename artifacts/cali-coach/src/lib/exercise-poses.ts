@@ -1063,35 +1063,35 @@ const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
   // MID:   body leans forward, arms STRAIGHT, palms flat, fingers toward knees.
   // END:   hips sink BACK toward heels — hands stay LOCKED at MID positions.
   "Wrist Extension Stretch": [
-    { // START — kneeling upright; elbows BENT; hands ON floor line (y=67)
-      head: { cx: 68, cy: 11, r: 6 },
+    { // START — kneeling upright, elbows bent, hands touching floor (y=67)
+      head: { cx: 50, cy: 10, r: 6 },
       lines: [
-        [[64, 17], [54, 44]],                              // spine (upright kneeling)
-        [[58, 25], [70, 44], [62, 67]],                    // near arm: shoulder→BENT elbow→hand at floor
-        [[58, 25], [72, 46], [68, 67]],                    // far arm: shoulder→bent elbow→hand at floor
-        [[54, 44], [44, 60], [28, 67]],                    // near shin on floor
-        [[54, 44], [46, 60], [32, 67]],                    // far shin on floor
+        [[50,16],[50,48]],
+        [[50,26],[36,36],[32,52]],
+        [[50,26],[64,36],[68,52]],
+        [[50,48],[44,66],[36,80]],
+        [[50,48],[56,66],[64,80]],
       ],
     },
-    { // MID — body leans forward; arms STRAIGHT; palms flat (fingers toward knees)
-      head: { cx: 80, cy: 20, r: 6 },
+    { // MID — body leans forward, arms straight, palms flat
+      head: { cx: 80, cy: 22, r: 6 },
       lines: [
-        [[76, 24], [62, 32], [44, 44]],                    // spine (forward lean)
-        [[62, 32], [62, 50], [62, 67]],                    // near arm STRAIGHT — hand LOCKED [62,67]
-        [[62, 32], [65, 50], [68, 67]],                    // far arm STRAIGHT  — hand LOCKED [68,67]
-        [[44, 44], [34, 60], [18, 67]],                    // near shin
-        [[44, 44], [36, 60], [22, 67]],                    // far shin
+        [[75,26],[62,32],[50,40]],
+        [[62,32],[44,36],[28,44]],
+        [[62,32],[68,40],[72,48]],
+        [[50,40],[44,58],[36,74]],
+        [[50,40],[56,58],[64,74]],
       ],
-      muscleGlow: { cx: 64, cy: 56, rx: 16, ry: 10 },
+      muscleGlow: { cx: 38, cy: 38, rx: 18, ry: 7 },
     },
-    { // END — hips sink BACK toward heels; hands LOCKED at EXACT MID coords
-      head: { cx: 62, cy: 17, r: 6 },
+    { // END — hips sink back toward heels, hands locked at mid positions
+      head: { cx: 82, cy: 27, r: 6 },
       lines: [
-        [[58, 23], [50, 50]],                              // spine more upright (hips back, y=50 vs y=44)
-        [[52, 32], [57, 50], [62, 67]],                    // near arm steeper angle — endpoint [62,67] LOCKED
-        [[52, 32], [60, 50], [68, 67]],                    // far arm steeper angle  — endpoint [68,67] LOCKED
-        [[50, 50], [38, 62], [22, 67]],                    // near shin (adjusted for hip shift)
-        [[50, 50], [34, 62], [16, 67]],                    // far shin
+        [[77,31],[64,37],[52,44]],
+        [[64,37],[46,41],[30,49]],
+        [[64,37],[70,45],[74,53]],
+        [[52,44],[46,62],[38,78]],
+        [[52,44],[58,62],[66,78]],
       ],
     },
   ],
