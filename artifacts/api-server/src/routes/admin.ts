@@ -13,8 +13,12 @@ interface PoseFrame {
   muscleGlow?: { cx: number; cy: number; rx: number; ry: number };
 }
 
-// ── Serializer ───────────────────────────────────────────────────────────────
-// Generates the TypeScript source block for one exercise entry in MOBILITY_POSE_LIBRARY.
+interface EnvAnchorPayload {
+  type: "floor" | "wall" | "bar" | "box";
+  x1: number; y1: number; x2: number; y2: number;
+}
+
+// ── Serializers ───────────────────────────────────────────────────────────────
 
 function serializeFrame(frame: PoseFrame, label: string): string {
   const h = frame.head;
@@ -40,17 +44,21 @@ function serializePoseSet(exerciseName: string, frames: PoseFrame[]): string {
   ].join("\n");
 }
 
-// ── File updater ──────────────────────────────────────────────────────────────
-// Finds the exercise block by name and replaces it with newly serialized content.
-// The regex matches:   "Exercise Name": [  …  ],
-// where the closing ],  has exactly 2 spaces of indentation (distinguishing it
-// from inner array closings which use 4+ spaces).
+function serializeEnvAnchor(a: EnvAnchorPayload): string {
+  return `    { type: "${a.type}", x1: ${a.x1}, y1: ${a.y1}, x2: ${a.x2}, y2: ${a.y2} },`;
+}
+
+function serializeWorldObjectsEntry(exerciseName: string, anchors: EnvAnchorPayload[]): string {
+  const rows = anchors.map(serializeEnvAnchor).join("\n");
+  return `  "${exerciseName}": [\n${rows}\n  ],`;
+}
+
+// ── File updaters ─────────────────────────────────────────────────────────────
 
 async function updateExerciseBlock(exerciseName: string, newBlock: string): Promise<void> {
   const source = await readFile(POSES_FILE, "utf-8");
 
   const escaped = exerciseName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  // Match from the opening key line up to (and including) the next \n  ], at 2-space indent
   const blockRe = new RegExp(`  "${escaped}": \\[[\\s\\S]*?\\n  \\],`, "g");
 
   if (!blockRe.test(source)) {
@@ -59,6 +67,36 @@ async function updateExerciseBlock(exerciseName: string, newBlock: string): Prom
   blockRe.lastIndex = 0;
 
   const updated = source.replace(blockRe, newBlock);
+  await writeFile(POSES_FILE, updated, "utf-8");
+}
+
+async function updateWorldObjects(exerciseName: string, anchors: EnvAnchorPayload[]): Promise<void> {
+  const source = await readFile(POSES_FILE, "utf-8");
+
+  const SENTINEL = "// <<<WORLD_OBJECTS_END>>>";
+  if (!source.includes(SENTINEL)) {
+    throw new Error("World objects sentinel not found in exercise-poses.ts");
+  }
+
+  const escaped = exerciseName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const entryRe = new RegExp(`  "${escaped}": \\[[\\s\\S]*?\\n  \\],\\n`, "g");
+
+  let updated: string;
+
+  if (anchors.length === 0) {
+    // Remove the entry if it exists
+    updated = source.replace(entryRe, "");
+  } else {
+    const newEntry = serializeWorldObjectsEntry(exerciseName, anchors);
+    if (entryRe.test(source)) {
+      entryRe.lastIndex = 0;
+      updated = source.replace(entryRe, `${newEntry}\n`);
+    } else {
+      // Insert before the sentinel
+      updated = source.replace(SENTINEL, `${newEntry}\n${SENTINEL}`);
+    }
+  }
+
   await writeFile(POSES_FILE, updated, "utf-8");
 }
 
@@ -76,7 +114,6 @@ router.put("/admin/poses/:name", async (req: Request, res: Response) => {
     return;
   }
 
-  // Basic shape validation
   for (let i = 0; i < 3; i++) {
     const f = frames[i];
     if (!f?.head || !Array.isArray(f.lines)) {
@@ -89,6 +126,33 @@ router.put("/admin/poses/:name", async (req: Request, res: Response) => {
     const block = serializePoseSet(exerciseName, frames);
     await updateExerciseBlock(exerciseName, block);
     res.json({ ok: true, message: `Updated "${exerciseName}" in exercise-poses.ts` });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: msg });
+  }
+});
+
+// PUT /api/admin/poses/:name/env — write world objects to EXERCISE_WORLD_OBJECTS
+router.put("/admin/poses/:name/env", async (req: Request, res: Response) => {
+  const exerciseName = decodeURIComponent(req.params.name);
+  const { objects } = req.body as { objects?: EnvAnchorPayload[] };
+
+  if (!Array.isArray(objects)) {
+    res.status(400).json({ error: "objects must be an array of EnvAnchor" });
+    return;
+  }
+
+  for (const a of objects) {
+    if (!a?.type || typeof a.x1 !== "number" || typeof a.y1 !== "number" ||
+        typeof a.x2 !== "number" || typeof a.y2 !== "number") {
+      res.status(400).json({ error: "Each anchor needs type, x1, y1, x2, y2" });
+      return;
+    }
+  }
+
+  try {
+    await updateWorldObjects(exerciseName, objects);
+    res.json({ ok: true, message: `Updated world objects for "${exerciseName}"` });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     res.status(500).json({ error: msg });

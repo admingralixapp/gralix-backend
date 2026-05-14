@@ -6,7 +6,7 @@ import { ArrowLeft, CheckCircle2, Clock, Flame, Pause, Pencil, Play, SkipForward
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
-import { getPoseSet, getMobilityEnv, getExerciseIntensity, type PoseData, type EnvAnchor } from "@/lib/exercise-poses";
+import { getPoseSet, getWorldObjects, getExerciseIntensity, type PoseData, type EnvAnchor } from "@/lib/exercise-poses";
 import { useTranslation } from "react-i18next";
 import { speak, setActiveVoiceProfile } from "@/lib/voice-service";
 import { getVoiceCues, getVoiceProfile } from "@/lib/workout-preferences";
@@ -432,7 +432,7 @@ function HeroSkeleton({
   exerciseName: string; paused: boolean; color?: string;
 }) {
   const poseSet = getPoseSet(exerciseName);
-  const env     = getMobilityEnv(exerciseName);
+  const env     = getWorldObjects(exerciseName)[0];
   const intensity = getExerciseIntensity(exerciseName);
   const intervalMs = intensity === "strenuous" ? 800 : intensity === "relaxed" ? 1900 : 1300;
 

@@ -1139,39 +1139,33 @@ const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
   // Arms sweep together; both shown slightly staggered for depth.
   "Shoulder Dislocates": [
     { // START
-      head: { cx: 50, cy: 10, r: 7 },
+      head: { cx: 49.5, cy: 22.5, r: 6 },
       lines: [
-        [[50,17],[50,52]],
-        [[50,22],[40,40],[35,60]],
-        [[50,22],[60,40],[65,60]],
-        [[50,52],[43,70]],
-        [[50,52],[57,70]],
-        [[43,70],[40,90]],
-        [[57,70],[60,90]],
+        [[50,31.5],[50,56]],
+        [[50,36.5],[66.5,54]],
+        [[50,36.5],[63,59]],
+        [[50,56],[48,73.5],[44,87]],
+        [[50,56],[56,73],[58,87]],
       ],
     },
     { // MID
-      head: { cx: 50, cy: 10, r: 7 },
+      head: { cx: 57, cy: 27.5, r: 6 },
       lines: [
-        [[50,17],[50,52]],
-        [[50,22],[38,38],[30,58]],
-        [[50,22],[62,38],[70,58]],
-        [[50,52],[43,70]],
-        [[50,52],[57,70]],
-        [[43,70],[40,90]],
-        [[57,70],[60,90]],
+        [[51.5,34],[50,56]],
+        [[50,42.5],[44,14]],
+        [[50,42.5],[36.5,21.5]],
+        [[50,56],[48,73.5],[43.5,88]],
+        [[50,56],[56,73],[57,88]],
       ],
     },
     { // END
-      head: { cx: 50, cy: 10, r: 7 },
+      head: { cx: 54, cy: 24.5, r: 6 },
       lines: [
-        [[50,17],[50,52]],
-        [[50,22],[40,40],[35,60]],
-        [[50,22],[60,40],[65,60]],
-        [[50,52],[43,70]],
-        [[50,52],[57,70]],
-        [[43,70],[40,90]],
-        [[57,70],[60,90]],
+        [[50,31.5],[50,56]],
+        [[50,36.5],[38,47],[31.5,57.5]],
+        [[50,36.5],[42,54],[40,62]],
+        [[50,56],[48,73.5],[43.5,88]],
+        [[50,56],[56,73],[58,87]],
       ],
     },
   ],
@@ -2177,13 +2171,13 @@ const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
       muscleGlow: { cx: 52, cy: 36, rx: 20, ry: 9 },
     },
     { // END
-      head: { cx: 50, cy: 64, r: 6 },
+      head: { cx: 79.5, cy: 55.5, r: 6 },
       lines: [
-        [[50,58],[50,42],[50,24]],
-        [[50,58],[40,72],[36,88]],
-        [[50,58],[60,72],[64,88]],
-        [[50,24],[38,36],[30,52]],
-        [[50,24],[62,36],[70,52]],
+        [[71,52.5],[61.5,48],[46,44.5],[36.5,46],[27,51.5]],
+        [[27.5,51.5],[30.5,75.5],[26.5,79],[23.5,79.5]],
+        [[27.5,51.5],[23,73],[15,79],[11.5,79]],
+        [[61.5,48],[57,64.5],[54.5,76],[58.5,76]],
+        [[61.5,48],[67,65],[68.5,77.5],[72,77]],
       ],
     },
   ],
@@ -2427,4 +2421,21 @@ export function getExerciseIntensity(exerciseName: string): ExerciseIntensity {
 }
 export function getMobilityExerciseNames(): string[] {
   return Object.keys(MOBILITY_POSE_LIBRARY);
+}
+
+// ─── World Objects ────────────────────────────────────────────────────────────
+// Per-exercise arrays of EnvAnchor objects rendered behind the skeleton in the
+// animation lab and in playback.  Written by PUT /api/admin/poses/:name/env.
+
+export const EXERCISE_WORLD_OBJECTS: Record<string, EnvAnchor[]> = {
+// <<<WORLD_OBJECTS_END>>>
+};
+
+/** Returns world-object anchors for an exercise.
+ *  New map has priority; falls back to the legacy MOBILITY_ENV_MAP entry. */
+export function getWorldObjects(exerciseName: string): EnvAnchor[] {
+  const wo = EXERCISE_WORLD_OBJECTS[exerciseName];
+  if (wo?.length) return wo;
+  const legacy = MOBILITY_ENV_MAP[exerciseName];
+  return legacy ? [legacy] : [];
 }

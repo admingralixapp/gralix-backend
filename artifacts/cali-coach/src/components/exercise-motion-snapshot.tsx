@@ -19,7 +19,40 @@
  * Muscle glow — pulsating SVG ellipse on MID frame only (from PoseData).
  */
 
-import { getPoseSet, getExerciseIntensity, type PoseData } from "@/lib/exercise-poses";
+import { getPoseSet, getExerciseIntensity, getWorldObjects, type PoseData, type EnvAnchor } from "@/lib/exercise-poses";
+
+// ─── Env object renderer ──────────────────────────────────────────────────────
+
+function EnvElement({ anchor }: { anchor: EnvAnchor }) {
+  if (anchor.type === "floor") {
+    return (
+      <line x1={anchor.x1} y1={anchor.y1} x2={anchor.x2} y2={anchor.y2}
+        stroke="#64748b" strokeWidth={1.4} strokeLinecap="round" opacity={0.55} />
+    );
+  }
+  if (anchor.type === "bar") {
+    return (
+      <line x1={anchor.x1} y1={anchor.y1} x2={anchor.x2} y2={anchor.y2}
+        stroke="#94a3b8" strokeWidth={3} strokeLinecap="round" opacity={0.5} />
+    );
+  }
+  if (anchor.type === "wall") {
+    return (
+      <line x1={anchor.x1} y1={anchor.y1} x2={anchor.x2} y2={anchor.y2}
+        stroke="#64748b" strokeWidth={1.6} strokeLinecap="round" opacity={0.45} />
+    );
+  }
+  if (anchor.type === "box") {
+    return (
+      <rect
+        x={anchor.x1} y={anchor.y1}
+        width={anchor.x2 - anchor.x1} height={anchor.y2 - anchor.y1}
+        fill="none" stroke="#64748b" strokeWidth={1.2} opacity={0.45}
+      />
+    );
+  }
+  return null;
+}
 
 // ─── Colour helpers ───────────────────────────────────────────────────────────
 
@@ -48,11 +81,13 @@ function StickFigure({
   color,
   sw,           // stroke width
   showMuscleGlow,
+  envAnchors = [],
 }: {
   pose: PoseData;
   color: string;
   sw: number;
   showMuscleGlow: boolean;
+  envAnchors?: EnvAnchor[];
 }) {
   const { head, lines, muscleGlow } = pose;
   const jointR = sw * 0.52;
@@ -73,6 +108,9 @@ function StickFigure({
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
+      {/* World objects rendered behind skeleton */}
+      {envAnchors.map((a, i) => <EnvElement key={i} anchor={a} />)}
+
       {/* Muscle group glow (mid frame only) */}
       {showMuscleGlow && muscleGlow && (
         <ellipse
@@ -126,6 +164,7 @@ function SnapshotPanel({
   glow,
   sw,
   showMuscleGlow,
+  envAnchors = [],
 }: {
   pose: PoseData;
   label: (typeof PANEL_LABELS)[number];
@@ -133,6 +172,7 @@ function SnapshotPanel({
   glow: boolean;
   sw: number;
   showMuscleGlow: boolean;
+  envAnchors?: EnvAnchor[];
 }) {
   const glowRgba   = hexToRgba(color, 0.35);
   const glowBorder = hexToRgba(color, 0.28);
@@ -157,6 +197,7 @@ function SnapshotPanel({
           color={color}
           sw={sw}
           showMuscleGlow={showMuscleGlow && label === "Mid"}
+          envAnchors={envAnchors}
         />
       </div>
       <span
@@ -214,6 +255,7 @@ export function ExerciseMotionSnapshot({
 
   const [start, mid, end] = getPoseSet(exerciseName);
   const intensity = getExerciseIntensity(exerciseName);
+  const envAnchors = getWorldObjects(exerciseName);
 
   // Stroke width varies by intensity
   const sw = intensity === "relaxed" ? 5 : intensity === "strenuous" ? 6.5 : 6;
@@ -229,9 +271,9 @@ export function ExerciseMotionSnapshot({
 
   return (
     <div className={`flex gap-2 ${className}`} style={animStyle}>
-      <SnapshotPanel pose={start} label="Start" color={color} glow={glow} sw={sw} showMuscleGlow={false} />
-      <SnapshotPanel pose={mid}   label="Mid"   color={color} glow={glow} sw={sw} showMuscleGlow={glow}  />
-      <SnapshotPanel pose={end}   label="End"   color={color} glow={glow} sw={sw} showMuscleGlow={false} />
+      <SnapshotPanel pose={start} label="Start" color={color} glow={glow} sw={sw} showMuscleGlow={false} envAnchors={envAnchors} />
+      <SnapshotPanel pose={mid}   label="Mid"   color={color} glow={glow} sw={sw} showMuscleGlow={glow}  envAnchors={envAnchors} />
+      <SnapshotPanel pose={end}   label="End"   color={color} glow={glow} sw={sw} showMuscleGlow={false} envAnchors={envAnchors} />
     </div>
   );
 }

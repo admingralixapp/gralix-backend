@@ -3,8 +3,8 @@ import { Link } from "wouter";
 import { Play, Square, Save, RotateCcw, X, Copy, Check, Minus, Plus, Clipboard, ChevronDown } from "lucide-react";
 import {
   getPoseSet,
-  getMobilityEnv,
   getMobilityExerciseNames,
+  getWorldObjects,
   type PoseData,
   type EnvAnchor,
 } from "@/lib/exercise-poses";
@@ -337,13 +337,16 @@ export function AnimLabPage() {
   const [copied, setCopied] = useState(false);
   const [copiedFrame, setCopiedFrame] = useState<PoseData | null>(null);
   const [pasteMenuOpen, setPasteMenuOpen] = useState(false);
+  const [worldObjects, setWorldObjects] = useState<EnvAnchor[]>(() => getWorldObjects(exercise));
+  const [savingEnv, setSavingEnv] = useState(false);
+  const [envSaveMsg, setEnvSaveMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const activeFameRef = useRef<FrameIdx>(activeFrame);
+  const envDragRef = useRef<{ idx: number; svgStartX: number; svgStartY: number; origObj: EnvAnchor } | null>(null);
   activeFameRef.current = activeFrame;
 
-  const env = getMobilityEnv(exercise);
 
   // ── Exercise change ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -352,6 +355,9 @@ export function AnimLabPage() {
     setIsPlaying(false);
     setSaveMsg(null);
     dragRef.current = null;
+    setWorldObjects(getWorldObjects(exercise));
+    setEnvSaveMsg(null);
+    envDragRef.current = null;
   }, [exercise]);
 
   // ── Play loop ────────────────────────────────────────────────────────────
@@ -366,7 +372,7 @@ export function AnimLabPage() {
 
   // ── Global pointer-up (catches drag release anywhere) ───────────────────
   useEffect(() => {
-    const up = () => { dragRef.current = null; };
+    const up = () => { dragRef.current = null; envDragRef.current = null; };
     window.addEventListener("pointerup", up);
     return () => window.removeEventListener("pointerup", up);
   }, []);
@@ -394,11 +400,43 @@ export function AnimLabPage() {
   }, [isPlaying]);
 
   const onSvgMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    if (!svgRef.current) return;
+    const [nx, ny] = svgPoint(e, svgRef.current);
+
+    // ── Env object drag (takes priority) ────────────────────────────────────
+    const envDrag = envDragRef.current;
+    if (envDrag) {
+      const { idx, svgStartX, svgStartY, origObj } = envDrag;
+      const dx = nx - svgStartX;
+      const dy = ny - svgStartY;
+      setWorldObjects(prev => {
+        const next = [...prev];
+        const obj = { ...origObj };
+        if (obj.type === "floor") {
+          const newY = Math.round(Math.max(5, Math.min(95, origObj.y1 + dy)) * 2) / 2;
+          obj.y1 = newY; obj.y2 = newY;
+        } else if (obj.type === "wall") {
+          const newX = Math.round(Math.max(5, Math.min(95, origObj.x1 + dx)) * 2) / 2;
+          obj.x1 = newX; obj.x2 = newX;
+        } else {
+          const w = origObj.x2 - origObj.x1;
+          const h = origObj.y2 - origObj.y1;
+          const newX1 = Math.round(Math.max(0, Math.min(100 - w, origObj.x1 + dx)) * 2) / 2;
+          const newY1 = Math.round(Math.max(0, Math.min(100 - h, origObj.y1 + dy)) * 2) / 2;
+          obj.x1 = newX1; obj.x2 = newX1 + w;
+          obj.y1 = newY1; obj.y2 = newY1 + h;
+        }
+        next[idx] = obj;
+        return next;
+      });
+      return;
+    }
+
+    // ── Skeleton joint drag ──────────────────────────────────────────────────
     // Capture the ref value synchronously — the setFrames updater runs
     // asynchronously and dragRef.current may be null by then (cleared by pointerup).
     const drag = dragRef.current;
-    if (!drag || !svgRef.current) return;
-    const [nx, ny] = svgPoint(e, svgRef.current);
+    if (!drag) return;
     const fi = activeFameRef.current;
     setFrames(prev => {
       const next = [...prev] as [PoseData, PoseData, PoseData];
@@ -547,6 +585,74 @@ export function AnimLabPage() {
     });
   };
 
+  // ── World Objects ─────────────────────────────────────────────────────────
+
+  const handleToggleObject = (type: EnvAnchor["type"]) => {
+    setWorldObjects(prev => {
+      if (prev.some(o => o.type === type)) return prev.filter(o => o.type !== type);
+      const defaults: Record<string, EnvAnchor> = {
+        floor: { type: "floor", x1: 4,  y1: 85, x2: 96, y2: 85 },
+        wall:  { type: "wall",  x1: 90, y1: 4,  x2: 90, y2: 96 },
+        bar:   { type: "bar",   x1: 20, y1: 10, x2: 80, y2: 10 },
+        box:   { type: "box",   x1: 50, y1: 50, x2: 80, y2: 70 },
+      };
+      return [...prev, defaults[type]];
+    });
+    setEnvSaveMsg(null);
+  };
+
+  const handleSnapBarToHands = () => {
+    const barIdx = worldObjects.findIndex(o => o.type === "bar");
+    if (barIdx === -1) return;
+    const terminals = frames[activeFrame].lines.map(line => line[line.length - 1]);
+    const sorted = [...terminals].sort((a, b) => a[1] - b[1]);
+    const top = sorted.slice(0, Math.min(2, sorted.length));
+    if (!top.length) return;
+    const avgX = top.reduce((s, p) => s + p[0], 0) / top.length;
+    const avgY = top.reduce((s, p) => s + p[1], 0) / top.length;
+    const snappedY = Math.round(avgY * 2) / 2;
+    const bar = worldObjects[barIdx];
+    const w = bar.x2 - bar.x1;
+    const newX1 = Math.round(Math.max(0, Math.min(100 - w, avgX - w / 2)) * 2) / 2;
+    setWorldObjects(prev => {
+      const next = [...prev];
+      next[barIdx] = { ...bar, x1: newX1, x2: newX1 + w, y1: snappedY, y2: snappedY };
+      return next;
+    });
+  };
+
+  const handleSnapFloorToFeet = () => {
+    const floorIdx = worldObjects.findIndex(o => o.type === "floor");
+    if (floorIdx === -1) return;
+    const terminals = frames[activeFrame].lines.map(line => line[line.length - 1]);
+    const maxY = Math.max(...terminals.map(p => p[1]));
+    const snappedY = Math.round(maxY * 2) / 2;
+    setWorldObjects(prev => {
+      const next = [...prev];
+      next[floorIdx] = { ...prev[floorIdx], y1: snappedY, y2: snappedY };
+      return next;
+    });
+  };
+
+  const handleSaveEnv = async () => {
+    setSavingEnv(true);
+    setEnvSaveMsg(null);
+    try {
+      const res = await fetch(`/api/admin/poses/${encodeURIComponent(exercise)}/env`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ objects: worldObjects }),
+      });
+      const data = await res.json() as { ok?: boolean; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Unknown error");
+      setEnvSaveMsg({ ok: true, text: "World objects saved to source." });
+    } catch (err: unknown) {
+      setEnvSaveMsg({ ok: false, text: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setSavingEnv(false);
+    }
+  };
+
   // ── Joints for handles ───────────────────────────────────────────────────
 
   const joints = uniqueJoints(activePose);
@@ -685,8 +791,8 @@ export function AnimLabPage() {
                 </g>
               ))}
 
-              {/* Environment anchor */}
-              {env && <EnvSVG env={env} />}
+              {/* Environment anchors */}
+              {worldObjects.map((wo, i) => <EnvSVG key={i} env={wo} />)}
 
               {/* Ghost frames */}
               {!isPlaying && ([0, 1, 2] as FrameIdx[])
@@ -803,6 +909,60 @@ export function AnimLabPage() {
                   strokeDasharray="2 2" opacity={0.5}
                 />
               )}
+
+              {/* ── World Object drag handles ─────────────────────────────── */}
+              {!isPlaying && worldObjects.map((obj, idx) => {
+                const handleX = obj.type === "wall" ? obj.x1 : (obj.x1 + obj.x2) / 2;
+                const handleY = obj.type === "floor" ? obj.y1 : obj.type === "bar" ? obj.y1 : (obj.y1 + obj.y2) / 2;
+                const handleColor = obj.type === "bar" ? "#94a3b8" : obj.type === "wall" ? "#64748b" : "#64748b";
+                return (
+                  <g key={`env-handle-${idx}`}>
+                    {/* Ghost line/shape for visual reference */}
+                    {obj.type === "floor" && (
+                      <line x1={obj.x1} y1={obj.y1} x2={obj.x2} y2={obj.y2}
+                        stroke="#64748b" strokeWidth={1.2} strokeDasharray="3 2" opacity={0.4}
+                        style={{ pointerEvents: "none" }} />
+                    )}
+                    {obj.type === "wall" && (
+                      <line x1={obj.x1} y1={obj.y1} x2={obj.x2} y2={obj.y2}
+                        stroke="#64748b" strokeWidth={1.2} strokeDasharray="3 2" opacity={0.4}
+                        style={{ pointerEvents: "none" }} />
+                    )}
+                    {obj.type === "bar" && (
+                      <line x1={obj.x1} y1={obj.y1} x2={obj.x2} y2={obj.y2}
+                        stroke="#94a3b8" strokeWidth={2.5} strokeDasharray="3 2" opacity={0.45}
+                        style={{ pointerEvents: "none" }} />
+                    )}
+                    {obj.type === "box" && (
+                      <rect x={obj.x1} y={obj.y1} width={obj.x2 - obj.x1} height={obj.y2 - obj.y1}
+                        fill="none" stroke="#64748b" strokeWidth={1.2} strokeDasharray="3 2" opacity={0.4}
+                        style={{ pointerEvents: "none" }} />
+                    )}
+                    {/* Drag handle circle */}
+                    <circle
+                      cx={handleX} cy={handleY}
+                      r={5}
+                      fill={handleColor}
+                      stroke="#0f172a"
+                      strokeWidth={1.5}
+                      opacity={0.85}
+                      style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
+                      onPointerDown={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!svgRef.current) return;
+                        const [sx, sy] = svgPoint(e, svgRef.current);
+                        envDragRef.current = { idx, svgStartX: sx, svgStartY: sy, origObj: { ...obj } };
+                      }}
+                    />
+                    {/* Label */}
+                    <text x={handleX + 7} y={handleY + 3}
+                      fill="#94a3b8" fontSize={5} style={{ pointerEvents: "none", userSelect: "none" }}>
+                      {obj.type}
+                    </text>
+                  </g>
+                );
+              })}
             </svg>
           </div>
 
@@ -908,6 +1068,102 @@ export function AnimLabPage() {
             </p>
           )}
 
+          {/* ── World Objects ── */}
+          <div style={{ marginBottom: 18, paddingBottom: 16, borderBottom: `1px solid ${borderCol}` }}>
+            <p style={{ fontSize: 10, color: mutedText, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              World Objects
+            </p>
+
+            {/* Toggle buttons */}
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+              {(["floor", "wall", "bar", "box"] as const).map(type => {
+                const active = worldObjects.some(o => o.type === type);
+                return (
+                  <button
+                    key={type}
+                    onClick={() => handleToggleObject(type)}
+                    style={{
+                      padding: "4px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer",
+                      fontWeight: 600, border: `1px solid ${active ? "#22c55e88" : "#334155"}`,
+                      background: active ? "#052e1680" : "#1e293b",
+                      color: active ? "#22c55e" : "#94a3b8",
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {type}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Snap helpers */}
+            {worldObjects.length > 0 && (
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                {worldObjects.some(o => o.type === "bar") && (
+                  <button
+                    onClick={handleSnapBarToHands}
+                    style={{
+                      padding: "4px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer",
+                      background: "#0f2a3a", border: "1px solid #1e4a6a", color: "#7dd3fc", fontWeight: 600,
+                    }}
+                  >
+                    ↑ Snap Bar to Hands
+                  </button>
+                )}
+                {worldObjects.some(o => o.type === "floor") && (
+                  <button
+                    onClick={handleSnapFloorToFeet}
+                    style={{
+                      padding: "4px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer",
+                      background: "#0f2a3a", border: "1px solid #1e4a6a", color: "#7dd3fc", fontWeight: 600,
+                    }}
+                  >
+                    ↓ Snap Floor to Feet
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Coord readout */}
+            {worldObjects.length > 0 && (
+              <div style={{ marginBottom: 8 }}>
+                {worldObjects.map((o, i) => (
+                  <p key={i} style={{ fontSize: 10, color: "#475569", marginBottom: 2 }}>
+                    {o.type}: x1={o.x1} y1={o.y1} x2={o.x2} y2={o.y2}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {/* Save button */}
+            <button
+              onClick={handleSaveEnv}
+              disabled={savingEnv}
+              style={{
+                width: "100%", padding: "8px 0", borderRadius: 7, border: "none",
+                background: savingEnv ? "#374151" : "#1e3a5f",
+                color: savingEnv ? "#9ca3af" : "#7dd3fc",
+                fontWeight: 700, fontSize: 12, cursor: savingEnv ? "not-allowed" : "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              }}
+            >
+              <Save size={12} />
+              {savingEnv ? "Saving…" : "Save World Objects"}
+            </button>
+
+            {envSaveMsg && (
+              <p style={{
+                fontSize: 11, marginTop: 6,
+                color: envSaveMsg.ok ? "#22c55e" : "#f87171",
+                padding: "5px 8px",
+                background: envSaveMsg.ok ? "#052e1680" : "#450a0a80",
+                borderRadius: 6,
+              }}>
+                {envSaveMsg.ok ? "✓ " : "✗ "}{envSaveMsg.text}
+              </p>
+            )}
+          </div>
+
           {/* Frame thumbnails */}
           <div style={{ marginBottom: 18 }}>
             <p style={{ fontSize: 10, color: mutedText, marginBottom: 7, textTransform: "uppercase", letterSpacing: "0.08em" }}>
@@ -918,7 +1174,7 @@ export function AnimLabPage() {
                 <Thumbnail
                   key={name}
                   pose={frames[idx]}
-                  env={env}
+                  env={worldObjects[0]}
                   color={FRAME_COLORS[idx]}
                   active={!isPlaying && activeFrame === idx}
                   onClick={() => { setActiveFrame(idx as FrameIdx); setIsPlaying(false); }}
