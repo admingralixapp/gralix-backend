@@ -1,4 +1,4 @@
-import { useGetProgressSummary, useGetRecentSessions, useGetProgressTimeline, useListSessions } from "@workspace/api-client-react";
+import { useGetProgressSummary, useGetRecentSessions, useGetProgressTimeline } from "@workspace/api-client-react";
 import { Link, useLocation } from "wouter";
 import {
   Activity,
@@ -19,8 +19,7 @@ import {
   HeartPulse,
   ChevronDown,
 } from "lucide-react";
-import { getSmartPrescription } from "@/lib/daily-prescription";
-import { evaluateSkillTree, type EvaluatedSkill } from "@/lib/skill-tree";
+import { getDailyPrescription } from "@/lib/daily-prescription";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -438,13 +437,13 @@ function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () =
 // ─── Daily Prescription Card ──────────────────────────────────────────────────
 
 function DailyPrescriptionCard({
-  evaluated,
+  targetSkillId,
   exerciseStats,
 }: {
-  evaluated: EvaluatedSkill[];
+  targetSkillId: string;
   exerciseStats: Record<string, { total: number }>;
 }) {
-  const prescription = getSmartPrescription(evaluated, exerciseStats);
+  const prescription = getDailyPrescription(targetSkillId, exerciseStats);
   if (!prescription) return null;
 
   const { targetNode, focusNode, readiness, requiredReps, totalReps, allMastered } = prescription;
@@ -579,11 +578,6 @@ export function Home() {
   const { data: recentSessions, isLoading: loadingSessions } = useGetRecentSessions({ limit: 5 });
   const { data: mobilityStatus, isLoading: loadingMobility } = useMobilityStatus();
   const { data: profile } = useMyProfile();
-  const { data: allSessions } = useListSessions({ limit: 500, offset: 0 });
-  const evaluatedSkills = useMemo(
-    () => evaluateSkillTree(allSessions ?? []),
-    [allSessions],
-  );
 
   useNotificationScheduler(mobilityStatus);
 
@@ -671,11 +665,13 @@ export function Home() {
         />
       </div>
 
-      {/* ── Daily Prescription (auto-selects most advanced available skill) ── */}
-      <DailyPrescriptionCard
-        evaluated={evaluatedSkills}
-        exerciseStats={profile?.exerciseStats ?? {}}
-      />
+      {/* ── Daily Prescription (only when user has a target skill) ─── */}
+      {profile?.targetSkillId && (
+        <DailyPrescriptionCard
+          targetSkillId={profile.targetSkillId}
+          exerciseStats={profile.exerciseStats ?? {}}
+        />
+      )}
 
       {/* ── Joint Readiness Quick-Log ──────────────────────────────── */}
       <JointReadinessWidget
