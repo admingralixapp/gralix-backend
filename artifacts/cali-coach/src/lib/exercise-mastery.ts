@@ -121,6 +121,9 @@ export const EXERCISE_MASTERY_DEFS: ExerciseMasteryDef[] = [
   { exerciseName: "Step-Up",                milestoneType: "reps",    category: "legs", icon: "🪜", tierTitles: ["Step Starter",        "Step Climber",           "Step Specialist",       "Step Master",           "Step Legend"]            },
   { exerciseName: "Assisted Pistol Squat",  milestoneType: "reps",    category: "legs", icon: "🔫", tierTitles: ["Assisted Pistolero",  "Supported Single-Leg",   "Pistol Prep",           "Almost Pistol",         "Pistol Pioneer"]         },
   { exerciseName: "Close-Stance Squat",     milestoneType: "reps",    category: "legs", icon: "🦵", tierTitles: ["Close Starter",       "Narrow Squatter",        "Close Specialist",      "Narrow Master",         "The Close-Out"]          },
+  { exerciseName: "Assisted Dead Hang",     milestoneType: "seconds", category: "pull", icon: "🧲", tierTitles: ["Hang Helper",         "Assisted Hanger",        "Partial Puller",        "Hang Builder",          "Dead Hang Pioneer"]      },
+  { exerciseName: "Box Squat",              milestoneType: "reps",    category: "legs", icon: "📦", tierTitles: ["Box Sitter",          "Chair Squatter",         "Box Specialist",        "Box Builder",           "The Foundation Squatter"]},
+  { exerciseName: "Knee Plank",             milestoneType: "seconds", category: "core", icon: "🦵", tierTitles: ["Knee Holder",         "Padded Plank",           "Knee Plank Specialist", "Knee Plank Builder",    "Floor Foundation"]       },
 ];
 
 const DEF_MAP = new Map<string, ExerciseMasteryDef>(

@@ -117,6 +117,7 @@ function nodeColor(id: string): string {
 
 const NODE_POS: Record<string, { x: number; y: number }> = {
   // ── PUSH (north) ──────────────────────────────────────────────────
+  "push-f1":   { x: HUB_X,           y: HUB_Y - 75 },            // (1500, 1425) Foundation
   "push-1":    { x: HUB_X,           y: HUB_Y - GAP },           // (1500, 1350)
   "push-2":    { x: HUB_X,           y: HUB_Y - GAP * 2 },       // (1500, 1200)
   "push-3":    { x: HUB_X,           y: HUB_Y - GAP * 3 },       // (1500, 1050)
@@ -135,6 +136,7 @@ const NODE_POS: Record<string, { x: number; y: number }> = {
   "push-pp-4": { x: HUB_X + SIDE * 2, y: HUB_Y - GAP * 6 },     // (1830,  600)
 
   // ── PULL (east) ───────────────────────────────────────────────────
+  "pull-f1":   { x: HUB_X + 75,       y: HUB_Y },                 // (1575, 1500) Foundation
   "pull-1":    { x: HUB_X + GAP,      y: HUB_Y },                 // (1650, 1500)
   "pull-2":    { x: HUB_X + GAP * 2,  y: HUB_Y },                 // (1800, 1500)
   "pull-3":    { x: HUB_X + GAP * 3,  y: HUB_Y },                 // (1950, 1500)
@@ -154,6 +156,7 @@ const NODE_POS: Record<string, { x: number; y: number }> = {
   "pull-oapu-1": { x: HUB_X + GAP * 5, y: HUB_Y + SIDE * 2 },   // (2250, 1830)
 
   // ── CORE (south) ──────────────────────────────────────────────────
+  "core-f1":   { x: HUB_X,            y: HUB_Y + 75 },            // (1500, 1575) Foundation
   "core-1":    { x: HUB_X,            y: HUB_Y + GAP },           // (1500, 1650)
   "core-2":    { x: HUB_X,            y: HUB_Y + GAP * 2 },       // (1500, 1800)
   // Hollow Holds (-SIDE west, from core-1)
@@ -174,6 +177,7 @@ const NODE_POS: Record<string, { x: number; y: number }> = {
   "core-hf-4": { x: HUB_X + SIDE * 2, y: HUB_Y + GAP * 5 },     // (1830, 2250)
 
   // ── LEGS (west) ───────────────────────────────────────────────────
+  "legs-f1":   { x: HUB_X - 75,       y: HUB_Y },                 // (1425, 1500) Foundation
   "legs-1":    { x: HUB_X - GAP,      y: HUB_Y },                 // (1350, 1500)
   "legs-2":    { x: HUB_X - GAP * 2,  y: HUB_Y },                 // (1200, 1500)
   "legs-3":    { x: HUB_X - GAP * 3,  y: HUB_Y },                 // (1050, 1500)
@@ -192,14 +196,16 @@ const NODE_POS: Record<string, { x: number; y: number }> = {
 
 // Hub-to-branch edges (visual only, no lock state)
 const HUB_EDGES: Array<{ toId: string; branch: SkillBranch }> = [
-  { toId: "push-1", branch: "PUSH" },
-  { toId: "pull-1", branch: "PULL" },
-  { toId: "core-1", branch: "CORE" },
-  { toId: "legs-1", branch: "LEGS" },
+  { toId: "push-f1", branch: "PUSH" },
+  { toId: "pull-f1", branch: "PULL" },
+  { toId: "core-f1", branch: "CORE" },
+  { toId: "legs-f1", branch: "LEGS" },
 ];
 
 // Skill-to-skill edges (prerequisite connections)
 const EDGES: [string, string][] = [
+  // PUSH foundation → main
+  ["push-f1", "push-1"],
   // PUSH main
   ["push-1", "push-2"], ["push-2", "push-3"],
   ["push-3", "push-4"], ["push-4", "push-5"],
@@ -210,6 +216,8 @@ const EDGES: [string, string][] = [
   // PUSH planche (from push-3)
   ["push-3", "push-pp-1"], ["push-pp-1", "push-pp-2"],
   ["push-pp-2", "push-pp-3"], ["push-pp-3", "push-pp-4"],
+  // PULL foundation → shared
+  ["pull-f1", "pull-1"],
   // PULL shared
   ["pull-1", "pull-2"], ["pull-2", "pull-3"],
   // PULL front lever (from pull-2)
@@ -220,6 +228,8 @@ const EDGES: [string, string][] = [
   ["pull-mu-1", "pull-am-1"], ["pull-am-1", "pull-am-2"],
   // PULL one-arm path (from pull-3)
   ["pull-3", "pull-oah-1"], ["pull-oah-1", "pull-oapu-1"],
+  // CORE foundation → main
+  ["core-f1", "core-1"],
   // CORE main
   ["core-1", "core-2"],
   // CORE hollow holds (from core-1)
@@ -232,6 +242,8 @@ const EDGES: [string, string][] = [
   // CORE human flag (from core-2)
   ["core-2", "core-hf-1"], ["core-hf-1", "core-hf-2"],
   ["core-hf-2", "core-hf-3"], ["core-hf-3", "core-hf-4"],
+  // LEGS foundation → main
+  ["legs-f1", "legs-1"],
   // LEGS main
   ["legs-1", "legs-2"], ["legs-2", "legs-3"], ["legs-3", "legs-4"],
   // LEGS l-sit (from legs-2)

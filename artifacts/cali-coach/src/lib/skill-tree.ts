@@ -23,6 +23,7 @@ export type SkillBranch = "PUSH" | "PULL" | "CORE" | "LEGS";
 export type SkillType = "standard" | "static" | "explosive";
 
 export type SkillLevelName =
+  | "Foundation"
   | "Beginner"
   | "Novice"
   | "Intermediate"
@@ -68,7 +69,92 @@ export interface SkillNode {
   equipmentSpecialty?: boolean;
 }
 
+// ─── Foundation Nodes (Level 0) ───────────────────────────────────────────────
+// These are the true Day-1 starting points for absolute beginners.
+// Each must be mastered before the corresponding branch Level 1 node unlocks.
+
+const PUSH_FOUNDATION_NODES: SkillNode[] = [
+  {
+    id: "push-f1",
+    branch: "PUSH",
+    level: 1,
+    levelName: "Foundation",
+    type: "standard",
+    title: "Foundation Push",
+    description: "Build your first pushing strength from the wall or floor. Wall Push-Ups, Incline Push-Ups, and Knee Push-Ups all count — any clean reps progress this node.",
+    exercises: ["Wall Push-Up", "Incline Push-Up", "Knee Push-Up"],
+    masteryRequirement: {
+      description: "Complete 8 reps with ≥60% form score in 3 sessions",
+      minReps: 8,
+      minFormScore: 60,
+      minQualifyingSessions: 3,
+    },
+    prerequisiteId: null,
+  },
+];
+
+const PULL_FOUNDATION_NODES: SkillNode[] = [
+  {
+    id: "pull-f1",
+    branch: "PULL",
+    level: 1,
+    levelName: "Foundation",
+    type: "standard",
+    title: "Foundation Pull",
+    description: "Start your pulling journey with horizontal rows or assisted hangs. Australian Rows and Assisted Dead Hangs build the lat and grip strength needed for your first Pull-Up.",
+    exercises: ["Australian Rows", "Assisted Dead Hang"],
+    masteryRequirement: {
+      description: "Complete 5 reps with ≥60% form score in 3 sessions",
+      minReps: 5,
+      minFormScore: 60,
+      minQualifyingSessions: 3,
+    },
+    prerequisiteId: null,
+  },
+];
+
+const CORE_FOUNDATION_NODES: SkillNode[] = [
+  {
+    id: "core-f1",
+    branch: "CORE",
+    level: 1,
+    levelName: "Foundation",
+    type: "standard",
+    title: "Foundation Core",
+    description: "Develop core stability with beginner-friendly moves. Knee Planks and Dead Bugs build the anti-extension strength needed for a solid full Plank.",
+    exercises: ["Knee Plank", "Dead Bug"],
+    masteryRequirement: {
+      description: "Complete 8 reps with ≥60% form score in 3 sessions",
+      minReps: 8,
+      minFormScore: 60,
+      minQualifyingSessions: 3,
+    },
+    prerequisiteId: null,
+  },
+];
+
+const LEGS_FOUNDATION_NODES: SkillNode[] = [
+  {
+    id: "legs-f1",
+    branch: "LEGS",
+    level: 1,
+    levelName: "Foundation",
+    type: "standard",
+    title: "Foundation Legs",
+    description: "Learn the squat pattern safely with a Box Squat — sit back to a chair or box and stand tall. Grooves the hip-hinge and builds quad strength for full Squats.",
+    exercises: ["Box Squat"],
+    masteryRequirement: {
+      description: "Complete 10 reps with ≥60% form score in 3 sessions",
+      minReps: 10,
+      minFormScore: 60,
+      minQualifyingSessions: 3,
+    },
+    prerequisiteId: null,
+  },
+];
+
 // ─── PUSH Branch ──────────────────────────────────────────────────────────────
+// Foundation: push-f1 (Wall/Incline/Knee Push-Up)
 // Main: push-1 → push-2 → push-3 → push-4 → push-5
 // Sub-paths from push-2: Overhead (push-oh-*)
 // Sub-paths from push-3: Planche  (push-pp-*)
@@ -90,7 +176,7 @@ const PUSH_NODES: SkillNode[] = [
       minFormScore: 70,
       minQualifyingSessions: 3,
     },
-    prerequisiteId: null,
+    prerequisiteId: "push-f1",
   },
   {
     id: "push-2",
@@ -164,6 +250,7 @@ const PUSH_NODES: SkillNode[] = [
 ];
 
 // ─── PULL Branch ──────────────────────────────────────────────────────────────
+// Foundation: pull-f1 (Australian Rows / Assisted Dead Hang)
 // Shared: pull-1 → pull-2 → pull-3
 // From pull-2: Front Lever Path (pull-fl-*) — requires core-hh-3
 // From pull-3: Muscle-Up Path (pull-mu-*), Advanced Moves (pull-am-*)
@@ -184,7 +271,7 @@ const PULL_NODES: SkillNode[] = [
       minFormScore: 65,
       minQualifyingSessions: 2,
     },
-    prerequisiteId: null,
+    prerequisiteId: "pull-f1",
   },
   {
     id: "pull-2",
@@ -223,6 +310,7 @@ const PULL_NODES: SkillNode[] = [
 ];
 
 // ─── CORE Branch ──────────────────────────────────────────────────────────────
+// Foundation: core-f1 (Knee Plank / Dead Bug)
 // Main: core-1 → core-2
 // From core-1: Hollow Holds (core-hh-*), Bar Based (core-bb-1/2)
 // From core-2: Human Flag (core-hf-*), Bar Based continues (core-bb-3/4)
@@ -243,7 +331,7 @@ const CORE_NODES: SkillNode[] = [
       minFormScore: 70,
       minQualifyingSessions: 3,
     },
-    prerequisiteId: null,
+    prerequisiteId: "core-f1",
   },
   {
     id: "core-2",
@@ -265,6 +353,7 @@ const CORE_NODES: SkillNode[] = [
 ];
 
 // ─── LEGS Branch ──────────────────────────────────────────────────────────────
+// Foundation: legs-f1 (Box Squat)
 // Main: legs-1 → legs-2 → legs-3 → legs-4
 // From legs-2: L-Sit Path (legs-ls-*), Pistol Squat Path (legs-ps-*)
 
@@ -284,7 +373,7 @@ const LEGS_NODES: SkillNode[] = [
       minFormScore: 70,
       minQualifyingSessions: 3,
     },
-    prerequisiteId: null,
+    prerequisiteId: "legs-f1",
   },
   {
     id: "legs-2",
@@ -1674,7 +1763,12 @@ export const EQUIPMENT_SPECIALTY_NODES: SkillNode[] = [
  * push-5 (capstone) comes after PUSH_PLANCHE so its secondary prereq push-pp-1 is ready.
  */
 export const ALL_SKILL_NODES: SkillNode[] = [
-  // CORE first — provides cross-branch prereqs core-hh-3 and core-hh-5
+  // Foundation nodes first — no prerequisites, must be resolved before L1 nodes
+  ...PUSH_FOUNDATION_NODES,
+  ...PULL_FOUNDATION_NODES,
+  ...CORE_FOUNDATION_NODES,
+  ...LEGS_FOUNDATION_NODES,
+  // CORE L1+ — provides cross-branch prereqs core-hh-3 and core-hh-5
   ...CORE_NODES,
   ...CORE_HH_NODES,
   ...CORE_BB_NODES,
@@ -1702,10 +1796,10 @@ export const ALL_SKILL_NODES: SkillNode[] = [
 
 /** All non-specialty nodes by branch (includes all sub-paths) */
 export const SKILL_TREE_BRANCHES: Record<SkillBranch, SkillNode[]> = {
-  PUSH: [...PUSH_NODES, ...PUSH_OVERHEAD_NODES, ...PUSH_PLANCHE_NODES],
-  PULL: [...PULL_NODES, ...PULL_FL_NODES, ...PULL_MU_NODES, ...PULL_AM_NODES, ...PULL_OAH_NODES],
-  CORE: [...CORE_NODES, ...CORE_HH_NODES, ...CORE_BB_NODES, ...CORE_HF_NODES],
-  LEGS: [...LEGS_NODES, ...LEGS_LS_NODES, ...LEGS_PS_NODES],
+  PUSH: [...PUSH_FOUNDATION_NODES, ...PUSH_NODES, ...PUSH_OVERHEAD_NODES, ...PUSH_PLANCHE_NODES],
+  PULL: [...PULL_FOUNDATION_NODES, ...PULL_NODES, ...PULL_FL_NODES, ...PULL_MU_NODES, ...PULL_AM_NODES, ...PULL_OAH_NODES],
+  CORE: [...CORE_FOUNDATION_NODES, ...CORE_NODES, ...CORE_HH_NODES, ...CORE_BB_NODES, ...CORE_HF_NODES],
+  LEGS: [...LEGS_FOUNDATION_NODES, ...LEGS_NODES, ...LEGS_LS_NODES, ...LEGS_PS_NODES],
 };
 
 /** Core skill count (excludes equipment specialty paths) */

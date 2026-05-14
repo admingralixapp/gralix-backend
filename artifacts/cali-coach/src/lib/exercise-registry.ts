@@ -414,6 +414,27 @@ const AUSTRALIAN_ROWS: ExerciseConfig = {
   },
 };
 
+const ASSISTED_DEAD_HANG: ExerciseConfig = {
+  displayName: "Assisted Dead Hang",
+  isStatic: true,
+  difficultyWeight: 1.0,
+  criticalJoints: [
+    { label: "Wrist–Elbow–Shoulder", description: "Arms fully extended overhead. Use your feet on the ground for light assistance." },
+    { label: "Shoulder packing", description: "Keep shoulders depressed — don't let them shrug up to ears." },
+  ],
+  initialPhase: "hold",
+  processFrame(lm, _phase) {
+    const elbowAngle = calcAngle(lm[LM.LEFT_WRIST], lm[LM.LEFT_ELBOW], lm[LM.LEFT_SHOULDER]);
+    const wristY = lm[LM.LEFT_WRIST].y;
+    const shoulderY = lm[LM.LEFT_SHOULDER].y;
+    const extensionPenalty = clamp((180 - elbowAngle) * 2, 0, 40);
+    const formScore = clamp(100 - extensionPenalty, 0, 100);
+    const isHoldActive = wristY < shoulderY && elbowAngle > 150;
+    const audioCue = formScore < 65 ? pickFormCue("Assisted Dead Hang", "arms_bent") : null;
+    return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
+  },
+};
+
 const NEGATIVE_PULL_UPS: ExerciseConfig = {
   displayName: "Negative Pull-Ups",
   isStatic: false,
@@ -827,6 +848,39 @@ const ASSISTED_SQUAT: ExerciseConfig = {
   },
 };
 
+const BOX_SQUAT: ExerciseConfig = {
+  displayName: "Box Squat",
+  isStatic: false,
+  difficultyWeight: 1.0,
+  criticalJoints: [
+    { label: "Hip–Knee–Ankle", description: "Sit back to the box keeping shins vertical, then drive through heels to stand." },
+    { label: "Knee tracking", description: "Knees track over toes — no caving inward." },
+  ],
+  initialPhase: "up",
+  processFrame(lm, phase) {
+    const kneeAngle = calcAngle(lm[LM.LEFT_HIP], lm[LM.LEFT_KNEE], lm[LM.LEFT_ANKLE]);
+    let newPhase = phase;
+    let repCounted = false;
+    let repQuality: RepQuality | null = null;
+
+    if (phase === "up" && kneeAngle < 115) newPhase = "down";
+    else if (phase === "down" && kneeAngle > 160) {
+      newPhase = "up"; repCounted = true; repQuality = "complete";
+    }
+
+    const shoulderMid = midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]);
+    const hipMid      = midpoint(lm[LM.LEFT_HIP],      lm[LM.RIGHT_HIP]);
+    const kneeMid     = midpoint(lm[LM.LEFT_KNEE],     lm[LM.RIGHT_KNEE]);
+    const torsoAngle  = calcAngle(shoulderMid, hipMid, kneeMid);
+    const torsoPenalty = clamp((90 - torsoAngle) * 1.5, 0, 40);
+    const kneeDrift   = Math.abs(lm[LM.LEFT_KNEE].x - lm[LM.LEFT_ANKLE].x) * 100;
+    const kneePenalty = clamp(kneeDrift, 0, 30);
+    const formScore   = clamp(100 - torsoPenalty - kneePenalty, 0, 100);
+    const audioCue = formScore < 60 ? pickFormCue("Box Squat", "chest_dropping") : null;
+    return { newPhase, repCounted, repQuality, formScore, audioCue };
+  },
+};
+
 const SQUAT: ExerciseConfig = {
   displayName: "Squat",
   isStatic: false,
@@ -1045,6 +1099,31 @@ const PLANK: ExerciseConfig = {
     else if (hipBelow) audioCue = pickFormCue("Plank", "hips_sagging");
     else if (formScore < 70) audioCue = pickFormCue("Plank", "core_loose");
 
+    return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
+  },
+};
+
+const KNEE_PLANK: ExerciseConfig = {
+  displayName: "Knee Plank",
+  isStatic: true,
+  difficultyWeight: 1.0,
+  criticalJoints: [
+    { label: "Shoulder–Hip–Knee line", description: "Body must form a straight line from shoulder to knee. Don't let hips pike up or sag." },
+  ],
+  initialPhase: "hold",
+  processFrame(lm, _phase) {
+    const shoulderMid = midpoint(lm[LM.LEFT_SHOULDER], lm[LM.RIGHT_SHOULDER]);
+    const hipMid      = midpoint(lm[LM.LEFT_HIP],      lm[LM.RIGHT_HIP]);
+    const kneeMid     = midpoint(lm[LM.LEFT_KNEE],     lm[LM.RIGHT_KNEE]);
+    const bodyAngle   = calcAngle(shoulderMid, hipMid, kneeMid);
+    const formScore   = clamp(100 - Math.abs(180 - bodyAngle) * 3, 0, 100);
+    const isHoldActive = inZone(bodyAngle, 180, 15);
+    const hipAbove = (shoulderMid.y + kneeMid.y) / 2 - hipMid.y > 0.08;
+    const hipBelow = hipMid.y - (shoulderMid.y + kneeMid.y) / 2 > 0.08;
+    let audioCue: string | null = null;
+    if (hipAbove) audioCue = pickFormCue("Knee Plank", "hips_too_high");
+    else if (hipBelow) audioCue = pickFormCue("Knee Plank", "hips_sagging");
+    else if (formScore < 65) audioCue = pickFormCue("Knee Plank", "core_loose");
     return { newPhase: "hold", repCounted: false, repQuality: null, formScore, audioCue, isHoldActive };
   },
 };
@@ -2411,6 +2490,9 @@ export const DIFFICULTY_WEIGHTS: Record<string, number> = {
   "Incline Push-Up":        1.0,
   "Knee Push-Up":           1.0,
   "Assisted Squat":         1.0,
+  "Box Squat":              1.0,
+  "Knee Plank":             1.0,
+  "Assisted Dead Hang":     1.0,
   "Scapular Shrugs":        1.0,
   "Negative Pull-Ups":      1.0,
   "Negative Pull-Up":       1.0,
@@ -2528,6 +2610,7 @@ export const EXERCISE_REGISTRY: Record<string, ExerciseConfig> = {
   // ── PULL — Foundation ───────────────────────────────────────────────────────
   "Scapular Shrugs":         SCAPULAR_SHRUGS,
   "Australian Rows":         AUSTRALIAN_ROWS,
+  "Assisted Dead Hang":      ASSISTED_DEAD_HANG,
   "Negative Pull-Ups":       NEGATIVE_PULL_UPS,
   "Negative Pull-Up":        NEGATIVE_PULL_UPS,
   "Pull-Up":                 PULL_UP,
@@ -2552,6 +2635,7 @@ export const EXERCISE_REGISTRY: Record<string, ExerciseConfig> = {
   "Weighted Muscle-Up":      WEIGHTED_MUSCLE_UP,
   "Weighted Dip":            WEIGHTED_DIP,
   // ── CORE — Main ─────────────────────────────────────────────────────────────
+  "Knee Plank":              KNEE_PLANK,
   "Plank":                   PLANK,
   "Side Plank":              SIDE_PLANK,
   // ── CORE — Hollow Holds Path ────────────────────────────────────────────────
@@ -2572,6 +2656,7 @@ export const EXERCISE_REGISTRY: Record<string, ExerciseConfig> = {
   "Human Flag":              HUMAN_FLAG,
   // ── LEGS — Main ─────────────────────────────────────────────────────────────
   "Assisted Squat":          ASSISTED_SQUAT,
+  "Box Squat":               BOX_SQUAT,
   "Squat":                   SQUAT,
   "Archer Squat":            ARCHER_SQUAT,
   "Shrimp Squat":            SHRIMP_SQUAT,

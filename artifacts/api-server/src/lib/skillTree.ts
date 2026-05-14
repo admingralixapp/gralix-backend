@@ -26,6 +26,28 @@ interface SkillNodeDef {
 }
 
 export const SKILL_NODES: SkillNodeDef[] = [
+  // ── Foundation (Level 0 — always unlocked, Day-1 starting points) ─────────
+  {
+    id: "push-f1", level: 1, levelName: "Foundation", title: "Foundation Push", branch: "PUSH",
+    exercises: ["Wall Push-Up", "Incline Push-Up", "Knee Push-Up"],
+    masteryRequirement: { minReps: 8, minFormScore: 60, minQualifyingSessions: 3 },
+  },
+  {
+    id: "pull-f1", level: 1, levelName: "Foundation", title: "Foundation Pull", branch: "PULL",
+    exercises: ["Australian Rows", "Assisted Dead Hang"],
+    masteryRequirement: { minReps: 5, minFormScore: 60, minQualifyingSessions: 3 },
+  },
+  {
+    id: "core-f1", level: 1, levelName: "Foundation", title: "Foundation Core", branch: "CORE",
+    exercises: ["Knee Plank", "Dead Bug"],
+    masteryRequirement: { minReps: 8, minFormScore: 60, minQualifyingSessions: 3 },
+  },
+  {
+    id: "legs-f1", level: 1, levelName: "Foundation", title: "Foundation Legs", branch: "LEGS",
+    exercises: ["Box Squat"],
+    masteryRequirement: { minReps: 10, minFormScore: 60, minQualifyingSessions: 3 },
+  },
+
   // ── PUSH ──────────────────────────────────────────────────────────────────
   {
     id: "push-1", level: 1, levelName: "Beginner", title: "Push-Up Foundation", branch: "PUSH",
@@ -193,6 +215,9 @@ export const DIFFICULTY_WEIGHTS: Record<string, number> = {
   "Incline Push-Up":    1.0,
   "Knee Push-Up":       1.0,
   "Assisted Squat":     1.0,
+  "Box Squat":          1.0,
+  "Knee Plank":         1.0,
+  "Assisted Dead Hang": 1.0,
   "Scapular Shrugs":    1.0,
   "Negative Pull-Ups":  1.0,
   "Plank":              1.0,
