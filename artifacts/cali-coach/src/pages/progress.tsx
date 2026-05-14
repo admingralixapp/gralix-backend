@@ -131,7 +131,10 @@ export function Progress() {
   const activatePro = useActivatePro();
   const { data: timeline } = useGetProgressTimeline({ days: 90 });
   const { data: summary }  = useGetProgressSummary();
-  const { data: sessions } = useListSessions();
+  const { data: sessions } = useListSessions(
+    { limit: 500, offset: 0 },
+    { query: { queryKey: ["/api/sessions", { limit: 500 }] } },
+  );
   const isPro = profile?.isPro ?? false;
 
   // ── Body Weight state (profile DB value takes priority over localStorage) ──
