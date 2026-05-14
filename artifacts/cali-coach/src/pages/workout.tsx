@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell, Crown } from "lucide-react";
+import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell, Crown, Sparkles, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMyProfile } from "@/lib/social";
 import { getExerciseConfig, getRequiredLandmarks, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
+import { getWarmupSuggestionsFor, formatTime } from "@/lib/mobility-service";
 import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile, getAudioContext, CUE_PRIORITY } from "@/lib/voice-service";
 import { getWorkoutPhrase } from "@/lib/cue-translations";
 import { useTranslation } from "react-i18next";
@@ -2545,6 +2546,33 @@ export function Workout() {
                       </ul>
                     </div>
                   )}
+
+                  {/* ── Recommended Warm-up ───────────────────────────────── */}
+                  {(() => {
+                    const warmups = getWarmupSuggestionsFor(infoExercise.name);
+                    if (!warmups.length) return null;
+                    return (
+                      <div className="rounded-lg border border-violet-500/30 bg-violet-950/30 p-3">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-violet-300 mb-2 flex items-center gap-1.5">
+                          <Sparkles className="w-3 h-3" /> Recommended Warm-up
+                        </div>
+                        <ul className="space-y-2">
+                          {warmups.map(s => (
+                            <li key={s.id} className="flex items-start gap-2">
+                              <ChevronRight className="w-3.5 h-3.5 text-violet-400 mt-0.5 shrink-0" />
+                              <div className="min-w-0">
+                                <span className="text-xs font-semibold text-violet-200">{s.name}</span>
+                                <span className="text-[10px] text-muted-foreground ml-2 inline-flex items-center gap-0.5">
+                                  <Clock className="w-2.5 h-2.5" />{formatTime(s.durationSeconds)}
+                                </span>
+                                <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">{s.why}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })()}
 
                   {/* ── Train action button — always available ────────────── */}
                   <Button
