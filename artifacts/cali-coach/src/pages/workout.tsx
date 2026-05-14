@@ -10,6 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell, Crown, Sparkles, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMyProfile } from "@/lib/social";
+import { useBadgeCelebrationTrigger } from "@/components/badge-celebration-context";
+import { MILESTONE_BADGE_MAP } from "@/lib/milestone-badges";
 import { getExerciseConfig, getRequiredLandmarks, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
 import { getWarmupSuggestionsFor, formatTime } from "@/lib/mobility-service";
 import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile, getAudioContext, CUE_PRIORITY } from "@/lib/voice-service";
@@ -514,6 +516,7 @@ export function Workout() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const { toast } = useToast();
+  const { triggerBadgeCelebrations } = useBadgeCelebrationTrigger();
   const { data: profile } = useMyProfile();
   const isPro = profile?.isPro ?? false;
   const { data: exercises } = useListExercises();
@@ -1771,15 +1774,13 @@ export function Workout() {
       void queryClient.refetchQueries({ queryKey: getListSessionsQueryKey() });
       void queryClient.invalidateQueries({ queryKey: getGetRecentSessionsQueryKey() });
 
-      // Show milestone badge toasts for newly earned category badges
+      // Trigger full-screen badge celebration modal for newly earned category badges
       const milestones = sessionResult?.newBadges ?? [];
-      for (const badge of milestones) {
-        setTimeout(() => {
-          toast({
-            title: t("workout.milestoneUnlocked", { name: badge.name }),
-            description: t("workout.milestoneDesc", { icon: badge.icon, tier: badge.tier, category: badge.category }),
-          });
-        }, 800);
+      if (milestones.length > 0) {
+        const badgeDefs = milestones
+          .map((b) => MILESTONE_BADGE_MAP.get(b.id))
+          .filter((b): b is NonNullable<typeof b> => b !== undefined);
+        setTimeout(() => triggerBadgeCelebrations(badgeDefs), 900);
       }
 
       // Show mastery tier toasts for newly earned per-exercise titles

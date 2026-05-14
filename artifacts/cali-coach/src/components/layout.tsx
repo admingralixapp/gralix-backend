@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useMyProfile, useFriendRequests } from "@/lib/social";
 import { SkillWatcher } from "./skill-watcher";
+import { BadgeCelebrationProvider } from "./badge-celebration-context";
 
 // ─── Nav definition ───────────────────────────────────────────────────────────
 
@@ -415,3 +416,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+// Re-export the provider so App.tsx / tests can import from one place.
+export { BadgeCelebrationProvider } from "./badge-celebration-context";

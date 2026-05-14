@@ -75,6 +75,10 @@ export interface UserProfile {
   } | null;
   /** Per-exercise lifetime totals — same shape as PublicProfile.exerciseStats */
   exerciseStats?: Record<string, { total: number }>;
+  /** Lifetime rep counters per category (updated on every session completion). */
+  lifetimeReps?: { push: number; pull: number; core: number; legs: number };
+  /** Earned milestone badge IDs, e.g. ["push-starter", "legs-bronze"]. */
+  earnedMilestoneBadges?: string[];
   createdAt: string;
 }
 

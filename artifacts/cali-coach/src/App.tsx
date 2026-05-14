@@ -19,7 +19,7 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Layout, clearUserSessionStorage } from "@/components/layout";
+import { Layout, clearUserSessionStorage, BadgeCelebrationProvider } from "@/components/layout";
 import { Home } from "@/pages/home";
 import { Workout } from "@/pages/workout";
 import { History } from "@/pages/history";
@@ -338,6 +338,7 @@ function AppRouter() {
 
               {/* All other routes rendered inside the sidebar Layout */}
               <Route>{() => (
+                <BadgeCelebrationProvider>
                 <Layout>
                   <Switch>
                     <Route path="/" component={HomeRoute} />
@@ -368,6 +369,7 @@ function AppRouter() {
                     <Route component={NotFound} />
                   </Switch>
                 </Layout>
+                </BadgeCelebrationProvider>
               )}</Route>
             </Switch>
             <Toaster />
