@@ -11,6 +11,7 @@ import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, Ch
 import { useToast } from "@/hooks/use-toast";
 import { useMyProfile } from "@/lib/social";
 import { useBadgeCelebrationTrigger } from "@/components/badge-celebration-context";
+import { useSkillMasteryCelebrationTrigger, type SkillMasteryCelebration } from "@/components/skill-mastery-context";
 import { MILESTONE_BADGE_MAP } from "@/lib/milestone-badges";
 import { getExerciseConfig, getRequiredLandmarks, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
 import { getWarmupSuggestionsFor, formatTime } from "@/lib/mobility-service";
@@ -517,6 +518,7 @@ export function Workout() {
   const search = useSearch();
   const { toast } = useToast();
   const { triggerBadgeCelebrations } = useBadgeCelebrationTrigger();
+  const { triggerSkillMasteryCelebrations } = useSkillMasteryCelebrationTrigger();
   const { data: profile } = useMyProfile();
   const isPro = profile?.isPro ?? false;
   const { data: exercises } = useListExercises();
@@ -1802,6 +1804,22 @@ export function Workout() {
       };
       const nextEvaluated = evaluateSkillTree([...history, newSession]);
 
+      // Detect and celebrate newly mastered skill nodes
+      const newlyMastered1 = nextEvaluated.filter(n => {
+        const prev = prevEvaluated.find(p => p.id === n.id);
+        return n.status === "mastered" && prev?.status !== "mastered";
+      });
+      if (newlyMastered1.length > 0) {
+        const celebrations: SkillMasteryCelebration[] = newlyMastered1.map(masteredNode => ({
+          masteredNode,
+          newlyUnlockedNodes: nextEvaluated.filter(n => {
+            const prev = prevEvaluated.find(p => p.id === n.id);
+            return n.status === "unlocked" && prev?.status === "locked";
+          }),
+        }));
+        setTimeout(() => triggerSkillMasteryCelebrations(celebrations), 2400);
+      }
+
       const resultsProps: Omit<SessionResultsProps, "onClose"> = {
         exerciseName,
         totalReps:    finalReps,
@@ -2092,6 +2110,22 @@ export function Workout() {
       };
       const nextEvaluated = evaluateSkillTree([...history, newSession]);
 
+      // Detect and celebrate newly mastered skill nodes
+      const newlyMastered2 = nextEvaluated.filter(n => {
+        const prev = prevEvaluated.find(p => p.id === n.id);
+        return n.status === "mastered" && prev?.status !== "mastered";
+      });
+      if (newlyMastered2.length > 0) {
+        const celebrations: SkillMasteryCelebration[] = newlyMastered2.map(masteredNode => ({
+          masteredNode,
+          newlyUnlockedNodes: nextEvaluated.filter(n => {
+            const prev = prevEvaluated.find(p => p.id === n.id);
+            return n.status === "unlocked" && prev?.status === "locked";
+          }),
+        }));
+        setTimeout(() => triggerSkillMasteryCelebrations(celebrations), 900);
+      }
+
       setIsManualLog(false);
       setManualReps(10);
       setManualRpe(null);
@@ -2182,6 +2216,22 @@ export function Workout() {
         completedAt:  new Date().toISOString(),
       };
       const nextEvaluated = evaluateSkillTree([...history, newSession]);
+
+      // Detect and celebrate newly mastered skill nodes
+      const newlyMastered3 = nextEvaluated.filter(n => {
+        const prev = prevEvaluated.find(p => p.id === n.id);
+        return n.status === "mastered" && prev?.status !== "mastered";
+      });
+      if (newlyMastered3.length > 0) {
+        const celebrations: SkillMasteryCelebration[] = newlyMastered3.map(masteredNode => ({
+          masteredNode,
+          newlyUnlockedNodes: nextEvaluated.filter(n => {
+            const prev = prevEvaluated.find(p => p.id === n.id);
+            return n.status === "unlocked" && prev?.status === "locked";
+          }),
+        }));
+        setTimeout(() => triggerSkillMasteryCelebrations(celebrations), 900);
+      }
 
       setPendingResult({
         type: "session",

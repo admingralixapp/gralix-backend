@@ -20,6 +20,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/reac
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout, clearUserSessionStorage, BadgeCelebrationProvider } from "@/components/layout";
+import { SkillMasteryCelebrationProvider } from "@/components/skill-mastery-context";
 import { Home } from "@/pages/home";
 import { Workout } from "@/pages/workout";
 import { History } from "@/pages/history";
@@ -339,6 +340,7 @@ function AppRouter() {
               {/* All other routes rendered inside the sidebar Layout */}
               <Route>{() => (
                 <BadgeCelebrationProvider>
+                <SkillMasteryCelebrationProvider>
                 <Layout>
                   <Switch>
                     <Route path="/" component={HomeRoute} />
@@ -369,6 +371,7 @@ function AppRouter() {
                     <Route component={NotFound} />
                   </Switch>
                 </Layout>
+                </SkillMasteryCelebrationProvider>
                 </BadgeCelebrationProvider>
               )}</Route>
             </Switch>
