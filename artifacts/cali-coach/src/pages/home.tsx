@@ -1,4 +1,5 @@
-import { useGetProgressSummary, useGetRecentSessions, useGetProgressTimeline } from "@workspace/api-client-react";
+import { useGetProgressSummary, useGetRecentSessions, useGetProgressTimeline, useListSessions } from "@workspace/api-client-react";
+import { evaluateSkillTree } from "@/lib/skill-tree";
 import { Link, useLocation } from "wouter";
 import {
   Activity,
@@ -438,12 +439,14 @@ function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () =
 
 function DailyPrescriptionCard({
   targetSkillId,
+  masteredNodeIds,
   exerciseStats,
 }: {
   targetSkillId: string;
+  masteredNodeIds: Set<string>;
   exerciseStats: Record<string, { total: number }>;
 }) {
-  const prescription = getDailyPrescription(targetSkillId, exerciseStats);
+  const prescription = getDailyPrescription(targetSkillId, masteredNodeIds, exerciseStats);
   if (!prescription) return null;
 
   const { targetNode, focusNode, readiness, requiredReps, totalReps, allMastered } = prescription;
@@ -579,6 +582,17 @@ export function Home() {
   const { data: mobilityStatus, isLoading: loadingMobility } = useMobilityStatus();
   const { data: profile } = useMyProfile();
 
+  // Fetch all sessions to evaluate real skill tree mastery (same as skill-tree page)
+  const { data: allSessions } = useListSessions(
+    { limit: 500 },
+    { query: { queryKey: ["/api/sessions", { limit: 500 }] } },
+  );
+  const masteredNodeIds = useMemo(() => {
+    if (!allSessions) return new Set<string>();
+    const evaluated = evaluateSkillTree(allSessions);
+    return new Set(evaluated.filter((n) => n.status === "mastered").map((n) => n.id));
+  }, [allSessions]);
+
   useNotificationScheduler(mobilityStatus);
 
   const isPro = profile?.isPro ?? false;
@@ -669,6 +683,7 @@ export function Home() {
       {profile?.targetSkillId && (
         <DailyPrescriptionCard
           targetSkillId={profile.targetSkillId}
+          masteredNodeIds={masteredNodeIds}
           exerciseStats={profile.exerciseStats ?? {}}
         />
       )}
