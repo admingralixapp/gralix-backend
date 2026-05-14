@@ -420,13 +420,17 @@ export function AnimLabPage() {
   const [cameraOpen, setCameraOpen]     = useState(false);
   const [cameraStatus, setCameraStatus] = useState<"loading" | "ready" | "error">("loading");
   const [hasLandmarks, setHasLandmarks] = useState(false);
+  const [countdown, setCountdown]       = useState<number | null>(null);
+  const [flashActive, setFlashActive]   = useState(false);
   const videoRef           = useRef<HTMLVideoElement>(null);
   const camCanvasRef       = useRef<HTMLCanvasElement>(null);
   const landmarkerRef      = useRef<PoseLandmarker | null>(null);
   const camFrameRef        = useRef<number>(0);
   const lastCamTimeRef     = useRef<number>(-1);
   const latestLandmarksRef = useRef<LM[] | null>(null);
-  const camStreamRef       = useRef<MediaStream | null>(null);
+  const camStreamRef         = useRef<MediaStream | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioCtxRef          = useRef<AudioContext | null>(null);
 
   // ── Global rotation ──────────────────────────────────────────────────────────
   const [rotationDeg, setRotationDeg] = useState(0);
@@ -804,6 +808,85 @@ export function AnimLabPage() {
     setIsPlaying(false);
   }, []);
 
+  // ── Countdown snap — 3s timer with beep/shutter audio + flash ────────────
+  const startCountdownSnap = useCallback(() => {
+    if (countdownIntervalRef.current !== null) return; // already counting
+
+    // Lazy-init AudioContext on user gesture (browser policy)
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new AudioContext();
+    }
+    const ctx = audioCtxRef.current;
+
+    const playBeep = () => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.4, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.13);
+    };
+
+    const playShutter = () => {
+      // Noise burst (mechanical click body)
+      const bufLen = Math.floor(ctx.sampleRate * 0.06);
+      const buf    = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+      const data   = buf.getChannelData(0);
+      for (let i = 0; i < bufLen; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufLen * 0.25));
+      }
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const ng  = ctx.createGain(); ng.gain.value = 0.55;
+      src.connect(ng); ng.connect(ctx.destination); src.start();
+      // High transient click layered on top
+      const osc = ctx.createOscillator();
+      const og  = ctx.createGain();
+      osc.connect(og); og.connect(ctx.destination);
+      osc.frequency.value = 2800;
+      og.gain.setValueAtTime(0.35, ctx.currentTime);
+      og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+      osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.07);
+    };
+
+    let count = 3;
+    setCountdown(count);
+    playBeep();
+
+    countdownIntervalRef.current = setInterval(() => {
+      count -= 1;
+      if (count > 0) {
+        setCountdown(count);
+        playBeep();
+      } else {
+        clearInterval(countdownIntervalRef.current!);
+        countdownIntervalRef.current = null;
+        setCountdown(null);
+
+        // ── Capture at tick-zero ──────────────────────────────────────────
+        const lms = latestLandmarksRef.current;
+        if (lms) {
+          playShutter();
+          setFlashActive(true);
+          setTimeout(() => setFlashActive(false), 600);
+          const frame = landmarksToFrame(lms);
+          if (frame) {
+            const fi = activeFameRef.current;
+            setFrames(prev => {
+              const next = [...prev] as [PoseData, PoseData, PoseData];
+              next[fi] = frame;
+              return next;
+            });
+            setIsPlaying(false);
+          }
+          // Close overlay after flash settles
+          setTimeout(() => setCameraOpen(false), 800);
+        }
+      }
+    }, 1000);
+  }, []);
+
   // ── Camera lifecycle — starts when overlay opens, cleans up when closed ───
   useEffect(() => {
     if (!cameraOpen) return;
@@ -855,6 +938,12 @@ export function AnimLabPage() {
       camStreamRef.current?.getTracks().forEach(t => t.stop());
       camStreamRef.current = null;
       latestLandmarksRef.current = null;
+      if (countdownIntervalRef.current !== null) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+      setCountdown(null);
+      setFlashActive(false);
     };
   }, [cameraOpen, camLoop]);
 
@@ -1761,24 +1850,58 @@ export function AnimLabPage() {
                 {hasLandmarks ? "Pose detected" : "No pose detected"}
               </div>
             )}
+
+            {/* ── Countdown overlay ── */}
+            {countdown !== null && (
+              <div style={{
+                position: "absolute", inset: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "rgba(0,0,0,0.25)",
+                pointerEvents: "none",
+              }}>
+                <span
+                  key={countdown}
+                  style={{
+                    fontSize: 160, fontWeight: 900, lineHeight: 1,
+                    color: "#22c55e",
+                    textShadow: "0 0 50px #22c55e, 0 0 120px #22c55e88, 0 0 200px #22c55e44",
+                    animation: "countPulse 0.95s ease-out forwards",
+                    display: "block", userSelect: "none",
+                  }}
+                >
+                  {countdown}
+                </span>
+              </div>
+            )}
+
+            {/* ── Flash overlay ── */}
+            {flashActive && (
+              <div style={{
+                position: "absolute", inset: 0,
+                background: "white",
+                animation: "flashFade 0.6s ease-out forwards",
+                pointerEvents: "none",
+              }} />
+            )}
           </div>
 
           {/* Action buttons */}
           <div style={{ display: "flex", gap: 10 }}>
             <button
-              onClick={snapToFrame}
-              disabled={!hasLandmarks}
+              onClick={startCountdownSnap}
+              disabled={!hasLandmarks || countdown !== null}
               style={{
                 padding: "10px 28px", borderRadius: 9, border: "none",
-                background: hasLandmarks ? "#22c55e" : "#1a3326",
-                color: hasLandmarks ? "#000" : "#4a7a5a",
+                background: countdown !== null ? "#ca8a04" : hasLandmarks ? "#22c55e" : "#1a3326",
+                color: countdown !== null ? "#fff" : hasLandmarks ? "#000" : "#4a7a5a",
                 fontWeight: 800, fontSize: 14,
-                cursor: hasLandmarks ? "pointer" : "not-allowed",
+                cursor: hasLandmarks && countdown === null ? "pointer" : "not-allowed",
                 display: "flex", alignItems: "center", gap: 8,
                 transition: "all 0.2s",
               }}
             >
-              <Camera size={15} /> Snap to {FRAME_LABELS[activeFrame]}
+              <Camera size={15} />
+              {countdown !== null ? `${countdown}…` : `Snap to ${FRAME_LABELS[activeFrame]}`}
             </button>
 
             <button
@@ -1823,7 +1946,11 @@ export function AnimLabPage() {
             })}
           </div>
 
-          <style>{`@keyframes camSpin { to { transform: rotate(360deg); } }`}</style>
+          <style>{`
+            @keyframes camSpin    { to { transform: rotate(360deg); } }
+            @keyframes countPulse { 0% { transform: scale(1.5); opacity: 0.5; } 12% { transform: scale(1.0); opacity: 1; } 80% { transform: scale(1.0); opacity: 1; } 100% { transform: scale(0.85); opacity: 0.3; } }
+            @keyframes flashFade  { 0% { opacity: 1; } 100% { opacity: 0; } }
+          `}</style>
         </div>
       )}
     </div>
