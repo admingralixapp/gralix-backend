@@ -58,16 +58,25 @@ function serializeWorldObjectsEntry(exerciseName: string, anchors: EnvAnchorPayl
 async function updateExerciseBlock(exerciseName: string, newBlock: string): Promise<void> {
   const source = await readFile(POSES_FILE, "utf-8");
 
+  // Scope the replacement to ONLY the pose library section (before EXERCISE_WORLD_OBJECTS),
+  // so saving frames can never corrupt the world-objects section.
+  const WORLD_OBJECTS_MARKER = "export const EXERCISE_WORLD_OBJECTS";
+  const markerIdx = source.indexOf(WORLD_OBJECTS_MARKER);
+  if (markerIdx === -1) throw new Error("EXERCISE_WORLD_OBJECTS marker not found in exercise-poses.ts");
+
+  const poseSection = source.slice(0, markerIdx);
+  const worldSection = source.slice(markerIdx);
+
   const escaped = exerciseName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const blockRe = new RegExp(`  "${escaped}": \\[[\\s\\S]*?\\n  \\],`, "g");
 
-  if (!blockRe.test(source)) {
+  if (!blockRe.test(poseSection)) {
     throw new Error(`Exercise "${exerciseName}" not found in MOBILITY_POSE_LIBRARY`);
   }
   blockRe.lastIndex = 0;
 
-  const updated = source.replace(blockRe, newBlock);
-  await writeFile(POSES_FILE, updated, "utf-8");
+  const updatedPoseSection = poseSection.replace(blockRe, newBlock);
+  await writeFile(POSES_FILE, updatedPoseSection + worldSection, "utf-8");
 }
 
 async function updateWorldObjects(exerciseName: string, anchors: EnvAnchorPayload[]): Promise<void> {

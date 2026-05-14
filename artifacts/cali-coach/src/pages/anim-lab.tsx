@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Link } from "wouter";
-import { Play, Square, Save, RotateCcw, X, Copy, Check, Minus, Plus, Clipboard, ChevronDown } from "lucide-react";
+import { Play, Square, Save, RotateCcw, X, Copy, Check, Minus, Plus, Clipboard, ChevronDown, Camera, RotateCw } from "lucide-react";
+import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-vision";
 import {
   getPoseSet,
   getMobilityExerciseNames,
@@ -130,6 +131,67 @@ function uniqueJoints(pose: PoseData): JointInfo[] {
     })
   );
   return out;
+}
+
+// ── Landmark → PoseData ──────────────────────────────────────────────────────
+
+type LM = { x: number; y: number };
+
+function landmarksToFrame(lms: LM[]): PoseData | null {
+  if (lms.length < 29) return null;
+  const R = (n: number) => Math.round(n * 2) / 2;
+  const lmX  = (i: number) => R((1 - lms[i]!.x) * 100); // mirror so figure faces right
+  const lmY  = (i: number) => R(lms[i]!.y * 100);
+  const lmPt = (i: number): [number, number] => [lmX(i), lmY(i)];
+  const midPt = (a: number, b: number): [number, number] => [
+    R((lmX(a) + lmX(b)) / 2),
+    R((lmY(a) + lmY(b)) / 2),
+  ];
+  const neck = midPt(11, 12);
+  const hips = midPt(23, 24);
+  return {
+    head: { cx: lmX(0), cy: lmY(0), r: 6 },
+    lines: [
+      [neck, hips],
+      [neck, lmPt(13), lmPt(15)],
+      [neck, lmPt(14), lmPt(16)],
+      [hips, lmPt(25), lmPt(27)],
+      [hips, lmPt(26), lmPt(28)],
+    ],
+  };
+}
+
+// ── Skeleton rotation ─────────────────────────────────────────────────────────
+
+function rotatePose(pose: PoseData, deg: number): PoseData {
+  if (deg === 0) return pose;
+  const rad = (deg * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const allPts: [number, number][] = [
+    [pose.head.cx, pose.head.cy],
+    ...pose.lines.flatMap(line => line),
+  ];
+  const cxA = allPts.reduce((s, p) => s + p[0], 0) / allPts.length;
+  const cyA = allPts.reduce((s, p) => s + p[1], 0) / allPts.length;
+  const rot = (x: number, y: number): [number, number] => {
+    const dx = x - cxA, dy = y - cyA;
+    return [
+      Math.round((cxA + dx * cos - dy * sin) * 2) / 2,
+      Math.round((cyA + dx * sin + dy * cos) * 2) / 2,
+    ];
+  };
+  const [nhx, nhy] = rot(pose.head.cx, pose.head.cy);
+  return {
+    head: { ...pose.head, cx: nhx, cy: nhy },
+    lines: pose.lines.map(line => line.map(([x, y]) => rot(x, y))),
+    muscleGlow: pose.muscleGlow
+      ? (() => {
+          const [gx, gy] = rot(pose.muscleGlow!.cx, pose.muscleGlow!.cy);
+          return { ...pose.muscleGlow!, cx: gx, cy: gy };
+        })()
+      : undefined,
+  };
 }
 
 // ── Environment Renderer (matches mobility.tsx visual exactly) ───────────────
@@ -353,6 +415,22 @@ export function AnimLabPage() {
   const dragRef = useRef<DragState | null>(null);
   const activeFameRef = useRef<FrameIdx>(activeFrame);
   const envDragRef = useRef<{ idx: number; svgStartX: number; svgStartY: number; origObj: EnvAnchor } | null>(null);
+
+  // ── Camera capture ──────────────────────────────────────────────────────────
+  const [cameraOpen, setCameraOpen]     = useState(false);
+  const [cameraStatus, setCameraStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [hasLandmarks, setHasLandmarks] = useState(false);
+  const videoRef           = useRef<HTMLVideoElement>(null);
+  const camCanvasRef       = useRef<HTMLCanvasElement>(null);
+  const landmarkerRef      = useRef<PoseLandmarker | null>(null);
+  const camFrameRef        = useRef<number>(0);
+  const lastCamTimeRef     = useRef<number>(-1);
+  const latestLandmarksRef = useRef<LM[] | null>(null);
+  const camStreamRef       = useRef<MediaStream | null>(null);
+
+  // ── Global rotation ──────────────────────────────────────────────────────────
+  const [rotationDeg, setRotationDeg] = useState(0);
+
   activeFameRef.current = activeFrame;
 
 
@@ -366,6 +444,8 @@ export function AnimLabPage() {
     setWorldObjects(getWorldObjects(exercise));
     setEnvSaveMsg(null);
     envDragRef.current = null;
+    setCameraOpen(false);
+    setRotationDeg(0);
   }, [exercise]);
 
   // ── Play loop ────────────────────────────────────────────────────────────
@@ -661,9 +741,127 @@ export function AnimLabPage() {
     }
   };
 
+  // ── Apply rotation ────────────────────────────────────────────────────────
+  const handleApplyRotation = (allFrames: boolean) => {
+    if (rotationDeg === 0) return;
+    setFrames(prev => {
+      const next = [...prev] as [PoseData, PoseData, PoseData];
+      if (allFrames) {
+        next[0] = rotatePose(prev[0], rotationDeg);
+        next[1] = rotatePose(prev[1], rotationDeg);
+        next[2] = rotatePose(prev[2], rotationDeg);
+      } else {
+        next[activeFrame] = rotatePose(prev[activeFrame], rotationDeg);
+      }
+      return next;
+    });
+    setRotationDeg(0);
+  };
+
+  // ── Camera detection loop ─────────────────────────────────────────────────
+  const camLoop = useCallback(() => {
+    const video  = videoRef.current;
+    const canvas = camCanvasRef.current;
+    const lm     = landmarkerRef.current;
+    if (!video || !canvas || !lm) { camFrameRef.current = requestAnimationFrame(camLoop); return; }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) { camFrameRef.current = requestAnimationFrame(camLoop); return; }
+    if (video.currentTime !== lastCamTimeRef.current) {
+      lastCamTimeRef.current = video.currentTime;
+      if (video.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+        if (canvas.width  !== video.videoWidth)  canvas.width  = video.videoWidth;
+        if (canvas.height !== video.videoHeight) canvas.height = video.videoHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let results;
+        try { results = lm.detectForVideo(video, performance.now()); }
+        catch { camFrameRef.current = requestAnimationFrame(camLoop); return; }
+        if (results.landmarks?.length > 0) {
+          latestLandmarksRef.current = results.landmarks[0]!;
+          setHasLandmarks(true);
+          const du = new DrawingUtils(ctx);
+          du.drawLandmarks(results.landmarks[0]!, { radius: 4, color: "#22c55e", lineWidth: 2 });
+          du.drawConnectors(results.landmarks[0]!, PoseLandmarker.POSE_CONNECTIONS, { color: "#22c55e", lineWidth: 2 });
+        } else {
+          latestLandmarksRef.current = null;
+          setHasLandmarks(false);
+        }
+      }
+    }
+    camFrameRef.current = requestAnimationFrame(camLoop);
+  }, []);
+
+  const snapToFrame = useCallback(() => {
+    const lms = latestLandmarksRef.current;
+    if (!lms) return;
+    const frame = landmarksToFrame(lms);
+    if (!frame) return;
+    const fi = activeFameRef.current;
+    setFrames(prev => {
+      const next = [...prev] as [PoseData, PoseData, PoseData];
+      next[fi] = frame;
+      return next;
+    });
+    setIsPlaying(false);
+  }, []);
+
+  // ── Camera lifecycle — starts when overlay opens, cleans up when closed ───
+  useEffect(() => {
+    if (!cameraOpen) return;
+    let cancelled = false;
+    setCameraStatus("loading");
+    setHasLandmarks(false);
+    (async () => {
+      if (!landmarkerRef.current) {
+        try {
+          const vision = await FilesetResolver.forVisionTasks(
+            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm",
+          );
+          if (cancelled) return;
+          landmarkerRef.current = await PoseLandmarker.createFromOptions(vision, {
+            baseOptions: {
+              modelAssetPath:
+                "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task",
+              delegate: "GPU",
+            },
+            runningMode: "VIDEO", numPoses: 1,
+            minPoseDetectionConfidence: 0.5, minTrackingConfidence: 0.5,
+          });
+        } catch {
+          if (!cancelled) setCameraStatus("error");
+          return;
+        }
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false,
+        });
+        if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
+        camStreamRef.current = stream;
+        const vid = videoRef.current;
+        if (vid) { vid.srcObject = stream; await vid.play(); }
+        if (!cancelled) {
+          setCameraStatus("ready");
+          lastCamTimeRef.current = -1;
+          camFrameRef.current = requestAnimationFrame(camLoop);
+        }
+      } catch {
+        if (!cancelled) setCameraStatus("error");
+      }
+    })();
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(camFrameRef.current);
+      camStreamRef.current?.getTracks().forEach(t => t.stop());
+      camStreamRef.current = null;
+      latestLandmarksRef.current = null;
+    };
+  }, [cameraOpen, camLoop]);
+
   // ── Joints for handles ───────────────────────────────────────────────────
 
   const joints = uniqueJoints(activePose);
+  const displayPose = rotationDeg !== 0 ? rotatePose(activePose, rotationDeg) : activePose;
 
   // ── Render ───────────────────────────────────────────────────────────────
 
@@ -810,14 +1008,14 @@ export function AnimLabPage() {
                 ))}
 
               {/* Active skeleton */}
-              <LiveSkeleton pose={activePose} color={FRAME_COLORS[displayFrame]} />
+              <LiveSkeleton pose={displayPose} color={FRAME_COLORS[displayFrame]} />
 
               {/* Draggable joint handles
                   - Cyan  (#22d3ee) = hinge joints → ELBOWS / KNEES (mid of chain)
                   - Green / frame colour = endpoint joints (shoulders, wrists, hips, ankles)
                   - "+" circle = extend this limb by adding a new joint beyond the tip
                   - "−" circle = remove the tip joint (trim back one step) */}
-              {!isPlaying && joints.map(({ x, y, isHinge, extendLineIdx }) => {
+              {!isPlaying && rotationDeg === 0 && joints.map(({ x, y, isHinge, extendLineIdx }) => {
                 // Direction vector for placing the +/- buttons relative to this joint.
                 // For terminals, use the last-segment direction; default to pointing up.
                 let btnDx = 0, btnDy = -1;
@@ -894,7 +1092,7 @@ export function AnimLabPage() {
               })}
 
               {/* Head drag handle */}
-              {!isPlaying && (
+              {!isPlaying && rotationDeg === 0 && (
                 <circle
                   cx={activePose.head.cx} cy={activePose.head.cy}
                   r={(activePose.head.r ?? 7) + 5}
@@ -1001,6 +1199,18 @@ export function AnimLabPage() {
             >
               <RotateCcw size={12} /> Reset
             </button>
+
+            <button
+              onClick={() => setCameraOpen(true)}
+              style={{
+                display: "flex", alignItems: "center", gap: 5,
+                padding: "8px 14px", borderRadius: 8, fontSize: 13, cursor: "pointer",
+                background: "transparent", color: "#7dd3fc",
+                border: "1px solid #1e4a6a",
+              }}
+            >
+              <Camera size={13} /> Camera
+            </button>
           </div>
 
           {/* Joint colour legend */}
@@ -1075,6 +1285,85 @@ export function AnimLabPage() {
               {saveMsg.ok ? "✓ " : "✗ "}{saveMsg.text}
             </p>
           )}
+
+          {/* ── Automation Tools ── */}
+          <div style={{ marginBottom: 18, paddingBottom: 18, borderBottom: `1px solid ${borderCol}` }}>
+            <p style={{
+              fontSize: 10, color: mutedText, marginBottom: 10,
+              textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600,
+            }}>
+              Automation Tools
+            </p>
+
+            {/* Capture from Camera */}
+            <button
+              onClick={() => setCameraOpen(true)}
+              style={{
+                width: "100%", padding: "9px 0", borderRadius: 7,
+                border: "1px solid #1e4a6a", background: "#0c2233", color: "#7dd3fc",
+                fontWeight: 700, fontSize: 13, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                marginBottom: 14,
+              }}
+            >
+              <Camera size={13} /> Capture Pose from Camera
+            </button>
+
+            {/* Global Rotation */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+              <span style={{ fontSize: 11, color: "#94a3b8", display: "flex", alignItems: "center", gap: 5 }}>
+                <RotateCw size={11} /> Global Rotation
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: FRAME_COLORS[activeFrame] }}>
+                {rotationDeg}°
+                {rotationDeg !== 0 && (
+                  <span style={{ color: "#facc15", fontWeight: 400, fontSize: 10, marginLeft: 5 }}>preview</span>
+                )}
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0} max={359} step={1}
+              value={rotationDeg}
+              onChange={e => setRotationDeg(Number(e.target.value))}
+              style={{ width: "100%", marginBottom: 8, accentColor: FRAME_COLORS[activeFrame] }}
+            />
+            {rotationDeg !== 0 && (
+              <div style={{ display: "flex", gap: 6 }}>
+                <button
+                  onClick={() => handleApplyRotation(false)}
+                  style={{
+                    flex: 1, padding: "6px 0", borderRadius: 6, border: "none",
+                    background: FRAME_COLORS[activeFrame], color: "#000",
+                    fontWeight: 700, fontSize: 11, cursor: "pointer",
+                  }}
+                >
+                  Apply to {FRAME_LABELS[activeFrame]}
+                </button>
+                <button
+                  onClick={() => handleApplyRotation(true)}
+                  style={{
+                    flex: 1, padding: "6px 0", borderRadius: 6,
+                    border: `1px solid ${FRAME_COLORS[activeFrame]}66`,
+                    background: "transparent", color: FRAME_COLORS[activeFrame],
+                    fontWeight: 700, fontSize: 11, cursor: "pointer",
+                  }}
+                >
+                  Apply to All 3
+                </button>
+                <button
+                  onClick={() => setRotationDeg(0)}
+                  style={{
+                    padding: "6px 10px", borderRadius: 6, border: "1px solid #334155",
+                    background: "transparent", color: "#64748b",
+                    fontSize: 11, cursor: "pointer",
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* ── World Objects ── */}
           <div style={{ marginBottom: 18, paddingBottom: 16, borderBottom: `1px solid ${borderCol}` }}>
@@ -1384,6 +1673,159 @@ export function AnimLabPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Camera Capture Overlay ── */}
+      {cameraOpen && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 1000,
+          background: "rgba(0,0,0,0.9)",
+          display: "flex", flexDirection: "column", alignItems: "center",
+          justifyContent: "center", gap: 14,
+        }}>
+          <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>
+            Capturing into{" "}
+            <span style={{ color: FRAME_COLORS[activeFrame], fontWeight: 700 }}>
+              {FRAME_LABELS[activeFrame]}
+            </span>{" "}
+            frame — stand in view and pose, then click Snap
+          </p>
+
+          {/* Video + skeleton overlay */}
+          <div style={{
+            position: "relative", borderRadius: 14, overflow: "hidden",
+            border: `2px solid ${hasLandmarks ? "#22c55e55" : "#1e293b"}`,
+            boxShadow: hasLandmarks ? "0 0 32px #22c55e22" : "none",
+            transition: "border-color 0.3s, box-shadow 0.3s",
+          }}>
+            <video
+              ref={videoRef}
+              playsInline muted
+              style={{
+                display: "block", width: 560, height: 420,
+                objectFit: "cover", transform: "scaleX(-1)",
+              }}
+            />
+            <canvas
+              ref={camCanvasRef}
+              style={{
+                position: "absolute", inset: 0,
+                width: "100%", height: "100%",
+                transform: "scaleX(-1)", pointerEvents: "none",
+              }}
+            />
+
+            {/* Loading spinner */}
+            {cameraStatus === "loading" && (
+              <div style={{
+                position: "absolute", inset: 0,
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                background: "rgba(8,14,26,0.88)", color: "#64748b",
+                fontSize: 13, gap: 12,
+              }}>
+                <div style={{
+                  width: 30, height: 30,
+                  border: "3px solid #1e293b",
+                  borderTop: "3px solid #22c55e",
+                  borderRadius: "50%",
+                  animation: "camSpin 0.8s linear infinite",
+                }} />
+                Loading pose detection…
+              </div>
+            )}
+
+            {/* Error state */}
+            {cameraStatus === "error" && (
+              <div style={{
+                position: "absolute", inset: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "rgba(8,14,26,0.92)", color: "#f87171", fontSize: 13,
+              }}>
+                Camera access denied or unavailable.
+              </div>
+            )}
+
+            {/* Live indicator */}
+            {cameraStatus === "ready" && (
+              <div style={{
+                position: "absolute", top: 10, left: 12,
+                display: "flex", alignItems: "center", gap: 6,
+                fontSize: 11, color: hasLandmarks ? "#22c55e" : "#64748b",
+                background: "rgba(0,0,0,0.6)", padding: "3px 9px", borderRadius: 20,
+              }}>
+                <div style={{
+                  width: 7, height: 7, borderRadius: "50%",
+                  background: hasLandmarks ? "#22c55e" : "#475569",
+                  boxShadow: hasLandmarks ? "0 0 6px #22c55e" : "none",
+                }} />
+                {hasLandmarks ? "Pose detected" : "No pose detected"}
+              </div>
+            )}
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: "flex", gap: 10 }}>
+            <button
+              onClick={snapToFrame}
+              disabled={!hasLandmarks}
+              style={{
+                padding: "10px 28px", borderRadius: 9, border: "none",
+                background: hasLandmarks ? "#22c55e" : "#1a3326",
+                color: hasLandmarks ? "#000" : "#4a7a5a",
+                fontWeight: 800, fontSize: 14,
+                cursor: hasLandmarks ? "pointer" : "not-allowed",
+                display: "flex", alignItems: "center", gap: 8,
+                transition: "all 0.2s",
+              }}
+            >
+              <Camera size={15} /> Snap to {FRAME_LABELS[activeFrame]}
+            </button>
+
+            <button
+              onClick={() => setCameraOpen(false)}
+              style={{
+                padding: "10px 20px", borderRadius: 9,
+                border: "1px solid #334155", background: "transparent",
+                color: "#94a3b8", fontSize: 13, cursor: "pointer",
+              }}
+            >
+              Close
+            </button>
+          </div>
+
+          <p style={{
+            fontSize: 11, color: "#475569",
+            maxWidth: 480, textAlign: "center", lineHeight: 1.65, margin: 0,
+          }}>
+            Switch frames below without closing — camera stays live.
+            Each Snap overwrites that frame's skeleton with your live pose.
+          </p>
+
+          {/* Frame switcher — switch target frame while camera is open */}
+          <div style={{ display: "flex", gap: 6 }}>
+            {FRAME_LABELS.map((name, idx) => {
+              const active = activeFrame === (idx as FrameIdx);
+              return (
+                <button
+                  key={name}
+                  onClick={() => { setActiveFrame(idx as FrameIdx); setIsPlaying(false); }}
+                  style={{
+                    padding: "5px 14px", borderRadius: 20, fontSize: 12,
+                    fontWeight: active ? 700 : 400, cursor: "pointer",
+                    border: `1.5px solid ${active ? FRAME_COLORS[idx] : "#334155"}`,
+                    background: active ? `${FRAME_COLORS[idx]}18` : "transparent",
+                    color: active ? FRAME_COLORS[idx] : "#64748b",
+                  }}
+                >
+                  {["▶", "◉", "◀"][idx]} {name}
+                </button>
+              );
+            })}
+          </div>
+
+          <style>{`@keyframes camSpin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
     </div>
   );
 }
