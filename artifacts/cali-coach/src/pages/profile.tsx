@@ -393,14 +393,8 @@ function ProfileContent() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      {/* Back */}
-      <Link
-        href="/friends"
-        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors w-fit"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Friends
-      </Link>
+      {/* Page title */}
+      <h1 className="text-2xl font-bold mb-6">Profile</h1>
 
       {/* User header */}
       <div className="rounded-xl border border-border bg-card p-5 mb-4 flex items-center gap-4">
