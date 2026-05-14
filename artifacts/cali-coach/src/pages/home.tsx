@@ -622,19 +622,6 @@ export function Home() {
         </Button>
       </header>
 
-      {/* ── Daily Prescription (only when user has a target skill) ─── */}
-      {profile?.targetSkillId && (
-        <DailyPrescriptionCard
-          targetSkillId={profile.targetSkillId}
-          exerciseStats={profile.exerciseStats ?? {}}
-        />
-      )}
-
-      {/* ── Joint Readiness Quick-Log ──────────────────────────────── */}
-      <JointReadinessWidget
-        onNavigateProgress={() => setLocation("/mastery?tab=progress")}
-      />
-
       {/* ── Stats Grid (5 cards) ───────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
@@ -677,6 +664,19 @@ export function Home() {
           isLoading={loadingMobility}
         />
       </div>
+
+      {/* ── Daily Prescription (only when user has a target skill) ─── */}
+      {profile?.targetSkillId && (
+        <DailyPrescriptionCard
+          targetSkillId={profile.targetSkillId}
+          exerciseStats={profile.exerciseStats ?? {}}
+        />
+      )}
+
+      {/* ── Joint Readiness Quick-Log ──────────────────────────────── */}
+      <JointReadinessWidget
+        onNavigateProgress={() => setLocation("/mastery?tab=progress")}
+      />
 
       {/* ── Performance Trends (Pro paywall) ──────────────────────── */}
       <PerformanceTrendsCard isPro={isPro} />
