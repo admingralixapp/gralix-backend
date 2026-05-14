@@ -586,6 +586,10 @@
     "formScoreLabel": "Form Score",
     "requiresLabel": "Requires",
     "nodeTitle": {
+      "push-f1": "Foundation Push",
+      "pull-f1": "Foundation Pull",
+      "core-f1": "Foundation Core",
+      "legs-f1": "Foundation Legs",
       "push-1": "First Push-Up",
       "push-2": "Push-Up Strength",
       "push-3": "Diamond Push-Up",
@@ -665,6 +669,10 @@
       "push-weighted-1": "Weighted Dip"
     },
     "nodeDesc": {
+      "push-f1": "Build your first pushing strength from the wall or floor. Wall Push-Ups, Incline Push-Ups, and Knee Push-Ups all count — any clean reps progress this node.",
+      "pull-f1": "Start your pulling journey with horizontal rows or assisted hangs. Australian Rows and Assisted Dead Hangs build the lat and grip strength needed for your first Pull-Up.",
+      "core-f1": "Develop core stability with beginner-friendly moves. Knee Planks and Dead Bugs build the anti-extension strength needed for a solid full Plank.",
+      "legs-f1": "Learn the squat pattern safely with a Box Squat — sit back to a chair or box and stand tall. Grooves the hip-hinge and builds quad strength for full Squats.",
       "push-1": "Achieve your first clean push-up: straight body line, chest touching the floor, full arm extension.",
       "push-2": "Double your push-up capacity and tighten your form — consistent sets unlock the overhead and planche paths.",
       "push-3": "Hands form a diamond under the chest, elbows track behind — isolates the triceps and inner chest for elite pressing density.",
