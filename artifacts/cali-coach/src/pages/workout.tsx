@@ -77,6 +77,16 @@ interface ExerciseCategory {
 const EXERCISE_CATEGORIES: ExerciseCategory[] = [
   // ── PUSH (orange) ─────────────────────────────────────────────────────────
   {
+    label: "Push — Foundation",
+    branch: "PUSH",
+    color: "#f97316",
+    exercises: [
+      { dbName: "Wall Push-Up",    label: "Wall Push-Up",    nodeId: "push-f1" },
+      { dbName: "Incline Push-Up", label: "Incline Push-Up", nodeId: "push-f1" },
+      { dbName: "Knee Push-Up",    label: "Knee Push-Up",    nodeId: "push-f1" },
+    ],
+  },
+  {
     label: "Push — Main",
     branch: "PUSH",
     color: "#f97316",
@@ -115,8 +125,16 @@ const EXERCISE_CATEGORIES: ExerciseCategory[] = [
     branch: "PULL",
     color: "#3b82f6",
     exercises: [
+      { dbName: "Australian Rows",   label: "Australian Rows",   nodeId: "pull-f1" },
+      { dbName: "Assisted Dead Hang", label: "Assisted Dead Hang", nodeId: "pull-f1" },
+    ],
+  },
+  {
+    label: "Pull — Main",
+    branch: "PULL",
+    color: "#3b82f6",
+    exercises: [
       { dbName: "Scapular Shrugs",   label: "Scapular Shrugs",   nodeId: "pull-1" },
-      { dbName: "Australian Rows",   label: "Australian Rows",   nodeId: null },
       { dbName: "Negative Pull-Ups", label: "Negative Pull-Ups", nodeId: "pull-3" },
       { dbName: "Pull-Up",           label: "Pull-Up",           nodeId: "pull-1" },
     ],
@@ -151,11 +169,20 @@ const EXERCISE_CATEGORIES: ExerciseCategory[] = [
   },
   // ── CORE (purple) ─────────────────────────────────────────────────────────
   {
+    label: "Core — Foundation",
+    branch: "CORE",
+    color: "#8b5cf6",
+    exercises: [
+      { dbName: "Knee Plank", label: "Knee Plank", nodeId: "core-f1" },
+      { dbName: "Dead Bug",   label: "Dead Bug",   nodeId: "core-f1" },
+    ],
+  },
+  {
     label: "Core — Main",
     branch: "CORE",
     color: "#8b5cf6",
     exercises: [
-      { dbName: "Plank",     label: "Plank",      nodeId: "core-1" },
+      { dbName: "Plank",      label: "Plank",      nodeId: "core-1" },
       { dbName: "Side Plank", label: "Side Plank", nodeId: "core-2" },
     ],
   },
@@ -194,6 +221,14 @@ const EXERCISE_CATEGORIES: ExerciseCategory[] = [
     ],
   },
   // ── LEGS (green) ──────────────────────────────────────────────────────────
+  {
+    label: "Legs — Foundation",
+    branch: "LEGS",
+    color: "#22c55e",
+    exercises: [
+      { dbName: "Box Squat", label: "Box Squat", nodeId: "legs-f1" },
+    ],
+  },
   {
     label: "Legs — Main",
     branch: "LEGS",
