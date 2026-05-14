@@ -280,7 +280,7 @@ export function Settings() {
   }
 
   return (
-    <div className="p-6 max-w-2xl space-y-6">
+    <div className="p-6 max-w-2xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">{t("settings.title")}</h1>
 
       {/* ── Account ──────────────────────────────────────────────────────────── */}
