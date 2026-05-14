@@ -59,22 +59,9 @@ const BRANCH_COLORS: Record<string, string> = {
   LEGS: "#8b5cf6",
 };
 
-// ─── Joint Readiness localStorage ────────────────────────────────────────────
+// ─── Body weight localStorage ─────────────────────────────────────────────────
 
-const JOINT_LOG_KEY   = "calicoach_joint_readiness_v1";
 const BODY_WEIGHT_KEY = "calicoach_body_weight_v1";
-
-interface JointLog {
-  date:     string;
-  wrist:    number;
-  elbow:    number;
-  shoulder: number;
-}
-
-function loadJointLogs(): JointLog[] {
-  try { return JSON.parse(localStorage.getItem(JOINT_LOG_KEY) ?? "[]"); }
-  catch { return []; }
-}
 
 // ─── Mastery date computation ─────────────────────────────────────────────────
 
@@ -146,14 +133,6 @@ export function Progress() {
   const { data: summary }  = useGetProgressSummary();
   const { data: sessions } = useListSessions();
   const isPro = profile?.isPro ?? false;
-
-  // ── Joint Readiness state ─────────────────────────────────────────────────
-  const [jointLogs, setJointLogs] = useState<JointLog[]>(loadJointLogs);
-  const [jointInput, setJointInput] = useState({ wrist: 7, elbow: 7, shoulder: 7 });
-  const [todayLogged, setTodayLogged] = useState(() => {
-    const today = format(new Date(), "yyyy-MM-dd");
-    return loadJointLogs().some((l) => l.date === today);
-  });
 
   // ── Body Weight state (profile DB value takes priority over localStorage) ──
   const [bodyWeight, setBodyWeight] = useState<number>(() => {
@@ -255,123 +234,6 @@ export function Progress() {
       }))
       .slice(-12);
   }, [sessions]);
-
-  // ── Load vs. Joint Readiness — weekly volume merged with comfort logs ────────
-  const loadVsReadinessData = useMemo(() => {
-    const weekMap: Record<string, {
-      week:         string;
-      volume:       number;
-      comfortSum:   number;
-      comfortCount: number;
-    }> = {};
-
-    sessions?.forEach((s) => {
-      if (!s.completedAt || !s.exerciseName) return;
-      const config   = getExerciseConfig(s.exerciseName);
-      const isStatic = config?.isStatic ?? false;
-      const reps     = s.totalReps ?? 0;
-      const tut      = isStatic ? reps : Math.round(reps * 2.5);
-      const volume   = reps + tut;
-
-      const d         = new Date(s.startedAt);
-      const isoWeek   = getISOWeek(d);
-      const isoYear   = getISOWeekYear(d);
-      const key       = `${isoYear}-W${String(isoWeek).padStart(2, "0")}`;
-      const dayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1;
-      const monday    = new Date(d);
-      monday.setDate(d.getDate() - dayOfWeek);
-      const label     = format(monday, "MMM d");
-
-      if (!weekMap[key]) weekMap[key] = { week: label, volume: 0, comfortSum: 0, comfortCount: 0 };
-      weekMap[key].volume += volume;
-    });
-
-    jointLogs.forEach((l) => {
-      const d         = new Date(l.date);
-      const isoWeek   = getISOWeek(d);
-      const isoYear   = getISOWeekYear(d);
-      const key       = `${isoYear}-W${String(isoWeek).padStart(2, "0")}`;
-      const dayOfWeek = d.getDay() === 0 ? 6 : d.getDay() - 1;
-      const monday    = new Date(d);
-      monday.setDate(d.getDate() - dayOfWeek);
-      const label     = format(monday, "MMM d");
-
-      if (!weekMap[key]) weekMap[key] = { week: label, volume: 0, comfortSum: 0, comfortCount: 0 };
-      const avg = (l.wrist + l.elbow + l.shoulder) / 3;
-      weekMap[key].comfortSum   += avg;
-      weekMap[key].comfortCount += 1;
-    });
-
-    return Object.entries(weekMap)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([, v]) => ({
-        week:            v.week,
-        Volume:          v.volume,
-        "Joint Comfort": v.comfortCount > 0
-          ? Math.round((v.comfortSum / v.comfortCount) * 10) / 10
-          : null,
-      }))
-      .slice(-12);
-  }, [sessions, jointLogs]);
-
-  // ── Overtraining Alert Engine ──────────────────────────────────────────────
-  const overtrainAlert = useMemo(() => {
-    if (!sessions?.length || jointLogs.length < 2) return null;
-
-    const now   = Date.now();
-    const MS_7D = 7 * 24 * 60 * 60 * 1000;
-
-    const thisWeekSess = sessions.filter((s) => now - new Date(s.startedAt).getTime() <  MS_7D);
-    const lastWeekSess = sessions.filter((s) => {
-      const age = now - new Date(s.startedAt).getTime();
-      return age >= MS_7D && age < 2 * MS_7D;
-    });
-    if (!lastWeekSess.length) return null;
-
-    const computeVol = (ss: typeof sessions) =>
-      ss.reduce((sum, s) => {
-        const cfg      = getExerciseConfig(s.exerciseName ?? "");
-        const isStatic = cfg?.isStatic ?? false;
-        const reps     = s.totalReps ?? 0;
-        return sum + reps + (isStatic ? reps : Math.round(reps * 2.5));
-      }, 0);
-
-    const thisVol = computeVol(thisWeekSess);
-    const lastVol = computeVol(lastWeekSess);
-    if (!lastVol || !thisVol) return null;
-
-    const volumeIncreaseFrac = (thisVol - lastVol) / lastVol;
-
-    const avgComfort = (logs: JointLog[]) =>
-      logs.length ? logs.reduce((s, l) => s + (l.wrist + l.elbow + l.shoulder) / 3, 0) / logs.length : null;
-
-    const thisLogs = jointLogs.filter((l) => now - new Date(l.date).getTime() <  MS_7D);
-    const lastLogs = jointLogs.filter((l) => {
-      const age = now - new Date(l.date).getTime();
-      return age >= MS_7D && age < 2 * MS_7D;
-    });
-
-    const thisComfort = avgComfort(thisLogs);
-    const lastComfort = avgComfort(lastLogs);
-    if (thisComfort === null || lastComfort === null) return null;
-
-    const comfortDrop = lastComfort - thisComfort;
-    if (volumeIncreaseFrac <= 0.20 || comfortDrop <= 2) return null;
-
-    // Identify which branch has the most load this week
-    const branchVols: Record<string, number> = {};
-    thisWeekSess.forEach((s) => {
-      const branch = EXERCISE_BRANCH[(s.exerciseName ?? "").toLowerCase()];
-      if (branch) branchVols[branch] = (branchVols[branch] ?? 0) + (s.totalReps ?? 0);
-    });
-    const topBranch = Object.entries(branchVols).sort(([, a], [, b]) => b - a)[0]?.[0] ?? "PUSH";
-
-    return {
-      volumeIncreasePct: Math.round(volumeIncreaseFrac * 100),
-      comfortDrop:       Math.round(comfortDrop * 10) / 10,
-      branch:            BRANCH_LABEL[topBranch] ?? topBranch,
-    };
-  }, [sessions, jointLogs]);
 
   // ── Relative Strength Index (RSI) — weighted volume / bodyweight ──────────
   const rsiChartData = useMemo(() => {
@@ -537,20 +399,6 @@ export function Progress() {
     return keys.size;
   }, [sessions]);
 
-  // ── Joint Readiness chart data ────────────────────────────────────────────
-  const jointChartData = jointLogs.slice(-14).map((l) => ({
-    date:     format(new Date(l.date), "MMM d"),
-    Wrist:    l.wrist,
-    Elbow:    l.elbow,
-    Shoulder: l.shoulder,
-  }));
-
-  const avgJointReadiness = jointLogs.length > 0
-    ? Math.round(
-        jointLogs.slice(-7).reduce((s, l) => s + (l.wrist + l.elbow + l.shoulder) / 3, 0) /
-        Math.min(7, jointLogs.slice(-7).length),
-      )
-    : null;
 
   // ── Total TUT stat ────────────────────────────────────────────────────────
   const totalTutHours = useMemo(() => {
@@ -710,140 +558,6 @@ export function Progress() {
               </CardContent>
             </Card>
           </div>
-
-          {/* ── Load vs. Joint Readiness (dual-axis) ──────────────────── */}
-          <Card className={glassCardClass}>
-            <CardHeader>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <HeartPulse className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 5px #f59e0b)" }} />
-                    Load vs. Joint Readiness
-                  </CardTitle>
-                  <CardDescription>
-                    Weekly volume (reps + TUT) vs. avg joint comfort (1–10) — spot overtraining before it becomes injury
-                  </CardDescription>
-                </div>
-                {avgJointReadiness !== null && (
-                  <div className="text-right shrink-0">
-                    <div
-                      className="text-2xl font-bold font-mono"
-                      style={{
-                        color:      avgJointReadiness >= 7 ? "#22c55e" : avgJointReadiness >= 5 ? "#f59e0b" : "#ef4444",
-                        textShadow: "0 0 10px currentColor",
-                      }}
-                    >
-                      {avgJointReadiness}
-                    </div>
-                    <div className="text-xs text-muted-foreground">7-day comfort</div>
-                  </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-
-              {/* Overtraining alert banner */}
-              {overtrainAlert && (
-                <div
-                  className="flex items-start gap-3 p-4 rounded-xl"
-                  style={{
-                    background: "rgba(239,68,68,0.08)",
-                    border:     "1px solid rgba(239,68,68,0.35)",
-                    boxShadow:  "0 0 20px rgba(239,68,68,0.08)",
-                  }}
-                >
-                  <AlertTriangle
-                    className="w-5 h-5 text-red-400 shrink-0 mt-0.5"
-                    style={{ filter: "drop-shadow(0 0 4px #ef4444)" }}
-                  />
-                  <div>
-                    <div className="text-sm font-black text-red-400 mb-1 uppercase tracking-wide">
-                      ⚠ Overtraining Detected
-                    </div>
-                    <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
-                      Your volume spiked{" "}
-                      <span className="font-bold text-red-400">+{overtrainAlert.volumeIncreasePct}%</span> while joint
-                      comfort dropped{" "}
-                      <span className="font-bold text-red-400">{overtrainAlert.comfortDrop} pts</span> this week. A{" "}
-                      <span className="font-semibold" style={{ color: "rgba(255,255,255,0.9)" }}>de-load week</span>{" "}
-                      is recommended for your{" "}
-                      <span className="font-bold text-amber-400">{overtrainAlert.branch}</span> branch to prevent injury.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Dual-axis chart */}
-              <div className="h-[280px] w-full">
-                {loadVsReadinessData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={loadVsReadinessData} margin={{ top: 4, right: 28, bottom: 0, left: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                      <XAxis dataKey="week" stroke="#888" fontSize={10} tickLine={false} axisLine={false} />
-                      <YAxis
-                        yAxisId="vol"
-                        stroke="#888"
-                        fontSize={10}
-                        tickLine={false}
-                        axisLine={false}
-                        label={{ value: "Volume", angle: -90, position: "insideLeft", fill: "#666", fontSize: 9, dx: -4 }}
-                      />
-                      <YAxis
-                        yAxisId="comfort"
-                        orientation="right"
-                        domain={[0, 10]}
-                        ticks={[0, 2, 4, 6, 8, 10]}
-                        stroke="#888"
-                        fontSize={10}
-                        tickLine={false}
-                        axisLine={false}
-                        label={{ value: "Comfort /10", angle: 90, position: "insideRight", fill: "#666", fontSize: 9, dx: 12 }}
-                      />
-                      <Tooltip
-                        {...tooltipStyle}
-                        formatter={(v: number, name: string) =>
-                          name === "Joint Comfort" ? [`${v}/10`, name] : [v, name]
-                        }
-                      />
-                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-                      {/* Danger zone: comfort below 5 */}
-                      <ReferenceLine yAxisId="comfort" y={5} stroke="rgba(239,68,68,0.25)" strokeDasharray="4 3" />
-                      <Bar
-                        yAxisId="vol"
-                        dataKey="Volume"
-                        fill="#22c55e"
-                        opacity={0.28}
-                        radius={[4, 4, 0, 0]}
-                        style={{ filter: "drop-shadow(0 0 2px rgba(34,197,94,0.3))" }}
-                      />
-                      <Line
-                        yAxisId="comfort"
-                        type="monotone"
-                        dataKey="Joint Comfort"
-                        stroke="#f59e0b"
-                        strokeWidth={2.5}
-                        dot={{ r: 4, fill: "hsl(var(--background))", strokeWidth: 2, stroke: "#f59e0b" }}
-                        connectNulls
-                        style={{ filter: "drop-shadow(0 0 5px #f59e0b)" }}
-                      />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-2 text-sm">
-                    <HeartPulse className="w-8 h-8 opacity-20" />
-                    <p>Complete sessions and log joint comfort to see this chart.</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Prompt to log if not yet done today */}
-              {!todayLogged && (
-                <p className="text-[11px] text-center" style={{ color: "rgba(245,158,11,0.65)" }}>
-                  ↓ Log today&apos;s joint comfort in the Joint Readiness section below to keep this chart accurate
-                </p>
-              )}
-            </CardContent>
-          </Card>
 
           {/* ── Form Score vs. Volume (dual-axis) ─────────────────────── */}
           <Card className={glassCardClass}>
@@ -1083,113 +797,6 @@ export function Progress() {
                 <div className="text-center py-10 text-muted-foreground">
                   <Zap className="w-8 h-8 mx-auto mb-3 opacity-30" />
                   <p className="text-sm">Complete more AI-verified sessions to see your readiness scores.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* ── Joint Readiness Slider ─────────────────────────────────── */}
-          <Card className={glassCardClass}>
-            <CardHeader>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-cyan-400" style={{ filter: "drop-shadow(0 0 5px #22d3ee)" }} />
-                    Joint Readiness Log
-                  </CardTitle>
-                  <CardDescription>
-                    Rate daily comfort (1 = pain, 10 = perfect) — spot overtraining patterns
-                  </CardDescription>
-                </div>
-                {avgJointReadiness !== null && (
-                  <div className="text-right shrink-0">
-                    <div
-                      className="text-2xl font-bold font-mono"
-                      style={{
-                        color:      avgJointReadiness >= 7 ? "#22c55e" : avgJointReadiness >= 5 ? "#f59e0b" : "#ef4444",
-                        textShadow: "0 0 10px currentColor",
-                      }}
-                    >
-                      {avgJointReadiness}
-                    </div>
-                    <div className="text-xs text-muted-foreground">7-day avg</div>
-                  </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {/* Daily input */}
-              <div
-                className="rounded-xl p-4 space-y-3"
-                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
-              >
-                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  Today's check-in
-                  {todayLogged && <span className="ml-2 text-primary">✓ Logged</span>}
-                </p>
-                {(["wrist", "elbow", "shoulder"] as const).map((joint) => (
-                  <div key={joint} className="flex items-center gap-3">
-                    <span className="w-20 text-xs capitalize text-muted-foreground shrink-0">{joint}</span>
-                    <input
-                      type="range"
-                      min={1}
-                      max={10}
-                      step={1}
-                      value={jointInput[joint]}
-                      onChange={(e) =>
-                        setJointInput((prev) => ({ ...prev, [joint]: parseInt(e.target.value) }))
-                      }
-                      className="flex-1 h-1.5 cursor-pointer"
-                      style={{ accentColor: "#22c55e" }}
-                    />
-                    <span
-                      className="w-6 text-sm font-bold font-mono text-right shrink-0"
-                      style={{
-                        color: jointInput[joint] >= 7 ? "#22c55e" : jointInput[joint] >= 5 ? "#f59e0b" : "#ef4444",
-                      }}
-                    >
-                      {jointInput[joint]}
-                    </span>
-                  </div>
-                ))}
-                <button
-                  onClick={() => {
-                    const today   = format(new Date(), "yyyy-MM-dd");
-                    const updated = [...jointLogs.filter((l) => l.date !== today), { date: today, ...jointInput }].slice(-30);
-                    setJointLogs(updated);
-                    localStorage.setItem(JOINT_LOG_KEY, JSON.stringify(updated));
-                    setTodayLogged(true);
-                  }}
-                  className="w-full py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
-                  style={{
-                    background: "linear-gradient(90deg, rgba(34,197,94,0.15), rgba(34,197,94,0.08))",
-                    border:     "1px solid rgba(34,197,94,0.3)",
-                    color:      "#22c55e",
-                  }}
-                >
-                  {todayLogged ? "Update Today's Log" : "Log Today"}
-                </button>
-              </div>
-
-              {/* History chart */}
-              {jointChartData.length > 1 ? (
-                <div className="h-[200px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={jointChartData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                      <XAxis dataKey="date" stroke="#888" fontSize={10} tickLine={false} axisLine={false} />
-                      <YAxis domain={[1, 10]} stroke="#888" fontSize={11} tickLine={false} axisLine={false} ticks={[1, 3, 5, 7, 10]} />
-                      <Tooltip {...tooltipStyle} formatter={(v: number, name: string) => [`${v}/10`, name]} />
-                      <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
-                      <Line type="monotone" dataKey="Wrist"    stroke="#22c55e" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="Elbow"    stroke="#06b6d4" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="Shoulder" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="h-[120px] flex items-center justify-center text-muted-foreground text-sm">
-                  Log a few days to see your readiness trend.
                 </div>
               )}
             </CardContent>
