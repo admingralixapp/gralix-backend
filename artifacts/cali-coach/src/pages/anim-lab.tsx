@@ -26,8 +26,8 @@ const BASE_TEMPLATES: Record<string, PoseData> = {
     head: { cx: 50, cy: 16, r: 6 },
     lines: [
       [[50, 22], [50, 50]],
-      [[50, 28], [40, 40], [34, 50]],
-      [[50, 28], [60, 40], [66, 50]],
+      [[50, 28], [40, 40], [34, 50], [29.5, 58]],  // left  arm + hand
+      [[50, 28], [60, 40], [66, 50], [70.5, 58]],  // right arm + hand
       [[50, 50], [44, 68], [42, 84]],
       [[50, 50], [56, 68], [58, 84]],
     ],
@@ -46,8 +46,8 @@ const BASE_TEMPLATES: Record<string, PoseData> = {
     head: { cx: 50, cy: 22, r: 6 },
     lines: [
       [[50, 28], [50, 56]],
-      [[50, 30], [36, 16], [30, 8]],
-      [[50, 30], [64, 16], [70, 8]],
+      [[50, 30], [36, 16], [30, 8], [25, 1.5]],  // left  arm + hand reaching up
+      [[50, 30], [64, 16], [70, 8], [75, 1.5]],  // right arm + hand reaching up
       [[50, 56], [44, 73], [42, 87]],
       [[50, 56], [56, 73], [58, 87]],
     ],
@@ -153,8 +153,8 @@ function landmarksToFrame(lms: LM[]): PoseData | null {
     head: { cx: lmX(0), cy: lmY(0), r: 6 },
     lines: [
       [neck, hips],
-      [neck, lmPt(13), lmPt(15)],
-      [neck, lmPt(14), lmPt(16)],
+      [neck, lmPt(13), lmPt(15), midPt(17, 19)],  // left  arm → elbow → wrist → knuckles
+      [neck, lmPt(14), lmPt(16), midPt(18, 20)],  // right arm → elbow → wrist → knuckles
       [hips, lmPt(25), lmPt(27)],
       [hips, lmPt(26), lmPt(28)],
     ],
@@ -258,12 +258,21 @@ function GhostSkeleton({ pose, color }: { pose: PoseData; color: string }) {
   return (
     <>
       {pose.lines.map((pts, li) =>
-        pts.slice(0, -1).map((_, pi) => (
-          <line key={`${li}-${pi}`}
-            x1={pts[pi][0]} y1={pts[pi][1]} x2={pts[pi + 1][0]} y2={pts[pi + 1][1]}
-            stroke={color} strokeWidth={4} strokeLinecap="round" opacity={0.12} />
-        ))
+        pts.slice(0, -1).map((_, pi) => {
+          const isHandSeg = pi === pts.length - 2 && pts.length >= 4;
+          return (
+            <line key={`${li}-${pi}`}
+              x1={pts[pi][0]} y1={pts[pi][1]} x2={pts[pi + 1][0]} y2={pts[pi + 1][1]}
+              stroke={color} strokeWidth={isHandSeg ? 2 : 4} strokeLinecap="round" opacity={0.12} />
+          );
+        })
       )}
+      {/* Ghost knuckle dots at hand/foot terminals (4+-point lines only) */}
+      {pose.lines.map((pts, li) => {
+        if (pts.length < 4) return null;
+        const [x, y] = pts[pts.length - 1];
+        return <circle key={`gk-${li}`} cx={x} cy={y} r={2} fill={color} opacity={0.12} />;
+      })}
       <circle cx={pose.head.cx} cy={pose.head.cy} r={(pose.head.r ?? 7) + 2}
         fill="none" stroke={color} strokeWidth={2} opacity={0.12} />
     </>
@@ -273,21 +282,31 @@ function GhostSkeleton({ pose, color }: { pose: PoseData; color: string }) {
 // ── Active skeleton (neon, matches mobility look) ───────────────────────────
 
 function LiveSkeleton({ pose, color }: { pose: PoseData; color: string }) {
-  const pts = pose.lines.flatMap(l => l);
   return (
     <>
-      {/* Limb segments */}
+      {/* Limb segments — last segment of 4+-point lines is thinner (hand/foot tip) */}
       {pose.lines.map((line, li) =>
-        line.slice(0, -1).map((_, pi) => (
-          <line key={`${li}-${pi}`}
-            x1={line[pi][0]} y1={line[pi][1]} x2={line[pi + 1][0]} y2={line[pi + 1][1]}
-            stroke={color} strokeWidth={6} strokeLinecap="round" />
-        ))
+        line.slice(0, -1).map((_, pi) => {
+          const isHandSeg = pi === line.length - 2 && line.length >= 4;
+          return (
+            <line key={`${li}-${pi}`}
+              x1={line[pi][0]} y1={line[pi][1]} x2={line[pi + 1][0]} y2={line[pi + 1][1]}
+              stroke={color} strokeWidth={isHandSeg ? 3.5 : 6} strokeLinecap="round" />
+          );
+        })
       )}
-      {/* Joint dots */}
-      {pts.map(([x, y], i) => (
-        <circle key={i} cx={x} cy={y} r={2.8} fill={color} opacity={0.6} />
-      ))}
+      {/* Joint dots — last point of 4+-point lines = smaller "knuckle" circle */}
+      {pose.lines.flatMap((line, li) =>
+        line.map(([x, y], pi) => {
+          const isKnuckle = pi === line.length - 1 && line.length >= 4;
+          return (
+            <circle key={`${li}-${pi}`} cx={x} cy={y}
+              r={isKnuckle ? 2.0 : 2.8}
+              fill={color}
+              opacity={isKnuckle ? 0.9 : 0.6} />
+          );
+        })
+      )}
       {/* Head halo */}
       <circle cx={pose.head.cx} cy={pose.head.cy} r={(pose.head.r ?? 7) + 2}
         fill="rgba(34,197,94,0.07)" stroke={color} strokeWidth={2.5} />
@@ -319,11 +338,14 @@ function Thumbnail({
       <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ overflow: "visible" }}>
         {env && <EnvSVG env={env} />}
         {pose.lines.map((line, li) =>
-          line.slice(0, -1).map((_, pi) => (
-            <line key={`${li}-${pi}`}
-              x1={line[pi][0]} y1={line[pi][1]} x2={line[pi + 1][0]} y2={line[pi + 1][1]}
-              stroke={color} strokeWidth={5} strokeLinecap="round" opacity={0.9} />
-          ))
+          line.slice(0, -1).map((_, pi) => {
+            const isHandSeg = pi === line.length - 2 && line.length >= 4;
+            return (
+              <line key={`${li}-${pi}`}
+                x1={line[pi][0]} y1={line[pi][1]} x2={line[pi + 1][0]} y2={line[pi + 1][1]}
+                stroke={color} strokeWidth={isHandSeg ? 3 : 5} strokeLinecap="round" opacity={0.9} />
+            );
+          })
         )}
         <circle cx={pose.head.cx} cy={pose.head.cy} r={(pose.head.r ?? 7) + 2}
           fill="none" stroke={color} strokeWidth={2.5} opacity={0.9} />
