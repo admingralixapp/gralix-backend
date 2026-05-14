@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Link } from "wouter";
-import { Play, Square, Save, RotateCcw, X, Copy, Check, Minus, Plus } from "lucide-react";
+import { Play, Square, Save, RotateCcw, X, Copy, Check, Minus, Plus, Clipboard, ChevronDown } from "lucide-react";
 import {
   getPoseSet,
   getMobilityEnv,
@@ -17,6 +17,41 @@ type DragState = { isHead: boolean; indices: { lineIdx: number; pointIdx: number
 const FRAME_LABELS = ["Start", "Mid", "End"] as const;
 const FRAME_COLORS: [string, string, string] = ["#22c55e", "#facc15", "#fb923c"];
 const PLAY_SEQ: FrameIdx[] = [0, 1, 2, 1];
+
+// ── Base Templates ───────────────────────────────────────────────────────────
+
+const BASE_TEMPLATES: Record<string, PoseData> = {
+  "Standing Neutral": {
+    head: { cx: 50, cy: 16, r: 6 },
+    lines: [
+      [[50, 22], [50, 50]],
+      [[50, 28], [40, 40], [34, 50]],
+      [[50, 28], [60, 40], [66, 50]],
+      [[50, 50], [44, 68], [42, 84]],
+      [[50, 50], [56, 68], [58, 84]],
+    ],
+  },
+  "Plank Position": {
+    head: { cx: 18, cy: 44, r: 5.5 },
+    lines: [
+      [[24, 47], [63, 43]],
+      [[24, 47], [15, 59]],
+      [[24, 47], [20, 61]],
+      [[63, 43], [69, 57], [71, 71]],
+      [[63, 43], [65, 59], [66, 74]],
+    ],
+  },
+  "Hanging (Dead Hang)": {
+    head: { cx: 50, cy: 22, r: 6 },
+    lines: [
+      [[50, 28], [50, 56]],
+      [[50, 30], [36, 16], [30, 8]],
+      [[50, 30], [64, 16], [70, 8]],
+      [[50, 56], [44, 73], [42, 87]],
+      [[50, 56], [56, 73], [58, 87]],
+    ],
+  },
+};
 
 // ── Utilities ───────────────────────────────────────────────────────────────
 
@@ -300,6 +335,8 @@ export function AnimLabPage() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedFrame, setCopiedFrame] = useState<PoseData | null>(null);
+  const [pasteMenuOpen, setPasteMenuOpen] = useState(false);
 
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -477,6 +514,36 @@ export function AnimLabPage() {
     navigator.clipboard.writeText(JSON.stringify(frames, null, 2)).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  // ── Copy / Paste frame ───────────────────────────────────────────────────
+
+  const handleCopyCurrentFrame = () => {
+    setCopiedFrame(cloneFrame(frames[activeFrame]));
+    setPasteMenuOpen(false);
+  };
+
+  const handlePasteToFrame = (targetIdx: FrameIdx) => {
+    if (!copiedFrame) return;
+    setFrames(prev => {
+      const next = [...prev] as [PoseData, PoseData, PoseData];
+      next[targetIdx] = cloneFrame(copiedFrame);
+      return next;
+    });
+    setActiveFrame(targetIdx);
+    setPasteMenuOpen(false);
+  };
+
+  // ── Apply base template to current frame ─────────────────────────────────
+
+  const handleApplyTemplate = (templateName: string) => {
+    const tpl = BASE_TEMPLATES[templateName];
+    if (!tpl) return;
+    setFrames(prev => {
+      const next = [...prev] as [PoseData, PoseData, PoseData];
+      next[activeFrame] = cloneFrame(tpl);
+      return next;
     });
   };
 
@@ -857,6 +924,113 @@ export function AnimLabPage() {
                   onClick={() => { setActiveFrame(idx as FrameIdx); setIsPlaying(false); }}
                   label={name}
                 />
+              ))}
+            </div>
+          </div>
+
+          {/* ── Copy / Paste Frame ── */}
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ fontSize: 10, color: mutedText, marginBottom: 7, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Copy / Paste Frame
+            </p>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              {/* Copy button */}
+              <button
+                onClick={handleCopyCurrentFrame}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  padding: "6px 14px", borderRadius: 6, fontSize: 12, cursor: "pointer",
+                  background: "#1e293b", color: "#f8fafc",
+                  border: `1px solid #334155`,
+                  fontWeight: 600,
+                }}
+              >
+                <Copy size={11} />
+                Copy {FRAME_LABELS[activeFrame]}
+              </button>
+
+              {/* Paste dropdown */}
+              <div style={{ position: "relative" }}>
+                <button
+                  onClick={() => setPasteMenuOpen(o => !o)}
+                  disabled={!copiedFrame}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    padding: "6px 14px", borderRadius: 6, fontSize: 12, cursor: copiedFrame ? "pointer" : "not-allowed",
+                    background: copiedFrame ? "#1e293b" : "#111827",
+                    color: copiedFrame ? "#f8fafc" : "#475569",
+                    border: `1px solid ${copiedFrame ? "#22c55e55" : "#334155"}`,
+                    fontWeight: 600,
+                  }}
+                >
+                  <Clipboard size={11} />
+                  Paste to Frame…
+                  <ChevronDown size={10} />
+                </button>
+                {pasteMenuOpen && copiedFrame && (
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 50,
+                    background: "#1e293b", border: "1px solid #334155", borderRadius: 8,
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.5)", minWidth: 160, overflow: "hidden",
+                  }}>
+                    {([0, 1, 2] as FrameIdx[]).map(idx => (
+                      <button
+                        key={idx}
+                        onClick={() => handlePasteToFrame(idx)}
+                        style={{
+                          width: "100%", padding: "9px 14px", textAlign: "left",
+                          background: idx === activeFrame ? "#0f172a" : "transparent",
+                          color: FRAME_COLORS[idx], fontSize: 12, fontWeight: 600,
+                          border: "none", cursor: "pointer",
+                          display: "flex", alignItems: "center", gap: 8,
+                          borderBottom: idx < 2 ? "1px solid #334155" : "none",
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#0f172a"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = idx === activeFrame ? "#0f172a" : "transparent"; }}
+                      >
+                        <span style={{ opacity: 0.6 }}>{["▶", "◉", "◀"][idx]}</span>
+                        {FRAME_LABELS[idx]} {idx === activeFrame ? "(current)" : ""}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {copiedFrame && (
+                <span style={{ fontSize: 10, color: "#22c55e", opacity: 0.8 }}>
+                  ✓ Frame copied
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* ── Base Templates ── */}
+          <div style={{ marginBottom: 18 }}>
+            <p style={{ fontSize: 10, color: mutedText, marginBottom: 7, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Base Templates → snap {FRAME_LABELS[activeFrame]} frame
+            </p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {Object.keys(BASE_TEMPLATES).map(name => (
+                <button
+                  key={name}
+                  onClick={() => handleApplyTemplate(name)}
+                  style={{
+                    padding: "5px 12px", borderRadius: 6, fontSize: 11, cursor: "pointer",
+                    background: "#1e293b", color: "#cbd5e1",
+                    border: "1px solid #334155", fontWeight: 500,
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#22c55e88";
+                    (e.currentTarget as HTMLButtonElement).style.color = "#22c55e";
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "#334155";
+                    (e.currentTarget as HTMLButtonElement).style.color = "#cbd5e1";
+                  }}
+                >
+                  {name === "Standing Neutral" ? "🧍" : name === "Plank Position" ? "🏋️" : "🏗️"} {name}
+                </button>
               ))}
             </div>
           </div>
