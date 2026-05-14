@@ -75,6 +75,22 @@ function buildPrerequisiteChain(targetId: string): SkillNode[] {
   return chain;
 }
 
+/**
+ * A node is "available" (unlocked) when every prerequisite it directly
+ * depends on is already mastered (readiness >= 1.0).
+ */
+function isAvailable(node: SkillNode, stats: Record<string, { total: number }>): boolean {
+  if (node.prerequisiteId) {
+    const prereq = NODE_MAP.get(node.prerequisiteId);
+    if (!prereq || readinessOf(prereq, stats) < 1.0) return false;
+  }
+  for (const sid of node.secondaryPrerequisiteIds ?? []) {
+    const prereq = NODE_MAP.get(sid);
+    if (!prereq || readinessOf(prereq, stats) < 1.0) return false;
+  }
+  return true;
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -111,10 +127,17 @@ export function getDailyPrescription(
     };
   }
 
-  // Pick the weakest link (lowest readiness among unmastered)
-  const focusNode = unmastered.reduce((worst, n) =>
-    readinessOf(n, exerciseStats) < readinessOf(worst, exerciseStats) ? n : worst,
-  );
+  // Pick the highest-level node that is both available (prerequisites met)
+  // and not yet mastered — i.e. the most advanced skill the user can work on.
+  // "candidates" is ordered earliest-first, so the last available+unmastered
+  // item is the highest available prerequisite.
+  const availableUnmastered = unmastered.filter((n) => isAvailable(n, exerciseStats));
+
+  // If somehow nothing is available (e.g. brand-new user with no reps at all),
+  // fall back to the very first unmastered prerequisite (the starting point).
+  const focusNode = availableUnmastered.length > 0
+    ? availableUnmastered[availableUnmastered.length - 1]
+    : unmastered[0];
 
   const required = focusNode.masteryRequirement.minReps * focusNode.masteryRequirement.minQualifyingSessions;
   const total     = nodeTotal(focusNode, exerciseStats);
