@@ -3482,41 +3482,42 @@ export function Workout() {
                 );
               })()}
 
-              {/* Gear Check */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/35">
-                  <Settings2 className="w-3 h-3" />
-                  {t("workout.gearCheck")}
-                </div>
-                <div className="space-y-2">
-                  {([
-                    { label: t("workout.push"),   options: PUSH_GEAR_OPTIONS  as Array<{ value: string; label: string }>, current: equipment.pushGear, onChange: (v: string) => setEquipment(e => ({ ...e, pushGear: v as EquipmentSelection["pushGear"] })) },
-                    { label: t("workout.pull"),   options: PULL_GEAR_OPTIONS  as Array<{ value: string; label: string }>, current: equipment.pullGear, onChange: (v: string) => setEquipment(e => ({ ...e, pullGear: v as EquipmentSelection["pullGear"] })) },
-                    { label: t("workout.addOn"),  options: ADD_ON_OPTIONS     as Array<{ value: string; label: string }>, current: equipment.addOn,    onChange: (v: string) => setEquipment(e => ({ ...e, addOn:    v as EquipmentSelection["addOn"]    })) },
-                  ]).map(row => (
-                    <div key={row.label} className="flex items-start gap-3">
-                      <span className="text-[10px] text-white/30 uppercase tracking-wider w-12 pt-1.5 shrink-0 text-right">
-                        {row.label}
+              {/* Exercise Description */}
+              {(() => {
+                const ex = exercises?.find(e => e.id.toString() === selectedExerciseId);
+                if (!ex) return null;
+
+                const difficultyColor: Record<string, string> = {
+                  beginner:     "text-emerald-400 border-emerald-500/30 bg-emerald-500/10",
+                  intermediate: "text-amber-400  border-amber-500/30  bg-amber-500/10",
+                  advanced:     "text-orange-400 border-orange-500/30 bg-orange-500/10",
+                  elite:        "text-rose-400   border-rose-500/30   bg-rose-500/10",
+                };
+                const diffClass = difficultyColor[ex.difficulty] ?? "text-white/50 border-white/15 bg-white/5";
+
+                return (
+                  <div className="space-y-3">
+                    {/* Difficulty + muscle chips */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${diffClass}`}>
+                        {ex.difficulty}
                       </span>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {row.options.map(opt => (
-                          <button
-                            key={opt.value}
-                            onClick={() => row.onChange(opt.value)}
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-all ${
-                              row.current === opt.value
-                                ? "bg-primary/20 border-primary/60 text-primary"
-                                : "bg-white/5 border-white/15 text-white/55 hover:border-white/35"
-                            }`}
-                          >
-                            {t(`workout.gear.${opt.value}`)}
-                          </button>
-                        ))}
-                      </div>
+                      {ex.muscleGroups.map(m => (
+                        <span key={m} className="px-2 py-0.5 rounded-full text-[10px] font-medium border border-white/10 bg-white/5 text-white/50 capitalize">
+                          {m}
+                        </span>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
+
+                    {/* Description prose */}
+                    {ex.description ? (
+                      <p className="text-sm text-white/65 leading-relaxed">
+                        {ex.description}
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })()}
 
               {/* Pro Tip */}
               {(() => {
