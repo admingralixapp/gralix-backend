@@ -10,7 +10,7 @@ import {
   RefreshCw, Database,
 } from "lucide-react";
 import { FilesetResolver, PoseLandmarker } from "@mediapipe/tasks-vision";
-import { getMobilityExerciseNames, type PoseData } from "@/lib/exercise-poses";
+import { getMobilityExerciseNames, getSkillExerciseNames, type PoseData } from "@/lib/exercise-poses";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types & constants
@@ -258,7 +258,8 @@ const FrameThumb = memo(function FrameThumb({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function MotionImporterPage() {
-  const exerciseNames = getMobilityExerciseNames();
+  const mobilityNames = getMobilityExerciseNames();
+  const skillNames    = getSkillExerciseNames();
 
   // ── Core state ────────────────────────────────────────────────────────────
   const [phase, setPhase]               = useState<Phase>("idle");
@@ -273,7 +274,8 @@ export function MotionImporterPage() {
   const [scrubIdx, setScrubIdx]         = useState(0);
   const [playingPuppet, setPlayingPuppet] = useState(false);
   const [puppetSeq, setPuppetSeq]       = useState(0);
-  const [commitExercise, setCommitExercise] = useState(() => exerciseNames[0] ?? "");
+  const [commitCategory, setCommitCategory] = useState<"mobility" | "skill">("mobility");
+  const [commitExercise, setCommitExercise] = useState(() => mobilityNames[0] ?? "");
   const [commitState, setCommitState]   = useState<"idle" | "saving" | "ok" | "error">("idle");
   const [commitMsg, setCommitMsg]       = useState("");
   const [dragOver, setDragOver]         = useState(false);
@@ -502,41 +504,74 @@ export function MotionImporterPage() {
         </span>
 
         {phase === "done" && (
-          <>
-            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 11, color: muted }}>Commit to:</span>
-              <select
-                value={commitExercise}
-                onChange={e => { setCommitExercise(e.target.value); setCommitState("idle"); }}
-                style={{
-                  background: "#1e293b", color: "#f8fafc",
-                  border: `1px solid ${border}`, borderRadius: 6,
-                  padding: "5px 10px", fontSize: 12, cursor: "pointer", maxWidth: 240,
-                }}
-              >
-                {exerciseNames.map(n => <option key={n} value={n}>{n}</option>)}
-              </select>
-              <button
-                onClick={handleCommit}
-                disabled={commitState === "saving"}
-                style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "7px 18px", borderRadius: 8, border: "none",
-                  background: commitState === "ok" ? "#166534" : "#22c55e",
-                  color: commitState === "ok" ? "#86efac" : "#000",
-                  fontWeight: 800, fontSize: 13, cursor: "pointer",
-                }}
-              >
-                {commitState === "saving" ? (
-                  <><Loader size={13} style={{ animation: "spin 1s linear infinite" }} /> Saving…</>
-                ) : commitState === "ok" ? (
-                  <><Check size={13} /> Saved!</>
-                ) : (
-                  <><Database size={13} /> Commit to Exercise DB</>
-                )}
-              </button>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 11, color: muted }}>Commit to:</span>
+
+            {/* Category toggle */}
+            <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", border: `1px solid ${border}` }}>
+              {(["mobility", "skill"] as const).map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setCommitCategory(cat);
+                    setCommitExercise(cat === "mobility" ? (mobilityNames[0] ?? "") : (skillNames[0] ?? ""));
+                    setCommitState("idle");
+                  }}
+                  style={{
+                    padding: "5px 11px", border: "none", cursor: "pointer", fontSize: 11,
+                    fontWeight: 700, letterSpacing: "0.04em",
+                    background: commitCategory === cat
+                      ? (cat === "skill" ? "#4c1d95" : "#14532d")
+                      : "#1e293b",
+                    color: commitCategory === cat
+                      ? (cat === "skill" ? "#c4b5fd" : "#86efac")
+                      : "#64748b",
+                    transition: "background 0.15s",
+                  }}
+                >
+                  {cat === "mobility" ? "Mobility" : "Skill Tree"}
+                </button>
+              ))}
             </div>
-          </>
+
+            {/* Exercise dropdown — list changes with category */}
+            <select
+              value={commitExercise}
+              onChange={e => { setCommitExercise(e.target.value); setCommitState("idle"); }}
+              style={{
+                background: commitCategory === "skill" ? "#1e1040" : "#1e293b",
+                color: "#f8fafc",
+                border: `1px solid ${commitCategory === "skill" ? "#4c1d95" : border}`,
+                borderRadius: 6, padding: "5px 10px", fontSize: 12,
+                cursor: "pointer", maxWidth: 240,
+              }}
+            >
+              {(commitCategory === "mobility" ? mobilityNames : skillNames)
+                .map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+
+            {/* Commit button */}
+            <button
+              onClick={handleCommit}
+              disabled={commitState === "saving" || !commitExercise}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "7px 18px", borderRadius: 8, border: "none",
+                background: commitState === "ok" ? "#166534" : "#22c55e",
+                color: commitState === "ok" ? "#86efac" : "#000",
+                fontWeight: 800, fontSize: 13, cursor: "pointer",
+                opacity: !commitExercise ? 0.5 : 1,
+              }}
+            >
+              {commitState === "saving" ? (
+                <><Loader size={13} style={{ animation: "spin 1s linear infinite" }} /> Saving…</>
+              ) : commitState === "ok" ? (
+                <><Check size={13} /> Saved!</>
+              ) : (
+                <><Database size={13} /> Commit to Exercise DB</>
+              )}
+            </button>
+          </div>
         )}
 
         <Link
