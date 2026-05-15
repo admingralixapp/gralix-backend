@@ -3482,41 +3482,50 @@ export function Workout() {
                 );
               })()}
 
-              {/* Gear Check */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/35">
-                  <Settings2 className="w-3 h-3" />
-                  {t("workout.gearCheck")}
-                </div>
-                <div className="space-y-2">
-                  {([
-                    { label: t("workout.push"),   options: PUSH_GEAR_OPTIONS  as Array<{ value: string; label: string }>, current: equipment.pushGear, onChange: (v: string) => setEquipment(e => ({ ...e, pushGear: v as EquipmentSelection["pushGear"] })) },
-                    { label: t("workout.pull"),   options: PULL_GEAR_OPTIONS  as Array<{ value: string; label: string }>, current: equipment.pullGear, onChange: (v: string) => setEquipment(e => ({ ...e, pullGear: v as EquipmentSelection["pullGear"] })) },
-                    { label: t("workout.addOn"),  options: ADD_ON_OPTIONS     as Array<{ value: string; label: string }>, current: equipment.addOn,    onChange: (v: string) => setEquipment(e => ({ ...e, addOn:    v as EquipmentSelection["addOn"]    })) },
-                  ]).map(row => (
-                    <div key={row.label} className="flex items-start gap-3">
-                      <span className="text-[10px] text-white/30 uppercase tracking-wider w-12 pt-1.5 shrink-0 text-right">
-                        {row.label}
-                      </span>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {row.options.map(opt => (
-                          <button
-                            key={opt.value}
-                            onClick={() => row.onChange(opt.value)}
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-all ${
-                              row.current === opt.value
-                                ? "bg-primary/20 border-primary/60 text-primary"
-                                : "bg-white/5 border-white/15 text-white/55 hover:border-white/35"
-                            }`}
-                          >
-                            {t(`workout.gear.${opt.value}`)}
-                          </button>
-                        ))}
-                      </div>
+              {/* How to Perform */}
+              {(() => {
+                const ex = exercises?.find(e => e.id.toString() === selectedExerciseId);
+                if (!ex) return null;
+                const config = getExerciseConfig(ex.name);
+                const cues = config?.criticalJoints ?? [];
+                const extraCues = (ex.coachingCues ?? []).slice(1);
+                if (cues.length === 0 && extraCues.length === 0) return null;
+                return (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/35">
+                      <Dumbbell className="w-3 h-3" />
+                      How to perform
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <ol className="space-y-2">
+                      {cues.map((joint, i) => (
+                        <li key={i} className="flex items-start gap-2.5">
+                          <span
+                            className="shrink-0 mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                            style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}
+                          >
+                            {i + 1}
+                          </span>
+                          <div>
+                            <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">{joint.label} — </span>
+                            <span className="text-xs text-white/70 leading-snug">{joint.description}</span>
+                          </div>
+                        </li>
+                      ))}
+                      {extraCues.map((cue, i) => (
+                        <li key={`cue-${i}`} className="flex items-start gap-2.5">
+                          <span
+                            className="shrink-0 mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                            style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e99", border: "1px solid rgba(34,197,94,0.2)" }}
+                          >
+                            {cues.length + i + 1}
+                          </span>
+                          <p className="text-xs text-white/60 leading-snug">{cue}</p>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                );
+              })()}
 
               {/* Pro Tip */}
               {(() => {
