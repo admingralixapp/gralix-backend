@@ -38,22 +38,19 @@ function lerp(a: number, b: number, t: number): number {
 }
 
 /**
- * For a standard 5-line skeleton, compute a line-index mapping from `from`
- * to `to` that prevents limbs from crossing the spine during interpolation.
+ * Pure spatial-sort line mapping — completely label-blind.
  *
- * Strategy: use each frame's OWN spine midpoint X as the body's centre
- * reference, then check whether lines[1] (left-arm slot) is on the same side
- * of its spine in both frames.  If it has flipped sides (i.e. the left-arm
- * slot now holds what is visually a right-side limb) swap the pair.
+ * For each paired limb group (arms 1↔2, legs 3↔4) we sort BOTH frames'
+ * lines by their centroid X and map in sorted order:
  *
- * This correctly handles BOTH cases:
- *   • Frames with correct line ordering  → no swap, arms stay on their sides.
- *   • Frames with inverted ordering (old mirror without re-indexing) → swap
- *     detected because the centroid crosses the spine midpoint.
+ *   leftmost-in-A  → leftmost-in-B
+ *   rightmost-in-A → rightmost-in-B
  *
- * A distance-comparison approach (previous implementation) fails for correctly
- * re-indexed frames when the arm centroids happen to be equidistant — it can
- * swap them back and reintroduce contortion.  Side-of-spine is unambiguous.
+ * This is unconditionally correct regardless of how the line arrays were
+ * indexed when the pose was saved — no spine reference, no threshold, no
+ * side comparison that can disagree between frames.  The leftmost hand in
+ * frame A will always travel to the leftmost hand position in frame B by
+ * the shortest horizontal path, eliminating every cross-body artefact.
  *
  * Returns result[i] = which index in `to.lines` to use for `from.lines[i]`.
  */
@@ -64,31 +61,30 @@ function optimalLineMap(from: PoseData, to: PoseData): number[] {
   const centX = (line: [number, number][]) =>
     line.length ? line.reduce((s, p) => s + p[0], 0) / line.length : 50;
 
-  // Spine midpoint X = average of neck (index 0) and hips (index 1).
-  const spineX = (lines: typeof from.lines): number => {
-    const s = lines[0];
-    return s && s.length >= 2 ? (s[0]![0] + s[1]![0]) / 2 : 50;
+  /**
+   * Sort indices [a, b] by their centroid X in `lines`, returning
+   * [smaller-X-idx, larger-X-idx].  Uses index as tie-breaker for stability.
+   */
+  const sortPairByX = (
+    lines: typeof from.lines,
+    a: number,
+    b: number,
+  ): [number, number] => {
+    const xa = centX(lines[a] ?? []);
+    const xb = centX(lines[b] ?? []);
+    return xa <= xb ? [a, b] : [b, a];
   };
 
-  const fromCX = spineX(from.lines);
-  const toCX   = spineX(to.lines);
-
-  const trySwap = (a: number, b: number) => {
-    const fa = from.lines[a];
-    const ta = to.lines[a];
-    if (!fa || !ta || !from.lines[b] || !to.lines[b]) return;
-    // true = line centroid is left of the spine in that frame.
-    const fromLeft = centX(fa) < fromCX;
-    const toLeft   = centX(ta) < toCX;
-    // Opposite sides → the slot has been inverted → swap the mapping.
-    if (fromLeft !== toLeft) {
-      map[a] = b;
-      map[b] = a;
-    }
+  const mapPair = (a: number, b: number) => {
+    if (!from.lines[a] || !from.lines[b] || !to.lines[a] || !to.lines[b]) return;
+    const [fLeft, fRight] = sortPairByX(from.lines, a, b);
+    const [tLeft, tRight] = sortPairByX(to.lines,   a, b);
+    map[fLeft]  = tLeft;   // leftmost  → leftmost
+    map[fRight] = tRight;  // rightmost → rightmost
   };
 
-  trySwap(1, 2); // left arm ↔ right arm
-  trySwap(3, 4); // left leg ↔ right leg
+  mapPair(1, 2); // arms
+  mapPair(3, 4); // legs
   return map;
 }
 

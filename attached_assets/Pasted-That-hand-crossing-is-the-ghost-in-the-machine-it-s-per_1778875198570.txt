@@ -1,0 +1,30 @@
+That "hand-crossing" is the ghost in the machine—it’s persistent because even with spatial logic, the LERP function is likely still tethered to the underlying array index of the joints. If "Joint 5" is the Left Hand in Frame A and it's on the left, but in Frame B "Joint 5" is the Left Hand and it's on the right, the code will always drag that specific point across the screen.
+
+Since you've tried swapping them manually and using spatial logic, it's time for a "Brute Force" engineering fix: we need to de-couple the animation from the Joint IDs entirely during the transition.
+
+Sprint 22: The "Spatial Sorting" Overhaul
+Copy and paste this into the Replit Agent:
+
+"The hands and feet are still crossing through the body. We need a definitive fix for the Animation Interpolation. Please implement this specific 'Spatial Sorting' logic:
+
+1. Frame-by-Frame Spatial Sorting:
+
+In the workout player, before performing any LERP, take the list of all joint coordinates for the 'Current' and 'Target' frames.
+
+Logic: Sort the limb joints (hands, elbows, feet, knees) strictly by their X-coordinate relative to the spine for every single frame.
+
+The Goal: The leftmost hand coordinate in Frame A must always map to the leftmost hand coordinate in Frame B, regardless of whether its ID is 'left' or 'right'.
+
+2. Midpoint Normalization:
+
+Ensure the 'Spine' (Mid-Shoulder to Mid-Hip) is used as the absolute zero line for this sorting. This ensures that even if the figure is tilted, the 'outer' limbs are mapped correctly.
+
+3. Force Sequential Indexing:
+
+Update the save function in the Animation Lab to re-write the JSON file such that joints are always saved in a fixed spatial order (e.g., Left-to-Right, Top-to-Bottom). This makes the data 'clean' at the source.
+
+4. Visual Debug:
+
+If the crossover persists, add a temporary 'Motion Path' line (a faint red line) between a joint's position in Frame 1 and Frame 2 so I can see exactly which path it's trying to take.
+
+Goal: Eliminate limb-crossing by making the animation engine blind to 'Left/Right' labels and purely focused on moving the closest physical point to its nearest target.

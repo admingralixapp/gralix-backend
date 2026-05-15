@@ -257,28 +257,43 @@ function EnvSVG({ env }: { env: EnvAnchor }) {
 
 // ── Mirror pose about its own centroid ──────────────────────────────────────
 
+// ── Canonical line ordering ───────────────────────────────────────────────────
+
 /**
- * Mirror a pose about its own centroid along the given axis.
+ * Re-order the paired limb lines of a 5-line skeleton so they are always
+ * stored in a consistent spatial order:
  *
- * After reflecting all coordinates we also RE-INDEX the paired limb lines so
- * that every line index stays on the same spatial side of the body across
- * frames.  Without this, lerpPose() interpolates lines[1] (left-arm slot)
- * from the left side in frame A straight through to the right side in frame B
- * (and vice-versa for lines[2]), causing the classic bone-twisting / torso-
- * crossing artefact.
+ *   lines[1] = arm  with smaller centroid X  (left arm)
+ *   lines[2] = arm  with larger  centroid X  (right arm)
+ *   lines[3] = leg  with smaller centroid X  (left leg)
+ *   lines[4] = leg  with larger  centroid X  (right leg)
  *
- * Expected line layout (5-line standard skeleton):
- *   [0] spine  (neck → hips)
- *   [1] left  arm  (neck → elbow → wrist → hand)
- *   [2] right arm
- *   [3] left  leg  (hips → knee → ankle)
- *   [4] right leg
- *
- * X-axis (horizontal) flip: swap arm pair (1↔2) + leg pair (3↔4).
- * Y-axis (vertical)   flip: swap arm/leg pairs per side (1↔3, 2↔4).
- *
- * Non-standard skeletons (≠5 lines) get a plain coordinate flip with no
- * re-indexing, which is safe for single-frame use.
+ * This makes every saved frame "label-blind" — the LERP engine can later sort
+ * both frames the same way and map left-to-left / right-to-right, guaranteeing
+ * no limb ever travels through the torso.  Non-5-line poses are returned as-is.
+ */
+function canonicalizePose(pose: PoseData): PoseData {
+  if (pose.lines.length !== 5) return pose;
+  const centX = (line: [number, number][]) =>
+    line.length ? line.reduce((s, p) => s + p[0], 0) / line.length : 50;
+  const lines = pose.lines.map(l => [...l] as [number, number][]);
+  const sortPair = (a: number, b: number) => {
+    if (centX(lines[a]!) > centX(lines[b]!)) {
+      [lines[a], lines[b]] = [lines[b]!, lines[a]!];
+    }
+  };
+  sortPair(1, 2); // arms:  smaller X → slot 1
+  sortPair(3, 4); // legs:  smaller X → slot 3
+  return { ...pose, lines };
+}
+
+// ── Mirror pose (reflect + canonicalize) ──────────────────────────────────────
+
+/**
+ * Mirror a pose about its own centroid along the given axis, then canonicalize
+ * the result so paired limb lines are always in ascending centroid-X order.
+ * The canonicalization replaces the old manual re-indexing logic and is fully
+ * consistent with the spatial-sort mapping used in the LERP engine.
  */
 function mirrorPose(pose: PoseData, axis: "x" | "y"): PoseData {
   const allPts: [number, number][] = [
@@ -295,27 +310,9 @@ function mirrorPose(pose: PoseData, axis: "x" | "y"): PoseData {
 
   const [nhx, nhy] = flipPt(pose.head.cx, pose.head.cy);
 
-  // Reflect every point in every line.
-  const fl = pose.lines.map(line => line.map(([x, y]) => flipPt(x, y)));
-
-  // Re-index to prevent LERP crossing: each slot must stay on the same
-  // spatial side of the body as it was before the mirror.
-  let reindexed: [number, number][][];
-  if (fl.length === 5) {
-    if (axis === "x") {
-      // Left-side and right-side swap, so swap arm pair and leg pair.
-      reindexed = [fl[0]!, fl[2]!, fl[1]!, fl[4]!, fl[3]!];
-    } else {
-      // Top and bottom swap, so swap arm/leg per side.
-      reindexed = [fl[0]!, fl[3]!, fl[4]!, fl[1]!, fl[2]!];
-    }
-  } else {
-    reindexed = fl;
-  }
-
-  return {
+  const flipped: PoseData = {
     head: { ...pose.head, cx: nhx, cy: nhy },
-    lines: reindexed,
+    lines: pose.lines.map(line => line.map(([x, y]) => flipPt(x, y))),
     muscleGlow: pose.muscleGlow
       ? (() => {
           const [gx, gy] = flipPt(pose.muscleGlow!.cx, pose.muscleGlow!.cy);
@@ -323,6 +320,8 @@ function mirrorPose(pose: PoseData, axis: "x" | "y"): PoseData {
         })()
       : undefined,
   };
+
+  return canonicalizePose(flipped);
 }
 
 // ── Ghost skeleton (other two frames shown faintly) ─────────────────────────
@@ -836,7 +835,7 @@ export function AnimLabPage() {
       const res = await fetch(`/api/admin/poses/${encodeURIComponent(exercise)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ frames }),
+        body: JSON.stringify({ frames: frames.map(canonicalizePose) }),
       });
       const data = await res.json() as { ok?: boolean; error?: string };
       if (!res.ok) throw new Error(data.error ?? "Unknown error");
