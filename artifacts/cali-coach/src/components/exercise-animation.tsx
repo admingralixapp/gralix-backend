@@ -38,33 +38,50 @@ function lerp(a: number, b: number, t: number): number {
 }
 
 /**
- * For a standard 5-line skeleton, find the optimal mapping from each `from`
- * line to a `to` line that minimises total LERP travel distance.
+ * For a standard 5-line skeleton, compute a line-index mapping from `from`
+ * to `to` that prevents limbs from crossing the spine during interpolation.
  *
- * Only swaps within known paired groups (arms 1↔2, legs 3↔4) so the spine
- * is never remapped.  If the swap partner is a closer spatial match in X
- * (for the arm pair) or Y (for the leg pair), swap.  This makes the LERP
- * robust against frames whose line arrays were stored with inverted left/right
- * assignments — such as frames saved with an older mirror that lacked
- * re-indexing — without requiring the stored data to be fixed.
+ * Strategy: use each frame's OWN spine midpoint X as the body's centre
+ * reference, then check whether lines[1] (left-arm slot) is on the same side
+ * of its spine in both frames.  If it has flipped sides (i.e. the left-arm
+ * slot now holds what is visually a right-side limb) swap the pair.
  *
- * Returns result[i] = which index in `to.lines` to use when interpolating
- * from `from.lines[i]`.
+ * This correctly handles BOTH cases:
+ *   • Frames with correct line ordering  → no swap, arms stay on their sides.
+ *   • Frames with inverted ordering (old mirror without re-indexing) → swap
+ *     detected because the centroid crosses the spine midpoint.
+ *
+ * A distance-comparison approach (previous implementation) fails for correctly
+ * re-indexed frames when the arm centroids happen to be equidistant — it can
+ * swap them back and reintroduce contortion.  Side-of-spine is unambiguous.
+ *
+ * Returns result[i] = which index in `to.lines` to use for `from.lines[i]`.
  */
 function optimalLineMap(from: PoseData, to: PoseData): number[] {
   const map = from.lines.map((_, i) => i);
   if (from.lines.length !== 5 || to.lines.length !== 5) return map;
 
   const centX = (line: [number, number][]) =>
-    line.length ? line.reduce((s, p) => s + p[0], 0) / line.length : 0;
+    line.length ? line.reduce((s, p) => s + p[0], 0) / line.length : 50;
+
+  // Spine midpoint X = average of neck (index 0) and hips (index 1).
+  const spineX = (lines: typeof from.lines): number => {
+    const s = lines[0];
+    return s && s.length >= 2 ? (s[0]![0] + s[1]![0]) / 2 : 50;
+  };
+
+  const fromCX = spineX(from.lines);
+  const toCX   = spineX(to.lines);
 
   const trySwap = (a: number, b: number) => {
-    const fa = from.lines[a], fb = from.lines[b];
-    const ta = to.lines[a],   tb = to.lines[b];
-    if (!fa || !fb || !ta || !tb) return;
-    const fax = centX(fa);
-    // Swap if from[a] is spatially closer to to[b] than to to[a].
-    if (Math.abs(fax - centX(tb)) < Math.abs(fax - centX(ta))) {
+    const fa = from.lines[a];
+    const ta = to.lines[a];
+    if (!fa || !ta || !from.lines[b] || !to.lines[b]) return;
+    // true = line centroid is left of the spine in that frame.
+    const fromLeft = centX(fa) < fromCX;
+    const toLeft   = centX(ta) < toCX;
+    // Opposite sides → the slot has been inverted → swap the mapping.
+    if (fromLeft !== toLeft) {
       map[a] = b;
       map[b] = a;
     }
