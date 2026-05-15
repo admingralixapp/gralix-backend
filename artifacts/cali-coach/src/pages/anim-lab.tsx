@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Link } from "wouter";
-import { Play, Square, Save, RotateCcw, X, Copy, Check, Minus, Plus, Clipboard, ChevronDown, Camera, RotateCw } from "lucide-react";
+import { Play, Square, Save, RotateCcw, X, Copy, Check, Minus, Plus, Clipboard, ChevronDown, Camera, RotateCw, FlipHorizontal2, FlipVertical2 } from "lucide-react";
 import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-vision";
 import {
   getPoseSet,
@@ -253,6 +253,32 @@ function EnvSVG({ env }: { env: EnvAnchor }) {
     );
   }
   return null;
+}
+
+// ── Mirror pose about its own centroid ──────────────────────────────────────
+
+function mirrorPose(pose: PoseData, axis: "x" | "y"): PoseData {
+  const allPts: [number, number][] = [
+    [pose.head.cx, pose.head.cy],
+    ...pose.lines.flatMap(line => line),
+  ];
+  const cxA = allPts.reduce((s, p) => s + p[0], 0) / allPts.length;
+  const cyA = allPts.reduce((s, p) => s + p[1], 0) / allPts.length;
+  const flip = (x: number, y: number): [number, number] =>
+    axis === "x"
+      ? [Math.round((2 * cxA - x) * 2) / 2, y]   // reflect about vertical centre
+      : [x, Math.round((2 * cyA - y) * 2) / 2];   // reflect about horizontal centre
+  const [nhx, nhy] = flip(pose.head.cx, pose.head.cy);
+  return {
+    head: { ...pose.head, cx: nhx, cy: nhy },
+    lines: pose.lines.map(line => line.map(([x, y]) => flip(x, y))),
+    muscleGlow: pose.muscleGlow
+      ? (() => {
+          const [gx, gy] = flip(pose.muscleGlow!.cx, pose.muscleGlow!.cy);
+          return { ...pose.muscleGlow!, cx: gx, cy: gy };
+        })()
+      : undefined,
+  };
 }
 
 // ── Ghost skeleton (other two frames shown faintly) ─────────────────────────
@@ -903,6 +929,21 @@ export function AnimLabPage() {
       return next;
     });
     setRotationDeg(0);
+  };
+
+  // ── Apply mirror ─────────────────────────────────────────────────────────
+  const handleMirror = (axis: "x" | "y", allFrames: boolean) => {
+    setFrames(prev => {
+      const next = [...prev] as [PoseData, PoseData, PoseData];
+      if (allFrames) {
+        next[0] = mirrorPose(prev[0], axis);
+        next[1] = mirrorPose(prev[1], axis);
+        next[2] = mirrorPose(prev[2], axis);
+      } else {
+        next[activeFrame] = mirrorPose(prev[activeFrame], axis);
+      }
+      return next;
+    });
   };
 
   // ── Camera detection loop ─────────────────────────────────────────────────
@@ -1757,6 +1798,47 @@ export function AnimLabPage() {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* ── Mirror Frame ── */}
+          <div style={{ marginBottom: 18, paddingBottom: 16, borderBottom: `1px solid ${borderCol}` }}>
+            <p style={{ fontSize: 10, color: mutedText, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em", display: "flex", alignItems: "center", gap: 5 }}>
+              <FlipHorizontal2 size={11} /> Mirror Frame
+            </p>
+            {(["x", "y"] as const).map(axis => (
+              <div key={axis} style={{ marginBottom: 8 }}>
+                <p style={{ fontSize: 10, color: "#64748b", marginBottom: 4 }}>
+                  {axis === "x" ? "↔ Horizontal (flip left / right)" : "↕ Vertical (flip up / down)"}
+                </p>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button
+                    onClick={() => handleMirror(axis, false)}
+                    style={{
+                      flex: 1, padding: "6px 0", borderRadius: 6, border: "none",
+                      background: FRAME_COLORS[activeFrame], color: "#000",
+                      fontWeight: 700, fontSize: 11, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                    }}
+                  >
+                    {axis === "x" ? <FlipHorizontal2 size={11} /> : <FlipVertical2 size={11} />}
+                    {FRAME_LABELS[activeFrame]}
+                  </button>
+                  <button
+                    onClick={() => handleMirror(axis, true)}
+                    style={{
+                      flex: 1, padding: "6px 0", borderRadius: 6,
+                      border: `1px solid ${FRAME_COLORS[activeFrame]}66`,
+                      background: "transparent", color: FRAME_COLORS[activeFrame],
+                      fontWeight: 700, fontSize: 11, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                    }}
+                  >
+                    {axis === "x" ? <FlipHorizontal2 size={11} /> : <FlipVertical2 size={11} />}
+                    All 3
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* ── World Objects ── */}
