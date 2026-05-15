@@ -257,6 +257,29 @@ function EnvSVG({ env }: { env: EnvAnchor }) {
 
 // ── Mirror pose about its own centroid ──────────────────────────────────────
 
+/**
+ * Mirror a pose about its own centroid along the given axis.
+ *
+ * After reflecting all coordinates we also RE-INDEX the paired limb lines so
+ * that every line index stays on the same spatial side of the body across
+ * frames.  Without this, lerpPose() interpolates lines[1] (left-arm slot)
+ * from the left side in frame A straight through to the right side in frame B
+ * (and vice-versa for lines[2]), causing the classic bone-twisting / torso-
+ * crossing artefact.
+ *
+ * Expected line layout (5-line standard skeleton):
+ *   [0] spine  (neck → hips)
+ *   [1] left  arm  (neck → elbow → wrist → hand)
+ *   [2] right arm
+ *   [3] left  leg  (hips → knee → ankle)
+ *   [4] right leg
+ *
+ * X-axis (horizontal) flip: swap arm pair (1↔2) + leg pair (3↔4).
+ * Y-axis (vertical)   flip: swap arm/leg pairs per side (1↔3, 2↔4).
+ *
+ * Non-standard skeletons (≠5 lines) get a plain coordinate flip with no
+ * re-indexing, which is safe for single-frame use.
+ */
 function mirrorPose(pose: PoseData, axis: "x" | "y"): PoseData {
   const allPts: [number, number][] = [
     [pose.head.cx, pose.head.cy],
@@ -264,17 +287,38 @@ function mirrorPose(pose: PoseData, axis: "x" | "y"): PoseData {
   ];
   const cxA = allPts.reduce((s, p) => s + p[0], 0) / allPts.length;
   const cyA = allPts.reduce((s, p) => s + p[1], 0) / allPts.length;
-  const flip = (x: number, y: number): [number, number] =>
+
+  const flipPt = (x: number, y: number): [number, number] =>
     axis === "x"
-      ? [Math.round((2 * cxA - x) * 2) / 2, y]   // reflect about vertical centre
-      : [x, Math.round((2 * cyA - y) * 2) / 2];   // reflect about horizontal centre
-  const [nhx, nhy] = flip(pose.head.cx, pose.head.cy);
+      ? [Math.round((2 * cxA - x) * 2) / 2, y]
+      : [x, Math.round((2 * cyA - y) * 2) / 2];
+
+  const [nhx, nhy] = flipPt(pose.head.cx, pose.head.cy);
+
+  // Reflect every point in every line.
+  const fl = pose.lines.map(line => line.map(([x, y]) => flipPt(x, y)));
+
+  // Re-index to prevent LERP crossing: each slot must stay on the same
+  // spatial side of the body as it was before the mirror.
+  let reindexed: [number, number][][];
+  if (fl.length === 5) {
+    if (axis === "x") {
+      // Left-side and right-side swap, so swap arm pair and leg pair.
+      reindexed = [fl[0]!, fl[2]!, fl[1]!, fl[4]!, fl[3]!];
+    } else {
+      // Top and bottom swap, so swap arm/leg per side.
+      reindexed = [fl[0]!, fl[3]!, fl[4]!, fl[1]!, fl[2]!];
+    }
+  } else {
+    reindexed = fl;
+  }
+
   return {
     head: { ...pose.head, cx: nhx, cy: nhy },
-    lines: pose.lines.map(line => line.map(([x, y]) => flip(x, y))),
+    lines: reindexed,
     muscleGlow: pose.muscleGlow
       ? (() => {
-          const [gx, gy] = flip(pose.muscleGlow!.cx, pose.muscleGlow!.cy);
+          const [gx, gy] = flipPt(pose.muscleGlow!.cx, pose.muscleGlow!.cy);
           return { ...pose.muscleGlow!, cx: gx, cy: gy };
         })()
       : undefined,
