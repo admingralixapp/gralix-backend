@@ -15,6 +15,7 @@ import { useSkillMasteryCelebrationTrigger, type SkillMasteryCelebration } from 
 import { MILESTONE_BADGE_MAP } from "@/lib/milestone-badges";
 import { getExerciseConfig, getRequiredLandmarks, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
 import { getWarmupSuggestionsFor, formatTime } from "@/lib/mobility-service";
+import { ExerciseAnimation } from "@/components/exercise-animation";
 import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile, getAudioContext, CUE_PRIORITY } from "@/lib/voice-service";
 import { getWorkoutPhrase } from "@/lib/cue-translations";
 import { useTranslation } from "react-i18next";
@@ -3446,12 +3447,40 @@ export function Workout() {
                 boxShadow: "0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)",
               }}
             >
-              <div>
-                <h2 className="text-lg font-bold mb-1">{t("workout.readyToTrain")}</h2>
-                <p className="text-sm text-white/45 leading-snug">
-                  {t("workout.ghostSkeletonDesc")}
-                </p>
-              </div>
+              {/* ── Animation preview or static heading ── */}
+              {(() => {
+                const ex = exercises?.find(e => e.id.toString() === selectedExerciseId);
+                if (ex) {
+                  return (
+                    <div className="flex flex-col items-center gap-3">
+                      <div
+                        className="rounded-xl overflow-hidden"
+                        style={{
+                          background: "#030712",
+                          boxShadow: "inset 0 2px 12px rgba(0,0,0,0.7), 0 0 28px rgba(34,197,94,0.07)",
+                          border: "1px solid rgba(34,197,94,0.15)",
+                        }}
+                      >
+                        <ExerciseAnimation exerciseName={ex.name} size={200} />
+                      </div>
+                      <div className="text-center">
+                        <h2 className="text-base font-bold leading-snug">{ex.name}</h2>
+                        <p className="text-xs text-white/40 mt-0.5 leading-snug">
+                          {t("workout.ghostSkeletonDesc")}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
+                return (
+                  <div>
+                    <h2 className="text-lg font-bold mb-1">{t("workout.readyToTrain")}</h2>
+                    <p className="text-sm text-white/45 leading-snug">
+                      {t("workout.ghostSkeletonDesc")}
+                    </p>
+                  </div>
+                );
+              })()}
 
               {/* Gear Check */}
               <div className="space-y-3">

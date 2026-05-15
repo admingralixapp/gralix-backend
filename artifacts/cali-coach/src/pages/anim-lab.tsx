@@ -5,6 +5,7 @@ import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-
 import {
   getPoseSet,
   getMobilityExerciseNames,
+  getSkillExerciseNames,
   getWorldObjects,
   type PoseData,
   type EnvAnchor,
@@ -403,7 +404,8 @@ function NumField({
 // ── Main AnimLab Page ────────────────────────────────────────────────────────
 
 export function AnimLabPage() {
-  const exerciseNames = getMobilityExerciseNames();
+  const exerciseNames      = getMobilityExerciseNames();
+  const skillExerciseNames = getSkillExerciseNames();
 
   const [exercise, setExercise] = useState<string>(
     exerciseNames[2] ?? exerciseNames[0] ?? "Wrist Extension Stretch"
@@ -1116,19 +1118,45 @@ export function AnimLabPage() {
           🎯 Animation Lab
         </span>
 
-        <select
-          value={exercise}
-          onChange={e => setExercise(e.target.value)}
-          style={{
-            background: "#1e293b", color: "#f8fafc",
-            border: `1px solid #334155`, borderRadius: 6,
-            padding: "5px 10px", fontSize: 13, cursor: "pointer", maxWidth: 300,
-          }}
-        >
-          {exerciseNames.map(name => (
-            <option key={name} value={name}>{name}</option>
-          ))}
-        </select>
+        {/* Mobility dropdown */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <span style={{ fontSize: 9, color: mutedText, textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>Mobility</span>
+          <select
+            value={exerciseNames.includes(exercise) ? exercise : ""}
+            onChange={e => e.target.value && setExercise(e.target.value)}
+            style={{
+              background: "#1e293b", color: "#f8fafc",
+              border: `1px solid ${exerciseNames.includes(exercise) ? "#22c55e55" : "#334155"}`,
+              borderRadius: 6, padding: "5px 10px", fontSize: 13, cursor: "pointer", maxWidth: 240,
+            }}
+          >
+            {!exerciseNames.includes(exercise) && <option value="">— pick exercise —</option>}
+            {exerciseNames.map(name => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+        </div>
+
+        <span style={{ color: "#334155", fontSize: 16, alignSelf: "flex-end", marginBottom: 2 }}>|</span>
+
+        {/* Skill Tree dropdown */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <span style={{ fontSize: 9, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>Skill Tree Workouts</span>
+          <select
+            value={skillExerciseNames.includes(exercise) ? exercise : ""}
+            onChange={e => e.target.value && setExercise(e.target.value)}
+            style={{
+              background: "#1e1040", color: "#f8fafc",
+              border: `1px solid ${skillExerciseNames.includes(exercise) ? "#a78bfa88" : "#3b2e6a"}`,
+              borderRadius: 6, padding: "5px 10px", fontSize: 13, cursor: "pointer", maxWidth: 240,
+            }}
+          >
+            <option value="">— pick skill —</option>
+            {skillExerciseNames.map(name => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+        </div>
 
         <span style={{ fontSize: 11, color: mutedText, marginLeft: 4 }}>
           Drag joints •{" "}
