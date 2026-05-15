@@ -40,6 +40,7 @@ import { TermsPage } from "@/pages/terms";
 import { PrivacyPage } from "@/pages/privacy";
 import { MobilityPage } from "@/pages/mobility";
 import { AnimLabPage } from "@/pages/anim-lab";
+import { MotionImporterPage } from "@/pages/motion-importer";
 import { BodyCalibration } from "@/pages/body-calibration";
 import { PhysicalCalibration } from "@/pages/physical-calibration";
 import { OnboardingTour } from "@/components/onboarding-tour";
@@ -336,6 +337,7 @@ function AppRouter() {
               {/* Full-screen takeover — no sidebar/layout wrapper */}
               <Route path="/mobility-session">{() => <MobilityPage autoStart={true} />}</Route>
               <Route path="/admin/anim-lab">{() => <AnimLabPage />}</Route>
+              <Route path="/admin/motion-importer">{() => <MotionImporterPage />}</Route>
 
               {/* All other routes rendered inside the sidebar Layout */}
               <Route>{() => (
