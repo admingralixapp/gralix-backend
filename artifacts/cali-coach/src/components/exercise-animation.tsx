@@ -37,9 +37,48 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
+/**
+ * For a standard 5-line skeleton, find the optimal mapping from each `from`
+ * line to a `to` line that minimises total LERP travel distance.
+ *
+ * Only swaps within known paired groups (arms 1↔2, legs 3↔4) so the spine
+ * is never remapped.  If the swap partner is a closer spatial match in X
+ * (for the arm pair) or Y (for the leg pair), swap.  This makes the LERP
+ * robust against frames whose line arrays were stored with inverted left/right
+ * assignments — such as frames saved with an older mirror that lacked
+ * re-indexing — without requiring the stored data to be fixed.
+ *
+ * Returns result[i] = which index in `to.lines` to use when interpolating
+ * from `from.lines[i]`.
+ */
+function optimalLineMap(from: PoseData, to: PoseData): number[] {
+  const map = from.lines.map((_, i) => i);
+  if (from.lines.length !== 5 || to.lines.length !== 5) return map;
+
+  const centX = (line: [number, number][]) =>
+    line.length ? line.reduce((s, p) => s + p[0], 0) / line.length : 0;
+
+  const trySwap = (a: number, b: number) => {
+    const fa = from.lines[a], fb = from.lines[b];
+    const ta = to.lines[a],   tb = to.lines[b];
+    if (!fa || !fb || !ta || !tb) return;
+    const fax = centX(fa);
+    // Swap if from[a] is spatially closer to to[b] than to to[a].
+    if (Math.abs(fax - centX(tb)) < Math.abs(fax - centX(ta))) {
+      map[a] = b;
+      map[b] = a;
+    }
+  };
+
+  trySwap(1, 2); // left arm ↔ right arm
+  trySwap(3, 4); // left leg ↔ right leg
+  return map;
+}
+
 /** Interpolate every joint in two PoseData frames, t ∈ [0, 1]. */
 function lerpPose(from: PoseData, to: PoseData, rawT: number): PoseData {
-  const t = easeInOutCubic(rawT);
+  const t      = easeInOutCubic(rawT);
+  const lineMap = optimalLineMap(from, to);
   return {
     head: {
       cx: lerp(from.head.cx, to.head.cx, t),
@@ -47,13 +86,13 @@ function lerpPose(from: PoseData, to: PoseData, rawT: number): PoseData {
       r:  lerp(from.head.r ?? 7, to.head.r ?? 7, t),
     },
     lines: from.lines.map((fromLine, li) => {
-      const toLine = to.lines[li];
+      const toLine = to.lines[lineMap[li] ?? li];
       if (!toLine) return fromLine;
       // Use the shorter line's length so we never access undefined points.
       const len = Math.min(fromLine.length, toLine.length);
       return Array.from({ length: len }, (_, pi) => [
-        lerp(fromLine[pi][0], toLine[pi][0], t),
-        lerp(fromLine[pi][1], toLine[pi][1], t),
+        lerp(fromLine[pi]![0], toLine[pi]![0], t),
+        lerp(fromLine[pi]![1], toLine[pi]![1], t),
       ] as [number, number]);
     }),
   };
