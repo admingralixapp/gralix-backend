@@ -14,6 +14,8 @@ import {
 
 type FrameIdx = 0 | 1 | 2;
 type DragState = { isHead: boolean; indices: { lineIdx: number; pointIdx: number }[] };
+type RootDragState = { startSvgX: number; startSvgY: number; origFrame: PoseData };
+type ScaleDragState = { rootX: number; rootY: number; startDist: number; origFrame: PoseData };
 
 const FRAME_LABELS = ["Start", "Mid", "End"] as const;
 const FRAME_COLORS: [string, string, string] = ["#22c55e", "#facc15", "#fb923c"];
@@ -437,6 +439,8 @@ export function AnimLabPage() {
   const dragRef = useRef<DragState | null>(null);
   const activeFameRef = useRef<FrameIdx>(activeFrame);
   const envDragRef = useRef<{ idx: number; svgStartX: number; svgStartY: number; origObj: EnvAnchor } | null>(null);
+  const rootDragRef  = useRef<RootDragState | null>(null);
+  const scaleDragRef = useRef<ScaleDragState | null>(null);
 
   // ── Camera capture ──────────────────────────────────────────────────────────
   const [cameraOpen, setCameraOpen]     = useState(false);
@@ -486,7 +490,12 @@ export function AnimLabPage() {
 
   // ── Global pointer-up (catches drag release anywhere) ───────────────────
   useEffect(() => {
-    const up = () => { dragRef.current = null; envDragRef.current = null; };
+    const up = () => {
+      dragRef.current = null;
+      envDragRef.current = null;
+      rootDragRef.current = null;
+      scaleDragRef.current = null;
+    };
     window.addEventListener("pointerup", up);
     return () => window.removeEventListener("pointerup", up);
   }, []);
@@ -512,6 +521,39 @@ export function AnimLabPage() {
     e.preventDefault();
     dragRef.current = { isHead: true, indices: [] };
   }, [isPlaying]);
+
+  // ── Root (translate whole skeleton) ─────────────────────────────────────
+  const onRootDown = useCallback((e: React.PointerEvent<SVGCircleElement | SVGGElement>) => {
+    if (isPlaying) return;
+    e.stopPropagation();
+    e.preventDefault();
+    if (!svgRef.current) return;
+    const [sx, sy] = svgPoint(e, svgRef.current);
+    rootDragRef.current = {
+      startSvgX: sx,
+      startSvgY: sy,
+      origFrame: cloneFrame(frames[activeFameRef.current]),
+    };
+  }, [isPlaying, frames]);
+
+  // ── Scale handle (uniform scale around hip root) ─────────────────────────
+  const onScaleDown = useCallback((
+    e: React.PointerEvent<SVGCircleElement>,
+    rootX: number,
+    rootY: number,
+  ) => {
+    if (isPlaying) return;
+    e.stopPropagation();
+    e.preventDefault();
+    if (!svgRef.current) return;
+    const [sx, sy] = svgPoint(e, svgRef.current);
+    const dist = Math.sqrt((sx - rootX) ** 2 + (sy - rootY) ** 2) || 1;
+    scaleDragRef.current = {
+      rootX, rootY,
+      startDist: dist,
+      origFrame: cloneFrame(frames[activeFameRef.current]),
+    };
+  }, [isPlaying, frames]);
 
   const onSvgMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
@@ -541,6 +583,66 @@ export function AnimLabPage() {
           obj.y1 = newY1; obj.y2 = newY1 + h;
         }
         next[idx] = obj;
+        return next;
+      });
+      return;
+    }
+
+    // ── Root drag (translate whole skeleton) ────────────────────────────────
+    const rootDrag = rootDragRef.current;
+    if (rootDrag) {
+      const dx = nx - rootDrag.startSvgX;
+      const dy = ny - rootDrag.startSvgY;
+      const fi = activeFameRef.current;
+      setFrames(prev => {
+        const next = [...prev] as [PoseData, PoseData, PoseData];
+        const frame = cloneFrame(rootDrag.origFrame);
+        const shift = (v: number, d: number) => Math.round((v + d) * 2) / 2;
+        frame.head.cx = shift(frame.head.cx, dx);
+        frame.head.cy = shift(frame.head.cy, dy);
+        frame.lines = frame.lines.map(line =>
+          line.map(([x, y]) => [shift(x, dx), shift(y, dy)] as [number, number])
+        );
+        if (frame.muscleGlow) {
+          frame.muscleGlow = {
+            ...frame.muscleGlow,
+            cx: shift(frame.muscleGlow.cx, dx),
+            cy: shift(frame.muscleGlow.cy, dy),
+          };
+        }
+        next[fi] = frame;
+        return next;
+      });
+      return;
+    }
+
+    // ── Scale drag (uniform scale around hip root) ───────────────────────────
+    const scaleDrag = scaleDragRef.current;
+    if (scaleDrag) {
+      const { rootX, rootY, startDist, origFrame } = scaleDrag;
+      const curDist = Math.sqrt((nx - rootX) ** 2 + (ny - rootY) ** 2) || 0.001;
+      const scale = Math.max(0.2, Math.min(3, curDist / startDist));
+      const fi = activeFameRef.current;
+      setFrames(prev => {
+        const next = [...prev] as [PoseData, PoseData, PoseData];
+        const frame = cloneFrame(origFrame);
+        const sc = (v: number, o: number) => Math.round((o + (v - o) * scale) * 2) / 2;
+        frame.head.cx = sc(frame.head.cx, rootX);
+        frame.head.cy = sc(frame.head.cy, rootY);
+        frame.head.r  = Math.round((origFrame.head.r ?? 6) * scale * 4) / 4;
+        frame.lines = frame.lines.map(line =>
+          line.map(([x, y]) => [sc(x, rootX), sc(y, rootY)] as [number, number])
+        );
+        if (frame.muscleGlow) {
+          frame.muscleGlow = {
+            ...frame.muscleGlow,
+            cx: sc(frame.muscleGlow.cx, rootX),
+            cy: sc(frame.muscleGlow.cy, rootY),
+            rx: Math.round(origFrame.muscleGlow!.rx * scale * 4) / 4,
+            ry: Math.round(origFrame.muscleGlow!.ry * scale * 4) / 4,
+          };
+        }
+        next[fi] = frame;
         return next;
       });
       return;
@@ -1216,6 +1318,86 @@ export function AnimLabPage() {
                 />
               )}
 
+              {/* ── Root node + Scale handle ─────────────────────────────── */}
+              {!isPlaying && rotationDeg === 0 && (() => {
+                const hip = activePose.lines[0]?.[1];
+                if (!hip) return null;
+                const [rx, ry] = hip;
+                const shX = Math.round((rx + 13) * 2) / 2;
+                const shY = ry;
+                return (
+                  <g>
+                    {/* Dashed ring around root */}
+                    <circle cx={rx} cy={ry} r={8}
+                      fill="none" stroke="#a78bfa" strokeWidth={0.8}
+                      strokeDasharray="2 2" opacity={0.45}
+                      style={{ pointerEvents: "none" }} />
+
+                    {/* Connector to scale handle */}
+                    <line x1={rx + 6} y1={ry} x2={shX - 3.5} y2={shY}
+                      stroke="#a78bfa" strokeWidth={0.7}
+                      strokeDasharray="2 1.5" opacity={0.55}
+                      style={{ pointerEvents: "none" }} />
+
+                    {/* Scale handle — drag right to grow, left to shrink */}
+                    <circle
+                      cx={shX} cy={shY} r={4}
+                      fill="#1e1040" stroke="#a78bfa" strokeWidth={1.3}
+                      opacity={0.92}
+                      style={{ cursor: "ew-resize", touchAction: "none", userSelect: "none" }}
+                      onPointerDown={e => onScaleDown(e, rx, ry)}
+                    />
+                    {/* ↔ arrows on scale handle */}
+                    <g style={{ pointerEvents: "none" }}>
+                      <line x1={shX - 2.2} y1={shY} x2={shX + 2.2} y2={shY}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      <line x1={shX - 2.2} y1={shY} x2={shX - 1} y2={shY - 1.2}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      <line x1={shX - 2.2} y1={shY} x2={shX - 1} y2={shY + 1.2}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      <line x1={shX + 2.2} y1={shY} x2={shX + 1} y2={shY - 1.2}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      <line x1={shX + 2.2} y1={shY} x2={shX + 1} y2={shY + 1.2}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                    </g>
+
+                    {/* Root crosshair — drag to move whole skeleton */}
+                    <g
+                      style={{ cursor: "move", touchAction: "none", userSelect: "none" }}
+                      onPointerDown={onRootDown}
+                    >
+                      {/* Invisible grab area */}
+                      <circle cx={rx} cy={ry} r={7} fill="transparent" />
+                      {/* Cross arms */}
+                      <line x1={rx - 5.5} y1={ry} x2={rx + 5.5} y2={ry}
+                        stroke="#a78bfa" strokeWidth={1.4} strokeLinecap="round" />
+                      <line x1={rx} y1={ry - 5.5} x2={rx} y2={ry + 5.5}
+                        stroke="#a78bfa" strokeWidth={1.4} strokeLinecap="round" />
+                      {/* Arrow heads (4 directions) */}
+                      <line x1={rx - 5.5} y1={ry} x2={rx - 4} y2={ry - 1.5}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      <line x1={rx - 5.5} y1={ry} x2={rx - 4} y2={ry + 1.5}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      <line x1={rx + 5.5} y1={ry} x2={rx + 4} y2={ry - 1.5}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      <line x1={rx + 5.5} y1={ry} x2={rx + 4} y2={ry + 1.5}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      <line x1={rx} y1={ry - 5.5} x2={rx - 1.5} y2={ry - 4}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      <line x1={rx} y1={ry - 5.5} x2={rx + 1.5} y2={ry - 4}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      <line x1={rx} y1={ry + 5.5} x2={rx - 1.5} y2={ry + 4}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      <line x1={rx} y1={ry + 5.5} x2={rx + 1.5} y2={ry + 4}
+                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      {/* Centre dot */}
+                      <circle cx={rx} cy={ry} r={2}
+                        fill="#a78bfa" opacity={0.95} />
+                    </g>
+                  </g>
+                );
+              })()}
+
               {/* muscleGlow indicator */}
               {!isPlaying && activePose.muscleGlow && (
                 <ellipse
@@ -1358,6 +1540,23 @@ export function AnimLabPage() {
                 <line x1={4.5} y1={6.5} x2={8.5} y2={6.5} stroke="#f87171" strokeWidth={1.2} strokeLinecap="round" />
               </svg>
               <span style={{ color: "#f87171", fontWeight: 600 }}>− Remove tip</span>
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <svg width={15} height={15}>
+                <line x1={2} y1={7.5} x2={13} y2={7.5} stroke="#a78bfa" strokeWidth={1.3} strokeLinecap="round" />
+                <line x1={7.5} y1={2} x2={7.5} y2={13} stroke="#a78bfa" strokeWidth={1.3} strokeLinecap="round" />
+                <circle cx={7.5} cy={7.5} r={2} fill="#a78bfa" />
+              </svg>
+              <span style={{ color: "#a78bfa", fontWeight: 600 }}>Root</span>
+              — move whole figure
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <svg width={13} height={13}>
+                <circle cx={6.5} cy={6.5} r={5} fill="#1e1040" stroke="#a78bfa" strokeWidth={1.3} />
+                <line x1={4} y1={6.5} x2={9} y2={6.5} stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+              </svg>
+              <span style={{ color: "#a78bfa", fontWeight: 600 }}>↔ Scale</span>
+              — drag to resize
             </span>
           </div>
         </div>
