@@ -2178,6 +2178,7 @@ const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
     },
   ],
 
+// <<<MOBILITY_LIBRARY_END>>>
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

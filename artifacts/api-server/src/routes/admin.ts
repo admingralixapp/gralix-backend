@@ -70,12 +70,25 @@ async function updateExerciseBlock(exerciseName: string, newBlock: string): Prom
   const escaped = exerciseName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const blockRe = new RegExp(`  "${escaped}": \\[[\\s\\S]*?\\n  \\],`, "g");
 
-  if (!blockRe.test(poseSection)) {
-    throw new Error(`Exercise "${exerciseName}" not found in MOBILITY_POSE_LIBRARY`);
+  if (blockRe.test(poseSection)) {
+    // Exercise already exists in MOBILITY_POSE_LIBRARY — update it in place.
+    blockRe.lastIndex = 0;
+    const updatedPoseSection = poseSection.replace(blockRe, newBlock);
+    await writeFile(POSES_FILE, updatedPoseSection + worldSection, "utf-8");
+    return;
   }
-  blockRe.lastIndex = 0;
 
-  const updatedPoseSection = poseSection.replace(blockRe, newBlock);
+  // Exercise not yet in MOBILITY_POSE_LIBRARY (e.g. a skill-tree exercise).
+  // Insert it as a new entry immediately before the <<<MOBILITY_LIBRARY_END>>> sentinel.
+  const SENTINEL = "// <<<MOBILITY_LIBRARY_END>>>";
+  const sentinelIdx = poseSection.indexOf(SENTINEL);
+  if (sentinelIdx === -1) {
+    throw new Error(`Exercise "${exerciseName}" not found and MOBILITY_LIBRARY_END sentinel is missing — cannot insert.`);
+  }
+
+  const before  = poseSection.slice(0, sentinelIdx);
+  const after   = poseSection.slice(sentinelIdx);          // includes sentinel + rest
+  const updatedPoseSection = before + newBlock + "\n\n" + after;
   await writeFile(POSES_FILE, updatedPoseSection + worldSection, "utf-8");
 }
 
@@ -130,7 +143,7 @@ const router = Router();
 
 // PUT /api/admin/poses/:name — write updated frame data to exercise-poses.ts
 router.put("/admin/poses/:name", async (req: Request, res: Response) => {
-  const exerciseName = decodeURIComponent(req.params.name);
+  const exerciseName = decodeURIComponent(req.params.name as string);
   const { frames } = req.body as { frames?: PoseFrame[] };
 
   if (!Array.isArray(frames) || frames.length < 3) {
@@ -158,7 +171,7 @@ router.put("/admin/poses/:name", async (req: Request, res: Response) => {
 
 // PUT /api/admin/poses/:name/env — write world objects to EXERCISE_WORLD_OBJECTS
 router.put("/admin/poses/:name/env", async (req: Request, res: Response) => {
-  const exerciseName = decodeURIComponent(req.params.name);
+  const exerciseName = decodeURIComponent(req.params.name as string);
   const { objects } = req.body as { objects?: EnvAnchorPayload[] };
 
   if (!Array.isArray(objects)) {
