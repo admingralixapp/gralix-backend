@@ -461,6 +461,11 @@ export function AnimLabPage() {
   // ── Global rotation ──────────────────────────────────────────────────────────
   const [rotationDeg, setRotationDeg] = useState(0);
 
+  // ── Handle visibility (H key toggle) ────────────────────────────────────────
+  const [showHandles, setShowHandles] = useState(true);
+  // hoveredKey: "j-x,y" | "head" | "root" | "scale" | "env-N"
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+
   activeFameRef.current = activeFrame;
 
 
@@ -498,6 +503,18 @@ export function AnimLabPage() {
     };
     window.addEventListener("pointerup", up);
     return () => window.removeEventListener("pointerup", up);
+  }, []);
+
+  // ── H key: toggle handle visibility ─────────────────────────────────────
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "h" && e.key !== "H") return;
+      const tag = (e.target as HTMLElement)?.tagName?.toUpperCase();
+      if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+      setShowHandles(p => !p);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   // ── Pointer handlers ─────────────────────────────────────────────────────
@@ -1223,81 +1240,90 @@ export function AnimLabPage() {
               {/* Active skeleton */}
               <LiveSkeleton pose={displayPose} color={FRAME_COLORS[displayFrame]} />
 
-              {/* Draggable joint handles
-                  - Cyan  (#22d3ee) = hinge joints → ELBOWS / KNEES (mid of chain)
-                  - Green / frame colour = endpoint joints (shoulders, wrists, hips, ankles)
-                  - "+" circle = extend this limb by adding a new joint beyond the tip
-                  - "−" circle = remove the tip joint (trim back one step) */}
-              {!isPlaying && rotationDeg === 0 && joints.map(({ x, y, isHinge, extendLineIdx }) => {
-                // Direction vector for placing the +/- buttons relative to this joint.
-                // For terminals, use the last-segment direction; default to pointing up.
+              {/* Draggable joint handles (hidden when showHandles=false via H key)
+                  - Cyan  (#22d3ee) = hinge joints → ELBOWS / KNEES
+                  - Frame colour    = endpoint joints (shoulders, wrists, hips, ankles)
+                  - Nodes are small by default; hover to expand */}
+              {!isPlaying && rotationDeg === 0 && showHandles && joints.map(({ x, y, isHinge, extendLineIdx }) => {
+                const jk = `j-${x},${y}`;
+                const isHov = hoveredKey === jk;
+                const Jr = isHov ? (isHinge ? 3.2 : 2.8) : (isHinge ? 2.0 : 1.7);
+
                 let btnDx = 0, btnDy = -1;
                 if (extendLineIdx !== undefined) {
                   const line = activePose.lines[extendLineIdx];
                   if (line.length >= 2) {
                     const [ax, ay] = line[line.length - 2];
-                    const ddx = x - ax;
-                    const ddy = y - ay;
+                    const ddx = x - ax; const ddy = y - ay;
                     const dlen = Math.sqrt(ddx * ddx + ddy * ddy) || 1;
-                    btnDx = ddx / dlen;
-                    btnDy = ddy / dlen;
+                    btnDx = ddx / dlen; btnDy = ddy / dlen;
                   }
                 }
-                // Offset the +/- buttons 8 units beyond the joint tip
-                const btnX = Math.round((x + btnDx * 8) * 10) / 10;
-                const btnY = Math.round((y + btnDy * 8) * 10) / 10;
-                // "−" trim button is perpendicular, 6 units beside the joint
-                const perpX = Math.round((x - btnDy * 6) * 10) / 10;
-                const perpY = Math.round((y + btnDx * 6) * 10) / 10;
+                const btnX = Math.round((x + btnDx * 7) * 10) / 10;
+                const btnY = Math.round((y + btnDy * 7) * 10) / 10;
+                const perpX = Math.round((x - btnDy * 5.5) * 10) / 10;
+                const perpY = Math.round((y + btnDx * 5.5) * 10) / 10;
 
                 return (
-                  <g key={`${x},${y}`}>
+                  <g key={jk}>
+                    {/* Invisible wide grab target — easier to click small nodes */}
+                    <circle cx={x} cy={y} r={5.5}
+                      fill="transparent"
+                      style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
+                      onPointerDown={e => onJointDown(e, x, y)}
+                      onPointerEnter={() => setHoveredKey(jk)}
+                      onPointerLeave={() => setHoveredKey(null)}
+                    />
+
+                    {/* Hinge outer ring — faint, expands on hover */}
                     {isHinge && (
-                      <circle cx={x} cy={y} r={7}
-                        fill="none" stroke="#22d3ee" strokeWidth={1}
-                        opacity={0.35} style={{ pointerEvents: "none" }} />
+                      <circle cx={x} cy={y} r={isHov ? 4.5 : 3.5}
+                        fill="none" stroke="#22d3ee" strokeWidth={0.8}
+                        opacity={isHov ? 0.55 : 0.22}
+                        style={{ pointerEvents: "none", transition: "r 0.1s, opacity 0.1s" }} />
                     )}
 
                     {/* Main draggable joint */}
                     <circle
-                      cx={x} cy={y}
-                      r={isHinge ? 5 : 4.2}
+                      cx={x} cy={y} r={Jr}
                       fill={isHinge ? "#22d3ee" : FRAME_COLORS[activeFrame]}
                       stroke={isHinge ? "#0e7490" : "#0b1120"}
-                      strokeWidth={1.5}
-                      filter="url(#jglow)"
-                      style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
-                      onPointerDown={e => onJointDown(e, x, y)}
+                      strokeWidth={isHov ? 1.2 : 0.8}
+                      filter={isHov ? "url(#jglow)" : undefined}
+                      opacity={isHov ? 1 : 0.7}
+                      style={{ pointerEvents: "none", transition: "opacity 0.1s" }}
                     />
 
-                    {/* "+" Extend button — only on terminal (non-hinge) endpoints */}
+                    {/* "+" Extend — shown faintly, brightens on joint hover */}
                     {!isHinge && extendLineIdx !== undefined && (
                       <g
-                        style={{ cursor: "pointer" }}
+                        style={{ cursor: "pointer", opacity: isHov ? 1 : 0.4 }}
                         onClick={() => extendLine(extendLineIdx)}
+                        onPointerEnter={() => setHoveredKey(jk)}
+                        onPointerLeave={() => setHoveredKey(null)}
                       >
-                        {/* Button background */}
-                        <circle cx={btnX} cy={btnY} r={4.5}
-                          fill="#052e16" stroke="#22c55e" strokeWidth={1.2} opacity={0.92} />
-                        {/* "+" cross */}
-                        <line x1={btnX - 2} y1={btnY} x2={btnX + 2} y2={btnY}
-                          stroke="#22c55e" strokeWidth={1.2} strokeLinecap="round" />
-                        <line x1={btnX} y1={btnY - 2} x2={btnX} y2={btnY + 2}
-                          stroke="#22c55e" strokeWidth={1.2} strokeLinecap="round" />
+                        <circle cx={btnX} cy={btnY} r={3.2}
+                          fill="#052e16" stroke="#22c55e" strokeWidth={1} />
+                        <line x1={btnX - 1.5} y1={btnY} x2={btnX + 1.5} y2={btnY}
+                          stroke="#22c55e" strokeWidth={1} strokeLinecap="round" />
+                        <line x1={btnX} y1={btnY - 1.5} x2={btnX} y2={btnY + 1.5}
+                          stroke="#22c55e" strokeWidth={1} strokeLinecap="round" />
                       </g>
                     )}
 
-                    {/* "−" Trim button — only on extendable terminals that have > 2 pts */}
+                    {/* "−" Trim — shown faintly, brightens on joint hover */}
                     {!isHinge && extendLineIdx !== undefined &&
                       activePose.lines[extendLineIdx].length > 2 && (
                       <g
-                        style={{ cursor: "pointer" }}
+                        style={{ cursor: "pointer", opacity: isHov ? 1 : 0.4 }}
                         onClick={() => trimLine(extendLineIdx)}
+                        onPointerEnter={() => setHoveredKey(jk)}
+                        onPointerLeave={() => setHoveredKey(null)}
                       >
-                        <circle cx={perpX} cy={perpY} r={4.5}
-                          fill="#1c0505" stroke="#f87171" strokeWidth={1.2} opacity={0.92} />
-                        <line x1={perpX - 2} y1={perpY} x2={perpX + 2} y2={perpY}
-                          stroke="#f87171" strokeWidth={1.2} strokeLinecap="round" />
+                        <circle cx={perpX} cy={perpY} r={3.2}
+                          fill="#1c0505" stroke="#f87171" strokeWidth={1} />
+                        <line x1={perpX - 1.5} y1={perpY} x2={perpX + 1.5} y2={perpY}
+                          stroke="#f87171" strokeWidth={1} strokeLinecap="round" />
                       </g>
                     )}
                   </g>
@@ -1305,93 +1331,112 @@ export function AnimLabPage() {
               })}
 
               {/* Head drag handle */}
-              {!isPlaying && rotationDeg === 0 && (
-                <circle
-                  cx={activePose.head.cx} cy={activePose.head.cy}
-                  r={(activePose.head.r ?? 7) + 5}
-                  fill="transparent"
-                  stroke={FRAME_COLORS[activeFrame]}
-                  strokeWidth={1.5}
-                  strokeDasharray="3 2.5"
-                  style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
-                  onPointerDown={onHeadDown}
-                />
-              )}
+              {!isPlaying && rotationDeg === 0 && showHandles && (() => {
+                const isHov = hoveredKey === "head";
+                const hr = (activePose.head.r ?? 7) + (isHov ? 4 : 2);
+                return (
+                  <circle
+                    cx={activePose.head.cx} cy={activePose.head.cy}
+                    r={hr}
+                    fill="transparent"
+                    stroke={FRAME_COLORS[activeFrame]}
+                    strokeWidth={isHov ? 1.2 : 0.7}
+                    strokeDasharray="2.5 2"
+                    opacity={isHov ? 0.85 : 0.4}
+                    style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
+                    onPointerDown={onHeadDown}
+                    onPointerEnter={() => setHoveredKey("head")}
+                    onPointerLeave={() => setHoveredKey(null)}
+                  />
+                );
+              })()}
 
               {/* ── Root node + Scale handle ─────────────────────────────── */}
-              {!isPlaying && rotationDeg === 0 && (() => {
+              {!isPlaying && rotationDeg === 0 && showHandles && (() => {
                 const hip = activePose.lines[0]?.[1];
                 if (!hip) return null;
                 const [rx, ry] = hip;
-                const shX = Math.round((rx + 13) * 2) / 2;
+                const shX = Math.round((rx + 10) * 2) / 2;
                 const shY = ry;
+                const rootHov  = hoveredKey === "root";
+                const scaleHov = hoveredKey === "scale";
                 return (
                   <g>
-                    {/* Dashed ring around root */}
-                    <circle cx={rx} cy={ry} r={8}
-                      fill="none" stroke="#a78bfa" strokeWidth={0.8}
-                      strokeDasharray="2 2" opacity={0.45}
+                    {/* Dashed ring — very faint, expands on hover */}
+                    <circle cx={rx} cy={ry} r={rootHov ? 6 : 4.5}
+                      fill="none" stroke="#a78bfa" strokeWidth={0.7}
+                      strokeDasharray="1.8 1.8" opacity={rootHov ? 0.5 : 0.22}
                       style={{ pointerEvents: "none" }} />
 
                     {/* Connector to scale handle */}
-                    <line x1={rx + 6} y1={ry} x2={shX - 3.5} y2={shY}
-                      stroke="#a78bfa" strokeWidth={0.7}
-                      strokeDasharray="2 1.5" opacity={0.55}
+                    <line x1={rx + 3.5} y1={ry} x2={shX - 2.5} y2={shY}
+                      stroke="#a78bfa" strokeWidth={0.5}
+                      strokeDasharray="1.5 1.2"
+                      opacity={rootHov || scaleHov ? 0.6 : 0.25}
                       style={{ pointerEvents: "none" }} />
 
-                    {/* Scale handle — drag right to grow, left to shrink */}
-                    <circle
-                      cx={shX} cy={shY} r={4}
-                      fill="#1e1040" stroke="#a78bfa" strokeWidth={1.3}
-                      opacity={0.92}
+                    {/* Scale handle */}
+                    <circle cx={shX} cy={shY} r={scaleHov ? 3.2 : 2.2}
+                      fill="transparent"
                       style={{ cursor: "ew-resize", touchAction: "none", userSelect: "none" }}
                       onPointerDown={e => onScaleDown(e, rx, ry)}
+                      onPointerEnter={() => setHoveredKey("scale")}
+                      onPointerLeave={() => setHoveredKey(null)}
                     />
-                    {/* ↔ arrows on scale handle */}
-                    <g style={{ pointerEvents: "none" }}>
-                      <line x1={shX - 2.2} y1={shY} x2={shX + 2.2} y2={shY}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
-                      <line x1={shX - 2.2} y1={shY} x2={shX - 1} y2={shY - 1.2}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
-                      <line x1={shX - 2.2} y1={shY} x2={shX - 1} y2={shY + 1.2}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
-                      <line x1={shX + 2.2} y1={shY} x2={shX + 1} y2={shY - 1.2}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
-                      <line x1={shX + 2.2} y1={shY} x2={shX + 1} y2={shY + 1.2}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                    <circle cx={shX} cy={shY} r={scaleHov ? 3.2 : 2.2}
+                      fill="#1e1040" stroke="#a78bfa"
+                      strokeWidth={scaleHov ? 1 : 0.7}
+                      opacity={scaleHov ? 0.95 : 0.5}
+                      style={{ pointerEvents: "none" }} />
+                    <g style={{ pointerEvents: "none", opacity: scaleHov ? 1 : 0.55 }}>
+                      <line x1={shX - 1.6} y1={shY} x2={shX + 1.6} y2={shY}
+                        stroke="#a78bfa" strokeWidth={0.8} strokeLinecap="round" />
+                      <line x1={shX - 1.6} y1={shY} x2={shX - 0.7} y2={shY - 0.9}
+                        stroke="#a78bfa" strokeWidth={0.8} strokeLinecap="round" />
+                      <line x1={shX - 1.6} y1={shY} x2={shX - 0.7} y2={shY + 0.9}
+                        stroke="#a78bfa" strokeWidth={0.8} strokeLinecap="round" />
+                      <line x1={shX + 1.6} y1={shY} x2={shX + 0.7} y2={shY - 0.9}
+                        stroke="#a78bfa" strokeWidth={0.8} strokeLinecap="round" />
+                      <line x1={shX + 1.6} y1={shY} x2={shX + 0.7} y2={shY + 0.9}
+                        stroke="#a78bfa" strokeWidth={0.8} strokeLinecap="round" />
                     </g>
 
-                    {/* Root crosshair — drag to move whole skeleton */}
-                    <g
+                    {/* Root crosshair */}
+                    <circle cx={rx} cy={ry} r={6}
+                      fill="transparent"
                       style={{ cursor: "move", touchAction: "none", userSelect: "none" }}
                       onPointerDown={onRootDown}
-                    >
-                      {/* Invisible grab area */}
-                      <circle cx={rx} cy={ry} r={7} fill="transparent" />
-                      {/* Cross arms */}
-                      <line x1={rx - 5.5} y1={ry} x2={rx + 5.5} y2={ry}
-                        stroke="#a78bfa" strokeWidth={1.4} strokeLinecap="round" />
-                      <line x1={rx} y1={ry - 5.5} x2={rx} y2={ry + 5.5}
-                        stroke="#a78bfa" strokeWidth={1.4} strokeLinecap="round" />
-                      {/* Arrow heads (4 directions) */}
-                      <line x1={rx - 5.5} y1={ry} x2={rx - 4} y2={ry - 1.5}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
-                      <line x1={rx - 5.5} y1={ry} x2={rx - 4} y2={ry + 1.5}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
-                      <line x1={rx + 5.5} y1={ry} x2={rx + 4} y2={ry - 1.5}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
-                      <line x1={rx + 5.5} y1={ry} x2={rx + 4} y2={ry + 1.5}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
-                      <line x1={rx} y1={ry - 5.5} x2={rx - 1.5} y2={ry - 4}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
-                      <line x1={rx} y1={ry - 5.5} x2={rx + 1.5} y2={ry - 4}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
-                      <line x1={rx} y1={ry + 5.5} x2={rx - 1.5} y2={ry + 4}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
-                      <line x1={rx} y1={ry + 5.5} x2={rx + 1.5} y2={ry + 4}
-                        stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                      onPointerEnter={() => setHoveredKey("root")}
+                      onPointerLeave={() => setHoveredKey(null)}
+                    />
+                    <g style={{ pointerEvents: "none", opacity: rootHov ? 1 : 0.45 }}>
+                      {/* Cross arms — shorter when idle */}
+                      {[[-1,0],[1,0],[0,-1],[0,1]].map(([dx, dy], i) => {
+                        const arm = rootHov ? 4.5 : 3.5;
+                        return (
+                          <line key={i}
+                            x1={rx + dx * 1.2} y1={ry + dy * 1.2}
+                            x2={rx + dx * arm} y2={ry + dy * arm}
+                            stroke="#a78bfa"
+                            strokeWidth={rootHov ? 1.2 : 0.9}
+                            strokeLinecap="round" />
+                        );
+                      })}
+                      {/* Arrow tips */}
+                      {rootHov && [[-1,0],[1,0],[0,-1],[0,1]].map(([dx, dy], i) => (
+                        <g key={`tip-${i}`}>
+                          <line
+                            x1={rx + dx * 4.5} y1={ry + dy * 4.5}
+                            x2={rx + dx * 3.2 - dy * 1.2} y2={ry + dy * 3.2 + dx * 1.2}
+                            stroke="#a78bfa" strokeWidth={0.9} strokeLinecap="round" />
+                          <line
+                            x1={rx + dx * 4.5} y1={ry + dy * 4.5}
+                            x2={rx + dx * 3.2 + dy * 1.2} y2={ry + dy * 3.2 - dx * 1.2}
+                            stroke="#a78bfa" strokeWidth={0.9} strokeLinecap="round" />
+                        </g>
+                      ))}
                       {/* Centre dot */}
-                      <circle cx={rx} cy={ry} r={2}
+                      <circle cx={rx} cy={ry} r={rootHov ? 1.8 : 1.2}
                         fill="#a78bfa" opacity={0.95} />
                     </g>
                   </g>
@@ -1438,22 +1483,30 @@ export function AnimLabPage() {
                         style={{ pointerEvents: "none" }} />
                     )}
                     {/* Drag handle circle */}
-                    <circle
-                      cx={handleX} cy={handleY}
-                      r={5}
-                      fill={handleColor}
-                      stroke="#0f172a"
-                      strokeWidth={1.5}
-                      opacity={0.85}
-                      style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
-                      onPointerDown={e => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (!svgRef.current) return;
-                        const [sx, sy] = svgPoint(e, svgRef.current);
-                        envDragRef.current = { idx, svgStartX: sx, svgStartY: sy, origObj: { ...obj } };
-                      }}
-                    />
+                    {(() => {
+                      const ek = `env-${idx}`;
+                      const eHov = hoveredKey === ek;
+                      return (
+                        <circle
+                          cx={handleX} cy={handleY}
+                          r={eHov ? 4 : 2.8}
+                          fill={handleColor}
+                          stroke="#0f172a"
+                          strokeWidth={eHov ? 1.2 : 0.7}
+                          opacity={eHov ? 0.95 : 0.55}
+                          style={{ cursor: "grab", touchAction: "none", userSelect: "none" }}
+                          onPointerDown={e => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (!svgRef.current) return;
+                            const [sx, sy] = svgPoint(e, svgRef.current);
+                            envDragRef.current = { idx, svgStartX: sx, svgStartY: sy, origObj: { ...obj } };
+                          }}
+                          onPointerEnter={() => setHoveredKey(ek)}
+                          onPointerLeave={() => setHoveredKey(null)}
+                        />
+                      );
+                    })()}
                     {/* Label */}
                     <text x={handleX + 7} y={handleY + 3}
                       fill="#94a3b8" fontSize={5} style={{ pointerEvents: "none", userSelect: "none" }}>
@@ -1508,55 +1561,58 @@ export function AnimLabPage() {
 
           {/* Joint colour legend */}
           <div style={{
-            display: "flex", gap: 14, alignItems: "center", marginTop: 8,
-            padding: "6px 12px", borderRadius: 8,
+            display: "flex", gap: 12, alignItems: "center", marginTop: 8,
+            padding: "5px 10px", borderRadius: 8,
             background: "#080e1a", border: "1px solid #1e293b",
-            fontSize: 10.5, color: mutedText,
+            fontSize: 10, color: mutedText, flexWrap: "wrap",
           }}>
-            <span style={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Joints:</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <svg width={11} height={11}><circle cx={5.5} cy={5.5} r={5.5} fill={FRAME_COLORS[activeFrame]} /></svg>
-              Shoulder / Hip (drag)
+            <span style={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>JOINTS:</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <svg width={8} height={8}><circle cx={4} cy={4} r={4} fill={FRAME_COLORS[activeFrame]} opacity={0.85} /></svg>
+              Shoulder / Hip
             </span>
-            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <svg width={13} height={13}>
-                <circle cx={6.5} cy={6.5} r={6.5} fill="none" stroke="#22d3ee" strokeWidth={1} opacity={0.4} />
-                <circle cx={6.5} cy={6.5} r={5} fill="#22d3ee" />
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <svg width={9} height={9}>
+                <circle cx={4.5} cy={4.5} r={4.5} fill="none" stroke="#22d3ee" strokeWidth={0.8} opacity={0.35} />
+                <circle cx={4.5} cy={4.5} r={3} fill="#22d3ee" opacity={0.85} />
               </svg>
-              <span style={{ color: "#22d3ee", fontWeight: 600 }}>Elbow / Knee</span>
+              <span style={{ color: "#22d3ee" }}>Elbow / Knee</span>
             </span>
-            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <svg width={13} height={13}>
-                <circle cx={6.5} cy={6.5} r={4.5} fill="#052e16" stroke="#22c55e" strokeWidth={1.2} />
-                <line x1={4.5} y1={6.5} x2={8.5} y2={6.5} stroke="#22c55e" strokeWidth={1.2} strokeLinecap="round" />
-                <line x1={6.5} y1={4.5} x2={6.5} y2={8.5} stroke="#22c55e" strokeWidth={1.2} strokeLinecap="round" />
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <svg width={10} height={10}>
+                <circle cx={5} cy={5} r={4} fill="#052e16" stroke="#22c55e" strokeWidth={1} />
+                <line x1={3} y1={5} x2={7} y2={5} stroke="#22c55e" strokeWidth={0.9} strokeLinecap="round" />
+                <line x1={5} y1={3} x2={5} y2={7} stroke="#22c55e" strokeWidth={0.9} strokeLinecap="round" />
               </svg>
-              <span style={{ color: "#22c55e", fontWeight: 600 }}>+ Add joint</span>
-              — wrist / ankle / hand / foot
+              <span style={{ color: "#22c55e", fontWeight: 600 }}>+ Add</span>
             </span>
-            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <svg width={13} height={13}>
-                <circle cx={6.5} cy={6.5} r={4.5} fill="#1c0505" stroke="#f87171" strokeWidth={1.2} />
-                <line x1={4.5} y1={6.5} x2={8.5} y2={6.5} stroke="#f87171" strokeWidth={1.2} strokeLinecap="round" />
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <svg width={10} height={10}>
+                <circle cx={5} cy={5} r={4} fill="#1c0505" stroke="#f87171" strokeWidth={1} />
+                <line x1={3} y1={5} x2={7} y2={5} stroke="#f87171" strokeWidth={0.9} strokeLinecap="round" />
               </svg>
-              <span style={{ color: "#f87171", fontWeight: 600 }}>− Remove tip</span>
+              <span style={{ color: "#f87171", fontWeight: 600 }}>− Remove</span>
             </span>
-            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <svg width={15} height={15}>
-                <line x1={2} y1={7.5} x2={13} y2={7.5} stroke="#a78bfa" strokeWidth={1.3} strokeLinecap="round" />
-                <line x1={7.5} y1={2} x2={7.5} y2={13} stroke="#a78bfa" strokeWidth={1.3} strokeLinecap="round" />
-                <circle cx={7.5} cy={7.5} r={2} fill="#a78bfa" />
+            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <svg width={12} height={12}>
+                <line x1={2} y1={6} x2={10} y2={6} stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                <line x1={6} y1={2} x2={6} y2={10} stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
+                <circle cx={6} cy={6} r={1.5} fill="#a78bfa" />
               </svg>
-              <span style={{ color: "#a78bfa", fontWeight: 600 }}>Root</span>
-              — move whole figure
+              <span style={{ color: "#a78bfa" }}>Root</span> · <span style={{ color: "#a78bfa" }}>↔ Scale</span>
             </span>
-            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
-              <svg width={13} height={13}>
-                <circle cx={6.5} cy={6.5} r={5} fill="#1e1040" stroke="#a78bfa" strokeWidth={1.3} />
-                <line x1={4} y1={6.5} x2={9} y2={6.5} stroke="#a78bfa" strokeWidth={1} strokeLinecap="round" />
-              </svg>
-              <span style={{ color: "#a78bfa", fontWeight: 600 }}>↔ Scale</span>
-              — drag to resize
+            {/* H-key toggle indicator */}
+            <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5 }}>
+              <kbd style={{
+                background: showHandles ? "#1e293b" : "#0f172a",
+                border: `1px solid ${showHandles ? "#475569" : "#22c55e"}`,
+                borderRadius: 4, padding: "1px 5px", fontSize: 9.5,
+                color: showHandles ? "#94a3b8" : "#22c55e",
+                fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.05em",
+              }}>H</kbd>
+              <span style={{ color: showHandles ? mutedText : "#22c55e", fontWeight: showHandles ? 400 : 600 }}>
+                {showHandles ? "hide handles" : "handles hidden"}
+              </span>
             </span>
           </div>
         </div>
