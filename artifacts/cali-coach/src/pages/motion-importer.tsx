@@ -291,12 +291,12 @@ export function MotionImporterPage() {
   // ── Puppet play loop ──────────────────────────────────────────────────────
   useEffect(() => {
     if (!playingPuppet) return;
-    const id = setInterval(() => setPuppetSeq(s => (s + 1) % 4), 1000);
+    const id = setInterval(() => setPuppetSeq(s => (s + 1) % 3), 1000);
     return () => clearInterval(id);
   }, [playingPuppet]);
 
-  const PLAY_SEQ = [0, 1, 2, 1] as const;
-  const puppetPoseIdx = slots[PLAY_SEQ[puppetSeq % 4]!];
+  const PLAY_SEQ = [0, 1, 2] as const;
+  const puppetPoseIdx = slots[PLAY_SEQ[puppetSeq % 3]!];
   const puppetPose    = frames[puppetPoseIdx];
 
   // ── File ingestion ────────────────────────────────────────────────────────
@@ -820,7 +820,7 @@ export function MotionImporterPage() {
                     {puppetPose ? (
                       <SkeletonSVG
                         pose={puppetPose}
-                        color={FRAME_COLORS[PLAY_SEQ[puppetSeq % 4]!]}
+                        color={FRAME_COLORS[PLAY_SEQ[puppetSeq % 3]!]}
                         size={160}
                       />
                     ) : (

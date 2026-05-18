@@ -22,7 +22,7 @@ type ScaleDragState = { rootX: number; rootY: number; startDist: number; origFra
 
 const FRAME_LABELS = ["Start", "Mid", "End"] as const;
 const FRAME_COLORS: [string, string, string] = ["#22c55e", "#facc15", "#fb923c"];
-const PLAY_SEQ: FrameIdx[] = [0, 1, 2, 1];
+const PLAY_SEQ: FrameIdx[] = [0, 1, 2];
 
 // ── Base Templates ───────────────────────────────────────────────────────────
 

@@ -4,8 +4,10 @@
  * Interpolates every joint coordinate between keyframes using ease-in-out cubic
  * easing driven by requestAnimationFrame. No jump-cuts.
  *
- * Sequence: Start → Mid → End → Mid → Start (seamless loop)
- * Each transition: TRANSITION_MS (1 500 ms)
+ * Sequence: Start → Mid → End → [fade-out → snap to Start → fade-in] → repeat
+ * Movement phases: TRANSITION_MS each (1 500 ms × 2 = 3 000 ms)
+ * Reset phase: FADE_MS fade-out + FADE_MS fade-in (250 ms × 2 = 500 ms)
+ * Total cycle: CYCLE_MS (3 500 ms)
  */
 import { useState, useEffect, useRef } from "react";
 import {
@@ -17,12 +19,20 @@ import {
 
 // ── Playback constants ───────────────────────────────────────────────────────
 
-/** Keyframe indices visited in order (loops back to 0 seamlessly). */
-const SEQ = [0, 1, 2, 1] as const;
-type SeqIdx = 0 | 1 | 2 | 3;
-
-/** Duration (ms) of each keyframe-to-keyframe transition. */
+/** Duration (ms) of each forward movement phase (Start→Mid, Mid→End). */
 const TRANSITION_MS = 1500;
+
+/**
+ * Duration (ms) of the quick fade-out and fade-in during reset.
+ * The puppet fades to 0 at End, snaps to Start, then fades back to 1.
+ */
+const FADE_MS = 250;
+
+/**
+ * Full cycle length (ms):
+ *   Start→Mid (1500) + Mid→End (1500) + fade-out (250) + fade-in (250) = 3500 ms
+ */
+const CYCLE_MS = 2 * TRANSITION_MS + 2 * FADE_MS;
 
 // ── Math helpers ─────────────────────────────────────────────────────────────
 
@@ -216,48 +226,54 @@ export function ExerciseAnimation({
   const envs  = getWorldObjects(exerciseName);
 
   // Live-rendered interpolated pose — starts at keyframe 0.
-  const [renderedPose, setRenderedPose] = useState<NamedPoseData>(() => poses[SEQ[0]]);
+  const [renderedPose, setRenderedPose] = useState<NamedPoseData>(() => poses[0]);
+  // Opacity for the puppet only (env objects stay solid during fade reset).
+  const [puppetOpacity, setPuppetOpacity] = useState(1);
 
-  // Mutable playback state lives in a ref so the RAF callback always has
-  // the latest values without triggering re-renders.
-  const seqIdxRef  = useRef<SeqIdx>(0);
-  const startRef   = useRef<number | null>(null);
-  const rafRef     = useRef<number>(0);
+  // Cycle start timestamp — reset when exercise changes.
+  const startRef = useRef<number | null>(null);
+  const rafRef   = useRef<number>(0);
 
   useEffect(() => {
     const currentPoses = getNamedPoseSet(exerciseName);
 
     // Reset on exercise change.
-    seqIdxRef.current = 0;
-    startRef.current  = null;
-    setRenderedPose(currentPoses[SEQ[0]]);
+    startRef.current = null;
+    setRenderedPose(currentPoses[0]);
+    setPuppetOpacity(1);
 
     function tick(now: number) {
-      // Initialise start timestamp on first frame.
       if (startRef.current === null) startRef.current = now;
 
-      let elapsed = now - startRef.current;
+      // Position within the current cycle (0 … CYCLE_MS).
+      // Using modulo means tab-sleep / slow frames are handled gracefully —
+      // we always land at the correct cycle position regardless of how much
+      // real time has passed.
+      const cycleT = (now - startRef.current) % CYCLE_MS;
 
-      // Advance through as many completed transitions as needed
-      // (handles tab sleep / slow frames gracefully).
-      while (elapsed >= TRANSITION_MS) {
-        elapsed -= TRANSITION_MS;
-        startRef.current = now - elapsed;
-        seqIdxRef.current = ((seqIdxRef.current + 1) % SEQ.length) as SeqIdx;
+      if (cycleT < TRANSITION_MS) {
+        // ── Phase 1: Start → Mid (ease-in-out) ──────────────────────────────
+        setRenderedPose(lerpPose(currentPoses[0], currentPoses[1], cycleT / TRANSITION_MS));
+        setPuppetOpacity(1);
+      } else if (cycleT < 2 * TRANSITION_MS) {
+        // ── Phase 2: Mid → End (ease-in-out) ────────────────────────────────
+        setRenderedPose(lerpPose(currentPoses[1], currentPoses[2], (cycleT - TRANSITION_MS) / TRANSITION_MS));
+        setPuppetOpacity(1);
+      } else if (cycleT < 2 * TRANSITION_MS + FADE_MS) {
+        // ── Phase 3: Fade-out — hold at End frame ───────────────────────────
+        setRenderedPose(currentPoses[2]);
+        setPuppetOpacity(1 - (cycleT - 2 * TRANSITION_MS) / FADE_MS);
+      } else {
+        // ── Phase 4: Fade-in — snapped to Start frame ───────────────────────
+        setRenderedPose(currentPoses[0]);
+        setPuppetOpacity((cycleT - 2 * TRANSITION_MS - FADE_MS) / FADE_MS);
       }
 
-      const fromIdx = SEQ[seqIdxRef.current];
-      const toIdx   = SEQ[((seqIdxRef.current + 1) % SEQ.length) as SeqIdx];
-      const t       = elapsed / TRANSITION_MS;
-
-      setRenderedPose(lerpPose(currentPoses[fromIdx], currentPoses[toIdx], t));
       rafRef.current = requestAnimationFrame(tick);
     }
 
     rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-    };
+    return () => cancelAnimationFrame(rafRef.current);
   }, [exerciseName]);
 
   return (
@@ -275,7 +291,9 @@ export function ExerciseAnimation({
         }}
       >
         {envs.map((env, i) => <EnvSVG key={i} env={env} />)}
-        <PuppetFrame pose={renderedPose} color={color} />
+        <g opacity={puppetOpacity}>
+          <PuppetFrame pose={renderedPose} color={color} />
+        </g>
       </svg>
     </div>
   );

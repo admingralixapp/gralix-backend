@@ -423,7 +423,7 @@ function BioThumbnailSVG({ pose, color, env }: { pose: PoseData; color: string; 
 
 // ─── Hero Skeleton — bio-mechanical figure cycling Start → Mid → End ──────────
 
-const POSE_SEQ = [0, 1, 2, 1] as const;
+const POSE_SEQ = [0, 1, 2] as const;
 const FRAME_LABELS = ["Start", "Mid", "End"] as const;
 
 function HeroSkeleton({
@@ -437,11 +437,27 @@ function HeroSkeleton({
   const intervalMs = intensity === "strenuous" ? 800 : intensity === "relaxed" ? 1900 : 1300;
 
   const [seqIdx, setSeqIdx] = useState(0);
+  // Brief opacity fade when the sequence wraps from End back to Start.
+  const [resetting, setResetting] = useState(false);
+
   useEffect(() => {
     if (paused) return;
-    const id = setInterval(() => setSeqIdx((s) => (s + 1) % POSE_SEQ.length), intervalMs);
+    const id = setInterval(() => {
+      setSeqIdx(s => {
+        const next = (s + 1) % POSE_SEQ.length;
+        if (next === 0) setResetting(true); // wrapping — trigger fade
+        return next;
+      });
+    }, intervalMs);
     return () => clearInterval(id);
   }, [paused, intervalMs]);
+
+  // Clear the resetting flag after the fade duration (250 ms fade-out + 50 ms hold).
+  useEffect(() => {
+    if (!resetting) return;
+    const t = setTimeout(() => setResetting(false), 300);
+    return () => clearTimeout(t);
+  }, [resetting]);
 
   const frameIdx = POSE_SEQ[seqIdx];
   const frameLabel = FRAME_LABELS[frameIdx];
@@ -462,14 +478,20 @@ function HeroSkeleton({
         }}>
           {frameLabel}
         </div>
-        {/* Bio-mechanical skeleton with spring morphing */}
-        <BioSkeletonSVG
-          poseSet={poseSet}
-          frameIdx={frameIdx}
-          paused={paused}
-          color={color}
-          env={env}
-        />
+        {/* Bio-mechanical skeleton with spring morphing + quick fade on reset */}
+        <div style={{
+          width: "100%", height: "100%",
+          opacity: resetting ? 0 : 1,
+          transition: resetting ? "opacity 0.25s linear" : "opacity 0.25s linear",
+        }}>
+          <BioSkeletonSVG
+            poseSet={poseSet}
+            frameIdx={frameIdx}
+            paused={paused}
+            color={color}
+            env={env}
+          />
+        </div>
       </div>
 
       {/* ── 3 reference thumbnails ── */}
