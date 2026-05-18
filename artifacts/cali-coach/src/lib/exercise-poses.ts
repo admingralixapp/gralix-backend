@@ -3008,7 +3008,7 @@ export const EXERCISE_WORLD_OBJECTS: Record<string, EnvAnchor[]> = {
     { type: "floor", x1: 4, y1: 89, x2: 96, y2: 89 },
   ],
   "Australian Rows": [
-    { type: "bar", x1: 20, y1: 20, x2: 80, y2: 20 },
+    { type: "bar", x1: 25, y1: 36.5, x2: 91, y2: 36.5 },
   ],
 // <<<WORLD_OBJECTS_END>>>
 };
