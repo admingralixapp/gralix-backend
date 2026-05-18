@@ -448,10 +448,10 @@ function LiveSkeleton({ pose, color }: { pose: PoseData; color: string }) {
 // ── Mini thumbnail ──────────────────────────────────────────────────────────
 
 function Thumbnail({
-  pose, env, color, active, onClick,
+  pose, envs, color, active, onClick,
   label,
 }: {
-  pose: PoseData; env?: EnvAnchor; color: string; active: boolean;
+  pose: PoseData; envs?: EnvAnchor[]; color: string; active: boolean;
   onClick: () => void; label: string;
 }) {
   return (
@@ -465,7 +465,7 @@ function Thumbnail({
       }}
     >
       <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ overflow: "visible" }}>
-        {env && <EnvSVG env={env} />}
+        {envs?.map((env, i) => <EnvSVG key={i} env={env} />)}
         {pose.lines.map((line, li) =>
           line.slice(0, -1).map((_, pi) => {
             const isHandSeg = pi === line.length - 2 && line.length >= 4;
@@ -2205,7 +2205,7 @@ export function AnimLabPage() {
                 <Thumbnail
                   key={name}
                   pose={frames[idx]}
-                  env={worldObjects[0]}
+                  envs={worldObjects}
                   color={FRAME_COLORS[idx]}
                   active={!isPlaying && activeFrame === idx}
                   onClick={() => { setActiveFrame(idx as FrameIdx); setIsPlaying(false); }}
