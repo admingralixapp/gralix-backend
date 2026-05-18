@@ -3147,7 +3147,7 @@ export const EXERCISE_WORLD_OBJECTS: Record<string, EnvAnchor[]> = {
   ],
   "Negative Pull-Ups": [
     { type: "bar", x1: 20, y1: 10, x2: 80, y2: 10 },
-    { type: "box", x1: 35, y1: 79, x2: 65, y2: 99 },
+    { type: "box", x1: 50, y1: 50, x2: 80, y2: 70 },
   ],
 // <<<WORLD_OBJECTS_END>>>
 };

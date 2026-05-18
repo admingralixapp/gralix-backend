@@ -193,7 +193,7 @@ router.put("/admin/poses/:name/env", async (req: Request, res: Response) => {
 
   try {
     await updateWorldObjects(exerciseName, objects);
-    res.json({ ok: true, message: `Updated world objects for "${exerciseName}"` });
+    res.json({ ok: true, count: objects.length, message: `Saved ${objects.length} world object(s) for "${exerciseName}"` });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     res.status(500).json({ error: msg });

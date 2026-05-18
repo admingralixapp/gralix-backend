@@ -565,6 +565,10 @@ export function AnimLabPage() {
 
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<DragState | null>(null);
+  // Tracks the exercise value that worldObjects was last loaded for.
+  // Lets us distinguish an HMR-triggered effect re-run (same exercise → skip reset)
+  // from a real exercise change (different exercise → reload world objects).
+  const prevExerciseRef = useRef<string>(exercise);
   const activeFameRef = useRef<FrameIdx>(activeFrame);
   const envDragRef = useRef<{ idx: number; svgStartX: number; svgStartY: number; origObj: EnvAnchor } | null>(null);
   const rootDragRef  = useRef<RootDragState | null>(null);
@@ -599,16 +603,30 @@ export function AnimLabPage() {
 
   // ── Exercise change ──────────────────────────────────────────────────────
   useEffect(() => {
+    // React Fast Refresh re-runs ALL effects after every HMR hot-update, even
+    // when the dependency value hasn't changed.  Guard against that: if `exercise`
+    // is the same as the last time we loaded world-objects, this is an HMR re-run
+    // and we must NOT reset worldObjects — that would wipe any unsaved toggles the
+    // user added since the last save.
+    const exerciseChanged = exercise !== prevExerciseRef.current;
+    prevExerciseRef.current = exercise;
+
     setFrames(initFrames(exercise));
     setActiveFrame(0);
     setIsPlaying(false);
     setSaveMsg(null);
     dragRef.current = null;
-    setWorldObjects(getWorldObjects(exercise));
-    setEnvSaveMsg(null);
-    envDragRef.current = null;
-    setCameraOpen(false);
-    setRotationDeg(0);
+
+    if (exerciseChanged) {
+      // Real exercise switch: load fresh world objects from source.
+      setWorldObjects(getWorldObjects(exercise));
+      setEnvSaveMsg(null);
+      envDragRef.current = null;
+      setCameraOpen(false);
+      setRotationDeg(0);
+    }
+    // When exercise hasn't changed (HMR re-run), keep worldObjects as-is so
+    // unsaved toggles survive the module hot-reload.
   }, [exercise]);
 
   // ── Play loop ────────────────────────────────────────────────────────────
@@ -1053,9 +1071,10 @@ export function AnimLabPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ objects: worldObjects }),
       });
-      const data = await res.json() as { ok?: boolean; error?: string };
+      const data = await res.json() as { ok?: boolean; count?: number; error?: string };
       if (!res.ok) throw new Error(data.error ?? "Unknown error");
-      setEnvSaveMsg({ ok: true, text: "World objects saved to source." });
+      const n = data.count ?? worldObjects.length;
+      setEnvSaveMsg({ ok: true, text: `Saved ${n} world object${n === 1 ? "" : "s"} to source.` });
     } catch (err: unknown) {
       setEnvSaveMsg({ ok: false, text: err instanceof Error ? err.message : String(err) });
     } finally {
