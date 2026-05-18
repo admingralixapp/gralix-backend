@@ -31,6 +31,8 @@ export interface EnvAnchor {
   y1: number;
   x2: number;
   y2: number;
+  /** Rotation in degrees around the object's centre. Optional — defaults to 0. */
+  rotation?: number;
 }
 
 export type ExerciseIntensity = "strenuous" | "relaxed" | "neutral";
@@ -2641,6 +2643,39 @@ const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
     },
   ],
 
+  "Planche": [
+    { // START
+      head: { cx: 82.5, cy: 35.5, r: 7.5 },
+      lines: [
+        [[71.5,33.5],[47,38.5]],
+        [[71.5,33.5],[53,49.5],[47.5,61.5],[45.5,63.5]],
+        [[71.5,33.5],[59.5,52],[56.5,59.5],[60,57.5]],
+        [[47,38.5],[32,55.5],[23,61.5]],
+        [[47,38.5],[36.5,58],[29.5,62]],
+      ],
+    },
+    { // MID
+      head: { cx: 83.5, cy: 41.5, r: 7.5 },
+      lines: [
+        [[72,40.5],[53,40.5]],
+        [[72,40.5],[54,50],[47,62],[45,64]],
+        [[72,40.5],[59.5,52],[55.5,59],[59,58]],
+        [[53,40.5],[31,51],[23.5,55.5]],
+        [[53,40.5],[37,53.5],[28.5,59]],
+      ],
+    },
+    { // END
+      head: { cx: 83.5, cy: 40, r: 7.5 },
+      lines: [
+        [[73,36.5],[48,38]],
+        [[73,36.5],[52.5,50],[45.5,61],[43,63]],
+        [[73,36.5],[58.5,53],[54.5,60],[58.5,58.5]],
+        [[48,38],[31.5,43.5],[19.5,44]],
+        [[48,38],[34,39.5],[21.5,40]],
+      ],
+    },
+  ],
+
 // <<<MOBILITY_LIBRARY_END>>>
 };
 
@@ -2971,6 +3006,9 @@ export const EXERCISE_WORLD_OBJECTS: Record<string, EnvAnchor[]> = {
   ],
   "Handstand Push-Up": [
     { type: "floor", x1: 4, y1: 89, x2: 96, y2: 89 },
+  ],
+  "Australian Rows": [
+    { type: "bar", x1: 20, y1: 20, x2: 80, y2: 20 },
   ],
 // <<<WORLD_OBJECTS_END>>>
 };

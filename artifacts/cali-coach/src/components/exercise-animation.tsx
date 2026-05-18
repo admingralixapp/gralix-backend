@@ -78,17 +78,24 @@ function lerpPose(from: NamedPoseData, to: NamedPoseData, rawT: number): NamedPo
 // ── Environment SVG ──────────────────────────────────────────────────────────
 
 function EnvSVG({ env }: { env: EnvAnchor }) {
+  const rot = env.rotation ?? 0;
+  const cx  = (env.x1 + env.x2) / 2;
+  const cy  = (env.y1 + env.y2) / 2;
+  const tr  = rot !== 0 ? `rotate(${rot}, ${cx}, ${cy})` : undefined;
+
   if (env.type === "floor") {
     return (
-      <line x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
-        stroke="#475569" strokeWidth={2} strokeLinecap="round" opacity={0.45} />
+      <g transform={tr}>
+        <line x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
+          stroke="#475569" strokeWidth={2} strokeLinecap="round" opacity={0.45} />
+      </g>
     );
   }
   if (env.type === "bar") {
     const ticks = 9;
     const step = (env.x2 - env.x1 - 8) / (ticks - 1);
     return (
-      <g>
+      <g transform={tr}>
         <line x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
           stroke="#94a3b8" strokeWidth={3.5} strokeLinecap="round" opacity={0.55} />
         {Array.from({ length: ticks }).map((_, i) => {
@@ -104,17 +111,21 @@ function EnvSVG({ env }: { env: EnvAnchor }) {
   }
   if (env.type === "wall") {
     return (
-      <line x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
-        stroke="#475569" strokeWidth={2} strokeLinecap="round" opacity={0.4} />
+      <g transform={tr}>
+        <line x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
+          stroke="#475569" strokeWidth={2} strokeLinecap="round" opacity={0.4} />
+      </g>
     );
   }
   if (env.type === "box") {
     return (
-      <rect
-        x={env.x1} y={env.y1}
-        width={env.x2 - env.x1} height={env.y2 - env.y1}
-        fill="#1e293b" stroke="#475569" strokeWidth={1.5} opacity={0.5} rx={1}
-      />
+      <g transform={tr}>
+        <rect
+          x={env.x1} y={env.y1}
+          width={env.x2 - env.x1} height={env.y2 - env.y1}
+          fill="#1e293b" stroke="#475569" strokeWidth={1.5} opacity={0.5} rx={1}
+        />
+      </g>
     );
   }
   return null;

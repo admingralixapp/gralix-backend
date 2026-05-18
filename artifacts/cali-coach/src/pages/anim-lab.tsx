@@ -202,11 +202,16 @@ function rotatePose(pose: PoseData, deg: number): PoseData {
 // ── Environment Renderer (matches mobility.tsx visual exactly) ───────────────
 
 function EnvSVG({ env }: { env: EnvAnchor }) {
+  const rot = env.rotation ?? 0;
+  const cx  = (env.x1 + env.x2) / 2;
+  const cy  = (env.y1 + env.y2) / 2;
+  const tr  = rot !== 0 ? `rotate(${rot}, ${cx}, ${cy})` : undefined;
+
   if (env.type === "floor") {
     const ticks = 12;
     const step = (env.x2 - env.x1) / ticks;
     return (
-      <g>
+      <g transform={tr}>
         {Array.from({ length: ticks }).map((_, i) => {
           const x = env.x1 + 2 + i * step;
           return <line key={i} x1={x} y1={env.y1} x2={x - 4} y2={env.y1 + 6}
@@ -223,7 +228,7 @@ function EnvSVG({ env }: { env: EnvAnchor }) {
     const ticks = 9;
     const step = (env.x2 - env.x1 - 8) / (ticks - 1);
     return (
-      <g>
+      <g transform={tr}>
         <line x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
           stroke="#94a3b8" strokeWidth={3.5} strokeLinecap="round" opacity={0.55} />
         {Array.from({ length: ticks }).map((_, i) => {
@@ -243,7 +248,7 @@ function EnvSVG({ env }: { env: EnvAnchor }) {
     const step = (env.y2 - env.y1) / ticks;
     const onRight = env.x1 > 50;
     return (
-      <g opacity={0.5}>
+      <g transform={tr} opacity={0.5}>
         <line x1={env.x1} y1={env.y1} x2={env.x2} y2={env.y2}
           stroke="#64748b" strokeWidth={2} strokeLinecap="round" />
         {Array.from({ length: ticks - 1 }).map((_, i) => {
@@ -251,6 +256,17 @@ function EnvSVG({ env }: { env: EnvAnchor }) {
           return <line key={i} x1={env.x1} y1={y} x2={env.x1 + (onRight ? -6 : 6)} y2={y}
             stroke="#64748b" strokeWidth={0.8} opacity={0.35} />;
         })}
+      </g>
+    );
+  }
+  if (env.type === "box") {
+    return (
+      <g transform={tr}>
+        <rect
+          x={env.x1} y={env.y1}
+          width={env.x2 - env.x1} height={env.y2 - env.y1}
+          fill="#0f172a" stroke="#475569" strokeWidth={1.5} opacity={0.55} rx={1}
+        />
       </g>
     );
   }
@@ -964,6 +980,30 @@ export function AnimLabPage() {
       next[barIdx] = { ...bar, x1: newX1, x2: newX1 + w, y1: snappedY, y2: snappedY };
       return next;
     });
+  };
+
+  const handleRotateEnv = (idx: number, delta: number) => {
+    setWorldObjects(prev => {
+      const next = [...prev];
+      const obj = { ...next[idx]! };
+      const current = obj.rotation ?? 0;
+      let next_rot = current + delta;
+      // Normalise to -180…180
+      next_rot = ((next_rot + 180) % 360 + 360) % 360 - 180;
+      obj.rotation = Math.round(next_rot);
+      next[idx] = obj;
+      return next;
+    });
+    setEnvSaveMsg(null);
+  };
+
+  const handleResetEnvRotation = (idx: number) => {
+    setWorldObjects(prev => {
+      const next = [...prev];
+      next[idx] = { ...next[idx]!, rotation: 0 };
+      return next;
+    });
+    setEnvSaveMsg(null);
   };
 
   const handleSnapFloorToFeet = () => {
@@ -1981,14 +2021,45 @@ export function AnimLabPage() {
               </div>
             )}
 
-            {/* Coord readout */}
+            {/* Per-object controls: coord readout + rotation */}
             {worldObjects.length > 0 && (
               <div style={{ marginBottom: 8 }}>
-                {worldObjects.map((o, i) => (
-                  <p key={i} style={{ fontSize: 10, color: "#475569", marginBottom: 2 }}>
-                    {o.type}: x1={o.x1} y1={o.y1} x2={o.x2} y2={o.y2}
-                  </p>
-                ))}
+                {worldObjects.map((o, i) => {
+                  const rot = o.rotation ?? 0;
+                  const btnBase: React.CSSProperties = {
+                    padding: "2px 7px", borderRadius: 4, fontSize: 11, cursor: "pointer",
+                    background: "#1e293b", border: "1px solid #334155", color: "#94a3b8",
+                    fontWeight: 600, lineHeight: "18px",
+                  };
+                  return (
+                    <div key={i} style={{ marginBottom: 6 }}>
+                      {/* Coord readout */}
+                      <p style={{ fontSize: 10, color: "#475569", marginBottom: 3 }}>
+                        {o.type}: x1={o.x1} y1={o.y1} x2={o.x2} y2={o.y2}
+                      </p>
+                      {/* Rotation row */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ fontSize: 10, color: "#64748b", width: 36, flexShrink: 0 }}>rotate</span>
+                        <button style={btnBase} onClick={() => handleRotateEnv(i, -15)}>−15°</button>
+                        <button style={btnBase} onClick={() => handleRotateEnv(i, -5)}>−5°</button>
+                        <span style={{
+                          fontSize: 11, color: rot !== 0 ? "#fbbf24" : "#64748b",
+                          minWidth: 36, textAlign: "center", fontFamily: "monospace", fontWeight: 600,
+                        }}>
+                          {rot}°
+                        </span>
+                        <button style={btnBase} onClick={() => handleRotateEnv(i, 5)}>+5°</button>
+                        <button style={btnBase} onClick={() => handleRotateEnv(i, 15)}>+15°</button>
+                        {rot !== 0 && (
+                          <button
+                            style={{ ...btnBase, color: "#f87171", border: "1px solid #7f1d1d", background: "#1c0505" }}
+                            onClick={() => handleResetEnvRotation(i)}
+                          >↺</button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 

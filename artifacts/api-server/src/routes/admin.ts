@@ -16,6 +16,7 @@ interface PoseFrame {
 interface EnvAnchorPayload {
   type: "floor" | "wall" | "bar" | "box";
   x1: number; y1: number; x2: number; y2: number;
+  rotation?: number;
 }
 
 // ── Serializers ───────────────────────────────────────────────────────────────
@@ -45,7 +46,10 @@ function serializePoseSet(exerciseName: string, frames: PoseFrame[]): string {
 }
 
 function serializeEnvAnchor(a: EnvAnchorPayload): string {
-  return `    { type: "${a.type}", x1: ${a.x1}, y1: ${a.y1}, x2: ${a.x2}, y2: ${a.y2} },`;
+  const base = `    { type: "${a.type}", x1: ${a.x1}, y1: ${a.y1}, x2: ${a.x2}, y2: ${a.y2}`;
+  return a.rotation != null && a.rotation !== 0
+    ? base + `, rotation: ${a.rotation} },`
+    : base + ` },`;
 }
 
 function serializeWorldObjectsEntry(exerciseName: string, anchors: EnvAnchorPayload[]): string {
