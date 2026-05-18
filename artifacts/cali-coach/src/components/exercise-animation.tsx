@@ -9,9 +9,9 @@
  */
 import { useState, useEffect, useRef } from "react";
 import {
-  getPoseSet,
+  getNamedPoseSet,
   getWorldObjects,
-  type PoseData,
+  type NamedPoseData,
   type EnvAnchor,
 } from "@/lib/exercise-poses";
 
@@ -37,85 +37,41 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-/**
- * Pure spatial-sort line mapping — completely label-blind.
- *
- * For each paired limb group (arms 1↔2, legs 3↔4) we sort BOTH frames'
- * lines by their centroid X and map in sorted order:
- *
- *   leftmost-in-A  → leftmost-in-B
- *   rightmost-in-A → rightmost-in-B
- *
- * This is unconditionally correct regardless of how the line arrays were
- * indexed when the pose was saved — no spine reference, no threshold, no
- * side comparison that can disagree between frames.  The leftmost hand in
- * frame A will always travel to the leftmost hand position in frame B by
- * the shortest horizontal path, eliminating every cross-body artefact.
- *
- * Returns result[i] = which index in `to.lines` to use for `from.lines[i]`.
- */
-function optimalLineMap(from: PoseData, to: PoseData): number[] {
-  const map = from.lines.map((_, i) => i);
-  if (from.lines.length !== 5 || to.lines.length !== 5) return map;
-
-  /**
-   * Anatomical key X for a limb line.
-   *
-   * Limb lines share a common origin point (neck for arms, hip for legs).
-   * Using the whole-line centroid dilutes the signal with that shared point
-   * and makes both legs cluster near x=50 in push-up / squat poses —
-   * causing the sort order to flip when knees come close together.
-   *
-   * Instead we use point[1] — the FIRST BRANCHING JOINT (elbow / knee).
-   * This is always anatomically on one side and is far more stable across
-   * frames than the centroid.  Falls back to point[0] for short lines.
-   */
-  const limbKeyX = (line: [number, number][]) =>
-    (line[1] ?? line[0])?.[0] ?? 50;
-
-  const sortPairByX = (
-    lines: typeof from.lines,
-    a: number,
-    b: number,
-  ): [number, number] => {
-    const xa = limbKeyX(lines[a] ?? []);
-    const xb = limbKeyX(lines[b] ?? []);
-    return xa <= xb ? [a, b] : [b, a];
-  };
-
-  const mapPair = (a: number, b: number) => {
-    if (!from.lines[a] || !from.lines[b] || !to.lines[a] || !to.lines[b]) return;
-    const [fLeft, fRight] = sortPairByX(from.lines, a, b);
-    const [tLeft, tRight] = sortPairByX(to.lines,   a, b);
-    map[fLeft]  = tLeft;   // leftmost  → leftmost
-    map[fRight] = tRight;  // rightmost → rightmost
-  };
-
-  mapPair(1, 2); // arms
-  mapPair(3, 4); // legs
-  return map;
+/** Interpolate an array of 2D points between two keyframes. */
+function lerpLine(
+  a: [number, number][],
+  b: [number, number][],
+  t: number,
+): [number, number][] {
+  const len = Math.min(a.length, b.length);
+  return Array.from({ length: len }, (_, i) => [
+    lerp(a[i]![0], b[i]![0], t),
+    lerp(a[i]![1], b[i]![1], t),
+  ] as [number, number]);
 }
 
-/** Interpolate every joint in two PoseData frames, t ∈ [0, 1]. */
-function lerpPose(from: PoseData, to: PoseData, rawT: number): PoseData {
-  const t      = easeInOutCubic(rawT);
-  const lineMap = optimalLineMap(from, to);
+/**
+ * Strictly key-based interpolation — leftArm→leftArm, rightLeg→rightLeg.
+ *
+ * There is no spatial sorting, no dynamic mapping, no threshold comparison.
+ * Because joints are identified by name rather than array position or
+ * coordinate proximity, limb crossing is mathematically impossible regardless
+ * of how close the knee or elbow coordinates get during the animation loop.
+ */
+function lerpPose(from: NamedPoseData, to: NamedPoseData, rawT: number): NamedPoseData {
+  const t = easeInOutCubic(rawT);
   return {
     head: {
       cx: lerp(from.head.cx, to.head.cx, t),
       cy: lerp(from.head.cy, to.head.cy, t),
-      r:  lerp(from.head.r ?? 7, to.head.r ?? 7, t),
+      r:  lerp(from.head.r,  to.head.r,  t),
     },
-    lines: from.lines.map((fromLine, li) => {
-      const toLine = to.lines[lineMap[li] ?? li];
-      if (!toLine) return fromLine;
-      // Use the shorter line's length so we never access undefined points.
-      const len = Math.min(fromLine.length, toLine.length);
-      return Array.from({ length: len }, (_, pi) => [
-        lerp(fromLine[pi]![0], toLine[pi]![0], t),
-        lerp(fromLine[pi]![1], toLine[pi]![1], t),
-      ] as [number, number]);
-    }),
+    spine:    lerpLine(from.spine,    to.spine,    t),
+    leftArm:  lerpLine(from.leftArm,  to.leftArm,  t),
+    rightArm: lerpLine(from.rightArm, to.rightArm, t),
+    leftLeg:  lerpLine(from.leftLeg,  to.leftLeg,  t),
+    rightLeg: lerpLine(from.rightLeg, to.rightLeg, t),
+    muscleGlow: from.muscleGlow,
   };
 }
 
@@ -167,61 +123,57 @@ function EnvSVG({ env }: { env: EnvAnchor }) {
 // ── Puppet frame renderer ────────────────────────────────────────────────────
 
 /**
- * Render pose lines in a stable depth order so limbs never visually z-flicker
- * when they pass close to each other.
+ * Render a NamedPoseData skeleton in a fixed back-to-front depth order.
  *
- * Draw order (back → front):
- *   0  spine         — always behind everything
- *   4  right leg     — larger knee-X (anatomically right/back for side view)
- *   2  right arm     — larger elbow-X
- *   3  left  leg     — smaller knee-X (front)
- *   1  left  arm     — smaller elbow-X (front, on top)
+ * Draw order: spine → rightLeg → rightArm → leftLeg → leftArm → head
  *
- * For non-standard skeletons the natural array order is used unchanged.
+ * Right-side limbs are painted first (behind); left-side limbs are painted
+ * last (in front).  Because the order is hardcoded to named keys and never
+ * derived from runtime coordinates, there is zero z-order flicker even when
+ * limbs pass through each other's screen positions.
  */
-const DRAW_ORDER_5 = [0, 4, 2, 3, 1] as const;
-
-function PuppetFrame({ pose, color }: { pose: PoseData; color: string }) {
-  const drawOrder =
-    pose.lines.length === 5
-      ? DRAW_ORDER_5.filter(i => i < pose.lines.length)
-      : pose.lines.map((_, i) => i);
+function PuppetFrame({ pose, color }: { pose: NamedPoseData; color: string }) {
+  const drawOrder: [string, [number, number][]][] = [
+    ["spine",    pose.spine],
+    ["rightLeg", pose.rightLeg],
+    ["rightArm", pose.rightArm],
+    ["leftLeg",  pose.leftLeg],
+    ["leftArm",  pose.leftArm],
+  ];
 
   return (
     <>
-      {/* Limb segments — drawn back-to-front */}
-      {drawOrder.map(li => {
-        const line = pose.lines[li]!;
-        return line.slice(0, -1).map((_, pi) => {
+      {/* Limb segments — drawn back-to-front by named key */}
+      {drawOrder.map(([key, line]) =>
+        line.slice(0, -1).map((_, pi) => {
           const isHandSeg = pi === line.length - 2 && line.length >= 4;
           return (
-            <line key={`${li}-${pi}`}
+            <line key={`${key}-${pi}`}
               x1={line[pi]![0]}     y1={line[pi]![1]}
               x2={line[pi + 1]![0]} y2={line[pi + 1]![1]}
               stroke={color}
               strokeWidth={isHandSeg ? 3.5 : 6}
               strokeLinecap="round" />
           );
-        });
-      })}
+        })
+      )}
       {/* Joint dots — same depth order */}
-      {drawOrder.flatMap(li => {
-        const line = pose.lines[li]!;
-        return line.map(([x, y], pi) => {
+      {drawOrder.flatMap(([key, line]) =>
+        line.map(([x, y], pi) => {
           const isKnuckle = pi === line.length - 1 && line.length >= 4;
           return (
-            <circle key={`d-${li}-${pi}`}
+            <circle key={`d-${key}-${pi}`}
               cx={x} cy={y}
               r={isKnuckle ? 2.0 : 2.8}
               fill={color}
               opacity={isKnuckle ? 0.9 : 0.6} />
           );
-        });
-      })}
+        })
+      )}
       {/* Head halo + core */}
       <circle
         cx={pose.head.cx} cy={pose.head.cy}
-        r={(pose.head.r ?? 7) + 2}
+        r={pose.head.r + 2}
         fill="rgba(34,197,94,0.07)" stroke={color} strokeWidth={2.5} />
       <circle
         cx={pose.head.cx} cy={pose.head.cy}
@@ -249,11 +201,11 @@ export function ExerciseAnimation({
   className,
   style,
 }: ExerciseAnimationProps) {
-  const poses = getPoseSet(exerciseName);
+  const poses = getNamedPoseSet(exerciseName);
   const envs  = getWorldObjects(exerciseName);
 
   // Live-rendered interpolated pose — starts at keyframe 0.
-  const [renderedPose, setRenderedPose] = useState<PoseData>(() => poses[SEQ[0]]);
+  const [renderedPose, setRenderedPose] = useState<NamedPoseData>(() => poses[SEQ[0]]);
 
   // Mutable playback state lives in a ref so the RAF callback always has
   // the latest values without triggering re-renders.
@@ -262,7 +214,7 @@ export function ExerciseAnimation({
   const rafRef     = useRef<number>(0);
 
   useEffect(() => {
-    const currentPoses = getPoseSet(exerciseName);
+    const currentPoses = getNamedPoseSet(exerciseName);
 
     // Reset on exercise change.
     seqIdxRef.current = 0;

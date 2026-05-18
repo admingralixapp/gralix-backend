@@ -7,7 +7,9 @@ import {
   getMobilityExerciseNames,
   getSkillExerciseNames,
   getWorldObjects,
+  legacyToNamed,
   type PoseData,
+  type NamedPoseData,
   type EnvAnchor,
 } from "@/lib/exercise-poses";
 
@@ -272,59 +274,95 @@ function EnvSVG({ env }: { env: EnvAnchor }) {
  * both frames the same way and map left-to-left / right-to-right, guaranteeing
  * no limb ever travels through the torso.  Non-5-line poses are returned as-is.
  */
+/**
+ * Convert a NamedPoseData back to the legacy PoseData array format.
+ * Slot order: [spine, leftArm, rightArm, leftLeg, rightLeg]
+ * This is the inverse of legacyToNamed and the format written to the file.
+ */
+function namedToLegacy(n: NamedPoseData): PoseData {
+  return {
+    head:      n.head,
+    lines:     [n.spine, n.leftArm, n.rightArm, n.leftLeg, n.rightLeg],
+    muscleGlow: n.muscleGlow,
+  };
+}
+
 function canonicalizePose(pose: PoseData): PoseData {
   if (pose.lines.length !== 5) return pose;
-  // Use the first BRANCHING joint (point[1]: elbow for arms, knee for legs)
-  // as the sort key — the same key used by the runtime LERP engine.
-  // This avoids centroid dilution from the shared neck/hip origin point.
-  const limbKeyX = (line: [number, number][]) =>
-    (line[1] ?? line[0])?.[0] ?? 50;
-  const lines = pose.lines.map(l => [...l] as [number, number][]);
-  const sortPair = (a: number, b: number) => {
-    if (limbKeyX(lines[a]!) > limbKeyX(lines[b]!)) {
-      [lines[a], lines[b]] = [lines[b]!, lines[a]!];
-    }
-  };
-  sortPair(1, 2); // arms:  smaller elbow-X → slot 1
-  sortPair(3, 4); // legs:  smaller knee-X  → slot 3
-  return { ...pose, lines };
+  // Convert to named keys, re-sort arm/leg pairs by first-branching-joint X
+  // so the slot ordering is consistent with legacyToNamed's slot convention,
+  // then convert back to array form for saving.
+  const n = legacyToNamed(pose);
+  const keyX = (line: [number, number][]) => (line[1] ?? line[0])?.[0] ?? 50;
+  if (keyX(n.leftArm)  > keyX(n.rightArm))  [n.leftArm,  n.rightArm]  = [n.rightArm,  n.leftArm];
+  if (keyX(n.leftLeg)  > keyX(n.rightLeg))  [n.leftLeg,  n.rightLeg]  = [n.rightLeg,  n.leftLeg];
+  return namedToLegacy(n);
 }
 
 // ── Mirror pose (reflect + canonicalize) ──────────────────────────────────────
 
 /**
- * Mirror a pose about its own centroid along the given axis, then canonicalize
- * the result so paired limb lines are always in ascending centroid-X order.
- * The canonicalization replaces the old manual re-indexing logic and is fully
- * consistent with the spatial-sort mapping used in the LERP engine.
+ * Mirror a pose about its own centroid along the given axis.
+ *
+ * For a HORIZONTAL (X-axis) mirror the figure flips left↔right, so we
+ * explicitly swap the named key assignments:
+ *   leftArm  ← reflect(rightArm)
+ *   rightArm ← reflect(leftArm)
+ *   leftLeg  ← reflect(rightLeg)
+ *   rightLeg ← reflect(leftLeg)
+ *
+ * For a VERTICAL (Y-axis) mirror the figure flips up↔down; left/right
+ * sides are unchanged so key names are preserved.
+ *
+ * Because the swap is driven by explicit key names — never by coordinate
+ * comparison — this is correct regardless of how close limb positions are.
  */
 function mirrorPose(pose: PoseData, axis: "x" | "y"): PoseData {
+  const n = legacyToNamed(pose);
+
   const allPts: [number, number][] = [
-    [pose.head.cx, pose.head.cy],
-    ...pose.lines.flatMap(line => line),
+    [n.head.cx, n.head.cy],
+    ...n.spine, ...n.leftArm, ...n.rightArm, ...n.leftLeg, ...n.rightLeg,
   ];
   const cxA = allPts.reduce((s, p) => s + p[0], 0) / allPts.length;
   const cyA = allPts.reduce((s, p) => s + p[1], 0) / allPts.length;
 
-  const flipPt = (x: number, y: number): [number, number] =>
+  const flipPt = ([x, y]: [number, number]): [number, number] =>
     axis === "x"
       ? [Math.round((2 * cxA - x) * 2) / 2, y]
       : [x, Math.round((2 * cyA - y) * 2) / 2];
+  const flipLine = (line: [number, number][]) => line.map(flipPt);
+  const [nhx, nhy] = flipPt([n.head.cx, n.head.cy]);
 
-  const [nhx, nhy] = flipPt(pose.head.cx, pose.head.cy);
+  const flipGlow = () =>
+    n.muscleGlow
+      ? (() => { const [gx, gy] = flipPt([n.muscleGlow!.cx, n.muscleGlow!.cy]); return { ...n.muscleGlow!, cx: gx, cy: gy }; })()
+      : undefined;
 
-  const flipped: PoseData = {
-    head: { ...pose.head, cx: nhx, cy: nhy },
-    lines: pose.lines.map(line => line.map(([x, y]) => flipPt(x, y))),
-    muscleGlow: pose.muscleGlow
-      ? (() => {
-          const [gx, gy] = flipPt(pose.muscleGlow!.cx, pose.muscleGlow!.cy);
-          return { ...pose.muscleGlow!, cx: gx, cy: gy };
-        })()
-      : undefined,
-  };
+  let mirrored: NamedPoseData;
+  if (axis === "x") {
+    mirrored = {
+      head:      { ...n.head, cx: nhx, cy: nhy },
+      spine:     flipLine(n.spine),
+      leftArm:   flipLine(n.rightArm),  // right → left after X-flip
+      rightArm:  flipLine(n.leftArm),   // left  → right
+      leftLeg:   flipLine(n.rightLeg),
+      rightLeg:  flipLine(n.leftLeg),
+      muscleGlow: flipGlow(),
+    };
+  } else {
+    mirrored = {
+      head:      { ...n.head, cx: nhx, cy: nhy },
+      spine:     flipLine(n.spine),
+      leftArm:   flipLine(n.leftArm),   // Y-flip: left/right unchanged
+      rightArm:  flipLine(n.rightArm),
+      leftLeg:   flipLine(n.leftLeg),
+      rightLeg:  flipLine(n.rightLeg),
+      muscleGlow: flipGlow(),
+    };
+  }
 
-  return canonicalizePose(flipped);
+  return namedToLegacy(mirrored);
 }
 
 // ── Ghost skeleton (other two frames shown faintly) ─────────────────────────
