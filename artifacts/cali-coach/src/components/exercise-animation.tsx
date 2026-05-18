@@ -58,20 +58,28 @@ function optimalLineMap(from: PoseData, to: PoseData): number[] {
   const map = from.lines.map((_, i) => i);
   if (from.lines.length !== 5 || to.lines.length !== 5) return map;
 
-  const centX = (line: [number, number][]) =>
-    line.length ? line.reduce((s, p) => s + p[0], 0) / line.length : 50;
-
   /**
-   * Sort indices [a, b] by their centroid X in `lines`, returning
-   * [smaller-X-idx, larger-X-idx].  Uses index as tie-breaker for stability.
+   * Anatomical key X for a limb line.
+   *
+   * Limb lines share a common origin point (neck for arms, hip for legs).
+   * Using the whole-line centroid dilutes the signal with that shared point
+   * and makes both legs cluster near x=50 in push-up / squat poses —
+   * causing the sort order to flip when knees come close together.
+   *
+   * Instead we use point[1] — the FIRST BRANCHING JOINT (elbow / knee).
+   * This is always anatomically on one side and is far more stable across
+   * frames than the centroid.  Falls back to point[0] for short lines.
    */
+  const limbKeyX = (line: [number, number][]) =>
+    (line[1] ?? line[0])?.[0] ?? 50;
+
   const sortPairByX = (
     lines: typeof from.lines,
     a: number,
     b: number,
   ): [number, number] => {
-    const xa = centX(lines[a] ?? []);
-    const xb = centX(lines[b] ?? []);
+    const xa = limbKeyX(lines[a] ?? []);
+    const xb = limbKeyX(lines[b] ?? []);
     return xa <= xb ? [a, b] : [b, a];
   };
 
@@ -158,26 +166,48 @@ function EnvSVG({ env }: { env: EnvAnchor }) {
 
 // ── Puppet frame renderer ────────────────────────────────────────────────────
 
+/**
+ * Render pose lines in a stable depth order so limbs never visually z-flicker
+ * when they pass close to each other.
+ *
+ * Draw order (back → front):
+ *   0  spine         — always behind everything
+ *   4  right leg     — larger knee-X (anatomically right/back for side view)
+ *   2  right arm     — larger elbow-X
+ *   3  left  leg     — smaller knee-X (front)
+ *   1  left  arm     — smaller elbow-X (front, on top)
+ *
+ * For non-standard skeletons the natural array order is used unchanged.
+ */
+const DRAW_ORDER_5 = [0, 4, 2, 3, 1] as const;
+
 function PuppetFrame({ pose, color }: { pose: PoseData; color: string }) {
+  const drawOrder =
+    pose.lines.length === 5
+      ? DRAW_ORDER_5.filter(i => i < pose.lines.length)
+      : pose.lines.map((_, i) => i);
+
   return (
     <>
-      {/* Limb segments */}
-      {pose.lines.map((line, li) =>
-        line.slice(0, -1).map((_, pi) => {
+      {/* Limb segments — drawn back-to-front */}
+      {drawOrder.map(li => {
+        const line = pose.lines[li]!;
+        return line.slice(0, -1).map((_, pi) => {
           const isHandSeg = pi === line.length - 2 && line.length >= 4;
           return (
             <line key={`${li}-${pi}`}
-              x1={line[pi][0]}     y1={line[pi][1]}
-              x2={line[pi + 1][0]} y2={line[pi + 1][1]}
+              x1={line[pi]![0]}     y1={line[pi]![1]}
+              x2={line[pi + 1]![0]} y2={line[pi + 1]![1]}
               stroke={color}
               strokeWidth={isHandSeg ? 3.5 : 6}
               strokeLinecap="round" />
           );
-        })
-      )}
-      {/* Joint dots */}
-      {pose.lines.flatMap((line, li) =>
-        line.map(([x, y], pi) => {
+        });
+      })}
+      {/* Joint dots — same depth order */}
+      {drawOrder.flatMap(li => {
+        const line = pose.lines[li]!;
+        return line.map(([x, y], pi) => {
           const isKnuckle = pi === line.length - 1 && line.length >= 4;
           return (
             <circle key={`d-${li}-${pi}`}
@@ -186,8 +216,8 @@ function PuppetFrame({ pose, color }: { pose: PoseData; color: string }) {
               fill={color}
               opacity={isKnuckle ? 0.9 : 0.6} />
           );
-        })
-      )}
+        });
+      })}
       {/* Head halo + core */}
       <circle
         cx={pose.head.cx} cy={pose.head.cy}

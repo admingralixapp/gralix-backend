@@ -274,16 +274,19 @@ function EnvSVG({ env }: { env: EnvAnchor }) {
  */
 function canonicalizePose(pose: PoseData): PoseData {
   if (pose.lines.length !== 5) return pose;
-  const centX = (line: [number, number][]) =>
-    line.length ? line.reduce((s, p) => s + p[0], 0) / line.length : 50;
+  // Use the first BRANCHING joint (point[1]: elbow for arms, knee for legs)
+  // as the sort key — the same key used by the runtime LERP engine.
+  // This avoids centroid dilution from the shared neck/hip origin point.
+  const limbKeyX = (line: [number, number][]) =>
+    (line[1] ?? line[0])?.[0] ?? 50;
   const lines = pose.lines.map(l => [...l] as [number, number][]);
   const sortPair = (a: number, b: number) => {
-    if (centX(lines[a]!) > centX(lines[b]!)) {
+    if (limbKeyX(lines[a]!) > limbKeyX(lines[b]!)) {
       [lines[a], lines[b]] = [lines[b]!, lines[a]!];
     }
   };
-  sortPair(1, 2); // arms:  smaller X → slot 1
-  sortPair(3, 4); // legs:  smaller X → slot 3
+  sortPair(1, 2); // arms:  smaller elbow-X → slot 1
+  sortPair(3, 4); // legs:  smaller knee-X  → slot 3
   return { ...pose, lines };
 }
 
