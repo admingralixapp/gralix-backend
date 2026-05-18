@@ -1006,6 +1006,31 @@ export function AnimLabPage() {
     setEnvSaveMsg(null);
   };
 
+  /** Resize an env anchor symmetrically around its centre.
+   *  axis='x' changes x1/x2 (width / horizontal length)
+   *  axis='y' changes y1/y2 (height / vertical length)
+   *  delta is in SVG coordinate units (coordinate space is ~0-100).
+   */
+  const handleResizeEnv = (idx: number, axis: "x" | "y", delta: number) => {
+    setWorldObjects(prev => {
+      const next = [...prev];
+      const o = { ...next[idx]! };
+      const half = delta / 2;
+      if (axis === "x") {
+        const nx1 = o.x1 - half;
+        const nx2 = o.x2 + half;
+        if (nx2 - nx1 >= 3) { o.x1 = Math.round(nx1 * 10) / 10; o.x2 = Math.round(nx2 * 10) / 10; }
+      } else {
+        const ny1 = o.y1 - half;
+        const ny2 = o.y2 + half;
+        if (ny2 - ny1 >= 3) { o.y1 = Math.round(ny1 * 10) / 10; o.y2 = Math.round(ny2 * 10) / 10; }
+      }
+      next[idx] = o;
+      return next;
+    });
+    setEnvSaveMsg(null);
+  };
+
   const handleSnapFloorToFeet = () => {
     const floorIdx = worldObjects.findIndex(o => o.type === "floor");
     if (floorIdx === -1) return;
@@ -2057,6 +2082,53 @@ export function AnimLabPage() {
                           >↺</button>
                         )}
                       </div>
+                      {/* Resize rows */}
+                      {(o.type === "floor" || o.type === "bar") && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
+                          <span style={{ fontSize: 10, color: "#64748b", width: 36, flexShrink: 0 }}>length</span>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "x", -10)}>−10</button>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "x", -2)}>−2</button>
+                          <span style={{ fontSize: 11, color: "#64748b", minWidth: 36, textAlign: "center", fontFamily: "monospace", fontWeight: 600 }}>
+                            {Math.round((o.x2 - o.x1) * 10) / 10}
+                          </span>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "x", 2)}>+2</button>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "x", 10)}>+10</button>
+                        </div>
+                      )}
+                      {o.type === "wall" && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
+                          <span style={{ fontSize: 10, color: "#64748b", width: 36, flexShrink: 0 }}>height</span>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "y", -10)}>−10</button>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "y", -2)}>−2</button>
+                          <span style={{ fontSize: 11, color: "#64748b", minWidth: 36, textAlign: "center", fontFamily: "monospace", fontWeight: 600 }}>
+                            {Math.round((o.y2 - o.y1) * 10) / 10}
+                          </span>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "y", 2)}>+2</button>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "y", 10)}>+10</button>
+                        </div>
+                      )}
+                      {o.type === "box" && (<>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
+                          <span style={{ fontSize: 10, color: "#64748b", width: 36, flexShrink: 0 }}>width</span>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "x", -10)}>−10</button>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "x", -2)}>−2</button>
+                          <span style={{ fontSize: 11, color: "#64748b", minWidth: 36, textAlign: "center", fontFamily: "monospace", fontWeight: 600 }}>
+                            {Math.round((o.x2 - o.x1) * 10) / 10}
+                          </span>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "x", 2)}>+2</button>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "x", 10)}>+10</button>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
+                          <span style={{ fontSize: 10, color: "#64748b", width: 36, flexShrink: 0 }}>height</span>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "y", -10)}>−10</button>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "y", -2)}>−2</button>
+                          <span style={{ fontSize: 11, color: "#64748b", minWidth: 36, textAlign: "center", fontFamily: "monospace", fontWeight: 600 }}>
+                            {Math.round((o.y2 - o.y1) * 10) / 10}
+                          </span>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "y", 2)}>+2</button>
+                          <button style={btnBase} onClick={() => handleResizeEnv(i, "y", 10)}>+10</button>
+                        </div>
+                      </>)}
                     </div>
                   );
                 })}
