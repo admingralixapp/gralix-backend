@@ -2004,15 +2004,16 @@ export function AnimLabPage() {
                   <button
                     key={type}
                     onClick={() => handleToggleObject(type)}
+                    title={active ? `Remove ${type}` : `Add ${type}`}
                     style={{
                       padding: "4px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer",
-                      fontWeight: 600, border: `1px solid ${active ? "#22c55e88" : "#334155"}`,
+                      fontWeight: 600, border: `1px solid ${active ? "#22c55e" : "#334155"}`,
                       background: active ? "#052e1680" : "#1e293b",
                       color: active ? "#22c55e" : "#94a3b8",
                       textTransform: "capitalize",
                     }}
                   >
-                    {type}
+                    {active ? `✓ ${type}` : `+ ${type}`}
                   </button>
                 );
               })}
@@ -2058,10 +2059,21 @@ export function AnimLabPage() {
                   };
                   return (
                     <div key={i} style={{ marginBottom: 6 }}>
-                      {/* Coord readout */}
-                      <p style={{ fontSize: 10, color: "#475569", marginBottom: 3 }}>
-                        {o.type}: x1={o.x1} y1={o.y1} x2={o.x2} y2={o.y2}
-                      </p>
+                      {/* Header: type label + remove button */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
+                        <p style={{ fontSize: 10, color: "#475569", margin: 0 }}>
+                          {o.type}: x1={o.x1} y1={o.y1} x2={o.x2} y2={o.y2}
+                        </p>
+                        <button
+                          title={`Remove ${o.type}`}
+                          onClick={() => setWorldObjects(prev => prev.filter((_, j) => j !== i))}
+                          style={{
+                            padding: "1px 6px", borderRadius: 4, fontSize: 11, cursor: "pointer",
+                            background: "#1c0505", border: "1px solid #7f1d1d", color: "#f87171",
+                            fontWeight: 700, lineHeight: "16px", flexShrink: 0,
+                          }}
+                        >×</button>
+                      </div>
                       {/* Rotation row */}
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         <span style={{ fontSize: 10, color: "#64748b", width: 36, flexShrink: 0 }}>rotate</span>
@@ -2148,7 +2160,7 @@ export function AnimLabPage() {
               }}
             >
               <Save size={12} />
-              {savingEnv ? "Saving…" : "Save World Objects"}
+              {savingEnv ? "Saving…" : `Save World Objects${worldObjects.length > 0 ? ` (${worldObjects.length})` : ""}`}
             </button>
 
             {envSaveMsg && (
