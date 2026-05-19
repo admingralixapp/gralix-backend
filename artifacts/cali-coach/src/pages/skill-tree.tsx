@@ -159,12 +159,11 @@ const NODE_POS: Record<string, { x: number; y: number }> = {
   "core-f1":   { x: HUB_X,            y: HUB_Y + 75 },            // (1500, 1575) Foundation
   "core-1":    { x: HUB_X,            y: HUB_Y + GAP },           // (1500, 1650)
   "core-2":    { x: HUB_X,            y: HUB_Y + GAP * 2 },       // (1500, 1800)
-  // Hollow Holds (-SIDE west, from core-1)
-  "core-hh-1": { x: HUB_X - SIDE,     y: HUB_Y + GAP },          // (1335, 1650)
-  "core-hh-2": { x: HUB_X - SIDE * 2, y: HUB_Y + GAP * 2 },     // (1170, 1800)
-  "core-hh-3": { x: HUB_X - SIDE,     y: HUB_Y + GAP * 2 },     // (1335, 1800)
-  "core-hh-4": { x: HUB_X - SIDE,     y: HUB_Y + GAP * 3 },     // (1335, 1950)
-  "core-hh-5": { x: HUB_X - SIDE,     y: HUB_Y + GAP * 4 },     // (1335, 2100)
+  // Hollow Holds (-SIDE west, branches directly from core-1; Dead Bug lives in Foundation)
+  "core-hh-2": { x: HUB_X - SIDE * 2, y: HUB_Y + GAP },         // (1170, 1650) Superman side
+  "core-hh-3": { x: HUB_X - SIDE,     y: HUB_Y + GAP },         // (1335, 1650) Hollow Body Hold
+  "core-hh-4": { x: HUB_X - SIDE,     y: HUB_Y + GAP * 2 },     // (1335, 1800)
+  "core-hh-5": { x: HUB_X - SIDE,     y: HUB_Y + GAP * 3 },     // (1335, 1950)
   // Bar Based (+SIDE east, from core-1 & core-2)
   "core-bb-1": { x: HUB_X + SIDE,     y: HUB_Y + GAP },          // (1665, 1650)
   "core-bb-2": { x: HUB_X + SIDE * 2, y: HUB_Y + GAP },          // (1830, 1650)
@@ -232,9 +231,8 @@ const EDGES: [string, string][] = [
   ["core-f1", "core-1"],
   // CORE main
   ["core-1", "core-2"],
-  // CORE hollow holds (from core-1)
-  ["core-1", "core-hh-1"],
-  ["core-hh-1", "core-hh-2"], ["core-hh-1", "core-hh-3"],
+  // CORE hollow holds (Dead Bug lives in Foundation; Superman + HBH branch directly from core-1)
+  ["core-1", "core-hh-2"], ["core-1", "core-hh-3"],
   ["core-hh-3", "core-hh-4"], ["core-hh-4", "core-hh-5"],
   // CORE bar based (from core-1 and core-2)
   ["core-1", "core-bb-1"], ["core-1", "core-bb-2"],

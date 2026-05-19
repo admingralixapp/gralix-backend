@@ -195,7 +195,6 @@ const EXERCISE_CATEGORIES: ExerciseCategory[] = [
     branch: "CORE",
     color: "#8b5cf6",
     exercises: [
-      { dbName: "Dead Bug",           label: "Dead Bug",            nodeId: "core-hh-1" },
       { dbName: "Superman",           label: "Superman",            nodeId: "core-hh-2" },
       { dbName: "Hollow Body Hold",   label: "Hollow Body Hold",    nodeId: "core-hh-3" },
       { dbName: "Dragon Flag Negative", label: "Dragon Flag Negative", nodeId: "core-hh-4" },

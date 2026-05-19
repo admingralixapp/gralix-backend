@@ -775,33 +775,14 @@ const PULL_AM_NODES: SkillNode[] = [
 ];
 
 // ─── Hollow Holds Path (branches from core-1) ────────────────────────────────
-// core-hh-1 → core-hh-2 (Back Extensions side branch)
-//           → core-hh-3 → core-hh-4 → core-hh-5 (main Dragon Flag line)
+// core-1 → core-hh-2 (Back Extensions / Superman side branch)
+//        → core-hh-3 → core-hh-4 → core-hh-5 (main Dragon Flag line)
 const CORE_HH_NODES: SkillNode[] = [
-  {
-    id: "core-hh-1",
-    branch: "CORE",
-    level: 2,
-    levelName: "Novice",
-    type: "standard",
-    title: "Dead Bug",
-    description: "Lie on your back with arms and legs raised — lower opposite arm and leg while bracing. The foundational anti-extension core drill.",
-    exercises: ["Dead Bug"],
-    masteryRequirement: {
-      description: "Complete 10 reps with ≥70% form score in 3 sessions",
-      minReps: 10,
-      minFormScore: 70,
-      minQualifyingSessions: 3,
-    },
-    prerequisiteId: "core-1",
-    path: "hollow-holds",
-    pathLabel: "Hollow Holds Path",
-  },
   {
     id: "core-hh-2",
     branch: "CORE",
-    level: 3,
-    levelName: "Intermediate",
+    level: 2,
+    levelName: "Novice",
     type: "standard",
     title: "Back Extensions",
     description: "Lie face-down and raise your chest and legs off the floor (Superman). Builds the posterior chain strength that balances hollow body work.",
@@ -812,15 +793,15 @@ const CORE_HH_NODES: SkillNode[] = [
       minFormScore: 72,
       minQualifyingSessions: 3,
     },
-    prerequisiteId: "core-hh-1",
+    prerequisiteId: "core-1",
     path: "hollow-holds",
     pathLabel: "Hollow Holds Path",
   },
   {
     id: "core-hh-3",
     branch: "CORE",
-    level: 3,
-    levelName: "Intermediate",
+    level: 2,
+    levelName: "Novice",
     type: "static",
     title: "Hollow Body Hold",
     description: "Lie on your back and brace into a hollow curve — shoulders off the floor, straight legs raised low. The fundamental full-body tension skill underpinning every calisthenics movement.",
@@ -831,7 +812,7 @@ const CORE_HH_NODES: SkillNode[] = [
       minFormScore: 75,
       minQualifyingSessions: 4,
     },
-    prerequisiteId: "core-hh-1",
+    prerequisiteId: "core-1",
     path: "hollow-holds",
     pathLabel: "Hollow Holds Path",
   },
