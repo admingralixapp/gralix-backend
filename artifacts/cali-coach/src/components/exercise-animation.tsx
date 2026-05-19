@@ -34,6 +34,45 @@ const FADE_MS = 250;
  */
 const CYCLE_MS = 2 * TRANSITION_MS + 2 * FADE_MS;
 
+// ── Human Flag normalization ──────────────────────────────────────────────────
+//
+// Human Flag poses are horizontal — the body is rotated 90°. The legacy slot
+// convention (leftArm = smaller elbow-X) is meaningless for a sideways figure;
+// different frames were authored with the upper/lower arm in different slots.
+// This causes the LERP engine to cross-interpolate upper-arm↔lower-arm frames,
+// producing the "inverted arms" visual bug.
+//
+// Fix: before any frame is used for LERP or rendering, normalise the named slots
+// so that `leftArm` is always the arm with the lower mean-Y (= upper arm, nearer
+// the top of the 100×100 viewBox) and `rightArm` is the higher mean-Y arm.
+// Same convention for legs. The LERP then always maps upper→upper, lower→lower.
+
+const HUMAN_FLAG_EXERCISES = new Set([
+  "Tucked Human Flag",
+  "One-Leg Human Flag",
+  "Human Flag",
+]);
+
+function meanY(pts: [number, number][]): number {
+  if (!pts.length) return 0;
+  return pts.reduce((s, p) => s + p[1], 0) / pts.length;
+}
+
+/**
+ * Enforce Y-axis topology for Human Flag frames.
+ * After this pass every frame guarantees:
+ *   leftArm  = upper arm (smaller mean Y — closer to top of screen)
+ *   rightArm = lower arm (larger  mean Y — closer to bottom of screen)
+ *   leftLeg  = upper leg (smaller mean Y)
+ *   rightLeg = lower leg (larger  mean Y)
+ */
+function normalizeHumanFlag(pose: NamedPoseData): NamedPoseData {
+  let { leftArm, rightArm, leftLeg, rightLeg } = pose;
+  if (meanY(leftArm) > meanY(rightArm)) [leftArm, rightArm] = [rightArm, leftArm];
+  if (meanY(leftLeg) > meanY(rightLeg)) [leftLeg, rightLeg] = [rightLeg, leftLeg];
+  return { ...pose, leftArm, rightArm, leftLeg, rightLeg };
+}
+
 // ── Math helpers ─────────────────────────────────────────────────────────────
 
 /** Ease-in-out cubic: slow start, fast middle, slow end. */
@@ -215,6 +254,14 @@ interface ExerciseAnimationProps {
   style?: React.CSSProperties;
 }
 
+/** Load and normalise pose frames for a given exercise. */
+function loadPoses(exerciseName: string): [NamedPoseData, NamedPoseData, NamedPoseData] {
+  const raw = getNamedPoseSet(exerciseName);
+  return HUMAN_FLAG_EXERCISES.has(exerciseName)
+    ? [normalizeHumanFlag(raw[0]), normalizeHumanFlag(raw[1]), normalizeHumanFlag(raw[2])]
+    : raw;
+}
+
 export function ExerciseAnimation({
   exerciseName,
   color = "#22c55e",
@@ -222,7 +269,7 @@ export function ExerciseAnimation({
   className,
   style,
 }: ExerciseAnimationProps) {
-  const poses = getNamedPoseSet(exerciseName);
+  const poses = loadPoses(exerciseName);
   const envs  = getWorldObjects(exerciseName);
 
   // Live-rendered interpolated pose — starts at keyframe 0.
@@ -235,7 +282,7 @@ export function ExerciseAnimation({
   const rafRef   = useRef<number>(0);
 
   useEffect(() => {
-    const currentPoses = getNamedPoseSet(exerciseName);
+    const currentPoses = loadPoses(exerciseName);
 
     // Reset on exercise change.
     startRef.current = null;
