@@ -1937,3 +1937,8 @@ export function evaluateSkillTree(
 
   return Array.from(evaluated.values());
 }
+
+/** Returns a deduplicated, sorted list of every exercise name referenced in the skill tree. */
+export function getAllSkillTreeExercises(): string[] {
+  return [...new Set(ALL_SKILL_NODES.flatMap(n => n.exercises))].sort();
+}

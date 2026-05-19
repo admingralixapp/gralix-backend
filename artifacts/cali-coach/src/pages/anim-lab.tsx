@@ -5,13 +5,14 @@ import { FilesetResolver, PoseLandmarker, DrawingUtils } from "@mediapipe/tasks-
 import {
   getPoseSet,
   getMobilityExerciseNames,
-  getSkillExerciseNames,
+  hasDedicatedPose,
   getWorldObjects,
   legacyToNamed,
   type PoseData,
   type NamedPoseData,
   type EnvAnchor,
 } from "@/lib/exercise-poses";
+import { getAllSkillTreeExercises } from "@/lib/skill-tree";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -531,7 +532,8 @@ function NumField({
 
 export function AnimLabPage() {
   const exerciseNames      = getMobilityExerciseNames();
-  const skillExerciseNames = getSkillExerciseNames();
+  // Full skill-tree exercise list — every node, including ones with no pose data yet
+  const skillExerciseNames = getAllSkillTreeExercises();
 
   const [exercise, setExercise] = useState<string>(
     exerciseNames[2] ?? exerciseNames[0] ?? "Wrist Extension Stretch"
@@ -1350,19 +1352,26 @@ export function AnimLabPage() {
 
         {/* Skill Tree dropdown */}
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <span style={{ fontSize: 9, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>Skill Tree Workouts</span>
+          <span style={{ fontSize: 9, color: "#a78bfa", textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>
+            Skill Tree Workouts
+            <span style={{ color: "#64748b", fontWeight: 400, marginLeft: 4 }}>
+              ({skillExerciseNames.filter(n => !hasDedicatedPose(n)).length} ⚠ un-animated)
+            </span>
+          </span>
           <select
             value={skillExerciseNames.includes(exercise) ? exercise : ""}
             onChange={e => e.target.value && setExercise(e.target.value)}
             style={{
               background: "#1e1040", color: "#f8fafc",
               border: `1px solid ${skillExerciseNames.includes(exercise) ? "#a78bfa88" : "#3b2e6a"}`,
-              borderRadius: 6, padding: "5px 10px", fontSize: 13, cursor: "pointer", maxWidth: 240,
+              borderRadius: 6, padding: "5px 10px", fontSize: 13, cursor: "pointer", maxWidth: 260,
             }}
           >
             <option value="">— pick skill —</option>
             {skillExerciseNames.map(name => (
-              <option key={name} value={name}>{name}</option>
+              <option key={name} value={name}>
+                {hasDedicatedPose(name) ? name : `⚠ ${name}`}
+              </option>
             ))}
           </select>
         </div>
