@@ -1,4 +1,4 @@
-import { useEffect, useRef, lazy, Suspense } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { isRTL } from "@/i18n/languages";
 import {
@@ -39,6 +39,8 @@ import { Landing } from "@/pages/landing";
 import { TermsPage } from "@/pages/terms";
 import { PrivacyPage } from "@/pages/privacy";
 import { MobilityPage } from "@/pages/mobility";
+import { AnimLabPage } from "@/pages/anim-lab";
+import { MotionImporterPage } from "@/pages/motion-importer";
 import { BodyCalibration } from "@/pages/body-calibration";
 import { PhysicalCalibration } from "@/pages/physical-calibration";
 import { OnboardingTour } from "@/components/onboarding-tour";
@@ -49,34 +51,6 @@ import NotFound from "@/pages/not-found";
 import { useMyProfile, useUpsertProfile } from "@/lib/social";
 import { setVoiceLanguage } from "@/lib/voice-service";
 import { setAuraLanguage } from "@/lib/aura-audio";
-
-// Heavy admin pages — code-split so @mediapipe/tasks-vision is not in the main bundle
-const AnimLabPage = lazy(() =>
-  import("@/pages/anim-lab").then(m => ({ default: m.AnimLabPage }))
-);
-const MotionImporterPage = lazy(() =>
-  import("@/pages/motion-importer").then(m => ({ default: m.MotionImporterPage }))
-);
-
-// ---------------------------------------------------------------------------
-// Admin page loading fallback (used by Suspense boundaries for lazy routes)
-// ---------------------------------------------------------------------------
-function AdminPageLoader({ label }: { label: string }) {
-  return (
-    <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 bg-background text-foreground">
-      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-        <div className="w-5 h-5 rounded-sm bg-primary animate-pulse" />
-      </div>
-      <div className="flex flex-col items-center gap-1">
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="text-xs text-muted-foreground">Loading…</p>
-      </div>
-      <div className="w-32 h-1 rounded-full bg-muted overflow-hidden">
-        <div className="h-full w-1/2 bg-primary rounded-full animate-[shimmer_1.2s_ease-in-out_infinite]" />
-      </div>
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Clerk setup
@@ -362,16 +336,8 @@ function AppRouter() {
             <Switch>
               {/* Full-screen takeover — no sidebar/layout wrapper */}
               <Route path="/mobility-session">{() => <MobilityPage autoStart={true} />}</Route>
-              <Route path="/admin/anim-lab">{() => (
-                <Suspense fallback={<AdminPageLoader label="Animation Lab" />}>
-                  <AnimLabPage />
-                </Suspense>
-              )}</Route>
-              <Route path="/admin/motion-importer">{() => (
-                <Suspense fallback={<AdminPageLoader label="Motion Importer" />}>
-                  <MotionImporterPage />
-                </Suspense>
-              )}</Route>
+              <Route path="/admin/anim-lab">{() => <AnimLabPage />}</Route>
+              <Route path="/admin/motion-importer">{() => <MotionImporterPage />}</Route>
 
               {/* All other routes rendered inside the sidebar Layout */}
               <Route>{() => (
