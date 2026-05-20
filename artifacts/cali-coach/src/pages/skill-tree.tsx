@@ -1741,42 +1741,6 @@ export function SkillTreePage() {
           <Lock className="w-3 h-3 text-zinc-600" />
           {t("skillTree.locked")}
         </span>
-        {/* L5 Elite gold glow legend */}
-        <span className="flex items-center gap-1.5">
-          <span className="relative w-4 h-4 flex items-center justify-center">
-            <span className="absolute w-4 h-4 rounded-full border-2"
-              style={{ borderColor: "#d97706", boxShadow: "0 0 6px #d97706aa" }} />
-          </span>
-          <span style={{ color: "#d97706" }}>L5 Elite</span>
-        </span>
-        {/* Equipment filter pills — shown only when lens is on; clicking highlights that type across all branches */}
-        {lensOn && (
-          <>
-            <span className="h-4 w-px bg-white/10" />
-            {(Object.entries(EQUIPMENT_SPECIALTIES) as [EquipmentTag, typeof EQUIPMENT_SPECIALTIES[EquipmentTag]][]).map(([tag, spec]) => {
-              const active = filterTag === tag;
-              const faded  = filterTag !== null && !active;
-              return (
-                <button
-                  key={tag}
-                  onClick={() => setFilterTag(active ? null : tag)}
-                  title={active ? "Click to clear filter" : `Show only ${spec.label} nodes`}
-                  className="flex items-center gap-1.5 rounded px-1.5 py-0.5 select-none transition-all"
-                  style={{
-                    opacity: faded ? 0.35 : 1,
-                    background: active ? `${spec.bgColor}` : "transparent",
-                    outline: active ? `1px solid ${spec.color}55` : "none",
-                  }}
-                >
-                  <svg width="11" height="11" viewBox="0 0 12 12">
-                    <polygon points="6,0 12,6 6,12 0,6" fill={spec.color} opacity={0.9} />
-                  </svg>
-                  <span style={{ color: spec.color }} className="text-xs font-medium">{t(`skillTree.eqShort.${tag}`)}</span>
-                </button>
-              );
-            })}
-          </>
-        )}
       </div>
 
       {/* Tree */}
