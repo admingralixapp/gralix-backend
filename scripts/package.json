@@ -7,6 +7,7 @@
     "hello": "tsx ./src/hello.ts",
     "translate": "tsx ./src/translate-all.ts",
     "translate:gaps": "tsx ./src/translate-elevenlabs-gaps.ts",
+    "tag-exercises": "tsx ./src/tag-exercises.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

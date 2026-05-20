@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, CheckCircle2, Clock, Flame, Pause, Pencil, Play, SkipForward, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Flame, Pause, Pencil, Play, Shuffle, SkipForward, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
@@ -13,6 +13,7 @@ import { getVoiceCues, getVoiceProfile } from "@/lib/workout-preferences";
 import { getWorkoutCue, getStretchCue } from "@/lib/cue-translations";
 import {
   getTasksForPreferences,
+  shuffleRoutine,
   routineDurationMinutes,
   GOAL_LABELS,
   type MobilityGoal,
@@ -1045,6 +1046,10 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
 
   const routine = getTasksForPreferences(goal, areasArray, dailyTimeMinutes);
 
+  // Shuffle state — null means "use the default goal-based routine"
+  const [shuffledRoutine, setShuffledRoutine] = useState<Stretch[] | null>(null);
+  const activeRoutine = shuffledRoutine ?? routine;
+
   const [pageState,        setPageState]        = useState<PageState>(autoStart ? "active" : "ready");
   const [stretchIndex,     setStretchIndex]     = useState(0);
   const [secondsLeft,      setSecondsLeft]      = useState(0);
@@ -1060,12 +1065,20 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
     };
     setLocalPrefs(newPrefs);
     writeLocalPrefs(newPrefs);
+    setShuffledRoutine(null); // reset any active shuffle when prefs change
     setShowQuestionnaire(false);
     toast({ title: "Goals Updated!", description: "Your routine has been personalised." });
     updateSettings.mutate(newPrefs);
   }
 
-  const currentStretch: Stretch | undefined = routine[stretchIndex];
+  function handleShuffle() {
+    const next = shuffleRoutine(goal, areasArray, dailyTimeMinutes);
+    setShuffledRoutine(next);
+    setStretchIndex(0);
+    toast({ title: "Routine shuffled!", description: `${next.length} exercises · ~${routineDurationMinutes(next)} min` });
+  }
+
+  const currentStretch: Stretch | undefined = activeRoutine[stretchIndex];
 
   // ── Hard-scroll to origin on mount ──────────────────────────────────────────
   useEffect(() => {
@@ -1100,12 +1113,12 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
   }, [secondsLeft, pageState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const advanceStretch = useCallback(() => {
-    if (stretchIndex + 1 >= routine.length) {
+    if (stretchIndex + 1 >= activeRoutine.length) {
       completeSession();
     } else {
       setStretchIndex((i) => i + 1);
     }
-  }, [stretchIndex, routine.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [stretchIndex, activeRoutine.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function completeSession() {
     completeMobility.mutate(
@@ -1212,7 +1225,7 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
                   {dailyTimeMinutes} min per day
                 </span>
                 <span>·</span>
-                <span>{routine.length} exercises · ~{routineDurationMinutes(routine)} min</span>
+                <span>{activeRoutine.length} exercises · ~{routineDurationMinutes(activeRoutine)} min</span>
               </div>
             </div>
           )}
@@ -1230,12 +1243,12 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
           {/* Stretch list + CTA */}
           <div className="rounded-xl border border-border bg-card p-5 space-y-4">
             <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>{routine.length} stretches</span>
-              <span>~{routineDurationMinutes(routine)} min total</span>
+              <span>{activeRoutine.length} stretches</span>
+              <span>~{routineDurationMinutes(activeRoutine)} min total</span>
             </div>
 
             <div className="space-y-3">
-              {routine.map((stretch, i) => (
+              {activeRoutine.map((stretch, i) => (
                 <div
                   key={stretch.id}
                   className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50"
@@ -1256,10 +1269,22 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
               ))}
             </div>
 
-            <Button onClick={startSession} className="w-full font-bold" size="lg">
-              <Play className="w-5 h-5 mr-2" />
-              {status?.completedToday ? "Repeat Session" : "Begin Session"}
-            </Button>
+            {/* Action row: Shuffle + Begin */}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleShuffle}
+                className="flex-1 font-semibold border-border hover:border-primary/50 hover:text-primary transition-colors"
+              >
+                <Shuffle className="w-4 h-4 mr-2" />
+                Shuffle
+              </Button>
+              <Button onClick={startSession} className="flex-[2] font-bold" size="lg">
+                <Play className="w-5 h-5 mr-2" />
+                {status?.completedToday ? "Repeat Session" : "Begin Session"}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -1382,7 +1407,7 @@ export function MobilityPage({ onDismiss, autoStart = false }: { onDismiss?: () 
   if (pageState === "active") {
     return createPortal(
       <ActiveWorkoutPlayer
-        routine={routine}
+        routine={activeRoutine}
         stretchIndex={stretchIndex}
         secondsLeft={secondsLeft}
         paused={paused}

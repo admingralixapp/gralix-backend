@@ -22,6 +22,17 @@ export interface Stretch {
    * Used to power the "Recommended Warm-up" section on exercise detail cards.
    */
   warmupFor?: string[];
+  /**
+   * Skill-tree goals this stretch directly supports.
+   * Populated by the semantic tag engine (see scripts/src/tag-exercises.ts).
+   */
+  goals?: MobilityGoal[];
+  /**
+   * Body areas whose tightness this stretch addresses.
+   * Mirrors the StiffnessArea questionnaire options so the shuffle engine can
+   * match user-reported problem areas to the right exercises.
+   */
+  restrictions?: StiffnessArea[];
 }
 
 export type GhostPose =
@@ -817,6 +828,72 @@ const GOAL_ROUTINES: Record<MobilityGoal, string[]> = {
   ],
 };
 
+// ─── Semantic Tag Map ─────────────────────────────────────────────────────────
+//
+// Generated / maintained by scripts/src/tag-exercises.ts (LLM-powered).
+// Maps each stretch ID to:
+//   goals        — which skill-tree goals it directly supports
+//   restrictions — which stiffness questionnaire areas it addresses
+//
+// The shuffle engine uses this map so it never needs to enumerate GOAL_ROUTINES;
+// it scores every stretch independently against the user's live preferences.
+
+const STRETCH_TAGS: Record<string, { goals: MobilityGoal[]; restrictions: StiffnessArea[] }> = {
+  // ── General ────────────────────────────────────────────────────────────────
+  wristExtension:              { goals: ["handstand", "push", "pull", "muscle-up"],                  restrictions: ["Wrists"] },
+  wristFlexion:                { goals: ["handstand", "push", "pull", "muscle-up"],                  restrictions: ["Wrists"] },
+  shoulderDislocates:          { goals: ["handstand", "push", "pull", "muscle-up", "front-lever"],   restrictions: ["Shoulders"] },
+  latStretch:                  { goals: ["pull", "muscle-up", "front-lever", "core"],                restrictions: ["Shoulders", "Lower Back"] },
+  chestOpener:                 { goals: ["push", "pull", "muscle-up", "core", "general"],            restrictions: ["Shoulders"] },
+  hipFlexorLunge:              { goals: ["legs", "core", "general"],                                 restrictions: ["Hips", "Lower Back"] },
+  hamstring:                   { goals: ["legs", "core", "front-lever", "general"],                  restrictions: ["Lower Back", "Hips"] },
+  thoracicRotation:            { goals: ["core", "pull", "front-lever", "general"],                  restrictions: ["Lower Back", "Shoulders"] },
+  pigeonPose:                  { goals: ["legs", "general"],                                         restrictions: ["Hips"] },
+  tricepsStretch:              { goals: ["handstand", "push", "pull", "muscle-up"],                  restrictions: ["Shoulders"] },
+  pancake:                     { goals: ["legs", "general"],                                         restrictions: ["Hips", "Lower Back"] },
+  shoulderFlexion:             { goals: ["handstand", "push", "muscle-up"],                          restrictions: ["Shoulders"] },
+  ankleCircles:                { goals: ["legs", "general"],                                         restrictions: ["Ankles"] },
+  calfStretch:                 { goals: ["legs", "general"],                                         restrictions: ["Ankles"] },
+  // ── Handstand Path ────────────────────────────────────────────────────────
+  activeScapularShrugsFloor:   { goals: ["handstand", "push", "pull"],                               restrictions: ["Shoulders"] },
+  puppyPoseFloor:              { goals: ["handstand", "push"],                                       restrictions: ["Shoulders", "Lower Back"] },
+  wristCircles:                { goals: ["handstand", "push", "pull"],                               restrictions: ["Wrists"] },
+  wallPuppyPose:               { goals: ["handstand", "push"],                                       restrictions: ["Shoulders"] },
+  firstKnuckleRaises:          { goals: ["handstand", "push"],                                       restrictions: ["Wrists"] },
+  butchersBlock:               { goals: ["handstand", "pull", "muscle-up"],                          restrictions: ["Shoulders"] },
+  // ── Muscle-Up / Pull ──────────────────────────────────────────────────────
+  sleeperStretch:              { goals: ["muscle-up", "pull", "front-lever"],                        restrictions: ["Shoulders"] },
+  latSmashFloor:               { goals: ["pull", "muscle-up", "front-lever"],                        restrictions: ["Shoulders", "Lower Back"] },
+  behindBackClasp:             { goals: ["pull", "muscle-up", "front-lever"],                        restrictions: ["Shoulders"] },
+  germanHang:                  { goals: ["muscle-up", "pull"],                                       restrictions: ["Shoulders"] },
+  skinTheCat:                  { goals: ["muscle-up", "pull", "front-lever"],                        restrictions: ["Shoulders"] },
+  deepLatStretch:              { goals: ["pull", "muscle-up", "front-lever"],                        restrictions: ["Shoulders", "Lower Back"] },
+  // ── Planche / Push ────────────────────────────────────────────────────────
+  backOfHandRocks:             { goals: ["push", "handstand"],                                       restrictions: ["Wrists"] },
+  plancheLeanActiveStretch:    { goals: ["push", "handstand"],                                       restrictions: ["Wrists", "Shoulders"] },
+  wristPalmPeels:              { goals: ["push", "handstand"],                                       restrictions: ["Wrists"] },
+  plancheLeans:                { goals: ["push", "handstand"],                                       restrictions: ["Wrists", "Shoulders"] },
+  reverseTabletop:             { goals: ["push", "handstand"],                                       restrictions: ["Shoulders", "Wrists"] },
+  fingerPulses:                { goals: ["push", "handstand"],                                       restrictions: ["Wrists"] },
+  // ── Pistol Squat ──────────────────────────────────────────────────────────
+  ninetyNineHipSwitches:       { goals: ["legs"],                                                    restrictions: ["Hips"] },
+  deepSquatInternalRotation:   { goals: ["legs"],                                                    restrictions: ["Hips", "Ankles"] },
+  couchStretch:                { goals: ["legs"],                                                    restrictions: ["Hips"] },
+  ankleDorsiflexion:           { goals: ["legs"],                                                    restrictions: ["Ankles"] },
+  cossackSquats:               { goals: ["legs"],                                                    restrictions: ["Hips", "Ankles"] },
+  // ── Core / Dragon Flag ────────────────────────────────────────────────────
+  threadTheNeedle:             { goals: ["core", "front-lever", "general"],                          restrictions: ["Lower Back", "Shoulders"] },
+  cobraStretch:                { goals: ["core", "general"],                                         restrictions: ["Lower Back", "Hips"] },
+  seatedLSitCompression:       { goals: ["core", "legs"],                                            restrictions: ["Hips", "Lower Back"] },
+  // ── Front Lever ───────────────────────────────────────────────────────────
+  scapularHangs:               { goals: ["front-lever", "pull", "muscle-up"],                        restrictions: ["Shoulders"] },
+  proneYRaises:                { goals: ["front-lever", "pull"],                                     restrictions: ["Shoulders", "Lower Back"] },
+  thoracicBridge:              { goals: ["front-lever", "core", "push"],                             restrictions: ["Lower Back", "Shoulders"] },
+  // ── Wrist Rock Flow & Cat-Cow ─────────────────────────────────────────────
+  wristRockFlow:               { goals: ["push", "handstand", "pull"],                               restrictions: ["Wrists"] },
+  catCowJeffersonCurl:         { goals: ["core", "front-lever", "general"],                          restrictions: ["Lower Back", "Hips"] },
+};
+
 // Full extended library for bonus stretches when time allows
 const ALL_STRETCH_IDS = Object.keys(STRETCHES);
 
@@ -919,4 +996,84 @@ export function formatTime(seconds: number): string {
 /** Total routine duration in minutes */
 export function routineDurationMinutes(routine: Stretch[]): number {
   return Math.round(routine.reduce((sum, s) => sum + s.durationSeconds, 0) / 60);
+}
+
+// ─── Shuffle Engine ───────────────────────────────────────────────────────────
+
+/** Fisher-Yates in-place shuffle. Returns the same array mutated. */
+function fisherYates<T>(arr: T[]): T[] {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j]!, arr[i]!];
+  }
+  return arr;
+}
+
+/**
+ * Dynamically assemble a randomised routine that perfectly fills the selected
+ * time slot while still honouring the user's goal and stiffness preferences.
+ *
+ * Algorithm
+ * ─────────
+ * 1. Score every stretch in STRETCHES against the user's goal and stiffness
+ *    areas using the STRETCH_TAGS semantic map:
+ *      +2 pts — stretch supports the user's goal (or goal is "general")
+ *      +1 pt  — stretch addresses at least one of the user's stiffness areas
+ * 2. Partition into tiers: [both match] → [goal only] → [restriction only] →
+ *    [anything else as a final safety net].
+ * 3. Fisher-Yates-shuffle each tier independently so every call produces a
+ *    unique ordering while high-relevance stretches are always preferred.
+ * 4. Walk the merged pool greedily, appending each stretch until the cumulative
+ *    duration reaches the target seconds (allowing a 30-second overshoot so we
+ *    never end up one stretch short on a tight fit).
+ *
+ * Fallback: if fewer than 3 eligible stretches exist after filtering (rare for
+ * exotic goal+restriction combos) the full library is used as the pool.
+ */
+export function shuffleRoutine(
+  goal: MobilityGoal | string,
+  stiffnessAreas: StiffnessArea[],
+  dailyTimeMinutes: number,
+): Stretch[] {
+  const safeGoal = (GOAL_ROUTINES[goal as MobilityGoal] ? goal : "general") as MobilityGoal;
+  const targetSeconds = dailyTimeMinutes * 60;
+
+  // ── Score every stretch ──────────────────────────────────────────────────
+  type Bucket = "both" | "goal" | "area" | "none";
+  const buckets: Record<Bucket, Stretch[]> = { both: [], goal: [], area: [], none: [] };
+
+  for (const [id, stretch] of Object.entries(STRETCHES)) {
+    const tags = STRETCH_TAGS[id];
+    const matchGoal = !tags || tags.goals.includes(safeGoal) || safeGoal === "general";
+    const matchArea = stiffnessAreas.length === 0
+      || (tags?.restrictions ?? []).some((r) => stiffnessAreas.includes(r));
+
+    const bucket: Bucket =
+      matchGoal && matchArea ? "both"
+      : matchGoal            ? "goal"
+      : matchArea            ? "area"
+      :                        "none";
+    buckets[bucket].push(stretch);
+  }
+
+  // ── Shuffle each tier, then merge ───────────────────────────────────────
+  const eligible = [
+    ...fisherYates(buckets.both),
+    ...fisherYates(buckets.goal),
+    ...fisherYates(buckets.area),
+  ];
+
+  // Safety net: if filtering left too few options, open up the full library
+  const pool = eligible.length >= 3 ? eligible : fisherYates([...Object.values(STRETCHES)]);
+
+  // ── Greedily fill to target duration ────────────────────────────────────
+  const routine: Stretch[] = [];
+  let total = 0;
+  for (const stretch of pool) {
+    if (total >= targetSeconds) break;
+    routine.push(stretch);
+    total += stretch.durationSeconds;
+  }
+
+  return routine;
 }
