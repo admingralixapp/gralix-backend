@@ -1036,7 +1036,6 @@ export function shuffleRoutine(
   dailyTimeMinutes: number,
 ): Stretch[] {
   const safeGoal = (GOAL_ROUTINES[goal as MobilityGoal] ? goal : "general") as MobilityGoal;
-  const targetSeconds = dailyTimeMinutes * 60;
 
   // ── Score every stretch ──────────────────────────────────────────────────
   type Bucket = "both" | "goal" | "area" | "none";
@@ -1066,14 +1065,12 @@ export function shuffleRoutine(
   // Safety net: if filtering left too few options, open up the full library
   const pool = eligible.length >= 3 ? eligible : fisherYates([...Object.values(STRETCHES)]);
 
-  // ── Greedily fill to target duration ────────────────────────────────────
-  const routine: Stretch[] = [];
-  let total = 0;
-  for (const stretch of pool) {
-    if (total >= targetSeconds) break;
-    routine.push(stretch);
-    total += stretch.durationSeconds;
-  }
+  // ── Respect the same count cap as getTasksForPreferences ────────────────
+  // 5 min → 5 stretches, 10 min → 8 stretches, 15 min → 12 stretches
+  const targetCount =
+    dailyTimeMinutes <= 5  ? 5
+    : dailyTimeMinutes <= 10 ? 8
+    : 12;
 
-  return routine;
+  return pool.slice(0, targetCount);
 }
