@@ -39,12 +39,6 @@ import { Landing } from "@/pages/landing";
 import { TermsPage } from "@/pages/terms";
 import { PrivacyPage } from "@/pages/privacy";
 import { MobilityPage } from "@/pages/mobility";
-const AnimLabPage = lazy(() =>
-  import("@/pages/anim-lab").then(m => ({ default: m.AnimLabPage }))
-);
-const MotionImporterPage = lazy(() =>
-  import("@/pages/motion-importer").then(m => ({ default: m.MotionImporterPage }))
-);
 import { BodyCalibration } from "@/pages/body-calibration";
 import { PhysicalCalibration } from "@/pages/physical-calibration";
 import { OnboardingTour } from "@/components/onboarding-tour";
@@ -55,6 +49,14 @@ import NotFound from "@/pages/not-found";
 import { useMyProfile, useUpsertProfile } from "@/lib/social";
 import { setVoiceLanguage } from "@/lib/voice-service";
 import { setAuraLanguage } from "@/lib/aura-audio";
+
+// Heavy admin pages — code-split so @mediapipe/tasks-vision is not in the main bundle
+const AnimLabPage = lazy(() =>
+  import("@/pages/anim-lab").then(m => ({ default: m.AnimLabPage }))
+);
+const MotionImporterPage = lazy(() =>
+  import("@/pages/motion-importer").then(m => ({ default: m.MotionImporterPage }))
+);
 
 // ---------------------------------------------------------------------------
 // Admin page loading fallback (used by Suspense boundaries for lazy routes)
