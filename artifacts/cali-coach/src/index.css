@@ -67,52 +67,52 @@
 }
 
 :root {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
   --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .06);
 
-  /* Force dark mode */
-  --background: 240 10% 4%;
-  --foreground: 0 0% 98%;
-  --border: 240 10% 12%;
-  --card: 240 10% 6%;
-  --card-foreground: 0 0% 98%;
-  --card-border: 240 10% 12%;
-  --popover: 240 10% 6%;
-  --popover-foreground: 0 0% 98%;
-  --popover-border: 240 10% 12%;
-  
-  /* Neon green primary */
-  --primary: 150 100% 50%;
-  --primary-foreground: 240 10% 4%;
-  
-  --secondary: 240 10% 12%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 10% 12%;
-  --muted-foreground: 240 5% 65%;
-  --accent: 240 10% 16%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
-  --input: 240 10% 16%;
-  --ring: 150 100% 50%;
-  
-  --sidebar: 240 10% 6%;
-  --sidebar-foreground: 0 0% 98%;
-  --sidebar-border: 240 10% 12%;
-  --sidebar-primary: 150 100% 50%;
-  --sidebar-primary-foreground: 240 10% 4%;
-  --sidebar-accent: 240 10% 12%;
-  --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-ring: 150 100% 50%;
+  /* Light mode — pure white / solid black / deep green #177548 */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 0%;
+  --border: 0 0% 88%;
+  --card: 0 0% 98%;
+  --card-foreground: 0 0% 0%;
+  --card-border: 0 0% 88%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 0%;
+  --popover-border: 0 0% 88%;
 
-  --chart-1: 150 100% 50%;
-  --chart-2: 200 100% 50%;
-  --chart-3: 30 100% 50%;
-  --chart-4: 280 100% 60%;
-  --chart-5: 0 100% 60%;
+  /* Deep green primary — #177548 ≈ hsl(151 67% 27%) */
+  --primary: 151 67% 27%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 0 0% 95%;
+  --secondary-foreground: 0 0% 0%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 42%;
+  --accent: 0 0% 93%;
+  --accent-foreground: 0 0% 0%;
+  --destructive: 0 72% 42%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 0 0% 93%;
+  --ring: 151 67% 27%;
+
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 0 0% 0%;
+  --sidebar-border: 0 0% 90%;
+  --sidebar-primary: 151 67% 27%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 95%;
+  --sidebar-accent-foreground: 0 0% 0%;
+  --sidebar-ring: 151 67% 27%;
+
+  --chart-1: 151 67% 27%;
+  --chart-2: 200 70% 32%;
+  --chart-3: 30 90% 38%;
+  --chart-4: 280 55% 40%;
+  --chart-5: 0 68% 42%;
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-mono: 'Space Mono', monospace;
@@ -125,39 +125,35 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
-    color-scheme: dark;
+    color-scheme: light;
   }
 }
 
-/* ── Glassmorphism card ───────────────────────────────────────────────────── */
+/* ── Clean white card ─────────────────────────────────────────────────────── */
 .glass-card {
-  background: rgba(25, 25, 25, 0.75);
+  background: rgba(255, 255, 255, 0.90);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.10);
   border-radius: 20px;
 }
 
-/* ── Neon-green CTA glow ──────────────────────────────────────────────────── */
+/* ── Deep-green CTA shadow ────────────────────────────────────────────────── */
 .neon-glow {
-  box-shadow:
-    0 0 20px rgba(0, 255, 100, 0.30),
-    0 0 8px  rgba(0, 255, 100, 0.18);
+  box-shadow: 0 2px 10px rgba(23, 117, 72, 0.22);
 }
 .neon-glow:hover {
-  box-shadow:
-    0 0 28px rgba(0, 255, 100, 0.45),
-    0 0 12px rgba(0, 255, 100, 0.28);
+  box-shadow: 0 4px 18px rgba(23, 117, 72, 0.32);
 }
 
-/* ── Active nav icon glow ─────────────────────────────────────────────────── */
+/* ── Active nav icon — inherits text-primary (deep green), no neon filter ── */
 .nav-icon-active {
-  filter: drop-shadow(0 0 6px rgba(0, 255, 100, 0.70));
+  filter: none;
 }
 
-/* ── Glass sidebar / bottom nav ──────────────────────────────────────────── */
+/* ── White top nav / bottom nav ───────────────────────────────────────────── */
 .glass-nav {
-  background: rgba(15, 15, 15, 0.85);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }

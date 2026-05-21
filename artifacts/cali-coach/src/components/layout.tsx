@@ -273,11 +273,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
 
       {/* ── Desktop Sidebar ─────────────────────────────────────────────── */}
-      <aside className="hidden md:flex w-64 flex-col border-r border-white/[0.06] glass-nav shrink-0">
+      <aside className="hidden md:flex w-64 flex-col border-r border-border glass-nav shrink-0">
         {/* Logo */}
         <div className="p-6">
           <button onClick={() => navigateTo("/")} className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center neon-glow">
+            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-sm">
               <Activity className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="font-extrabold text-xl tracking-tight">CaliCoach</span>
@@ -299,7 +299,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm text-left",
                   active
                     ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+                    : "text-muted-foreground hover:bg-black/5 hover:text-foreground",
                 )}
               >
                 <Icon className={cn("w-5 h-5 shrink-0", active && "nav-icon-active")} />
@@ -317,7 +317,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm text-left",
               isSettingsActive
                 ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+                : "text-muted-foreground hover:bg-black/5 hover:text-foreground",
             )}
           >
             <Settings className={cn("w-4 h-4 shrink-0", isSettingsActive && "nav-icon-active")} />
@@ -331,7 +331,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* ── Mobile Bottom Nav ───────────────────────────────────────────── */}
       <nav
         ref={mobileNavRef}
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/[0.06] glass-nav flex items-end pb-safe"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border glass-nav flex items-end pb-safe"
         style={{ scrollbarWidth: "none" } as React.CSSProperties}
       >
         {/* 5 main tabs */}
@@ -369,7 +369,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <motion.div
                     layoutId="mobile-nav-indicator"
                     className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary"
-                    style={{ boxShadow: "0 0 6px rgba(0,255,100,0.8)" }}
+                    style={{ boxShadow: "0 0 4px rgba(23,117,72,0.5)" }}
                     transition={springTransition}
                   />
                 )}
@@ -382,7 +382,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <button
           onClick={() => navigateTo("/settings")}
           className={cn(
-            "flex-shrink-0 flex flex-col items-center justify-center px-3 py-2.5 border-l border-white/[0.06] transition-all",
+            "flex-shrink-0 flex flex-col items-center justify-center px-3 py-2.5 border-l border-border transition-all",
             isSettingsActive ? "text-primary" : "text-muted-foreground/60",
           )}
         >

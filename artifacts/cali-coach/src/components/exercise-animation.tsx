@@ -234,7 +234,7 @@ function PuppetFrame({ pose, color }: { pose: NamedPoseData; color: string }) {
       <circle
         cx={pose.head.cx} cy={pose.head.cy}
         r={pose.head.r + 2}
-        fill="rgba(34,197,94,0.07)" stroke={color} strokeWidth={2.5} />
+        fill="rgba(23,117,72,0.07)" stroke={color} strokeWidth={2.5} />
       <circle
         cx={pose.head.cx} cy={pose.head.cy}
         r={2.5} fill={color} opacity={0.5} />
@@ -264,7 +264,7 @@ function loadPoses(exerciseName: string): [NamedPoseData, NamedPoseData, NamedPo
 
 export function ExerciseAnimation({
   exerciseName,
-  color = "#22c55e",
+  color = "#177548",
   size = 200,
   className,
   style,

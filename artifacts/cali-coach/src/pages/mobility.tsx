@@ -261,8 +261,8 @@ function ForceOverlayLayer({
   ay: number;
   pulse: number; // 0–1 sine wave from the RAF clock
 }) {
-  const op  = 0.28 + 0.52 * pulse;
-  const col = `rgba(34,197,94,${op.toFixed(2)})`;
+  const op  = 0.35 + 0.55 * pulse;
+  const col = `rgba(23,117,72,${op.toFixed(2)})`;
   const off = pulse * 1.8; // subtle spatial bounce
 
   if (type === "press-down") {
@@ -341,7 +341,7 @@ function ForceOverlayLayer({
         <line
           x1={ax - 6} y1={ay + 4.5 + off * 0.4}
           x2={ax + 6} y2={ay + 4.5 + off * 0.4}
-          stroke={`rgba(34,197,94,${(op * 0.45).toFixed(2)})`} strokeWidth={1}
+          stroke={`rgba(23,117,72,${(op * 0.45).toFixed(2)})`} strokeWidth={1}
           strokeLinecap="round"
         />
       </g>
@@ -530,11 +530,14 @@ function EnvLayerThumb({ env }: { env: EnvAnchor }) {
 // calling lerpPoseData() every frame and passing the result as `pose`.
 
 function BioSkeletonSVG({
-  pose, paused, color = "#22c55e", env, svgViewBox = "0 0 100 100", overlayProps,
+  pose, paused, color = "#177548", boneColor = "#1a1a1a", env, svgViewBox = "0 0 100 100", overlayProps,
 }: {
   pose: PoseData;
   paused: boolean;
+  /** Joint node fill color — deep green */
   color?: string;
+  /** Bone stroke color — dark charcoal */
+  boneColor?: string;
   env?: EnvAnchor;
   /** Zoomed viewBox string — lerped by HeroSkeleton for smooth auto-zoom. */
   svgViewBox?: string;
@@ -553,9 +556,9 @@ function BioSkeletonSVG({
       style={{
         overflow: "visible",
         filter: paused
-          ? "drop-shadow(0 0 3px rgba(34,197,94,0.2))"
-          : "drop-shadow(0 0 10px rgba(34,197,94,0.7)) drop-shadow(0 0 24px rgba(34,197,94,0.18))",
-        opacity: paused ? 0.32 : 1,
+          ? "none"
+          : "drop-shadow(0 0 5px rgba(23,117,72,0.30))",
+        opacity: paused ? 0.40 : 1,
         animation: !paused ? "bioGhostPulse 2.5s ease-in-out infinite" : "none",
         transition: "opacity 0.4s ease",
       }}
@@ -573,19 +576,19 @@ function BioSkeletonSVG({
       {/* Environmental anchor — rendered BEHIND skeleton */}
       {env && <EnvLayer env={env} />}
 
-      {/* Capsule limbs — coordinates computed by LERP, not spring physics */}
+      {/* Capsule limbs — dark charcoal bones for light background */}
       {segs.map((seg, i) => (
         <line
           key={i}
           x1={seg.x1} y1={seg.y1} x2={seg.x2} y2={seg.y2}
-          stroke={color}
+          stroke={boneColor}
           strokeWidth={7}
           strokeLinecap="round"
           fill="none"
         />
       ))}
 
-      {/* Glowing joint nodes */}
+      {/* Glowing joint nodes — deep green accent */}
       {pts.map(([x, y], i) => (
         <circle
           key={i}
@@ -600,15 +603,15 @@ function BioSkeletonSVG({
       <circle
         cx={pose.head.cx} cy={pose.head.cy}
         r={(pose.head.r ?? 7) + 2}
-        fill="rgba(34,197,94,0.08)"
-        stroke={color}
+        fill="rgba(23,117,72,0.06)"
+        stroke={boneColor}
         strokeWidth={2.5}
       />
       <circle
         cx={pose.head.cx} cy={pose.head.cy}
         r={2.8}
         fill={color}
-        opacity={0.5}
+        opacity={0.7}
       />
 
       {/* Force-direction overlay — drawn on top of everything, in SVG space */}
@@ -626,10 +629,9 @@ function BioSkeletonSVG({
 
 // ─── BioThumbnailSVG — static capsule-style figure for reference strips ───────
 
-function BioThumbnailSVG({ pose, color, env }: { pose: PoseData; color: string; env?: EnvAnchor }) {
+function BioThumbnailSVG({ pose, color = "#177548", boneColor = "#1a1a1a", env }: { pose: PoseData; color?: string; boneColor?: string; env?: EnvAnchor }) {
   const segs = extractSegments(pose.lines);
   const pts  = extractAllPoints(pose.lines);
-  const isGreen = color === "#22c55e" || color.startsWith("rgba(34,197,94");
   return (
     <svg
       viewBox="0 0 100 100"
@@ -638,21 +640,21 @@ function BioThumbnailSVG({ pose, color, env }: { pose: PoseData; color: string; 
       aria-hidden="true"
       style={{
         overflow: "visible",
-        filter: isGreen ? "drop-shadow(0 0 4px rgba(34,197,94,0.5))" : "none",
+        filter: "drop-shadow(0 0 3px rgba(23,117,72,0.30))",
       }}
     >
       {/* ── Environmental anchor behind skeleton ── */}
       {env && <EnvLayerThumb env={env} />}
       {segs.map((s, i) => (
         <line key={i} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2}
-          stroke={color} strokeWidth={5} strokeLinecap="round" fill="none" />
+          stroke={boneColor} strokeWidth={5} strokeLinecap="round" fill="none" />
       ))}
       {pts.map(([x, y], i) => (
         <circle key={i} cx={x} cy={y} r={2.5} fill={color} />
       ))}
       <circle
         cx={pose.head.cx} cy={pose.head.cy} r={(pose.head.r ?? 7) + 1.5}
-        fill="none" stroke={color} strokeWidth={2}
+        fill="none" stroke={boneColor} strokeWidth={2}
       />
     </svg>
   );
@@ -665,9 +667,9 @@ function BioThumbnailSVG({ pose, color, env }: { pose: PoseData; color: string; 
 // Workout ExerciseAnimation component, tuned for slow therapeutic stretching.
 
 function HeroSkeleton({
-  exerciseName, paused, color = "#22c55e",
+  exerciseName, paused, color = "#177548", boneColor = "#1a1a1a",
 }: {
-  exerciseName: string; paused: boolean; color?: string;
+  exerciseName: string; paused: boolean; color?: string; boneColor?: string;
 }) {
   const poseSet    = getPoseSet(exerciseName);
   const env        = getWorldObjects(exerciseName)[0];
@@ -787,6 +789,7 @@ function HeroSkeleton({
           pose={renderedPose}
           paused={paused}
           color={color}
+          boneColor={boneColor}
           env={env}
           svgViewBox={svgViewBox}
           overlayProps={overlayProps}
@@ -832,18 +835,18 @@ function getActiveRegions(muscles: string[]): Set<string> {
 
 function MuscleSilhouette({ muscles }: { muscles: string[] }) {
   const active = getActiveRegions(muscles);
-  const C = "#22c55e";
-  const dim = "rgba(255,255,255,0.07)";
+  const C = "#177548";
+  const dim = "rgba(0,0,0,0.08)";
   const f = (id: string) => active.has(id) ? C : dim;
-  const g = (id: string) => active.has(id) ? `drop-shadow(0 0 5px rgba(34,197,94,0.7))` : "none";
+  const g = (id: string) => active.has(id) ? `drop-shadow(0 0 4px rgba(23,117,72,0.5))` : "none";
   const s = (id: string): React.CSSProperties => ({ fill: f(id), filter: g(id), transition: "fill 0.4s, filter 0.4s" });
 
   return (
     <svg viewBox="0 0 60 122" width={44} height={88} aria-hidden="true" style={{ flexShrink: 0 }}>
       {/* Head */}
-      <circle cx={30} cy={7} r={6.5} fill="rgba(255,255,255,0.12)" />
+      <circle cx={30} cy={7} r={6.5} fill="rgba(0,0,0,0.12)" />
       {/* Neck */}
-      <rect x={27} y={13.5} width={6} height={5} rx={2} fill="rgba(255,255,255,0.08)" />
+      <rect x={27} y={13.5} width={6} height={5} rx={2} fill="rgba(0,0,0,0.08)" />
       {/* Shoulders */}
       <ellipse cx={15} cy={21} rx={6} ry={3.5} style={s("shoulder-l")} />
       <ellipse cx={45} cy={21} rx={6} ry={3.5} style={s("shoulder-r")} />
@@ -944,12 +947,12 @@ function ActiveWorkoutPlayer({
       <style>{`
         @keyframes heroMuscleGlow  { 0%,100%{opacity:.06} 50%{opacity:.38} }
         @keyframes cockpitFadeIn   { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes bioGhostPulse   { 0%,100%{opacity:.78} 50%{opacity:1} }
+        @keyframes bioGhostPulse   { 0%,100%{opacity:.82} 50%{opacity:1} }
 
-        /* ── Shell: solid dark full-screen grid (4 rows) ── */
+        /* ── Shell: solid white full-screen grid (4 rows) ── */
         #ms-shell {
           position: fixed; inset: 0;
-          background: #080d12;
+          background: #ffffff;
           display: grid;
           grid-template-rows: 52px auto 1fr 172px;
           overflow: hidden;
@@ -967,35 +970,35 @@ function ActiveWorkoutPlayer({
         #ms-shell *::-webkit-scrollbar { display: none; }
         #ms-shell button { touch-action: manipulation; cursor: pointer; }
 
-        /* ── ROW 1: Header bar — solid background creates hard stacking boundary ── */
+        /* ── ROW 1: Header bar ── */
         #ms-hdr {
           display: flex; align-items: center; justify-content: space-between;
           padding: 0 20px;
-          background: #080d12;
-          border-bottom: 1px solid rgba(255,255,255,0.05);
+          background: #ffffff;
+          border-bottom: 1px solid rgba(0,0,0,0.08);
           position: relative; z-index: 10;
           isolation: isolate;
         }
         #ms-hdr .exit-btn {
           display: flex; align-items: center; gap: 6px;
           background: none; border: none;
-          color: rgba(100,116,139,0.9); font-size: 13px; font-weight: 500;
+          color: rgba(0,0,0,0.45); font-size: 13px; font-weight: 500;
           padding: 6px 0;
         }
         #ms-hdr .ctrl-row { display: flex; align-items: center; gap: 16px; }
         #ms-hdr .ctrl-btn {
-          background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.10);
           border-radius: 8px; padding: 6px 10px;
           display: flex; align-items: center; gap: 5px;
-          color: rgba(148,163,184,0.9); font-size: 11px; font-weight: 600;
+          color: rgba(0,0,0,0.55); font-size: 11px; font-weight: 600;
         }
 
-        /* ── ROW 2: Title block — solid background, isolated stacking context ── */
+        /* ── ROW 2: Title block ── */
         #ms-title {
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
           gap: 4px; padding: 10px 24px 8px;
-          background: #080d12;
+          background: #ffffff;
           position: relative; z-index: 5;
           isolation: isolate;
           contain: layout style paint;
@@ -1004,33 +1007,27 @@ function ActiveWorkoutPlayer({
         #ms-title .chip {
           font-size: 9px; font-weight: 800;
           letter-spacing: 0.16em; text-transform: uppercase;
-          color: #22c55e;
-          background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.22);
+          color: #177548;
+          background: rgba(23,117,72,0.08); border: 1px solid rgba(23,117,72,0.20);
           border-radius: 99px; padding: 2px 10px; line-height: 1.6;
         }
         #ms-title h2 {
           font-size: 21px; font-weight: 900; letter-spacing: -0.02em;
           margin: 0; line-height: 1.15; text-align: center;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-          max-width: min(90vw, 480px); color: #f1f5f9;
+          max-width: min(90vw, 480px); color: #000000;
         }
 
-        /* ── ROW 3: Skeleton canvas — hard bounding box, nothing escapes ── */
+        /* ── ROW 3: Skeleton canvas — light background ── */
         #ms-canvas {
           position: relative;
           width: 100%; height: 100%;
           display: flex; align-items: center; justify-content: center;
           overflow: hidden;
-          /* CSS Paint containment: browser guarantees nothing paints outside this box */
           contain: layout style paint;
           isolation: isolate;
           min-height: 0;
-        }
-        /* Radial green glow — contained within the canvas row */
-        #ms-canvas::before {
-          content: "";
-          position: absolute; inset: 0; pointer-events: none;
-          background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(34,197,94,0.09) 0%, transparent 70%);
+          background: #f8fafc;
         }
         /* Skeleton hero container — fills the full canvas cell */
         #ms-canvas .hero-inner {
@@ -1040,16 +1037,16 @@ function ActiveWorkoutPlayer({
           animation: cockpitFadeIn 0.22s ease-out both;
         }
 
-        /* ── ROW 3: Symmetric info dock ── */
+        /* ── ROW 4: Symmetric info dock ── */
         #ms-dock {
           display: grid;
           grid-template-columns: 108px 1fr 108px;
           align-items: center;
           gap: 0;
-          background: rgba(8,13,18,0.92);
+          background: rgba(255,255,255,0.97);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
-          border-top: 1px solid rgba(34,197,94,0.14);
+          border-top: 1px solid rgba(0,0,0,0.08);
           overflow: hidden; flex-shrink: 0;
         }
 
@@ -1058,11 +1055,11 @@ function ActiveWorkoutPlayer({
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
           padding: 12px 8px 14px 12px; gap: 3px;
-          border-right: 1px solid rgba(255,255,255,0.05);
+          border-right: 1px solid rgba(0,0,0,0.08);
         }
         #ms-dock .dock-timer .timer-label {
           font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
-          text-transform: uppercase; color: rgba(100,116,139,0.8);
+          text-transform: uppercase; color: rgba(0,0,0,0.38);
           margin-top: 2px;
         }
 
@@ -1074,7 +1071,7 @@ function ActiveWorkoutPlayer({
         }
         #ms-dock .dock-cue {
           font-size: 11.5px; line-height: 1.55;
-          color: rgba(148,163,184,0.9);
+          color: rgba(0,0,0,0.60);
           text-align: center;
           display: -webkit-box; -webkit-line-clamp: 2;
           -webkit-box-orient: vertical; overflow: hidden;
@@ -1087,9 +1084,9 @@ function ActiveWorkoutPlayer({
         #ms-dock .muscle-pill {
           font-size: 9.5px; font-weight: 700; padding: 2px 8px;
           border-radius: 99px;
-          background: rgba(34,197,94,0.08);
-          color: rgba(34,197,94,0.85);
-          border: 1px solid rgba(34,197,94,0.2);
+          background: rgba(23,117,72,0.08);
+          color: rgba(23,117,72,0.90);
+          border: 1px solid rgba(23,117,72,0.20);
         }
 
         /* Right cell: next exercise preview */
@@ -1097,23 +1094,23 @@ function ActiveWorkoutPlayer({
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
           padding: 10px 12px 12px 8px; gap: 5px;
-          border-left: 1px solid rgba(255,255,255,0.05);
+          border-left: 1px solid rgba(0,0,0,0.08);
           overflow: hidden;
         }
         #ms-dock .next-header {
           font-size: 8px; font-weight: 800; letter-spacing: 0.14em;
-          text-transform: uppercase; color: rgba(100,116,139,0.7);
+          text-transform: uppercase; color: rgba(0,0,0,0.35);
         }
         #ms-dock .next-name {
           font-size: 9.5px; font-weight: 700; text-align: center;
-          color: rgba(226,232,240,0.9); line-height: 1.3;
+          color: rgba(0,0,0,0.75); line-height: 1.3;
           overflow: hidden; text-overflow: ellipsis;
           display: -webkit-box; -webkit-line-clamp: 2;
           -webkit-box-orient: vertical; max-width: 84px;
         }
         #ms-dock .last-strong {
           font-size: 9px; font-weight: 800;
-          color: #22c55e; text-align: center; letter-spacing: 0.02em;
+          color: #177548; text-align: center; letter-spacing: 0.02em;
         }
       `}</style>
 
@@ -1169,24 +1166,24 @@ function ActiveWorkoutPlayer({
             <svg width={80} height={80} viewBox="0 0 80 80">
               {/* Outer ring glow */}
               <circle cx={40} cy={40} r={timerR} fill="none"
-                stroke="rgba(34,197,94,0.06)" strokeWidth={9} />
+                stroke="rgba(23,117,72,0.10)" strokeWidth={9} />
               {/* Track */}
               <circle cx={40} cy={40} r={timerR} fill="none"
-                stroke="rgba(255,255,255,0.05)" strokeWidth={7} />
+                stroke="rgba(0,0,0,0.07)" strokeWidth={7} />
               {/* Progress arc */}
               <circle cx={40} cy={40} r={timerR} fill="none"
-                stroke={paused ? "#475569" : "#22c55e"}
+                stroke={paused ? "#9ca3af" : "#177548"}
                 strokeWidth={7} strokeLinecap="round"
                 strokeDasharray={timerCirc} strokeDashoffset={timerOffset}
                 transform="rotate(-90 40 40)"
                 style={{ transition: "stroke-dashoffset 0.9s linear, stroke 0.35s ease" }}
               />
-              <text x={40} y={37} textAnchor="middle" fill="#f1f5f9"
+              <text x={40} y={37} textAnchor="middle" fill="#000000"
                 fontSize={22} fontWeight="900" fontFamily="monospace">
                 {secondsLeft}
               </text>
               <text x={40} y={52} textAnchor="middle"
-                fill={paused ? "#475569" : "#64748b"} fontSize={9}>
+                fill={paused ? "#9ca3af" : "#6b7280"} fontSize={9}>
                 {paused ? "paused" : "seconds"}
               </text>
             </svg>

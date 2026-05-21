@@ -1,0 +1,25 @@
+We are executing a total light-mode structural design overhaul for Yerie. The application must transition to a hyper-minimalist, premium aesthetic based on exactly three main colors: Pure White for backgrounds, Solid Black for text/borders, and our specific accent Deep Green (#177548). Please refactor the global CSS variables, Tailwind configurations, component states, and canvas rendering styles:
+
+1. Enforce Global Background & Text Layers:
+
+Set the main application background color across all pages, tabs, sidebars, and parent containers to Pure White (#FFFFFF or bg-white).
+
+Force every single piece of typography across the entire app to default to Solid Black (#000000 or text-black), completely removing any muted grays, whites, or legacy amber/yellow header colors (e.g., update the Leaderboard title, tab menus, and descriptions).
+
+2. Clean Navigation & Active Tab States:
+
+Update all sidebars, top headers, and selection tabs: when a menu or tab is selected (like the 'Mastery' sidebar tab or 'Leaderboard' link), ensure its background overlay switches to a clean white/light fill with a solid black text label and thin black structural borders instead of glow states.
+
+3. Integrate the New Deep Green Accent (#177548):
+
+Apply our primary accent green (#177548) exclusively to call-to-action buttons, active action states, slider tracks (like the Joint Readiness sliders), and custom toggle switches.
+
+Remove all legacy neon glows, drop shadows, and amber borders from cards like 'Bodyweight', 'Equipment', and 'Manual Log'. Replace them with crisp, thin black outlines (border-black or border-neutral-900).
+
+4. Update Canvas & Skeleton Rendering:
+
+In the Workout, Daily Mobility, and Animation Lab canvas rendering loops, flip the background grid or viewport container to light gray/white.
+
+Change the Ghost Skeleton bone stroke color to Solid Black or dark charcoal so it contrasts beautifully against the light background, using the new Deep Green (#177548) for the primary interactive joint nodes and tracking indicators.
+
+Goal: Standardize the entire Yerie app under a premium, high-contrast light-mode system utilizing pure white, black typography, and our precise custom green accent.
