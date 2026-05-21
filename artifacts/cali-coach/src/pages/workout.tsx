@@ -227,7 +227,7 @@ const EXERCISE_CATEGORIES: ExerciseCategory[] = [
   {
     label: "Legs — Foundation",
     branch: "LEGS",
-    color: "#22c55e",
+    color: "rgba(255,255,255,0.88)",
     exercises: [
       { dbName: "Box Squat", label: "Box Squat", nodeId: "legs-f1" },
     ],
@@ -235,7 +235,7 @@ const EXERCISE_CATEGORIES: ExerciseCategory[] = [
   {
     label: "Legs — Main",
     branch: "LEGS",
-    color: "#22c55e",
+    color: "rgba(255,255,255,0.88)",
     exercises: [
       { dbName: "Squat",                label: "Squat",                nodeId: "legs-1" },
       { dbName: "Shrimp Squat",         label: "Shrimp Squat",         nodeId: "legs-3" },
@@ -246,7 +246,7 @@ const EXERCISE_CATEGORIES: ExerciseCategory[] = [
   {
     label: "Legs — L-Sit Path",
     branch: "LEGS",
-    color: "#22c55e",
+    color: "rgba(255,255,255,0.88)",
     exercises: [
       { dbName: "Pike Stretch",      label: "Pike Stretch",       nodeId: "legs-ls-1" },
       { dbName: "L-Sit Compression", label: "L-Sit Compression",  nodeId: "legs-ls-2" },
@@ -257,7 +257,7 @@ const EXERCISE_CATEGORIES: ExerciseCategory[] = [
   {
     label: "Legs — Pistol Squat Path",
     branch: "LEGS",
-    color: "#22c55e",
+    color: "rgba(255,255,255,0.88)",
     exercises: [
       { dbName: "Step-Up",             label: "Step-Up",             nodeId: "legs-ps-1" },
       { dbName: "Assisted Pistol Squat", label: "Assisted Pistol Squat", nodeId: "legs-ps-2" },
@@ -472,10 +472,10 @@ function drawMinimalistJoints(
       ctx.fillStyle   = `rgba(239,68,68,${0.45 * pulse})`;
       ctx.strokeStyle = `rgba(239,68,68,${0.9 * pulse})`;
     } else {
-      ctx.shadowColor = "#22c55e";
-      ctx.shadowBlur  = 20;
-      ctx.fillStyle   = "rgba(34,197,94,0.30)";
-      ctx.strokeStyle = "#22c55e";
+      ctx.shadowColor = "rgba(180,220,255,0.8)";
+      ctx.shadowBlur  = 14;
+      ctx.fillStyle   = "rgba(180,220,255,0.18)";
+      ctx.strokeStyle = "rgba(180,220,255,0.88)";
     }
 
     ctx.fill();
@@ -2294,7 +2294,7 @@ export function Workout() {
   }
 
   const syncColor =
-    syncPct >= 90 ? { bg: "rgba(34,197,94,0.2)",  border: "rgba(34,197,94,0.5)",  text: "#86efac" } :
+    syncPct >= 90 ? { bg: "rgba(180,220,255,0.15)", border: "rgba(180,220,255,0.4)", text: "#c8e4ff" } :
     syncPct >= 75 ? { bg: "rgba(234,179,8,0.2)",  border: "rgba(234,179,8,0.5)",  text: "#fde047" } :
                     { bg: "rgba(239,68,68,0.18)",  border: "rgba(239,68,68,0.5)",  text: "#fca5a5" };
 
@@ -2641,7 +2641,7 @@ export function Workout() {
               style={{
                 boxShadow: isStaticExercise
                   ? (isInActiveZone
-                      ? "inset 0 0 0 5px rgba(34,197,94,0.75)"
+                      ? "inset 0 0 0 4px rgba(180,220,255,0.55)"
                       : "inset 0 0 0 5px rgba(239,68,68,0.55)")
                   : (syncPct >= SYNC_GATE
                       ? "inset 0 0 0 4px rgba(0,212,255,0.5)"
@@ -2669,9 +2669,9 @@ export function Workout() {
                 onClick={() => setMinimalistMode(!minimalistMode)}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-all select-none"
                 style={{
-                  background:  minimalistMode ? "rgba(34,197,94,0.18)" : "rgba(0,0,0,0.50)",
-                  borderColor: minimalistMode ? "rgba(34,197,94,0.6)"  : "rgba(255,255,255,0.15)",
-                  color:       minimalistMode ? "#86efac"               : "rgba(255,255,255,0.50)",
+                  background:  minimalistMode ? "rgba(180,220,255,0.14)" : "rgba(0,0,0,0.50)",
+                  borderColor: minimalistMode ? "rgba(180,220,255,0.5)"  : "rgba(255,255,255,0.15)",
+                  color:       minimalistMode ? "#c8e4ff"                 : "rgba(255,255,255,0.50)",
                 }}
               >
                 {minimalistMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -2694,9 +2694,9 @@ export function Workout() {
                 <div
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold select-none animate-pulse"
                   style={{
-                    background:  "rgba(34,197,94,0.15)",
-                    borderColor: "rgba(34,197,94,0.5)",
-                    color:       "#86efac",
+                    background:  "rgba(180,220,255,0.12)",
+                    borderColor: "rgba(180,220,255,0.45)",
+                    color:       "#c8e4ff",
                   }}
                 >
                   <Mic className="w-3.5 h-3.5" />
@@ -2737,16 +2737,16 @@ export function Workout() {
                   <span className="text-sm font-mono text-white/70 uppercase tracking-widest">{t("workout.holdTime")}</span>
                   <span
                     className="text-8xl font-black leading-none tracking-tighter drop-shadow-lg"
-                    style={{ color: isInActiveZone ? "#22c55e" : "#ef4444" }}
+                    style={{ color: isInActiveZone ? "#c8e4ff" : "#ef4444" }}
                   >
                     {formatHoldTime(holdSeconds)}
                   </span>
                   <div
                     className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest"
                     style={{
-                      backgroundColor: isInActiveZone ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)",
-                      color:           isInActiveZone ? "#86efac" : "#fca5a5",
-                      border: `1px solid ${isInActiveZone ? "rgba(34,197,94,0.5)" : "rgba(239,68,68,0.5)"}`,
+                      backgroundColor: isInActiveZone ? "rgba(180,220,255,0.18)" : "rgba(239,68,68,0.25)",
+                      color:           isInActiveZone ? "#c8e4ff" : "#fca5a5",
+                      border: `1px solid ${isInActiveZone ? "rgba(180,220,255,0.4)" : "rgba(239,68,68,0.5)"}`,
                     }}
                   >
                     {isInActiveZone ? t("workout.syncedHoldIt") : t("workout.matchGhost")}
@@ -2811,7 +2811,7 @@ export function Workout() {
                 </div>
                 <div
                   className="text-9xl font-black tabular-nums leading-none tracking-tighter"
-                  style={{ color: restSeconds <= 10 ? "#ef4444" : "#22c55e" }}
+                  style={{ color: restSeconds <= 10 ? "#ef4444" : "#c8e4ff" }}
                 >
                   {restSeconds}
                 </div>
@@ -3207,7 +3207,7 @@ export function Workout() {
                     className={[
                       "flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all",
                       totalSets === n
-                        ? "bg-primary/20 border-primary/60 text-primary shadow-[0_0_12px_rgba(34,197,94,0.15)]"
+                        ? "bg-primary/20 border-primary/60 text-primary"
                         : "border-white/10 text-white/40 hover:border-white/20 hover:text-white/70",
                     ].join(" ")}
                   >
@@ -3351,8 +3351,8 @@ export function Workout() {
                         className="rounded-xl overflow-hidden"
                         style={{
                           background: "#030712",
-                          boxShadow: "inset 0 2px 12px rgba(0,0,0,0.7), 0 0 28px rgba(34,197,94,0.07)",
-                          border: "1px solid rgba(34,197,94,0.15)",
+                          boxShadow: "inset 0 2px 12px rgba(0,0,0,0.7)",
+                          border: "1px solid rgba(255,255,255,0.08)",
                         }}
                       >
                         <ExerciseAnimation exerciseName={ex.name} size={200} />
@@ -3395,7 +3395,7 @@ export function Workout() {
                         <li key={i} className="flex items-start gap-2.5">
                           <span
                             className="shrink-0 mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-                            style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}
+                            style={{ background: "rgba(180,220,255,0.12)", color: "rgba(180,220,255,0.9)", border: "1px solid rgba(180,220,255,0.25)" }}
                           >
                             {i + 1}
                           </span>
@@ -3409,7 +3409,7 @@ export function Workout() {
                         <li key={`cue-${i}`} className="flex items-start gap-2.5">
                           <span
                             className="shrink-0 mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-                            style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e99", border: "1px solid rgba(34,197,94,0.2)" }}
+                            style={{ background: "rgba(180,220,255,0.07)", color: "rgba(180,220,255,0.6)", border: "1px solid rgba(180,220,255,0.15)" }}
                           >
                             {cues.length + i + 1}
                           </span>

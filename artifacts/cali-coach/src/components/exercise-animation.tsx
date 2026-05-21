@@ -234,7 +234,7 @@ function PuppetFrame({ pose, color }: { pose: NamedPoseData; color: string }) {
       <circle
         cx={pose.head.cx} cy={pose.head.cy}
         r={pose.head.r + 2}
-        fill="rgba(34,197,94,0.07)" stroke={color} strokeWidth={2.5} />
+        fill="rgba(200,228,255,0.05)" stroke={color} strokeWidth={2} />
       <circle
         cx={pose.head.cx} cy={pose.head.cy}
         r={2.5} fill={color} opacity={0.5} />
@@ -246,7 +246,7 @@ function PuppetFrame({ pose, color }: { pose: NamedPoseData; color: string }) {
 
 interface ExerciseAnimationProps {
   exerciseName: string;
-  /** Neon line colour — defaults to primary green */
+  /** Skeleton line colour — defaults to chalk-white */
   color?: string;
   /** Square pixel size of the SVG container */
   size?: number;
@@ -264,7 +264,7 @@ function loadPoses(exerciseName: string): [NamedPoseData, NamedPoseData, NamedPo
 
 export function ExerciseAnimation({
   exerciseName,
-  color = "#22c55e",
+  color = "rgba(255,255,255,0.88)",
   size = 200,
   className,
   style,
@@ -334,7 +334,7 @@ export function ExerciseAnimation({
         height="100%"
         style={{
           display: "block",
-          filter: `drop-shadow(0 0 10px ${color}44)`,
+          filter: `drop-shadow(0 0 8px rgba(200,228,255,0.16))`,
         }}
       >
         {envs.map((env, i) => <EnvSVG key={i} env={env} />)}
