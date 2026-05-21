@@ -194,8 +194,40 @@ interface FocusConfig {
   overlayLineIdx: number;
 }
 
-/** Default full-body viewBox — used when no focus config is defined. */
+/** Default full-body viewBox — fallback only. */
 const FULL_VB: [number, number, number, number] = [0, 0, 100, 100];
+
+/**
+ * Compute a torso-anchored viewBox so every exercise renders at the same
+ * apparent skeleton size regardless of where its raw coordinates sit in the
+ * 0-100 SVG space.
+ *
+ * Anatomy convention used throughout the pose library:
+ *   lines[0][0]        = neck / shoulder junction  (top of torso)
+ *   lines[0][last]     = hip  / pelvis              (bottom of torso)
+ *
+ * The viewBox is sized so the neck→hip torso vector always occupies
+ * TARGET_TORSO_VB units, and the hip is pinned at a fixed viewport fraction
+ * (50 % across, 55 % down) so head + torso sit above the midpoint and the
+ * legs have room below.
+ */
+const TARGET_TORSO_VB = 30;  // torso spans this many viewport units out of 100
+const HIP_ANCHOR_X    = 0.50; // hip lands at 50 % of viewport width
+const HIP_ANCHOR_Y    = 0.55; // hip lands at 55 % of viewport height
+
+function computeNormViewBox(pose: PoseData): [number, number, number, number] {
+  const line0 = pose.lines[0];
+  if (!line0 || line0.length < 2) return [...FULL_VB];
+  const [nx, ny] = line0[0]!;
+  const [hx, hy] = line0[line0.length - 1]!;
+  const T = Math.hypot(hx - nx, hy - ny);
+  if (T < 2) return [...FULL_VB];
+  // Viewport size in original SVG coordinate units
+  const vw = T * (100 / TARGET_TORSO_VB);
+  const vx = hx - HIP_ANCHOR_X * vw;
+  const vy = hy - HIP_ANCHOR_Y * vw;
+  return [vx, vy, vw, vw];
+}
 
 /**
  * Maps exercise name → focus + overlay config.
@@ -644,18 +676,22 @@ function HeroSkeleton({
   const env        = getWorldObjects(exerciseName)[0];
   const focusConfig = FOCUS_CONFIG[exerciseName] ?? null;
 
+  // Torso-anchored baseline viewBox for this exercise — stable for the whole
+  // animation cycle so scale never changes as joints move.
+  const normVB = computeNormViewBox(poseSet[0]);
+
   // Live-rendered interpolated pose — starts at keyframe 0.
   const [renderedPose, setRenderedPose] = useState<PoseData>(() => poseSet[0]);
   // Separate opacity for the puppet wrapper (env stays solid during fade).
   const [puppetOpacity, setPuppetOpacity] = useState(1);
   // Current SVG viewBox string — smoothly lerped toward the focus target.
-  const [svgViewBox, setSvgViewBox] = useState("0 0 100 100");
+  const [svgViewBox, setSvgViewBox] = useState(() => normVB.map(v => v.toFixed(2)).join(" "));
   // 0→1 sine pulse for the force overlay animation.
   const [overlayPulse, setOverlayPulse] = useState(0);
 
   // Smooth viewBox lerp: ref holds current [x,y,w,h] floats, state holds the
   // rendered string.  We lerp ~5 % per frame → ~95 % convergence in ~1.2 s.
-  const currentVBRef = useRef<[number, number, number, number]>([0, 0, 100, 100]);
+  const currentVBRef = useRef<[number, number, number, number]>([...normVB]);
 
   // Use a ref so the RAF callback always reads the latest paused value without
   // being part of the effect's dependency array (avoids restart on every toggle).
@@ -666,14 +702,18 @@ function HeroSkeleton({
 
   useEffect(() => {
     const [start, mid, end] = poseSet;
-    const vbTarget = focusConfig?.viewBox ?? FULL_VB;
+    // For exercises with a FOCUS_CONFIG, lerp from the norm viewBox toward the
+    // zoomed focus region.  For all others, snap directly to normVB (no lerp
+    // needed since it IS the target) — keeping scale perfectly stable.
+    const vbTarget = focusConfig?.viewBox ?? normVB;
 
     // Reset state whenever the exercise changes.
     setRenderedPose(start);
     setPuppetOpacity(1);
-    // Snap viewBox to full-body on exercise change; zoom will ease in.
-    currentVBRef.current = [...FULL_VB];
-    setSvgViewBox("0 0 100 100");
+    // Snap to the torso-anchored viewBox immediately; focus-config exercises
+    // will then ease in to their zoomed region over ~1.2 s.
+    currentVBRef.current = [...normVB];
+    setSvgViewBox(normVB.map(v => v.toFixed(2)).join(" "));
 
     let elapsed  = 0;
     let lastTime: number | null = null;
