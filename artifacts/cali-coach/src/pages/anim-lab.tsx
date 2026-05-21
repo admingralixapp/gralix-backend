@@ -974,14 +974,16 @@ export function AnimLabPage() {
 
   // ── World Objects ─────────────────────────────────────────────────────────
 
-  const handleToggleObject = (type: EnvAnchor["type"]) => {
+  const handleAddObject = (type: EnvAnchor["type"]) => {
     setWorldObjects(prev => {
-      if (prev.some(o => o.type === type)) return prev.filter(o => o.type !== type);
+      // Offset each duplicate so they don't stack on top of each other
+      const n = prev.filter(o => o.type === type).length;
+      const d = n * 6; // 6-unit offset per duplicate
       const defaults: Record<string, EnvAnchor> = {
-        floor: { type: "floor", x1: 4,  y1: 85, x2: 96, y2: 85 },
-        wall:  { type: "wall",  x1: 90, y1: 4,  x2: 90, y2: 96 },
-        bar:   { type: "bar",   x1: 20, y1: 10, x2: 80, y2: 10 },
-        box:   { type: "box",   x1: 50, y1: 50, x2: 80, y2: 70 },
+        floor: { type: "floor", x1: 4,       y1: 85 - d,  x2: 96,      y2: 85 - d  },
+        wall:  { type: "wall",  x1: 90 - d,  y1: 4,       x2: 90 - d,  y2: 96      },
+        bar:   { type: "bar",   x1: 20,      y1: 10 + d,  x2: 80,      y2: 10 + d  },
+        box:   { type: "box",   x1: 50 + d,  y1: 50 + d,  x2: 80 + d,  y2: 70 + d  },
       };
       return [...prev, defaults[type]];
     });
@@ -2030,24 +2032,33 @@ export function AnimLabPage() {
               World Objects
             </p>
 
-            {/* Toggle buttons */}
+            {/* Add buttons — always adds a new instance; use × per-object to remove */}
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
               {(["floor", "wall", "bar", "box"] as const).map(type => {
-                const active = worldObjects.some(o => o.type === type);
+                const count = worldObjects.filter(o => o.type === type).length;
                 return (
                   <button
                     key={type}
-                    onClick={() => handleToggleObject(type)}
-                    title={active ? `Remove ${type}` : `Add ${type}`}
+                    onClick={() => handleAddObject(type)}
+                    title={`Add ${type}`}
                     style={{
                       padding: "4px 10px", borderRadius: 6, fontSize: 11, cursor: "pointer",
-                      fontWeight: 600, border: `1px solid ${active ? "#22c55e" : "#334155"}`,
-                      background: active ? "#052e1680" : "#1e293b",
-                      color: active ? "#22c55e" : "#94a3b8",
+                      fontWeight: 600, border: `1px solid ${count > 0 ? "#22c55e55" : "#334155"}`,
+                      background: count > 0 ? "#052e1640" : "#1e293b",
+                      color: count > 0 ? "#22c55e" : "#94a3b8",
                       textTransform: "capitalize",
+                      display: "flex", alignItems: "center", gap: 4,
                     }}
                   >
-                    {active ? `✓ ${type}` : `+ ${type}`}
+                    + {type}
+                    {count > 0 && (
+                      <span style={{
+                        background: "#22c55e", color: "#000", borderRadius: 99,
+                        fontSize: 9, fontWeight: 800, padding: "0 5px", lineHeight: "14px",
+                      }}>
+                        {count}
+                      </span>
+                    )}
                   </button>
                 );
               })}
