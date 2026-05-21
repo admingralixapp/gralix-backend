@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Activity, Play, Square, FlaskConical, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell, Crown, Sparkles, Clock } from "lucide-react";
+import { Activity, Play, Square, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell, Crown, Sparkles, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMyProfile } from "@/lib/social";
 import { useBadgeCelebrationTrigger } from "@/components/badge-celebration-context";
@@ -619,7 +619,6 @@ export function Workout() {
   /** true while all required landmarks for the current exercise are visible */
   const [bodyVisible, setBodyVisible] = useState(true);
   const [isModelLoading, setIsModelLoading] = useState(false);
-  const [isSavingTest, setIsSavingTest] = useState(false);
   const [isManualLog, setIsManualLog] = useState(false);
   const [manualReps, setManualReps] = useState(10);
   const [manualRpe, setManualRpe] = useState<number | null>(null);
@@ -2151,110 +2150,6 @@ export function Workout() {
     }
   };
 
-  /** Test mode: saves a synthetic workout entry without camera. */
-  const handleSaveTestWorkout = async () => {
-    if (!selectedExerciseId) {
-      toast({ title: "Select an exercise", description: "Pick an exercise first." });
-      return;
-    }
-    setIsSavingTest(true);
-    setAnalyzingVisible(true);
-    setAnalyzingApiDone(false);
-    try {
-      console.log("Attempting to save workout...", { exerciseId: selectedExerciseId, type: "test" });
-      const session = await createSession.mutateAsync({
-        data: { exerciseId: parseInt(selectedExerciseId) },
-      });
-
-      const repCount  = 12 + Math.floor(Math.random() * 6);
-      const baseScore = 65 + Math.floor(Math.random() * 25);
-      const exercise  = exercises?.find(e => e.id.toString() === selectedExerciseId);
-      const cues      = exercise?.coachingCues ?? [];
-
-      for (let i = 1; i <= repCount; i++) {
-        const score = Math.min(100, baseScore + Math.random() * 10 - 5);
-        await createRep.mutateAsync({
-          sessionId: session.id,
-          data: {
-            repNumber:    i,
-            formScore:    Math.round(score * 10) / 10,
-            durationMs:   1800 + Math.floor(Math.random() * 800),
-            feedbackGiven: score < 75 && cues.length ? cues[Math.floor(Math.random() * cues.length)] : null,
-          },
-        });
-      }
-
-      const avgScore       = baseScore + Math.random() * 5;
-      const finalFormScore = Math.round(avgScore * 10) / 10;
-
-      const history: SessionSummary[] = (sessionHistory ?? []).map(s => ({
-        exerciseName: s.exerciseName ?? "",
-        totalReps:    s.totalReps    ?? null,
-        avgFormScore: s.avgFormScore ?? null,
-        completedAt:  s.completedAt  ?? null,
-      }));
-      const prevEvaluated = evaluateSkillTree(history);
-
-      const testResult = await updateSession.mutateAsync({
-        id:   session.id,
-        data: {
-          completedAt:  new Date().toISOString(),
-          totalReps:    repCount,
-          avgFormScore: finalFormScore,
-          sets:         totalSets,
-        },
-      });
-      console.log("Save successful!", testResult);
-      void queryClient.refetchQueries({ queryKey: getListSessionsQueryKey() });
-      void queryClient.invalidateQueries({ queryKey: getGetRecentSessionsQueryKey() });
-
-      const exerciseName = exercise?.name ?? "Exercise";
-      const newSession: SessionSummary = {
-        exerciseName,
-        totalReps:    repCount,
-        avgFormScore: finalFormScore,
-        completedAt:  new Date().toISOString(),
-      };
-      const nextEvaluated = evaluateSkillTree([...history, newSession]);
-
-      // Detect and celebrate newly mastered skill nodes
-      const newlyMastered3 = nextEvaluated.filter(n => {
-        const prev = prevEvaluated.find(p => p.id === n.id);
-        return n.status === "mastered" && prev?.status !== "mastered";
-      });
-      if (newlyMastered3.length > 0) {
-        const celebrations: SkillMasteryCelebration[] = newlyMastered3.map(masteredNode => ({
-          masteredNode,
-          newlyUnlockedNodes: nextEvaluated.filter(n => {
-            const prev = prevEvaluated.find(p => p.id === n.id);
-            return n.status === "unlocked" && prev?.status === "locked";
-          }),
-        }));
-        setTimeout(() => triggerSkillMasteryCelebrations(celebrations), 900);
-      }
-
-      setPendingResult({
-        type: "session",
-        results: {
-          exerciseName,
-          totalReps:    repCount,
-          avgFormScore: finalFormScore,
-          sessionId:    session.id,
-          bestSyncPct:  undefined,
-          prevEvaluated,
-          nextEvaluated,
-        },
-      });
-      setAnalyzingApiDone(true);
-    } catch (error) {
-      console.error("Database Save Failed:", error);
-      setAnalyzingVisible(false);
-      toast({ title: "Error", description: "Could not save test workout.", variant: "destructive" });
-    } finally {
-      setIsSavingTest(false);
-    }
-  };
-
   // ── Analyzing overlay completion — hand off to the correct results screen ──
   const handleAnalyzingComplete = useCallback(() => {
     setAnalyzingVisible(false);
@@ -3578,28 +3473,6 @@ export function Workout() {
               </Button>
             </div>
           )}
-
-          {/* ── Test Mode card ───────────────────────────────────────────── */}
-          <Card className="bg-white/5 border-white/10">
-            <CardContent className="p-4 space-y-3">
-              <div className="text-sm text-white/70 font-medium flex items-center gap-2">
-                <FlaskConical className="w-4 h-4 text-primary" />
-                {t("workout.testMode")}
-              </div>
-              <p className="text-xs text-white/40">
-                {t("workout.testModeDesc")}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full border-white/20 text-white hover:bg-white/10"
-                onClick={handleSaveTestWorkout}
-                disabled={!selectedExerciseId || isSavingTest}
-              >
-                {isSavingTest ? t("workout.savingTest") : t("workout.saveTest")}
-              </Button>
-            </CardContent>
-          </Card>
 
         </div>
       )}
