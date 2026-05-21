@@ -2303,7 +2303,7 @@ export function Workout() {
   const cameraActive = isCameraInitializing || isWorkoutActive || isResting;
 
   return (
-    <div className="bg-black text-white min-h-full">
+    <div className="bg-background text-foreground min-h-full">
 
       {/* ── Analyzing Performance overlay ───────────────────────────────────── */}
       <AnalyzingOverlay
@@ -2340,42 +2340,34 @@ export function Workout() {
       {/* ── Camera / AI Tracking Pro Paywall ────────────────────────────────── */}
       <Dialog open={showCameraPaywall} onOpenChange={(open) => { if (!open) setShowCameraPaywall(false); }}>
         <DialogContent
-          className="max-w-sm border-0 p-0 overflow-hidden"
+          className="max-w-sm border p-0 overflow-hidden bg-white"
           style={{
-            background: "linear-gradient(145deg, rgba(168,85,247,0.18) 0%, rgba(109,40,217,0.08) 50%, rgba(15,10,20,0.98) 100%)",
             borderRadius: 24,
-            border: "1px solid rgba(168,85,247,0.35)",
-            boxShadow: "0 0 80px rgba(168,85,247,0.22), inset 0 1px 0 rgba(168,85,247,0.15)",
+            border: "1px solid rgba(0,0,0,0.10)",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.14)",
           }}
         >
-          {/* Ambient glow */}
-          <div
-            className="absolute -top-12 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full blur-3xl opacity-25 pointer-events-none"
-            style={{ background: "radial-gradient(circle, #a855f7 0%, transparent 70%)" }}
-          />
-
-          <div className="relative z-10 flex flex-col items-center text-center p-7 space-y-5">
+          <div className="flex flex-col items-center text-center p-7 space-y-5">
             {/* Icon */}
             <div
               className="w-16 h-16 rounded-2xl flex items-center justify-center"
               style={{
-                background: "rgba(168,85,247,0.18)",
-                border: "1px solid rgba(168,85,247,0.4)",
-                boxShadow: "0 0 24px rgba(168,85,247,0.35)",
+                background: "rgba(23,117,72,0.10)",
+                border: "1px solid rgba(23,117,72,0.25)",
               }}
             >
-              <Crown className="w-8 h-8" style={{ color: "#c084fc" }} />
+              <Crown className="w-8 h-8" style={{ color: "#177548" }} />
             </div>
 
             {/* Copy */}
             <div>
-              <div className="text-[10px] font-black uppercase tracking-[0.18em] mb-1.5" style={{ color: "#c084fc" }}>
+              <div className="text-[10px] font-black uppercase tracking-[0.18em] mb-1.5 text-primary">
                 {t("shop.proLabel", "Pro Feature")}
               </div>
-              <DialogTitle className="text-xl font-black" style={{ color: "#e9d5ff" }}>
+              <DialogTitle className="text-xl font-black text-foreground">
                 {t("workout.proPaywallTitle", "Unlock AI Form Tracking")}
               </DialogTitle>
-              <p className="text-sm text-white/55 mt-2 leading-relaxed">
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
                 {t("workout.proPaywallDesc", "Real-time pose detection, rep counting, and form scoring require a Pro plan. Manual logging is always free.")}
               </p>
             </div>
@@ -2391,11 +2383,11 @@ export function Workout() {
                 <div key={label} className="flex items-center gap-3">
                   <div
                     className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm"
-                    style={{ background: "rgba(168,85,247,0.14)", border: "1px solid rgba(168,85,247,0.22)" }}
+                    style={{ background: "rgba(23,117,72,0.08)", border: "1px solid rgba(23,117,72,0.18)" }}
                   >
                     {icon}
                   </div>
-                  <span className="text-sm text-white/75">{label}</span>
+                  <span className="text-sm text-foreground/80">{label}</span>
                 </div>
               ))}
             </div>
@@ -2406,9 +2398,9 @@ export function Workout() {
                 onClick={() => { setShowCameraPaywall(false); setLocation("/shop"); }}
                 className="w-full py-3.5 rounded-xl text-sm font-black tracking-wide transition-all"
                 style={{
-                  background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+                  background: "#177548",
                   color: "#fff",
-                  boxShadow: "0 4px 24px rgba(168,85,247,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
+                  boxShadow: "0 4px 18px rgba(23,117,72,0.30)",
                 }}
               >
                 {t("progress.startTrial", "Start 3-Day Free Trial")}
@@ -2420,12 +2412,12 @@ export function Workout() {
                   setManualReps(10);
                   setManualRpe(null);
                 }}
-                className="w-full py-2.5 rounded-xl text-sm font-semibold text-white/50 hover:text-white/70 transition-colors"
+                className="w-full py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
               >
                 {t("workout.manualLogNoAI", "Continue with Manual Log")}
               </button>
             </div>
-            <p className="text-[10px] text-white/25">{t("progress.trialNote", "Cancel any time · No charge today")}</p>
+            <p className="text-[10px] text-muted-foreground/60">{t("progress.trialNote", "Cancel any time · No charge today")}</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -2458,22 +2450,22 @@ export function Workout() {
                     <div
                       className="rounded-xl border p-4 space-y-2"
                       style={{
-                        background: "rgba(168,85,247,0.06)",
-                        borderColor: "rgba(168,85,247,0.25)",
+                        background: "rgba(23,117,72,0.06)",
+                        borderColor: "rgba(23,117,72,0.22)",
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        <Lock className="w-3.5 h-3.5 text-purple-400/80 shrink-0" />
-                        <span className="text-sm font-bold text-purple-300/90">{t("workout.skillTreeNote", { defaultValue: "Skill Tree — Not Yet Mastered" })}</span>
+                        <Lock className="w-3.5 h-3.5 text-primary/70 shrink-0" />
+                        <span className="text-sm font-bold text-primary">{t("workout.skillTreeNote", { defaultValue: "Skill Tree — Not Yet Mastered" })}</span>
                       </div>
-                      <p className="text-xs text-white/50 leading-relaxed">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         {prereqNode
                           ? t("workout.skillTreeNotePrereq", { title: prereqNode.title, defaultValue: `Master ${prereqNode.title} first to unlock this node in the Skill Tree. You can still practise this exercise freely.` })
                           : t("workout.skillTreeNoteGeneric", { defaultValue: "Complete the prerequisites in the Skill Tree to unlock this node. You can still practise this exercise freely." })
                         }
                       </p>
                       <button
-                        className="flex items-center gap-2 w-full justify-center px-3 py-2 rounded-lg border border-purple-500/20 bg-purple-500/[0.08] text-xs font-semibold text-purple-300/80 hover:bg-purple-500/[0.14] transition-colors"
+                        className="flex items-center gap-2 w-full justify-center px-3 py-2 rounded-lg border border-primary/20 bg-primary/[0.08] text-xs font-semibold text-primary/80 hover:bg-primary/[0.14] transition-colors"
                         onClick={() => {
                           setInfoExercise(null);
                           setLocation(infoExercise.nodeId
@@ -2533,16 +2525,16 @@ export function Workout() {
                     const warmups = getWarmupSuggestionsFor(infoExercise.name);
                     if (!warmups.length) return null;
                     return (
-                      <div className="rounded-lg border border-violet-500/30 bg-violet-950/30 p-3">
-                        <div className="text-[10px] font-bold uppercase tracking-widest text-violet-300 mb-2 flex items-center gap-1.5">
+                      <div className="rounded-lg border border-primary/25 bg-primary/[0.05] p-3">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2 flex items-center gap-1.5">
                           <Sparkles className="w-3 h-3" /> Recommended Warm-up
                         </div>
                         <ul className="space-y-2">
                           {warmups.map(s => (
                             <li key={s.id} className="flex items-start gap-2">
-                              <ChevronRight className="w-3.5 h-3.5 text-violet-400 mt-0.5 shrink-0" />
+                              <ChevronRight className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
                               <div className="min-w-0">
-                                <span className="text-xs font-semibold text-violet-200">{s.name}</span>
+                                <span className="text-xs font-semibold text-foreground">{s.name}</span>
                                 <span className="text-[10px] text-muted-foreground ml-2 inline-flex items-center gap-0.5">
                                   <Clock className="w-2.5 h-2.5" />{formatTime(s.durationSeconds)}
                                 </span>
@@ -2878,7 +2870,7 @@ export function Workout() {
             </div>
             <div>
               <h1 className="text-xl font-extrabold tracking-tight leading-none">{t("workout.workoutTitle")}</h1>
-              <p className="text-xs text-white/40 mt-0.5">{t("workout.workoutSubtitle")}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("workout.workoutSubtitle")}</p>
             </div>
           </div>
 
@@ -2936,11 +2928,8 @@ export function Workout() {
                 {/* ══ LEFT: Bodyweight Fundamentals ══════════════════════════ */}
                 {/* No backdropFilter — avoids creating a nested stacking context that clips the dropdown */}
                 <div
-                  className="rounded-2xl border border-white/10 p-3 flex flex-col gap-2"
-                  style={{
-                    background: "linear-gradient(135deg,rgba(255,255,255,0.06) 0%,rgba(255,255,255,0.02) 100%)",
-                    boxShadow: "0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)",
-                  }}
+                  className="rounded-2xl border border-border p-3 flex flex-col gap-2 bg-white"
+                  style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}
                 >
                   <div className="flex items-center gap-1.5">
                     <Activity className="w-3 h-3 text-primary/70 shrink-0" />
@@ -2951,21 +2940,21 @@ export function Workout() {
                   <div className="relative">
                     {/* Input */}
                     <div className="relative flex items-center">
-                      <Search className="absolute left-2.5 w-3 h-3 text-white/30 pointer-events-none shrink-0" />
+                      <Search className="absolute left-2.5 w-3 h-3 text-muted-foreground pointer-events-none shrink-0" />
                       <input
                         ref={bwInputRef}
                         disabled={isModelLoading}
                         value={bwOpen ? bwInputVal : (bwSelectedLabel ?? "")}
                         placeholder={isModelLoading ? t("workout.loadingModel") : t("workout.searchPlaceholder")}
                         autoComplete="off"
-                        className="w-full pl-7 pr-7 py-2.5 text-xs font-semibold bg-white/[0.06] border border-white/10 rounded-xl outline-none transition-colors placeholder:text-white/25 placeholder:font-normal disabled:opacity-40 truncate"
-                        style={bwOpen ? { borderColor: "rgba(var(--primary-rgb),0.4)" } : undefined}
+                        className="w-full pl-7 pr-7 py-2.5 text-xs font-semibold bg-muted/50 border border-border rounded-xl outline-none transition-colors placeholder:text-muted-foreground placeholder:font-normal disabled:opacity-40 truncate"
+                        style={bwOpen ? { borderColor: "rgba(23,117,72,0.4)" } : undefined}
                         onFocus={() => { setBwOpen(true); setBwInputVal(""); setEqOpen(false); }}
                         onChange={e => { setBwInputVal(e.target.value); }}
                         onBlur={() => { setTimeout(() => setBwOpen(false), 150); }}
                       />
                       <button
-                        className="absolute right-2 p-0.5 text-white/30 hover:text-white/60 transition-colors"
+                        className="absolute right-2 p-0.5 text-muted-foreground hover:text-foreground transition-colors"
                         tabIndex={-1}
                         onMouseDown={e => {
                           e.preventDefault();
@@ -2980,11 +2969,11 @@ export function Workout() {
                     {/* Floating dropdown — opens downward */}
                     {bwOpen && (
                       <div
-                        className="absolute left-0 right-0 z-50 rounded-xl border border-white/15 overflow-hidden"
+                        className="absolute left-0 right-0 z-50 rounded-xl border border-border overflow-hidden"
                         style={{
                           top: "calc(100% + 6px)",
-                          background: "hsl(var(--card))",
-                          boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)",
+                          background: "#ffffff",
+                          boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
                           maxHeight: "280px",
                           overflowY: "auto",
                         }}
@@ -3014,7 +3003,7 @@ export function Workout() {
                                 <div key={cat.label}>
                                   {!q && (
                                     <div className="px-3 py-1 text-[8.5px] font-bold uppercase tracking-widest border-b"
-                                      style={{ color: `${branchColor}80`, borderColor: "rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}>
+                                      style={{ color: `${branchColor}`, borderColor: "rgba(0,0,0,0.06)", background: `${branchColor}10` }}>
                                       {subLabel}
                                     </div>
                                   )}
@@ -3035,7 +3024,7 @@ export function Workout() {
                               </div>
                             );
                           });
-                          if (!anyResults && q) return <div className="py-6 text-center text-xs text-white/35">{t("workout.noExercisesFound", { query: bwInputVal })}</div>;
+                          if (!anyResults && q) return <div className="py-6 text-center text-xs text-muted-foreground">{t("workout.noExercisesFound", { query: bwInputVal })}</div>;
                           return <>{sections}</>;
                         })()}
                       </div>
@@ -3046,41 +3035,33 @@ export function Workout() {
                 {/* ══ RIGHT: Equipment Specialty ══════════════════════════════ */}
                 {/* No backdropFilter — avoids nested stacking context that clips the dropdown */}
                 <div
-                  className="rounded-2xl border p-3 flex flex-col gap-2"
-                  style={{
-                    background: "linear-gradient(135deg,rgba(245,158,11,0.06) 0%,rgba(245,158,11,0.02) 100%)",
-                    borderColor: "#f59e0b22",
-                    boxShadow: "0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(245,158,11,0.08)",
-                  }}
+                  className="rounded-2xl border border-border p-3 flex flex-col gap-2 bg-white"
+                  style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}
                 >
                   <div className="flex items-center gap-1.5">
-                    <Dumbbell className="w-3 h-3 shrink-0" style={{ color: "#f59e0b99" }} />
-                    <span className="text-[10px] font-black uppercase tracking-[0.12em]" style={{ color: "#f59e0bcc" }}>{t("workout.equipmentLabel")}</span>
+                    <Dumbbell className="w-3 h-3 text-primary/70 shrink-0" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.12em] text-primary/80">{t("workout.equipmentLabel")}</span>
                   </div>
 
                   {/* EQ Combobox */}
                   <div className="relative">
                     {/* Input */}
                     <div className="relative flex items-center">
-                      <Search className="absolute left-2.5 w-3 h-3 text-white/30 pointer-events-none shrink-0" />
+                      <Search className="absolute left-2.5 w-3 h-3 text-muted-foreground pointer-events-none shrink-0" />
                       <input
                         ref={eqInputRef}
                         disabled={isModelLoading}
                         value={eqOpen ? eqInputVal : (eqSelectedLabel ?? "")}
                         placeholder={isModelLoading ? t("workout.loadingModel") : t("workout.searchEquipmentPlaceholder")}
                         autoComplete="off"
-                        className="w-full pl-7 pr-7 py-2.5 text-xs font-semibold border rounded-xl outline-none transition-colors placeholder:text-white/25 placeholder:font-normal disabled:opacity-40 truncate"
-                        style={{
-                          background: "rgba(245,158,11,0.06)",
-                          borderColor: eqOpen ? "#f59e0b55" : "#f59e0b22",
-                        }}
+                        className="w-full pl-7 pr-7 py-2.5 text-xs font-semibold bg-muted/50 border border-border rounded-xl outline-none transition-colors placeholder:text-muted-foreground placeholder:font-normal disabled:opacity-40 truncate"
+                        style={eqOpen ? { borderColor: "rgba(23,117,72,0.4)" } : undefined}
                         onFocus={() => { setEqOpen(true); setEqInputVal(""); setBwOpen(false); }}
                         onChange={e => { setEqInputVal(e.target.value); }}
                         onBlur={() => { setTimeout(() => setEqOpen(false), 150); }}
                       />
                       <button
-                        className="absolute right-2 p-0.5 transition-colors"
-                        style={{ color: "#f59e0b55" }}
+                        className="absolute right-2 p-0.5 text-muted-foreground hover:text-foreground transition-colors"
                         tabIndex={-1}
                         onMouseDown={e => {
                           e.preventDefault();
@@ -3095,11 +3076,11 @@ export function Workout() {
                     {/* Floating dropdown — opens downward */}
                     {eqOpen && (
                       <div
-                        className="absolute left-0 right-0 z-50 rounded-xl border border-white/15 overflow-hidden"
+                        className="absolute left-0 right-0 z-50 rounded-xl border border-border overflow-hidden"
                         style={{
                           top: "calc(100% + 6px)",
-                          background: "hsl(var(--card))",
-                          boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,158,11,0.12)",
+                          background: "#ffffff",
+                          boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
                           maxHeight: "280px",
                           overflowY: "auto",
                         }}
@@ -3107,9 +3088,9 @@ export function Workout() {
                         {(() => {
                           const q = eqInputVal.toLowerCase().trim();
                           const branchMeta: Record<EquipmentBranchKey, { label: string; color: string }> = {
-                            BAR:      { label: t("workout.barSpecialist"), color: "#f59e0b" },
-                            RINGS:    { label: t("workout.rings"),    color: "#06b6d4" },
-                            WEIGHTED: { label: t("workout.weighted"), color: "#a855f7" },
+                            BAR:      { label: t("workout.barSpecialist"), color: "#b45309" },
+                            RINGS:    { label: t("workout.rings"),    color: "#0891b2" },
+                            WEIGHTED: { label: t("workout.weighted"), color: "#177548" },
                           };
                           let anyResults = false;
                           const sections = (["BAR", "RINGS", "WEIGHTED"] as EquipmentBranchKey[]).map(branch => {
@@ -3141,7 +3122,7 @@ export function Workout() {
                                         </div>
                                       )}
                                       <div
-                                        className={`flex items-center gap-1 border-b border-border/20 group transition-colors ${isSelected ? "" : "hover:bg-white/[0.04]"}`}
+                                        className={`flex items-center gap-1 border-b border-border/20 group transition-colors ${isSelected ? "" : "hover:bg-muted/60"}`}
                                         style={isSelected ? { background: `${branchColor}20` } : undefined}
                                       >
                                         <button
@@ -3158,7 +3139,7 @@ export function Workout() {
                                           <span className="flex-1 truncate">{item.label}</span>
                                         </button>
                                         <button
-                                          className="p-1.5 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
+                                          className="p-1.5 mr-1 rounded opacity-0 group-hover:opacity-100 hover:bg-black/5 text-muted-foreground hover:text-foreground transition-all shrink-0"
                                           onMouseDown={e => e.preventDefault()}
                                           onClick={e => { e.stopPropagation(); setInfoExercise({ name: item.dbName, id: item.id, nodeId: item.nodeId }); }}
                                         >
@@ -3171,7 +3152,7 @@ export function Workout() {
                               </div>
                             );
                           });
-                          if (!anyResults && q) return <div className="py-6 text-center text-xs text-white/35">{t("workout.noExercisesFound", { query: eqInputVal })}</div>;
+                          if (!anyResults && q) return <div className="py-6 text-center text-xs text-muted-foreground">{t("workout.noExercisesFound", { query: eqInputVal })}</div>;
                           return <>{sections}</>;
                         })()}
                       </div>
@@ -3185,17 +3166,12 @@ export function Workout() {
 
           {/* ── Sets & Voice card ────────────────────────────────────────── */}
           <div
-            className="rounded-2xl border border-white/10 p-4 space-y-4"
-            style={{
-              background: "linear-gradient(135deg,rgba(255,255,255,0.06) 0%,rgba(255,255,255,0.02) 100%)",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)",
-            }}
+            className="rounded-2xl border border-border p-4 space-y-4 bg-white"
+            style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}
           >
             {/* Sets picker */}
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-white/35 mb-2.5 flex items-center gap-1.5">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2.5 flex items-center gap-1.5">
                 <Layers className="w-3 h-3" />
                 {t("workout.setsLabel")}
               </div>
@@ -3207,8 +3183,8 @@ export function Workout() {
                     className={[
                       "flex-1 py-2.5 rounded-xl border text-sm font-bold transition-all",
                       totalSets === n
-                        ? "bg-primary/20 border-primary/60 text-primary shadow-[0_0_12px_rgba(34,197,94,0.15)]"
-                        : "border-white/10 text-white/40 hover:border-white/20 hover:text-white/70",
+                        ? "bg-primary/15 border-primary/50 text-primary"
+                        : "border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground",
                     ].join(" ")}
                   >
                     {n}
@@ -3220,11 +3196,11 @@ export function Workout() {
             {/* Voice commands toggle */}
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-semibold text-white/80 flex items-center gap-1.5">
+                <div className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                   <Mic className="w-3.5 h-3.5 text-primary/70" />
                   {t("workout.voiceCommands")}
                 </div>
-                <div className="text-[11px] text-white/30 mt-0.5">
+                <div className="text-[11px] text-muted-foreground mt-0.5">
                   "start" · "end set" · "end workout"
                 </div>
               </div>
@@ -3232,7 +3208,7 @@ export function Workout() {
                 onClick={() => setVoiceCommandsEnabled(!voiceCommandsEnabled)}
                 className={[
                   "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
-                  voiceCommandsEnabled ? "bg-primary" : "bg-white/10",
+                  voiceCommandsEnabled ? "bg-primary" : "bg-muted",
                 ].join(" ")}
                 role="switch"
                 aria-checked={voiceCommandsEnabled}
@@ -3250,35 +3226,30 @@ export function Workout() {
           {/* ── Manual Log view ──────────────────────────────────────────── */}
           {isManualLog ? (
             <div
-              className="rounded-2xl border border-white/10 p-5 space-y-5"
-              style={{
-                background: "linear-gradient(135deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0.02) 100%)",
-                backdropFilter: "blur(16px)",
-                WebkitBackdropFilter: "blur(16px)",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)",
-              }}
+              className="rounded-2xl border border-border p-5 space-y-5 bg-white"
+              style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}
             >
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => { setIsManualLog(false); setManualReps(10); setManualRpe(null); }}
-                  className="p-1.5 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                  className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <div>
                   <h2 className="text-lg font-bold leading-tight">{t("workout.manualLogTitle")}</h2>
-                  <p className="text-xs text-white/40">
+                  <p className="text-xs text-muted-foreground">
                     {exercises?.find(e => e.id.toString() === selectedExerciseId)?.name ?? "Select exercise above"}
                   </p>
                 </div>
               </div>
 
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-3">{t("workout.repsCompleted")}</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">{t("workout.repsCompleted")}</div>
                 <div className="flex items-center justify-center gap-6">
                   <button
                     onClick={() => setManualReps(r => Math.max(0, r - 1))}
-                    className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center transition-all active:scale-95"
+                    className="w-12 h-12 rounded-full bg-muted hover:bg-muted/70 border border-border flex items-center justify-center transition-all active:scale-95"
                   >
                     <Minus className="w-5 h-5" />
                   </button>
@@ -3287,7 +3258,7 @@ export function Workout() {
                   </div>
                   <button
                     onClick={() => setManualReps(r => r + 1)}
-                    className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center transition-all active:scale-95"
+                    className="w-12 h-12 rounded-full bg-muted hover:bg-muted/70 border border-border flex items-center justify-center transition-all active:scale-95"
                   >
                     <Plus className="w-5 h-5" />
                   </button>
@@ -3295,7 +3266,7 @@ export function Workout() {
               </div>
 
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2 flex justify-between">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex justify-between">
                   <span>{t("workout.rpeLabel")}</span>
                   {manualRpe && <span className="text-primary">{manualRpe}/10</span>}
                 </div>
@@ -3306,15 +3277,15 @@ export function Workout() {
                       onClick={() => setManualRpe(prev => prev === n ? null : n)}
                       className={`w-9 h-9 rounded-full text-sm font-bold transition-all active:scale-95 ${
                         manualRpe === n
-                          ? "bg-primary text-black border-2 border-primary"
-                          : "bg-white/8 border border-white/15 text-white/60 hover:border-white/35"
+                          ? "bg-primary text-white border-2 border-primary"
+                          : "bg-muted border border-border text-muted-foreground hover:border-foreground/30"
                       }`}
                     >
                       {n}
                     </button>
                   ))}
                 </div>
-                <p className="text-[10px] text-white/25 mt-2 text-center">
+                <p className="text-[10px] text-muted-foreground mt-2 text-center">
                   {t("workout.rpeHint")}
                 </p>
               </div>
@@ -3333,13 +3304,8 @@ export function Workout() {
           ) : (
             /* ── Ready to Train card ─────────────────────────────────────── */
             <div
-              className="rounded-2xl border border-white/10 p-5 space-y-5"
-              style={{
-                background: "linear-gradient(135deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0.02) 100%)",
-                backdropFilter: "blur(16px)",
-                WebkitBackdropFilter: "blur(16px)",
-                boxShadow: "0 4px 24px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08)",
-              }}
+              className="rounded-2xl border border-border p-5 space-y-5 bg-white"
+              style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.06)" }}
             >
               {/* ── Animation preview or static heading ── */}
               {(() => {
@@ -3350,16 +3316,16 @@ export function Workout() {
                       <div
                         className="rounded-xl overflow-hidden"
                         style={{
-                          background: "#030712",
-                          boxShadow: "inset 0 2px 12px rgba(0,0,0,0.7), 0 0 28px rgba(34,197,94,0.07)",
-                          border: "1px solid rgba(34,197,94,0.15)",
+                          background: "#f8fafc",
+                          boxShadow: "inset 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px rgba(23,117,72,0.12)",
+                          border: "1px solid rgba(23,117,72,0.15)",
                         }}
                       >
                         <ExerciseAnimation exerciseName={ex.name} size={200} />
                       </div>
                       <div className="text-center">
                         <h2 className="text-base font-bold leading-snug">{ex.name}</h2>
-                        <p className="text-xs text-white/40 mt-0.5 leading-snug">
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
                           {t("workout.ghostSkeletonDesc")}
                         </p>
                       </div>
@@ -3369,7 +3335,7 @@ export function Workout() {
                 return (
                   <div>
                     <h2 className="text-lg font-bold mb-1">{t("workout.readyToTrain")}</h2>
-                    <p className="text-sm text-white/45 leading-snug">
+                    <p className="text-sm text-muted-foreground leading-snug">
                       {t("workout.ghostSkeletonDesc")}
                     </p>
                   </div>
@@ -3386,7 +3352,7 @@ export function Workout() {
                 if (cues.length === 0 && extraCues.length === 0) return null;
                 return (
                   <div className="space-y-2.5">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/35">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                       <Dumbbell className="w-3 h-3" />
                       How to perform
                     </div>
@@ -3394,26 +3360,26 @@ export function Workout() {
                       {cues.map((joint, i) => (
                         <li key={i} className="flex items-start gap-2.5">
                           <span
-                            className="shrink-0 mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-                            style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}
+                            className="shrink-0 mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+                            style={{ background: "#177548", border: "1px solid rgba(23,117,72,0.4)" }}
                           >
                             {i + 1}
                           </span>
                           <div>
-                            <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">{joint.label} — </span>
-                            <span className="text-xs text-white/70 leading-snug">{joint.description}</span>
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{joint.label} — </span>
+                            <span className="text-xs text-foreground/80 leading-snug">{joint.description}</span>
                           </div>
                         </li>
                       ))}
                       {extraCues.map((cue, i) => (
                         <li key={`cue-${i}`} className="flex items-start gap-2.5">
                           <span
-                            className="shrink-0 mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-                            style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e99", border: "1px solid rgba(34,197,94,0.2)" }}
+                            className="shrink-0 mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white/80"
+                            style={{ background: "rgba(23,117,72,0.75)", border: "1px solid rgba(23,117,72,0.3)" }}
                           >
                             {cues.length + i + 1}
                           </span>
-                          <p className="text-xs text-white/60 leading-snug">{cue}</p>
+                          <p className="text-xs text-foreground/70 leading-snug">{cue}</p>
                         </li>
                       ))}
                     </ol>
@@ -3433,7 +3399,7 @@ export function Workout() {
                     <Zap className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
                     <div>
                       <div className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mb-0.5">{t("workout.proTip")}</div>
-                      <p className="text-xs text-white/70 leading-snug">{tip}</p>
+                      <p className="text-xs text-foreground/75 leading-snug">{tip}</p>
                     </div>
                   </div>
                 );
@@ -3453,10 +3419,10 @@ export function Workout() {
               {/* Divider */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-white/10" />
+                  <span className="w-full border-t border-border" />
                 </div>
-                <div className="relative flex justify-center text-xs text-white/30 uppercase tracking-widest">
-                  <span className="bg-transparent px-3">{t("common.or")}</span>
+                <div className="relative flex justify-center text-xs text-muted-foreground uppercase tracking-widest">
+                  <span className="bg-white px-3">{t("common.or")}</span>
                 </div>
               </div>
 
@@ -3464,7 +3430,7 @@ export function Workout() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300 hover:border-amber-400/50 transition-all rounded-xl"
+                className="w-full border border-primary/30 text-primary hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-all rounded-xl"
                 onClick={() => { setIsManualLog(true); setManualReps(10); setManualRpe(null); }}
                 disabled={!selectedExerciseId}
               >
