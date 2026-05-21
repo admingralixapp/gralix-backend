@@ -89,15 +89,15 @@ const GAP      = 150;    // pixels between each level
 const SIDE     = 165;    // side-branch offset (perpendicular)
 const HUB_X    = 1500;
 const HUB_Y    = 1500;
-const GOLD     = "#eab308";
-const MUTED    = "#6b7280";
+const GOLD     = "#177548";
+const MUTED    = "#9ca3af";
 const HIT_R    = NODE_R + 20;  // 48px+ touch/mouse target
 
 const BRANCH_COLOR: Record<SkillBranch, string> = {
-  PUSH: "#f97316",
-  PULL: "#3b82f6",
-  CORE: "#a855f7",
-  LEGS: "#10b981",
+  PUSH: "#1a1a1a",
+  PULL: "#1a1a1a",
+  CORE: "#1a1a1a",
+  LEGS: "#1a1a1a",
 };
 
 function nodeColor(id: string): string {
@@ -533,14 +533,14 @@ function DiamondNode({
 
       {/* Main diamond */}
       <polygon points={pts}
-        fill={isMastered ? GOLD : isLocked ? "#080f1a" : "rgba(15,23,42,0.92)"}
-        stroke={isMastered ? "#f59e0b" : isLocked ? "#1e293b" : color}
+        fill={isMastered ? GOLD : isLocked ? "#f1f5f9" : "#ffffff"}
+        stroke={isMastered ? GOLD : isLocked ? "#9ca3af" : color}
         strokeWidth={
           isMastered ? (isHovered ? 3 : 2)
           : isLocked  ? 1.5
           : (isHovered ? 3.5 : 2.5)
         }
-        opacity={isLocked ? 0.5 : 1}
+        opacity={isLocked ? 0.6 : 1}
       />
 
       {/* Shimmer on top facet */}
@@ -573,7 +573,7 @@ function DiamondNode({
       {showLabel && (
         <text x={x} y={y + R + 13} textAnchor="middle"
           fontSize={8}
-          fill={isLocked ? "#374151" : isHovered ? (isMastered ? GOLD : color) : "#9ca3af"}
+          fill={isLocked ? "#9ca3af" : isHovered ? (isMastered ? GOLD : "#1a1a1a") : "#374151"}
           fontWeight={isUnlocked || isHovered ? "600" : "400"}
           fontFamily="ui-sans-serif, system-ui, sans-serif">
           {shortTitle}
@@ -661,10 +661,10 @@ function ConnectorPath({
 
   return (
     <path d={d} fill="none"
-      stroke={lit ? color : "#1e293b"}
+      stroke={lit ? color : "#cbd5e1"}
       strokeWidth={lit ? 2 : 1.5}
       strokeDasharray="8 5"
-      opacity={lit ? 0.55 : 0.9}
+      opacity={lit ? 0.7 : 0.9}
       strokeLinecap="round"
       style={{ transition: "stroke 0.15s, opacity 0.15s" }}
     />
@@ -713,29 +713,29 @@ function HubNode() {
     <g>
       {/* Animated pulse rings */}
       <circle cx={HUB_X} cy={HUB_Y} r={HUB_R + 22} fill="none"
-        stroke="white" strokeWidth={1} opacity={0.04} />
+        stroke="#177548" strokeWidth={1} opacity={0.15} />
       <circle cx={HUB_X} cy={HUB_Y} r={HUB_R + 12} fill="none"
-        stroke="white" strokeWidth={1.5} opacity={0.08} />
+        stroke="#177548" strokeWidth={1.5} opacity={0.25} />
       {/* Main circle */}
       <circle cx={HUB_X} cy={HUB_Y} r={HUB_R}
-        fill="rgba(15,23,42,0.96)"
-        stroke="white"
+        fill="#177548"
+        stroke="#177548"
         strokeWidth={2}
-        opacity={0.9}
+        opacity={1}
       />
       {/* Shimmer */}
       <ellipse cx={HUB_X} cy={HUB_Y - HUB_R * 0.32}
         rx={HUB_R * 0.4} ry={HUB_R * 0.18}
-        fill="white" opacity={0.1} />
+        fill="white" opacity={0.15} />
       {/* Label */}
       <text x={HUB_X} y={HUB_Y - 3} textAnchor="middle"
-        fontSize={7.5} fontWeight="800" fill="white" opacity={0.85}
+        fontSize={7.5} fontWeight="800" fill="white" opacity={0.95}
         fontFamily="ui-sans-serif, system-ui, sans-serif"
         letterSpacing="0.06em">
         CORE
       </text>
       <text x={HUB_X} y={HUB_Y + 8} textAnchor="middle"
-        fontSize={7.5} fontWeight="800" fill="white" opacity={0.85}
+        fontSize={7.5} fontWeight="800" fill="white" opacity={0.95}
         fontFamily="ui-sans-serif, system-ui, sans-serif"
         letterSpacing="0.06em">
         STRENGTH
@@ -764,7 +764,7 @@ function LockShape({ cx, cy }: { cx: number; cy: number }) {
         fill="none" stroke={MUTED} strokeWidth={3} strokeLinecap="round"
       />
       <rect x={cx - 9} y={cy - 1} width={18} height={13} rx={3} fill={MUTED} opacity={0.7} />
-      <circle cx={cx} cy={cy + 5} r={2.5} fill="#1e293b" />
+      <circle cx={cx} cy={cy + 5} r={2.5} fill="#f1f5f9" />
     </>
   );
 }
@@ -869,14 +869,14 @@ function GlassNode({
 
       {/* Main glass circle */}
       <circle cx={x} cy={y} r={NODE_R}
-        fill={isMastered ? GOLD : isLocked ? "#080f1a" : "rgba(15,23,42,0.92)"}
-        stroke={isMastered ? "#f59e0b" : isLocked ? "#1e293b" : color}
+        fill={isMastered ? GOLD : isLocked ? "#f1f5f9" : "#ffffff"}
+        stroke={isMastered ? GOLD : isLocked ? "#9ca3af" : color}
         strokeWidth={
           isMastered ? (isHovered ? 3 : 2)
           : isLocked  ? 1.5
           : (isHovered ? 3.5 : 2.5)
         }
-        opacity={isLocked ? 0.5 : 1}
+        opacity={isLocked ? 0.6 : 1}
       />
 
       {/* Highlight shimmer */}
@@ -911,7 +911,7 @@ function GlassNode({
       {showLabel && (
         <text x={x} y={y + NODE_R + 13} textAnchor="middle"
           fontSize={8}
-          fill={isLocked ? "#374151" : isHovered ? (isMastered ? GOLD : color) : "#9ca3af"}
+          fill={isLocked ? "#9ca3af" : isHovered ? (isMastered ? GOLD : "#1a1a1a") : "#374151"}
           fontWeight={isUnlocked || isHovered ? "600" : "400"}
           fontFamily="ui-sans-serif, system-ui, sans-serif">
           {shortTitle}
@@ -974,11 +974,9 @@ function SkillOverlay({
         left, top,
         width:     OVERLAY_W,
         zIndex:    60,
-        boxShadow: isLocked
-          ? "0 0 32px rgba(0,0,0,0.85), 0 4px 24px rgba(0,0,0,0.6)"
-          : `0 0 32px ${color}30, 0 0 10px ${color}14, 0 6px 28px rgba(0,0,0,0.8)`,
+        boxShadow: "0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08)",
       }}
-      className="bg-zinc-900/97 border border-zinc-700/60 rounded-2xl p-4 backdrop-blur-md"
+      className="bg-white border border-black/10 rounded-2xl p-4"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Header row */}
@@ -987,12 +985,12 @@ function SkillOverlay({
           <span className="w-2 h-2 rounded-full shrink-0"
             style={{ backgroundColor: isLocked ? "#4b5563" : color }} />
           <span className="text-[11px] font-bold uppercase tracking-wider truncate"
-            style={{ color: isLocked ? "#6b7280" : color }}>
+            style={{ color: isLocked ? "#9ca3af" : color }}>
             {t("skillTree.level")} {skill.level} · {t(`skillTree.levelName.${skill.levelName.toLowerCase()}`)}
           </span>
         </div>
         <button onClick={onClose}
-          className="text-zinc-500 hover:text-zinc-300 transition-colors text-lg leading-none shrink-0 w-6 h-6 flex items-center justify-center">
+          className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none shrink-0 w-6 h-6 flex items-center justify-center">
           ×
         </button>
       </div>
@@ -1000,31 +998,32 @@ function SkillOverlay({
       {/* Badges */}
       <div className="flex flex-wrap items-center gap-1 mb-2">
         {(skill.type as SkillType) === "static" && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-900/50 text-cyan-300 border border-cyan-700/40">
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200">
             🧲 {t("skillTree.staticHold")}
           </span>
         )}
         {(skill.type as SkillType) === "explosive" && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-orange-900/50 text-orange-300 border border-orange-700/40">
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
             ⚡ {t("skillTree.explosive")}
           </span>
         )}
         {isLocked && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-500 border border-zinc-700/50">
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
             {t("skillTree.lockedNode")}
           </span>
         )}
         {isMastered && (
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-900/40 text-amber-300 border border-amber-700/40">
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full border"
+            style={{ backgroundColor: "rgba(23,117,72,0.08)", color: "#177548", borderColor: "rgba(23,117,72,0.25)" }}>
             ★ {t("skillTree.mastered")}
           </span>
         )}
       </div>
 
       {/* Title */}
-      <p className="font-bold text-sm text-white mb-0.5 leading-tight">{t(`skillTree.nodeTitle.${skill.id}`)}</p>
+      <p className="font-bold text-sm text-foreground mb-0.5 leading-tight">{t(`skillTree.nodeTitle.${skill.id}`)}</p>
       {skill.pathLabel && (
-        <p className="text-[10px] text-zinc-500 mb-2">
+        <p className="text-[10px] text-muted-foreground mb-2">
           {t(PATH_LABEL_I18N[skill.pathLabel] ?? "skillTree.pathLabel.overhead", { defaultValue: skill.pathLabel })}
         </p>
       )}
@@ -1032,14 +1031,14 @@ function SkillOverlay({
       {/* "Why train this?" */}
       <div className="rounded-lg px-2.5 py-2 mb-3 border"
         style={{
-          borderColor: isLocked ? "#27272a" : `${color}30`,
-          backgroundColor: isLocked ? "rgba(39,39,42,0.4)" : `${color}0d`,
+          borderColor: isLocked ? "rgba(0,0,0,0.07)" : `${color}25`,
+          backgroundColor: isLocked ? "rgba(0,0,0,0.03)" : `${color}08`,
         }}>
         <p className="text-[9px] font-bold uppercase tracking-widest mb-1"
-          style={{ color: isLocked ? "#6b7280" : color }}>
+          style={{ color: isLocked ? "#9ca3af" : color }}>
           {isLocked ? t("skillTree.lockedNode") : t("skillTree.whyTrain")}
         </p>
-        <p className="text-[11px] text-zinc-300 leading-relaxed">
+        <p className="text-[11px] text-foreground/80 leading-relaxed">
           {isLocked
             ? t("skillTree.masterPrereq")
             : t(`skillTree.nodeDesc.${skill.id}`, { defaultValue: skill.description })}
@@ -1049,7 +1048,7 @@ function SkillOverlay({
       {/* Cross-branch requirements */}
       {skill.secondaryPrerequisiteIds && skill.secondaryPrerequisiteIds.length > 0 && (
         <div className="mb-3">
-          <p className="text-[9px] font-bold uppercase tracking-widest mb-1.5 text-zinc-500">
+          <p className="text-[9px] font-bold uppercase tracking-widest mb-1.5 text-muted-foreground">
             {t("skillTree.alsoRequires")}
           </p>
           <div className="space-y-1">
@@ -1064,7 +1063,7 @@ function SkillOverlay({
                   style={{ backgroundColor: isMet ? `${reqColor}14` : "rgba(239,68,68,0.09)" }}>
                   <span className="w-1.5 h-1.5 rounded-full shrink-0"
                     style={{ backgroundColor: isMet ? reqColor : "#ef4444" }} />
-                  <span className="text-[10px] text-zinc-300 flex-1 truncate">
+                  <span className="text-[10px] text-foreground/80 flex-1 truncate">
                     {t(`skillTree.nodeTitle.${reqNode.id}`, { defaultValue: reqNode.title })}
                   </span>
                   <span className={cn(
@@ -1084,18 +1083,18 @@ function SkillOverlay({
       {!isLocked && (
         <div className="mb-3">
           <div className="flex justify-between items-center mb-1.5">
-            <span className="text-[9px] text-zinc-500 uppercase tracking-wide">{t("skillTree.masteryLabel")}</span>
+            <span className="text-[9px] text-muted-foreground uppercase tracking-wide">{t("skillTree.masteryLabel")}</span>
             <span className="text-[11px] font-bold tabular-nums"
               style={{ color: isMastered ? GOLD : color }}>
               {isMastered ? t("skillTree.masteryComplete") : `${masteryPct}%`}
             </span>
           </div>
-          <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
             <div className="h-full rounded-full transition-all duration-300"
               style={{ width: `${masteryPct}%`, backgroundColor: isMastered ? GOLD : color }} />
           </div>
-          <p className="text-[9px] text-zinc-600 mt-1">{translateReq(req, t)}</p>
-          <p className="text-[9px] text-zinc-600 mt-0.5">
+          <p className="text-[9px] text-muted-foreground mt-1">{translateReq(req, t)}</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5">
             {t("skillTree.qualifyingSessions", { done: Math.min(prog.qualifyingSessions, req.minQualifyingSessions), total: req.minQualifyingSessions })}
           </p>
         </div>
@@ -1103,23 +1102,23 @@ function SkillOverlay({
 
       {/* Stats */}
       {!isLocked && (prog.bestReps > 0 || prog.bestFormScore > 0) && (
-        <div className="rounded-xl bg-zinc-800/60 border border-zinc-700/40 px-3 py-2 mb-3 space-y-1">
+        <div className="rounded-xl bg-muted/50 border border-border px-3 py-2 mb-3 space-y-1">
           {isStatic && prog.bestReps > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-[9px] text-cyan-400/80 font-medium">⏱ {t("skillTree.bestHold")}</span>
-              <span className="text-[10px] font-bold text-cyan-300 tabular-nums">{prog.bestReps}s</span>
+              <span className="text-[9px] text-cyan-600/80 font-medium">⏱ {t("skillTree.bestHold")}</span>
+              <span className="text-[10px] font-bold text-cyan-700 tabular-nums">{prog.bestReps}s</span>
             </div>
           )}
           {!isStatic && prog.bestReps > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-[9px] text-zinc-400">🏆 {t("skillTree.bestReps")}</span>
-              <span className="text-[10px] font-bold text-zinc-200 tabular-nums">{prog.bestReps}</span>
+              <span className="text-[9px] text-muted-foreground">🏆 {t("skillTree.bestReps")}</span>
+              <span className="text-[10px] font-bold text-foreground tabular-nums">{prog.bestReps}</span>
             </div>
           )}
           {prog.bestFormScore > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-[9px] text-zinc-400">🎯 {t("skillTree.formScoreLabel")}</span>
-              <span className="text-[10px] font-bold text-zinc-200 tabular-nums">
+              <span className="text-[9px] text-muted-foreground">🎯 {t("skillTree.formScoreLabel")}</span>
+              <span className="text-[10px] font-bold text-foreground tabular-nums">
                 {Math.round(prog.bestFormScore)}%
               </span>
             </div>
@@ -1129,10 +1128,10 @@ function SkillOverlay({
 
       {/* Locked prerequisite */}
       {isLocked && prereqNode && (
-        <div className="rounded-xl bg-zinc-800/50 border border-zinc-700/40 px-3 py-2 mb-3">
-          <p className="text-[9px] text-zinc-500 uppercase tracking-wide mb-0.5">{t("skillTree.requiresLabel")}</p>
-          <p className="text-[11px] font-semibold text-zinc-300">{t(`skillTree.nodeTitle.${prereqNode.id}`, { defaultValue: prereqNode.title })}</p>
-          <p className="text-[9px] text-zinc-500 mt-0.5">{translateReq(prereqNode.masteryRequirement, t)}</p>
+        <div className="rounded-xl bg-muted/50 border border-border px-3 py-2 mb-3">
+          <p className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">{t("skillTree.requiresLabel")}</p>
+          <p className="text-[11px] font-semibold text-foreground/80">{t(`skillTree.nodeTitle.${prereqNode.id}`, { defaultValue: prereqNode.title })}</p>
+          <p className="text-[9px] text-muted-foreground mt-0.5">{translateReq(prereqNode.masteryRequirement, t)}</p>
         </div>
       )}
 
@@ -1142,7 +1141,7 @@ function SkillOverlay({
           <button
             onClick={onClose}
             className="w-full py-2.5 rounded-xl text-xs font-bold text-white transition-opacity hover:opacity-90 active:opacity-75"
-            style={{ backgroundColor: isMastered ? "#d97706" : color }}
+            style={{ backgroundColor: "#177548" }}
           >
             {isMastered ? t("skillTree.practiceAgain") : t("skillTree.trainNowArrow")}
           </button>
@@ -1371,28 +1370,28 @@ function TreeCanvas({ evaluated, lensOn, filterTag }: { evaluated: EvaluatedSkil
       <div className="absolute top-3 right-3 z-20 flex gap-1.5">
         <button
           onClick={autoCenter}
-          className="w-8 h-8 rounded-lg bg-zinc-800/90 border border-zinc-700/60 flex items-center justify-center text-zinc-300 hover:bg-zinc-700 transition-colors"
+          className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center text-foreground hover:bg-muted transition-colors"
           title="Auto-center on in-progress skill"
         >
           <Crosshair className="w-4 h-4" />
         </button>
         <button
           onClick={() => setZoom((z) => Math.min(4, z * 1.25))}
-          className="w-8 h-8 rounded-lg bg-zinc-800/90 border border-zinc-700/60 flex items-center justify-center text-zinc-300 hover:bg-zinc-700 transition-colors"
+          className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center text-foreground hover:bg-muted transition-colors"
           title="Zoom in"
         >
           <ZoomIn className="w-4 h-4" />
         </button>
         <button
           onClick={() => setZoom((z) => Math.max(0.22, z * 0.8))}
-          className="w-8 h-8 rounded-lg bg-zinc-800/90 border border-zinc-700/60 flex items-center justify-center text-zinc-300 hover:bg-zinc-700 transition-colors"
+          className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center text-foreground hover:bg-muted transition-colors"
           title="Zoom out"
         >
           <ZoomOut className="w-4 h-4" />
         </button>
         <button
           onClick={resetView}
-          className="w-8 h-8 rounded-lg bg-zinc-800/90 border border-zinc-700/60 flex items-center justify-center text-zinc-300 hover:bg-zinc-700 transition-colors"
+          className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center text-foreground hover:bg-muted transition-colors"
           title="Reset view"
         >
           <Maximize2 className="w-3.5 h-3.5" />
@@ -1402,7 +1401,7 @@ function TreeCanvas({ evaluated, lensOn, filterTag }: { evaluated: EvaluatedSkil
       {/* SVG canvas */}
       <div
         ref={containerRef}
-        className="w-full h-full overflow-hidden rounded-2xl border border-border/30 bg-zinc-950/80"
+        className="w-full h-full overflow-hidden rounded-2xl border border-border bg-white"
         style={{ cursor: isPanning.current ? "grabbing" : "grab", touchAction: "none" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -1602,7 +1601,7 @@ function TreeCanvas({ evaluated, lensOn, filterTag }: { evaluated: EvaluatedSkil
         </AnimatePresence>
 
         {/* Hint */}
-        <p className="absolute bottom-3 left-3 text-[10px] text-zinc-600 pointer-events-none select-none">
+        <p className="absolute bottom-3 left-3 text-[10px] text-muted-foreground pointer-events-none select-none">
           {t("skillTree.dragToPan")} · {t("skillTree.scrollOrPinchToZoom")} · {t("skillTree.tapNodeForDetails")} · {
             zoom < 0.48 ? t("skillTree.zoomInToSeeLabels") : t("skillTree.tapToSnapToActive")
           }
@@ -1665,12 +1664,12 @@ export function SkillTreePage() {
             onClick={toggleLens}
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl border transition-all select-none"
             style={lensOn ? {
-              borderColor: "#f59e0b60",
-              background: "rgba(245,158,11,0.08)",
-              boxShadow: "0 0 12px rgba(245,158,11,0.18)",
+              borderColor: "rgba(23,117,72,0.4)",
+              background: "rgba(23,117,72,0.07)",
+              boxShadow: "0 0 12px rgba(23,117,72,0.15)",
             } : {
-              borderColor: "rgba(255,255,255,0.08)",
-              background: "rgba(255,255,255,0.03)",
+              borderColor: "rgba(0,0,0,0.12)",
+              background: "rgba(0,0,0,0.02)",
             }}
             title={lensOn ? t("skillTree.hideEquipmentPaths") : t("skillTree.showEquipmentPaths")}
           >
@@ -1678,25 +1677,25 @@ export function SkillTreePage() {
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <polygon
                 points="7,0 14,7 7,14 0,7"
-                fill={lensOn ? "#f59e0b" : "transparent"}
-                stroke={lensOn ? "#f59e0b" : "#6b7280"}
+                fill={lensOn ? "#177548" : "transparent"}
+                stroke={lensOn ? "#177548" : "#9ca3af"}
                 strokeWidth="1.5"
               />
             </svg>
             <span className="text-xs font-bold tracking-wide"
-              style={{ color: lensOn ? "#f59e0b" : "#6b7280" }}>
+              style={{ color: lensOn ? "#177548" : "#6b7280" }}>
               {t("skillTree.equipmentOverlay")}
             </span>
             {/* Toggle pill */}
             <span className="relative inline-flex w-9 h-5 rounded-full border transition-colors shrink-0"
               style={{
-                backgroundColor: lensOn ? "rgba(245,158,11,0.3)" : "rgba(255,255,255,0.05)",
-                borderColor: lensOn ? "#f59e0b60" : "rgba(255,255,255,0.10)",
+                backgroundColor: lensOn ? "rgba(23,117,72,0.2)" : "rgba(0,0,0,0.04)",
+                borderColor: lensOn ? "rgba(23,117,72,0.4)" : "rgba(0,0,0,0.12)",
               }}>
               <span className="absolute top-0.5 transition-all duration-200 w-4 h-4 rounded-full shadow"
                 style={{
                   left: lensOn ? "calc(100% - 18px)" : "2px",
-                  backgroundColor: lensOn ? "#f59e0b" : "#374151",
+                  backgroundColor: lensOn ? "#177548" : "#9ca3af",
                 }} />
             </span>
           </button>
@@ -1728,7 +1727,7 @@ export function SkillTreePage() {
           </span>
         ))}
         <span className="flex items-center gap-1.5">
-          <span className="w-4 h-4 rounded-full bg-amber-400 flex items-center justify-center">
+          <span className="w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: "#177548" }}>
             <Star className="w-2.5 h-2.5 fill-white text-white" />
           </span>
           {t("skillTree.mastered")}
@@ -1738,7 +1737,7 @@ export function SkillTreePage() {
           {t("skillTree.inProgress")}
         </span>
         <span className="flex items-center gap-1.5">
-          <Lock className="w-3 h-3 text-zinc-600" />
+          <Lock className="w-3 h-3 text-muted-foreground" />
           {t("skillTree.locked")}
         </span>
       </div>

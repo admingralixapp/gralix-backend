@@ -40,8 +40,7 @@ export function MasteryHub() {
   return (
     <div className="flex flex-col min-h-full">
       <div
-        className="sticky top-0 z-20 flex border-b border-white/[0.06]"
-        style={{ background: "rgba(10,15,26,0.92)", backdropFilter: "blur(16px)" }}
+        className="sticky top-0 z-20 flex border-b border-border bg-background"
       >
         <button
           onClick={() => switchTab("skill-tree")}
@@ -61,7 +60,7 @@ export function MasteryHub() {
           className={cn(
             "flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-all border-b-2",
             tab === "history"
-              ? "border-amber-400 text-amber-400"
+              ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground",
           )}
         >

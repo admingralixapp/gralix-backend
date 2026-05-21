@@ -28,10 +28,10 @@ import { cn } from "@/lib/utils";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const BRANCH_META: Record<SkillBranch, { emoji: string; color: string }> = {
-  PUSH: { emoji: "💪", color: "#f97316" },
-  PULL: { emoji: "⬆",  color: "#3b82f6" },
-  CORE: { emoji: "⚡", color: "#a855f7" },
-  LEGS: { emoji: "🟢", color: "#10b981" },
+  PUSH: { emoji: "💪", color: "#177548" },
+  PULL: { emoji: "⬆",  color: "#177548" },
+  CORE: { emoji: "⚡", color: "#177548" },
+  LEGS: { emoji: "🟢", color: "#177548" },
 };
 
 const BRANCHES: SkillBranch[] = ["PUSH", "PULL", "CORE", "LEGS"];
@@ -107,13 +107,13 @@ function WindowNode({
     <div
       className={cn(
         "rounded-xl border px-3 py-2.5 transition-all",
-        isMastered && "border-amber-500/40 bg-amber-950/20",
+        isMastered && "border-primary/30 bg-primary/5",
         isUnlocked && "border-border bg-card hover:bg-card/80",
         isLocked   && "border-border/30 bg-card/20 opacity-55",
       )}
     >
       <div className="flex items-center gap-2 mb-0.5">
-        {isMastered && <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />}
+        {isMastered && <Star className="w-3.5 h-3.5 text-primary fill-primary shrink-0" />}
         {isUnlocked  && (
           <div
             className="w-3 h-3 rounded-full border-2 shrink-0"
@@ -124,7 +124,7 @@ function WindowNode({
         <span
           className={cn(
             "text-[11px] font-semibold leading-tight truncate",
-            isMastered && "text-amber-200",
+            isMastered && "text-primary",
             isUnlocked && "text-foreground",
             isLocked   && "text-muted-foreground/50",
           )}
@@ -158,7 +158,7 @@ function WindowNode({
       )}
 
       {isMastered && (
-        <p className="text-[9px] text-amber-400/70 mt-0.5">✓ {t("skillTree.mastered")}</p>
+        <p className="text-[9px] text-primary/70 mt-0.5">✓ {t("skillTree.mastered")}</p>
       )}
       {isLocked && (
         <p className="text-[9px] text-muted-foreground/40 mt-0.5">{t("skillTree.locked")}</p>
@@ -324,7 +324,7 @@ export function SkillMap() {
       {/* Footer */}
       <div className="flex justify-end pt-1">
         <button
-          className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 transition-colors"
+          className="flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 transition-colors"
           onClick={() => navigate("/skill-tree")}
         >
           {t("skillTree.viewFullTree")}
