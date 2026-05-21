@@ -171,6 +171,172 @@ function lerpPoseData(a: PoseData, b: PoseData, rawT: number): PoseData {
   };
 }
 
+// ─── Focus zoom + directional force-overlay system ───────────────────────────
+//
+// For exercises targeting a small joint (wrists, ankles, fingers) the SVG
+// viewBox is smoothly lerped from the default [0 0 100 100] to a cropped
+// region so the relevant body part fills the canvas.  A pulsing neon indicator
+// is drawn at the live joint position to reinforce the movement direction.
+
+type OverlayType =
+  | "press-down"    // downward weight arrow  — wrist extension / knuckle raises
+  | "flex-up"       // upward arc arrows      — wrist flexion / finger pulses
+  | "circle-cw"     // clockwise arc + tick   — ankle / wrist circles
+  | "heel-press"    // heel-flat indicator    — calf stretch
+  | "forward-drive"; // horizontal knee arrow — ankle dorsiflexion
+
+interface FocusConfig {
+  /** Target viewBox [x, y, w, h] to crop into the region of interest. */
+  viewBox: [number, number, number, number];
+  /** Force-indicator style to draw at the anchor joint. */
+  overlay: OverlayType | null;
+  /** Index into PoseData.lines; its *last* point is the overlay anchor. */
+  overlayLineIdx: number;
+}
+
+/** Default full-body viewBox — used when no focus config is defined. */
+const FULL_VB: [number, number, number, number] = [0, 0, 100, 100];
+
+/**
+ * Maps exercise name → focus + overlay config.
+ * ViewBox values were derived from the actual pose coordinate ranges so the
+ * region of interest fills approximately 60–80 % of the cropped canvas.
+ */
+const FOCUS_CONFIG: Record<string, FocusConfig> = {
+  // ── Wrist / hand exercises ──────────────────────────────────────────────────
+  "Wrist Extension Stretch":    { viewBox: [15, 36, 70, 56], overlay: "press-down",    overlayLineIdx: 1 },
+  "Wrist Flexion Stretch":      { viewBox: [36, -2, 60, 52], overlay: "flex-up",       overlayLineIdx: 2 },
+  "Finger Tendon Pulses":       { viewBox: [36, -2, 60, 52], overlay: "flex-up",       overlayLineIdx: 2 },
+  "First Knuckle Raises":       { viewBox: [8,  26, 66, 44], overlay: "press-down",    overlayLineIdx: 1 },
+  "Back-of-Hand Rocks":         { viewBox: [15, 36, 70, 56], overlay: "press-down",    overlayLineIdx: 1 },
+  "Wrist Palm Peels":           { viewBox: [15, 36, 70, 56], overlay: "flex-up",       overlayLineIdx: 1 },
+  "Wrist Rock Flow":            { viewBox: [8,  28, 70, 54], overlay: "circle-cw",     overlayLineIdx: 1 },
+  "Wrist Circles (Closed Fist)":{ viewBox: [15, 36, 70, 56], overlay: "circle-cw",     overlayLineIdx: 1 },
+  // ── Ankle / foot exercises ──────────────────────────────────────────────────
+  "Ankle Mobility Circles":     { viewBox: [8,  48, 84, 50], overlay: "circle-cw",     overlayLineIdx: 4 },
+  "Wall Calf Stretch":          { viewBox: [5,  46, 90, 52], overlay: "heel-press",    overlayLineIdx: 4 },
+  "Weighted Ankle Dorsiflexion":{ viewBox: [22, 40, 68, 58], overlay: "forward-drive", overlayLineIdx: 3 },
+};
+
+// ── ForceOverlayLayer ─────────────────────────────────────────────────────────
+
+/**
+ * Pulsing neon directional indicator rendered in SVG space at a joint anchor.
+ * `pulse` is a 0→1 sine value driven by the RAF clock.
+ */
+function ForceOverlayLayer({
+  type, ax, ay, pulse,
+}: {
+  type: OverlayType;
+  ax: number;
+  ay: number;
+  pulse: number; // 0–1 sine wave from the RAF clock
+}) {
+  const op  = 0.28 + 0.52 * pulse;
+  const col = `rgba(34,197,94,${op.toFixed(2)})`;
+  const off = pulse * 1.8; // subtle spatial bounce
+
+  if (type === "press-down") {
+    return (
+      <g>
+        {[-5, 0, 5].map(dx => (
+          <g key={dx}>
+            <line
+              x1={ax + dx} y1={ay - 5.5 + off} x2={ax + dx} y2={ay + 1.5 + off}
+              stroke={col} strokeWidth={1.4} strokeLinecap="round"
+            />
+            <polygon
+              points={`${ax + dx},${ay + 4 + off} ${ax + dx - 2},${ay + 1 + off} ${ax + dx + 2},${ay + 1 + off}`}
+              fill={col}
+            />
+          </g>
+        ))}
+      </g>
+    );
+  }
+
+  if (type === "flex-up") {
+    return (
+      <g>
+        {[-5, 5].map(dx => (
+          <g key={dx}>
+            <line
+              x1={ax + dx} y1={ay + 4.5 - off} x2={ax + dx} y2={ay - 2.5 - off}
+              stroke={col} strokeWidth={1.4} strokeLinecap="round"
+            />
+            <polygon
+              points={`${ax + dx},${ay - 5 - off} ${ax + dx - 2},${ay - 2 - off} ${ax + dx + 2},${ay - 2 - off}`}
+              fill={col}
+            />
+          </g>
+        ))}
+      </g>
+    );
+  }
+
+  if (type === "circle-cw") {
+    const r = 5.5 + 1.5 * pulse;
+    return (
+      <g>
+        {/* CW arc — top-right → bottom-right */}
+        <path
+          d={`M ${ax + r},${ay} A ${r},${r} 0 0,1 ${ax},${ay + r}`}
+          fill="none" stroke={col} strokeWidth={1.7} strokeLinecap="round"
+        />
+        {/* CW arc — bottom-right → bottom-left */}
+        <path
+          d={`M ${ax},${ay + r} A ${r},${r} 0 0,1 ${ax - r},${ay}`}
+          fill="none" stroke={col} strokeWidth={1.7} strokeLinecap="round"
+        />
+        {/* Arrowhead at 3 o'clock pointing downward (clockwise direction) */}
+        <polygon
+          points={`${ax + r},${ay + 2.5} ${ax + r - 2},${ay - 0.5} ${ax + r + 2},${ay - 0.5}`}
+          fill={col}
+        />
+      </g>
+    );
+  }
+
+  if (type === "heel-press") {
+    return (
+      <g>
+        <line
+          x1={ax} y1={ay - 6.5 + off} x2={ax} y2={ay + 0.5 + off}
+          stroke={col} strokeWidth={1.6} strokeLinecap="round"
+        />
+        <polygon
+          points={`${ax},${ay + 3.5 + off} ${ax - 2.2},${ay + 0.5 + off} ${ax + 2.2},${ay + 0.5 + off}`}
+          fill={col}
+        />
+        {/* Flat floor indicator line */}
+        <line
+          x1={ax - 6} y1={ay + 4.5 + off * 0.4}
+          x2={ax + 6} y2={ay + 4.5 + off * 0.4}
+          stroke={`rgba(34,197,94,${(op * 0.45).toFixed(2)})`} strokeWidth={1}
+          strokeLinecap="round"
+        />
+      </g>
+    );
+  }
+
+  if (type === "forward-drive") {
+    return (
+      <g>
+        <line
+          x1={ax - 5.5 + off} y1={ay} x2={ax + 2.5 + off} y2={ay}
+          stroke={col} strokeWidth={1.6} strokeLinecap="round"
+        />
+        <polygon
+          points={`${ax + 5.5 + off},${ay} ${ax + 2.5 + off},${ay - 2.2} ${ax + 2.5 + off},${ay + 2.2}`}
+          fill={col}
+        />
+      </g>
+    );
+  }
+
+  return null;
+}
+
 // ─── Environmental Anchor Layer ───────────────────────────────────────────────
 // Renders behind the skeleton. Static (not animated) — the anchor never moves.
 // The "locked joint" illusion comes from identical endpoint coords across frames.
@@ -335,16 +501,23 @@ function EnvLayerThumb({ env }: { env: EnvAnchor }) {
 // calling lerpPoseData() every frame and passing the result as `pose`.
 
 function BioSkeletonSVG({
-  pose, paused, color = "#22c55e", env,
+  pose, paused, color = "#22c55e", env, svgViewBox = "0 0 100 100", overlayProps,
 }: {
-  pose: PoseData; paused: boolean; color?: string; env?: EnvAnchor;
+  pose: PoseData;
+  paused: boolean;
+  color?: string;
+  env?: EnvAnchor;
+  /** Zoomed viewBox string — lerped by HeroSkeleton for smooth auto-zoom. */
+  svgViewBox?: string;
+  /** If set, a force-direction overlay is drawn at the given SVG coordinate. */
+  overlayProps?: { type: OverlayType; ax: number; ay: number; pulse: number };
 }) {
   const segs = extractSegments(pose.lines);
   const pts  = extractAllPoints(pose.lines);
 
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox={svgViewBox}
       width="100%"
       height="100%"
       aria-hidden="true"
@@ -408,6 +581,16 @@ function BioSkeletonSVG({
         fill={color}
         opacity={0.5}
       />
+
+      {/* Force-direction overlay — drawn on top of everything, in SVG space */}
+      {overlayProps && (
+        <ForceOverlayLayer
+          type={overlayProps.type}
+          ax={overlayProps.ax}
+          ay={overlayProps.ay}
+          pulse={overlayProps.pulse}
+        />
+      )}
     </svg>
   );
 }
@@ -459,8 +642,9 @@ function HeroSkeleton({
 }: {
   exerciseName: string; paused: boolean; color?: string;
 }) {
-  const poseSet = getPoseSet(exerciseName);
-  const env     = getWorldObjects(exerciseName)[0];
+  const poseSet    = getPoseSet(exerciseName);
+  const env        = getWorldObjects(exerciseName)[0];
+  const focusConfig = FOCUS_CONFIG[exerciseName] ?? null;
 
   // Live-rendered interpolated pose — starts at keyframe 0.
   const [renderedPose, setRenderedPose] = useState<PoseData>(() => poseSet[0]);
@@ -468,24 +652,34 @@ function HeroSkeleton({
   const [puppetOpacity, setPuppetOpacity] = useState(1);
   // Which reference thumbnail is highlighted (0=Start, 1=Mid, 2=End).
   const [frameIdx, setFrameIdx] = useState<0 | 1 | 2>(0);
+  // Current SVG viewBox string — smoothly lerped toward the focus target.
+  const [svgViewBox, setSvgViewBox] = useState("0 0 100 100");
+  // 0→1 sine pulse for the force overlay animation.
+  const [overlayPulse, setOverlayPulse] = useState(0);
+
+  // Smooth viewBox lerp: ref holds current [x,y,w,h] floats, state holds the
+  // rendered string.  We lerp ~5 % per frame → ~95 % convergence in ~1.2 s.
+  const currentVBRef = useRef<[number, number, number, number]>([0, 0, 100, 100]);
 
   // Use a ref so the RAF callback always reads the latest paused value without
   // being part of the effect's dependency array (avoids restart on every toggle).
   const pausedRef = useRef(paused);
   useEffect(() => { pausedRef.current = paused; }, [paused]);
 
-  const rafRef   = useRef<number>(0);
+  const rafRef = useRef<number>(0);
 
   useEffect(() => {
     const [start, mid, end] = poseSet;
+    const vbTarget = focusConfig?.viewBox ?? FULL_VB;
 
     // Reset state whenever the exercise changes.
     setRenderedPose(start);
     setPuppetOpacity(1);
     setFrameIdx(0);
+    // Snap viewBox to full-body on exercise change; zoom will ease in.
+    currentVBRef.current = [...FULL_VB];
+    setSvgViewBox("0 0 100 100");
 
-    // Elapsed accumulator: only increments while not paused, so pause/resume
-    // is seamless — the animation continues exactly where it left off.
     let elapsed  = 0;
     let lastTime: number | null = null;
 
@@ -494,9 +688,22 @@ function HeroSkeleton({
         if (lastTime !== null) elapsed = (elapsed + (now - lastTime)) % MOB_CYCLE_MS;
         lastTime = now;
       } else {
-        // While paused: keep lastTime null so no time accrues.
         lastTime = null;
       }
+
+      // ── Smooth viewBox zoom ──────────────────────────────────────────────────
+      const cv = currentVBRef.current;
+      const ZOOM_K = 0.05; // ~1.2 s to reach 95 % of target
+      currentVBRef.current = [
+        lerpNum(cv[0], vbTarget[0], ZOOM_K),
+        lerpNum(cv[1], vbTarget[1], ZOOM_K),
+        lerpNum(cv[2], vbTarget[2], ZOOM_K),
+        lerpNum(cv[3], vbTarget[3], ZOOM_K),
+      ];
+      setSvgViewBox(currentVBRef.current.map(v => v.toFixed(2)).join(" "));
+
+      // ── Overlay pulse (1.4 s sine wave, independent of stretch cycle) ───────
+      setOverlayPulse(0.5 + 0.5 * Math.sin((elapsed / 1400) * Math.PI * 2));
 
       const cycleT = elapsed;
 
@@ -536,6 +743,15 @@ function HeroSkeleton({
     return () => cancelAnimationFrame(rafRef.current);
   }, [exerciseName]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Build overlay props: extract last point of the configured line as anchor.
+  const overlayProps = (() => {
+    if (!focusConfig?.overlay) return undefined;
+    const line = renderedPose.lines[focusConfig.overlayLineIdx];
+    if (!line?.length) return undefined;
+    const [ax, ay] = line[line.length - 1]!;
+    return { type: focusConfig.overlay, ax, ay, pulse: overlayPulse };
+  })();
+
   const frameLabel = FRAME_LABELS[frameIdx];
 
   return (
@@ -561,6 +777,8 @@ function HeroSkeleton({
             paused={paused}
             color={color}
             env={env}
+            svgViewBox={svgViewBox}
+            overlayProps={overlayProps}
           />
         </div>
       </div>
