@@ -55,22 +55,18 @@ function ClaimModal({
         initial={{ scale: 0.92, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.92, opacity: 0 }}
-        className="relative z-10 w-full max-w-md rounded-3xl border border-yellow-500/30 overflow-hidden"
-        style={{
-          background: "linear-gradient(135deg, #1a0f00 0%, #0f0a00 100%)",
-          boxShadow: "0 0 80px rgba(234,179,8,0.2)",
-        }}
+        className="relative z-10 w-full max-w-md rounded-3xl border border-black/10 overflow-hidden bg-white"
       >
         {/* Header */}
         <div className="px-6 pt-6 pb-4 flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Gift className="w-5 h-5" style={{ color: "#eab308" }} />
-              <span className="font-black text-lg" style={{ color: "#fef08a" }}>{t("shop.claimVoiceTitle")}</span>
+              <Gift className="w-5 h-5 text-primary" />
+              <span className="font-black text-lg text-foreground">{t("shop.claimVoiceTitle")}</span>
             </div>
-            <p className="text-xs text-white/50">{t("shop.claimVoiceSubtitle")}</p>
+            <p className="text-xs text-muted-foreground">{t("shop.claimVoiceSubtitle")}</p>
           </div>
-          <button onClick={onClose} className="text-white/30 hover:text-white/60 transition-colors ml-3 mt-0.5">
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors ml-3 mt-0.5">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -84,18 +80,18 @@ function ClaimModal({
               className={cn(
                 "flex items-center gap-3 p-3 rounded-xl border text-left transition-all",
                 chosen === voice.id
-                  ? "border-yellow-500/50 bg-yellow-500/10"
-                  : "border-white/10 hover:border-white/20 bg-white/[0.02]",
+                  ? "border-primary/50 bg-primary/8"
+                  : "border-border hover:border-border/60 bg-secondary/30",
               )}
             >
               <span className="text-2xl leading-none shrink-0">{voice.emoji}</span>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-white">{voice.label}</div>
-                <div className="text-[10px] text-white/50 leading-tight">{t(`shop.voiceDesc.${voice.id}`)}</div>
+                <div className="text-sm font-bold text-foreground">{voice.label}</div>
+                <div className="text-[10px] text-muted-foreground leading-tight">{t(`shop.voiceDesc.${voice.id}`)}</div>
               </div>
               {chosen === voice.id && (
-                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-yellow-500">
-                  <Check className="w-3 h-3 text-black" />
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-primary">
+                  <Check className="w-3 h-3 text-white" />
                 </div>
               )}
             </button>
@@ -109,8 +105,8 @@ function ClaimModal({
             disabled={!chosen || isPending}
             className="w-full py-3 rounded-xl text-sm font-black transition-all disabled:opacity-40"
             style={{
-              background: chosen ? "linear-gradient(135deg, #eab308, #ca8a04)" : "rgba(255,255,255,0.06)",
-              color: chosen ? "#000" : "#666",
+              background: chosen ? "#177548" : "rgba(0,0,0,0.06)",
+              color: chosen ? "#fff" : "#9ca3af",
             }}
           >
             {isPending ? t("shop.claiming") : chosenVoice ? t("shop.claimVoice", { name: chosenVoice.label }) : t("shop.selectVoice")}
@@ -239,43 +235,24 @@ export function ShopPage() {
       {/* ── Pro Subscription Card ── */}
       <section>
         <div
-          className="rounded-3xl border p-5 space-y-4 relative overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, rgba(168,85,247,0.14) 0%, rgba(109,40,217,0.07) 50%, rgba(168,85,247,0.04) 100%)",
-            borderColor: "rgba(168,85,247,0.35)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            boxShadow: "0 0 50px rgba(168,85,247,0.18), inset 0 1px 0 rgba(168,85,247,0.2)",
-          }}
+          className="rounded-3xl border border-black/10 p-5 space-y-4 relative overflow-hidden bg-white shadow-sm"
         >
-          {/* Ambient glow orb */}
-          <div
-            className="absolute -top-8 -right-8 w-36 h-36 rounded-full blur-3xl opacity-25 pointer-events-none"
-            style={{ background: "radial-gradient(circle, #a855f7 0%, transparent 70%)" }}
-          />
-
           {/* Header row */}
           <div className="flex items-center justify-between relative">
             <div className="flex items-center gap-3">
-              <div
-                className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: "rgba(168,85,247,0.22)", border: "1px solid rgba(168,85,247,0.45)" }}
-              >
-                <Crown className="w-5 h-5" style={{ color: "#c084fc" }} />
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-primary/10 border border-primary/25">
+                <Crown className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <div className="font-black text-base" style={{ color: "#e9d5ff" }}>
+                <div className="font-black text-base text-foreground">
                   CaliCoach Pro
                 </div>
                 {profile?.isPro ? (
-                  <span
-                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: "rgba(168,85,247,0.22)", color: "#c084fc", border: "1px solid rgba(168,85,247,0.4)" }}
-                  >
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/25">
                     {t("shop.proActive")}
                   </span>
                 ) : (
-                  <div className="text-[11px] text-white/50">{t("shop.proSubtitle")}</div>
+                  <div className="text-[11px] text-muted-foreground">{t("shop.proSubtitle")}</div>
                 )}
               </div>
             </div>
@@ -287,22 +264,19 @@ export function ShopPage() {
               { icon: "🎥", label: t("shop.whyProItem1Label"), description: t("shop.whyProItem1Desc") },
               { icon: "📊", label: t("shop.whyProItem4Label"), description: t("shop.whyProItem4Desc") },
               { icon: "🎁", label: t("shop.whyProItem3Label"), description: t("shop.whyProItem3Desc") },
-              { icon: "💜", label: t("shop.whyProItem2Label"), description: t("shop.whyProItem2Desc") },
+              { icon: "💚", label: t("shop.whyProItem2Label"), description: t("shop.whyProItem2Desc") },
             ].map(({ icon, label, description }) => (
               <div key={label} className="flex items-start gap-3">
-                <div
-                  className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm mt-0.5"
-                  style={{ background: "rgba(168,85,247,0.14)", border: "1px solid rgba(168,85,247,0.25)" }}
-                >
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm mt-0.5 bg-primary/10 border border-primary/20">
                   {icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm text-white/80">{label}</span>
+                  <span className="text-sm text-foreground">{label}</span>
                   {description && (
-                    <p className="text-[10px] text-white/35 mt-0.5 leading-snug">{description}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{description}</p>
                   )}
                 </div>
-                <Check className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "#c084fc" }} />
+                <Check className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
               </div>
             ))}
           </div>
@@ -311,8 +285,7 @@ export function ShopPage() {
             <>
               {/* Billing toggle */}
               <div
-                className="flex rounded-xl overflow-hidden border border-white/10 p-0.5 gap-0.5 relative"
-                style={{ background: "rgba(255,255,255,0.04)" }}
+                className="flex rounded-xl overflow-hidden border border-border p-0.5 gap-0.5 relative bg-secondary"
               >
                 {(["monthly", "yearly"] as const).map((cycle) => (
                   <button
@@ -322,9 +295,9 @@ export function ShopPage() {
                       "flex-1 py-2 rounded-[9px] text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5",
                       billingCycle === cycle
                         ? "text-white shadow-md"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06]",
+                        : "text-muted-foreground hover:text-foreground",
                     ].join(" ")}
-                    style={billingCycle === cycle ? { background: "#7c3aed" } : {}}
+                    style={billingCycle === cycle ? { background: "#177548" } : {}}
                   >
                     {cycle === "monthly" ? t("shop.monthly") : t("shop.yearly")}
                     {cycle === "yearly" && (
@@ -333,7 +306,7 @@ export function ShopPage() {
                           "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
                           billingCycle === "yearly"
                             ? "bg-white/20 text-white"
-                            : "bg-green-500/20 text-green-400",
+                            : "bg-primary/15 text-primary",
                         ].join(" ")}
                       >
                         {t("shop.save20")}
@@ -345,10 +318,10 @@ export function ShopPage() {
 
               {/* Price */}
               <div className="text-center py-1 relative">
-                <span className="text-4xl font-black" style={{ color: "#e9d5ff" }}>
+                <span className="text-4xl font-black text-foreground">
                   {billingCycle === "monthly" ? prices.monthly : prices.yearly}
                 </span>
-                <span className="text-sm text-white/40 ml-1">
+                <span className="text-sm text-muted-foreground ml-1">
                   {billingCycle === "monthly" ? t("shop.perMonthFull") : t("shop.perYearFull")}
                 </span>
               </div>
@@ -358,28 +331,23 @@ export function ShopPage() {
                 onClick={handleActivateTrial}
                 disabled={activatePro.isPending}
                 className="w-full py-3 rounded-xl text-sm font-black tracking-wide transition-all disabled:opacity-60 relative"
-                style={{
-                  background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
-                  color: "#fff",
-                  boxShadow: "0 4px 24px rgba(168,85,247,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
-                }}
+                style={{ background: "#177548", color: "#fff" }}
               >
                 {activatePro.isPending ? t("common.loading") : t("shop.startTrial")}
               </button>
-              <p className="text-[10px] text-white/30 text-center">
+              <p className="text-[10px] text-muted-foreground text-center">
                 {t("shop.trialNote")}
               </p>
             </>
           )}
 
           {profile?.isPro && (
-            <div className="flex items-center justify-center gap-2 py-1.5 text-sm relative" style={{ color: "#c084fc" }}>
+            <div className="flex items-center justify-center gap-2 py-1.5 text-sm relative text-primary">
               <Zap className="w-4 h-4" />
               <span>{t("shop.proActiveManage")}</span>
               <button
                 onClick={() => setLocation("/settings?section=membership")}
-                className="font-bold underline underline-offset-2 hover:opacity-80 transition-opacity"
-                style={{ color: "#c084fc" }}
+                className="font-bold underline underline-offset-2 hover:opacity-80 transition-opacity text-primary"
               >
                 {t("shop.manageSubscription")}
               </button>
@@ -395,32 +363,21 @@ export function ShopPage() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="rounded-2xl border p-4 flex items-center gap-4 cursor-pointer"
-            style={{
-              background: "linear-gradient(135deg, rgba(234,179,8,0.12) 0%, rgba(234,179,8,0.04) 100%)",
-              borderColor: "rgba(234,179,8,0.4)",
-              boxShadow: "0 0 30px rgba(234,179,8,0.12)",
-            }}
+            className="rounded-2xl border border-primary/30 bg-primary/5 p-4 flex items-center gap-4 cursor-pointer"
             onClick={() => setShowClaimModal(true)}
           >
-            <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-xl"
-              style={{ background: "rgba(234,179,8,0.2)", border: "1px solid rgba(234,179,8,0.4)" }}
-            >
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-xl bg-primary/10 border border-primary/25">
               🎁
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-black text-sm" style={{ color: "#fef08a" }}>
+              <div className="font-black text-sm text-foreground">
                 {t("shop.claimBonusTitle")}
               </div>
-              <div className="text-[11px] text-white/50 mt-0.5">
+              <div className="text-[11px] text-muted-foreground mt-0.5">
                 {t("shop.claimBonusDesc")}
               </div>
             </div>
-            <div
-              className="px-3 py-1.5 rounded-lg text-xs font-black shrink-0"
-              style={{ background: "#eab308", color: "#000" }}
-            >
+            <div className="px-3 py-1.5 rounded-lg text-xs font-black shrink-0 bg-primary text-white">
               {t("shop.claim")}
             </div>
           </motion.div>
@@ -450,13 +407,8 @@ export function ShopPage() {
                   key={p.id}
                   className={[
                     "rounded-2xl border p-3.5 flex flex-col gap-2.5 transition-all",
-                    active ? "border-primary/50 ring-1 ring-primary/20" : "border-white/10",
+                    active ? "border-primary/50 bg-primary/5" : "border-border bg-card",
                   ].join(" ")}
-                  style={{
-                    background: active
-                      ? "linear-gradient(135deg, rgba(132,204,22,0.10) 0%, rgba(132,204,22,0.04) 100%)"
-                      : "rgba(255,255,255,0.03)",
-                  }}
                 >
                   <div className="flex items-center gap-2.5">
                     <span className="text-2xl leading-none">{p.emoji}</span>
@@ -478,7 +430,7 @@ export function ShopPage() {
                           setTestingVoiceId(null);
                         }
                       }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-all disabled:opacity-60"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-border text-muted-foreground hover:text-foreground hover:border-black/20 transition-all disabled:opacity-60"
                     >
                       {testingVoiceId === p.id
                         ? <Loader2 className="w-3 h-3 animate-spin" />
@@ -495,7 +447,7 @@ export function ShopPage() {
                         "flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all disabled:opacity-40",
                         active
                           ? "bg-primary/15 text-primary border border-primary/30"
-                          : "bg-white/[0.06] text-foreground hover:bg-white/10 border border-white/10",
+                          : "bg-secondary text-foreground hover:bg-secondary/80 border border-border",
                       ].join(" ")}
                     >
                       {active ? t("shop.activeLabel") : t("shop.select")}
@@ -509,9 +461,9 @@ export function ShopPage() {
 
         {/* Divider between free and pro */}
         <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-white/[0.08]" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-white/20">{t("shop.customAuras")}</span>
-          <div className="flex-1 h-px bg-white/[0.08]" />
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t("shop.customAuras")}</span>
+          <div className="flex-1 h-px bg-border" />
         </div>
 
         {/* Paid tier — à la carte */}
@@ -529,26 +481,18 @@ export function ShopPage() {
                   className={[
                     "rounded-2xl border p-3.5 flex items-center gap-3 transition-all",
                     active
-                      ? "border-violet-500/50 ring-1 ring-violet-500/20"
+                      ? "border-primary/50 bg-primary/5"
                       : owned
-                      ? "border-white/15"
-                      : "border-white/[0.08]",
+                      ? "border-border bg-card"
+                      : "border-border bg-card",
                   ].join(" ")}
-                  style={{
-                    background: active
-                      ? "linear-gradient(135deg, rgba(139,92,246,0.10) 0%, rgba(139,92,246,0.04) 100%)"
-                      : "rgba(255,255,255,0.02)",
-                  }}
                 >
                   <span className="text-2xl leading-none shrink-0">{p.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
                       <span className="text-sm font-bold text-foreground">{p.label}</span>
                       {owned && (
-                        <span
-                          className="text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide"
-                          style={{ background: "rgba(132,204,22,0.15)", color: "#84cc16" }}
-                        >
+                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide bg-primary/10 text-primary border border-primary/20">
                           {t("shop.owned")}
                         </span>
                       )}
@@ -570,7 +514,7 @@ export function ShopPage() {
                         }
                       }}
                       title="Preview this voice"
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-all disabled:opacity-60"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-border text-muted-foreground hover:text-foreground hover:border-black/20 transition-all disabled:opacity-60"
                     >
                       {testingVoiceId === p.id
                         ? <Loader2 className="w-3 h-3 animate-spin" />
@@ -587,8 +531,8 @@ export function ShopPage() {
                         className={[
                           "px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all disabled:opacity-40",
                           active
-                            ? "bg-violet-500/15 text-violet-400 border border-violet-500/30"
-                            : "bg-white/[0.06] text-foreground hover:bg-white/10 border border-white/10",
+                            ? "bg-primary/15 text-primary border border-primary/30"
+                            : "bg-secondary text-foreground hover:bg-secondary/80 border border-border",
                         ].join(" ")}
                       >
                         {active ? t("shop.activeLabel") : t("shop.equip")}
@@ -598,11 +542,7 @@ export function ShopPage() {
                         onClick={() => handleBuyVoice(p.id, p.label)}
                         disabled={purchase.isPending}
                         className="px-3 py-1.5 rounded-lg text-[11px] font-black transition-all disabled:opacity-50 whitespace-nowrap"
-                        style={{
-                          background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
-                          color: "#fff",
-                          boxShadow: "0 2px 10px rgba(124,58,237,0.35)",
-                        }}
+                        style={{ background: "#177548", color: "#fff" }}
                       >
                         {purchase.isPending ? "…" : t("shop.buyFor", { price: prices.pack })}
                       </button>
@@ -621,10 +561,7 @@ export function ShopPage() {
           <Tag className="w-4 h-4 text-primary" />
           <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("shop.redeemCodeSection")}</span>
         </div>
-        <div
-          className="rounded-2xl border border-white/10 p-4"
-          style={{ background: "rgba(255,255,255,0.03)" }}
-        >
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex gap-2">
             <input
               type="text"
@@ -633,7 +570,7 @@ export function ShopPage() {
               onKeyDown={(e) => e.key === "Enter" && handleRedeem()}
               placeholder={t("shop.promoPlaceholder").toUpperCase()}
               maxLength={24}
-              className="flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-3 py-2.5 text-sm font-mono font-bold text-white placeholder:text-white/20 focus:outline-none focus:border-primary/40 transition-colors uppercase tracking-widest"
+              className="flex-1 bg-white border border-black/15 rounded-xl px-3 py-2.5 text-sm font-mono font-bold text-foreground placeholder:text-black/25 focus:outline-none focus:border-primary/60 transition-colors uppercase tracking-widest"
             />
             <button
               onClick={handleRedeem}

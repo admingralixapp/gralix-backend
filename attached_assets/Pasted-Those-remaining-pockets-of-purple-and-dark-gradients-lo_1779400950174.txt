@@ -1,0 +1,42 @@
+Those remaining pockets of purple and dark gradients look incredibly out of place now that the rest of the application is starting to look so crisp and premium.
+
+Looking at your dashboard in image_dd6549.jpg, the Today's Prescription card and the Joint Readiness dashboard sliders are still completely trapped in the old dark-mode gradient style with legacy amber tracks. Over in the shop (video 22:00 mark), those button blocks are holding onto that high-contrast digital purple, and your Redeem Code input box has no default visibility state until it's actively hovered over.
+
+Let's do a final style sweep with the Agent to lock down the Dashboard, the Shop, the input fields, and the premium paywall modals to your exact new White background, Solid Black text, and Racing Green (#177548) accent blueprint.
+
+Sprint 47: Global Style Sweep (Dashboard, Shop, and Modals)
+Copy and paste this straight into your Replit Agent:
+
+"We are executing the final stylistic conversion to unify the Dashboard, Shop, input styles, and premium pop-up modals under our strict light-mode design language:
+
+1. Refactor the Paywall Modals (image_dd64cd.png / image_dd6906.jpg):
+
+Locate the 'Unlock Your Performance Data' premium upsell pop-up modal component.
+
+Strip the purple gradients, neon text, and purple crown icons entirely.
+
+Convert the main card container to a clean, crisp Pure White (or clear semi-transparent white frosted glass with a thin solid black border).
+
+Set all text inside the modal to Solid Black (text-black).
+
+Change the 'Start 3-Day Free Trial' button from purple to a solid fill of our specific Deep Green (#177548) with bold white text.
+
+2. Fix the Dashboard Cards & Sliders (image_dd6549.jpg):
+
+Open the Dashboard component player (e.g., src/components/Dashboard.tsx).
+
+Remove the dark, metallic gradient backgrounds from the Today's Prescription and Joint Readiness panels. Turn them into clean white layout containers with a thin solid black outline (border-black).
+
+Convert all text labels, headings, and values inside these containers to Solid Black (text-black).
+
+Change the Joint Readiness track sliders: swap the amber/orange tracks and thumbs so they leverage our unified Deep Green (#177548) for active range tracking.
+
+3. Align the Shop Panel & Input Outlines (video 22:00):
+
+Open the voice marketplace/shop view.
+
+Change all 'Buy for £4.99' action buttons from vibrant purple to a solid fill of our Deep Green (#177548) with white text.
+
+Locate the Redeem Code input box container at the bottom. Give it a permanent, visible Solid Black outline border (border border-black) by default so it is fully legible without needing a cursor hover state. Ensure its text input defaults to solid black on a white fill background.
+
+Goal: Complete the visual overhaul across the final remaining views of Yerie, entirely removing legacy purple/amber blocks in favor of high-contrast black typography on white with tactical green accents

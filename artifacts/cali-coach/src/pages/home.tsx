@@ -150,31 +150,27 @@ function PerformanceTrendsCard({ isPro }: { isPro: boolean }) {
                 label: t("dashboard.avgForm", "Avg Form"),
                 value: summary?.avgFormScore != null ? `${Math.round(summary.avgFormScore)}` : "--",
                 unit: "/100",
-                color: "#22c55e",
               },
               {
                 label: t("dashboard.totalReps", "Total Reps"),
                 value: summary?.totalReps != null ? `${summary.totalReps}` : "--",
                 unit: "",
-                color: "#60a5fa",
               },
               {
                 label: t("dashboard.sessions", "Sessions"),
                 value: summary?.totalSessions != null ? `${summary.totalSessions}` : "--",
                 unit: "",
-                color: "#c084fc",
               },
             ].map((s) => (
               <div
                 key={s.label}
-                className="rounded-xl p-3 text-center"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                className="rounded-xl p-3 text-center bg-secondary border border-border"
               >
-                <div className="text-xl font-black font-mono" style={{ color: s.color }}>
+                <div className="text-xl font-black font-mono text-primary">
                   {s.value}
-                  {s.unit && <span className="text-xs text-white/30 ml-0.5">{s.unit}</span>}
+                  {s.unit && <span className="text-xs text-muted-foreground ml-0.5">{s.unit}</span>}
                 </div>
-                <div className="text-[9px] font-bold uppercase tracking-widest text-white/40 mt-0.5">
+                <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-0.5">
                   {s.label}
                 </div>
               </div>
@@ -187,26 +183,26 @@ function PerformanceTrendsCard({ isPro }: { isPro: boolean }) {
               <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="formGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#177548" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="#177548" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="label" hide />
                 <Tooltip
                   contentStyle={{
-                    background: "rgba(10,15,26,0.95)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "#fff",
+                    border: "1px solid rgba(0,0,0,0.1)",
                     borderRadius: 8,
                     fontSize: 11,
                   }}
-                  labelStyle={{ color: "rgba(255,255,255,0.5)" }}
-                  itemStyle={{ color: "#22c55e" }}
+                  labelStyle={{ color: "#6b7280" }}
+                  itemStyle={{ color: "#177548" }}
                   formatter={(v: number) => [`${v}`, "Form"]}
                 />
                 <Area
                   type="monotone"
                   dataKey="form"
-                  stroke="#22c55e"
+                  stroke="#177548"
                   strokeWidth={2}
                   fill="url(#formGrad)"
                   dot={false}
@@ -215,7 +211,7 @@ function PerformanceTrendsCard({ isPro }: { isPro: boolean }) {
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <p className="text-[10px] text-white/25 text-center">
+          <p className="text-[10px] text-muted-foreground text-center">
             {t("dashboard.formScoreOverTime", "Form score over time")}
           </p>
         </CardContent>
@@ -225,43 +221,21 @@ function PerformanceTrendsCard({ isPro }: { isPro: boolean }) {
       {!isPro && (
         <div className="absolute inset-0 z-20 flex items-center justify-center px-6 py-8">
           <div className="absolute inset-0 backdrop-blur-[2px]" />
-          <div
-            className="relative z-10 w-full max-w-sm rounded-2xl border p-6 flex flex-col items-center text-center space-y-4 shadow-2xl"
-            style={{
-              background: "linear-gradient(145deg, rgba(168,85,247,0.18) 0%, rgba(109,40,217,0.08) 50%, rgba(15,10,20,0.96) 100%)",
-              borderColor: "rgba(168,85,247,0.35)",
-              backdropFilter: "blur(32px)",
-              WebkitBackdropFilter: "blur(32px)",
-              boxShadow: "0 0 60px rgba(168,85,247,0.18), inset 0 1px 0 rgba(168,85,247,0.12)",
-            }}
-          >
-            {/* Ambient glow */}
-            <div
-              className="absolute -top-8 left-1/2 -translate-x-1/2 w-32 h-32 rounded-full blur-3xl opacity-25 pointer-events-none"
-              style={{ background: "radial-gradient(circle, #a855f7 0%, transparent 70%)" }}
-            />
-
+          <div className="relative z-10 w-full max-w-sm rounded-2xl border border-black/10 p-6 flex flex-col items-center text-center space-y-4 shadow-lg bg-white">
             {/* Icon */}
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{
-                background: "rgba(168,85,247,0.18)",
-                border: "1px solid rgba(168,85,247,0.4)",
-                boxShadow: "0 0 20px rgba(168,85,247,0.3)",
-              }}
-            >
-              <Crown className="w-6 h-6" style={{ color: "#c084fc" }} />
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-primary/10 border border-primary/25">
+              <Crown className="w-6 h-6 text-primary" />
             </div>
 
             {/* Copy */}
             <div>
-              <div className="text-[9px] font-black uppercase tracking-[0.18em] mb-1" style={{ color: "#c084fc" }}>
+              <div className="text-[9px] font-black uppercase tracking-[0.18em] mb-1 text-primary">
                 {t("dashboard.proFeature", "Pro Feature")}
               </div>
-              <h3 className="text-lg font-black" style={{ color: "#e9d5ff" }}>
+              <h3 className="text-lg font-black text-foreground">
                 {t("dashboard.unlockPerformance", "Unlock Your Performance Data")}
               </h3>
-              <p className="text-xs text-white/50 mt-1 leading-relaxed">
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                 {t("dashboard.performanceDesc", "See form trends, rep volume, and progress charts with a Pro plan.")}
               </p>
             </div>
@@ -270,15 +244,11 @@ function PerformanceTrendsCard({ isPro }: { isPro: boolean }) {
             <button
               onClick={() => setLocation("/shop")}
               className="w-full py-3 rounded-xl text-sm font-black tracking-wide transition-all"
-              style={{
-                background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
-                color: "#fff",
-                boxShadow: "0 4px 20px rgba(168,85,247,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
-              }}
+              style={{ background: "#177548", color: "#fff" }}
             >
               {t("dashboard.startTrial", "Start 3-Day Free Trial")}
             </button>
-            <p className="text-[9px] text-white/25">
+            <p className="text-[9px] text-muted-foreground">
               {t("progress.trialNote", "Cancel any time · No charge today")}
             </p>
           </div>
@@ -337,66 +307,50 @@ function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () =
   }, [logs, today, input]);
 
   return (
-    <div
-      className="rounded-2xl overflow-hidden"
-      style={{
-        border:     "1px solid rgba(245,158,11,0.3)",
-        background: "linear-gradient(145deg, rgba(245,158,11,0.05) 0%, rgba(10,15,26,0.95) 60%)",
-        boxShadow:  "0 0 20px rgba(245,158,11,0.06)",
-      }}
-    >
+    <div className="rounded-2xl overflow-hidden border border-border bg-card">
       {/* Header row — always visible */}
       <button
         type="button"
         onClick={() => setExpanded(v => !v)}
         className="w-full flex items-center gap-3 px-5 pt-4 pb-3 text-left"
       >
-        <div
-          className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-          style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)" }}
-        >
-          <HeartPulse className="w-4 h-4 text-amber-400" />
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-primary/10 border border-primary/25">
+          <HeartPulse className="w-4 h-4 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-amber-400">Joint Readiness</span>
+            <span className="text-sm font-bold text-foreground">Joint Readiness</span>
             {todayDone && (
-              <span
-                className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-                style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e" }}
-              >
+              <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/25 text-primary">
                 ✓ Logged
               </span>
             )}
           </div>
-          <p className="text-[11px] text-white/35 leading-none mt-0.5">
+          <p className="text-[11px] text-muted-foreground leading-none mt-0.5">
             {todayDone ? "Today's check-in complete" : "Log today's joint comfort"}
           </p>
         </div>
         {avgLast7 !== null && (
           <div className="text-right shrink-0 mr-1">
-            <div className="text-xl font-black font-mono" style={{ color: comfortColor, textShadow: `0 0 8px ${comfortColor}` }}>
+            <div className="text-xl font-black font-mono" style={{ color: comfortColor }}>
               {avgLast7}
             </div>
-            <div className="text-[9px] text-white/30">7-day avg</div>
+            <div className="text-[9px] text-muted-foreground">7-day avg</div>
           </div>
         )}
         <ChevronDown
-          className="w-4 h-4 shrink-0 transition-transform"
-          style={{ color: "rgba(245,158,11,0.5)", transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
+          className="w-4 h-4 shrink-0 text-muted-foreground transition-transform"
+          style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
         />
       </button>
 
       {/* Expandable sliders */}
       {expanded && (
         <div className="px-5 pb-4 space-y-3">
-          <div
-            className="rounded-xl p-4 space-y-3"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
-          >
+          <div className="rounded-xl p-4 space-y-3 bg-secondary border border-border">
             {JOINTS.map((joint) => (
               <div key={joint} className="flex items-center gap-3">
-                <span className="w-16 text-xs capitalize text-white/40 shrink-0">{joint}</span>
+                <span className="w-16 text-xs capitalize text-muted-foreground shrink-0">{joint}</span>
                 <input
                   type="range"
                   min={1}
@@ -405,7 +359,7 @@ function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () =
                   value={input[joint]}
                   onChange={e => setInput(prev => ({ ...prev, [joint]: parseInt(e.target.value) }))}
                   className="flex-1 h-1.5 cursor-pointer"
-                  style={{ accentColor: "#f59e0b" }}
+                  style={{ accentColor: "#177548" }}
                 />
                 <span
                   className="w-5 text-sm font-bold font-mono text-right shrink-0"
@@ -420,12 +374,7 @@ function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () =
           </div>
           <button
             onClick={handleLog}
-            className="w-full py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
-            style={{
-              background: "linear-gradient(90deg, rgba(245,158,11,0.18), rgba(245,158,11,0.10))",
-              border:     "1px solid rgba(245,158,11,0.35)",
-              color:      "#f59e0b",
-            }}
+            className="w-full py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all bg-primary text-white hover:bg-primary/90"
           >
             {todayDone ? "Update Today" : "Log Today"}
           </button>
@@ -454,95 +403,70 @@ function DailyPrescriptionCard({
   const workoutUrl = `/workout?exercise=${encodeURIComponent(focusNode.exercises[0])}`;
 
   return (
-    <div
-      className="rounded-2xl overflow-hidden"
-      style={{
-        border: "1.5px solid rgba(34,197,94,0.5)",
-        boxShadow: "0 0 28px rgba(34,197,94,0.10), 0 0 0 1px rgba(34,197,94,0.06)",
-        background: "linear-gradient(145deg, rgba(34,197,94,0.07) 0%, rgba(10,15,26,0.95) 60%)",
-      }}
-    >
+    <div className="rounded-2xl overflow-hidden border border-primary/30 bg-card">
       <div className="flex items-stretch">
-        {/* Neon green accent bar */}
-        <div
-          className="w-1 shrink-0"
-          style={{ background: "linear-gradient(180deg, #22c55e 0%, #4ade80 100%)" }}
-        />
+        {/* Accent bar */}
+        <div className="w-1 shrink-0 bg-primary" />
 
         <div className="flex-1 p-5">
           {/* Label row */}
           <div className="flex items-center gap-2 mb-2">
-            <div
-              className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
-              style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)" }}
-            >
+            <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 bg-primary/10 border border-primary/25">
               <Zap className="w-3.5 h-3.5 text-primary" />
             </div>
-            <span
-              className="text-[10px] font-black uppercase tracking-[0.16em]"
-              style={{ color: "#22c55e" }}
-            >
+            <span className="text-[10px] font-black uppercase tracking-[0.16em] text-primary">
               Today's Prescription
             </span>
           </div>
 
           {/* Main message */}
           {allMastered ? (
-            <p className="text-base font-bold leading-snug text-white/90">
+            <p className="text-base font-bold leading-snug text-foreground">
               You've mastered the full path to{" "}
               <span className="text-primary">{targetNode.title}</span>! Keep
               training to maintain your edge.
             </p>
           ) : focusNode.id === targetNode.id ? (
-            <p className="text-base font-bold leading-snug text-white/90">
+            <p className="text-base font-bold leading-snug text-foreground">
               Focus on{" "}
-              <span className="text-white">{focusNode.title}</span> today to
+              <span className="font-black">{focusNode.title}</span> today to
               master your target —{" "}
               <span className="text-primary">{targetNode.title}</span>.
             </p>
           ) : (
-            <p className="text-base font-bold leading-snug text-white/90">
+            <p className="text-base font-bold leading-snug text-foreground">
               To unlock{" "}
               <span className="text-primary">{targetNode.title}</span>, focus
-              on <span className="text-white">{focusNode.title}</span> today.
+              on <span className="font-black">{focusNode.title}</span> today.
             </p>
           )}
 
           {/* Mastery requirement hint */}
-          <p className="text-[11px] text-white/35 mt-1 leading-snug">
+          <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
             {focusNode.masteryRequirement.description}
           </p>
 
           {/* Progress bar */}
           <div className="mt-3 mb-4">
             <div className="flex justify-between items-center mb-1.5">
-              <span className="text-[11px] font-semibold text-white/50">
+              <span className="text-[11px] font-semibold text-muted-foreground">
                 {focusNode.title} Readiness
               </span>
               <span
                 className="text-[11px] font-black tabular-nums"
-                style={{ color: pct >= 100 ? "#22c55e" : pct >= 50 ? "#86efac" : "#ffffff80" }}
+                style={{ color: pct >= 50 ? "#177548" : "#9ca3af" }}
               >
                 {pct}%
               </span>
             </div>
-            <div
-              className="h-2 rounded-full overflow-hidden"
-              style={{ background: "rgba(255,255,255,0.07)" }}
-            >
+            <div className="h-2 rounded-full overflow-hidden bg-secondary">
               <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{
-                  width: `${pct}%`,
-                  background: pct >= 100
-                    ? "linear-gradient(90deg, #22c55e, #4ade80)"
-                    : "linear-gradient(90deg, #22c55e88, #22c55e)",
-                  boxShadow: pct > 0 ? "0 0 8px rgba(34,197,94,0.5)" : "none",
-                }}
+                className="h-full rounded-full transition-all duration-700 bg-primary"
+                style={{ width: `${pct}%` }}
               />
             </div>
             {!allMastered && (
-              <p className="text-[10px] text-white/25 mt-1">
+              <p className="text-[10px] text-muted-foreground mt-1">
                 {totalReps} / {requiredReps} qualifying reps logged
               </p>
             )}
@@ -552,13 +476,7 @@ function DailyPrescriptionCard({
           <Button
             asChild
             size="sm"
-            className="font-bold w-full sm:w-auto"
-            style={{
-              background: "rgba(34,197,94,0.14)",
-              border: "1px solid rgba(34,197,94,0.4)",
-              color: "#22c55e",
-              boxShadow: "0 0 12px rgba(34,197,94,0.15)",
-            }}
+            className="font-bold w-full sm:w-auto bg-primary text-white hover:bg-primary/90"
           >
             <Link href={workoutUrl}>
               <Dumbbell className="w-4 h-4 mr-1.5" />
@@ -671,7 +589,7 @@ export function Home() {
           isLoading={loadingSummary}
         />
         <StatCard
-          icon={<Sparkles className="w-4 h-4 text-violet-400" />}
+          icon={<Sparkles className="w-4 h-4 text-primary" />}
           label={t("dashboard.mobilityStreak")}
           value={loadingMobility ? "--" : (mobilityStatus?.currentStreak ?? 0)}
           sub={t("dashboard.stretchDays")}
@@ -700,14 +618,14 @@ export function Home() {
       <Card className="border-border bg-card overflow-hidden">
         <div className="flex items-stretch">
           {/* Accent bar */}
-          <div className="w-1 bg-gradient-to-b from-violet-500 to-primary shrink-0" />
+          <div className="w-1 bg-primary shrink-0" />
 
           <div className="flex-1 p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="w-4 h-4 text-violet-400" />
-                  <span className="text-sm font-semibold text-violet-400">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-semibold text-primary">
                     {t("dashboard.dailyMobility")}
                   </span>
                   {mobilityStatus?.completedToday && (
@@ -781,7 +699,7 @@ export function Home() {
             ))}
           </div>
         ) : !recentSessions || recentSessions.length === 0 ? (
-          <div className="text-center py-12 border border-dashed border-white/10 rounded-[20px] bg-white/[0.02]">
+          <div className="text-center py-12 border border-dashed border-border rounded-[20px] bg-secondary/30">
             <Dumbbell className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-30" />
             <p className="text-muted-foreground font-light opacity-80 mb-4">{t("dashboard.noSessionsYet")}</p>
             <Button asChild variant="outline">
@@ -792,7 +710,7 @@ export function Home() {
           <div className="grid gap-3">
             {recentSessions.map((session) => (
               <Link key={session.id} href={`/session/${session.id}`}>
-                <Card className="hover:bg-white/[0.04] transition-all cursor-pointer">
+                <Card className="hover:bg-secondary/50 transition-all cursor-pointer">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
                       <div className="font-extrabold text-lg">{session.exerciseName}</div>
@@ -815,7 +733,7 @@ export function Home() {
                         <span className="text-sm text-muted-foreground">{t("dashboard.reps")}</span>
                       </div>
                       {session.logType === "manual" ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 border border-amber-500/30 text-amber-400 mt-1">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/8 border border-black/12 text-muted-foreground mt-1">
                           <PenLine className="w-2.5 h-2.5" />
                           {t("dashboard.manual")}
                         </span>

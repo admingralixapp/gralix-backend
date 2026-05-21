@@ -418,39 +418,19 @@ export function Progress() {
   const paywallOverlay = !isPro && (
     <div className="absolute inset-0 z-20 flex items-center justify-center px-6 py-12">
       <div className="absolute inset-0 backdrop-blur-[2px]" />
-      <div
-        className="relative z-10 w-full max-w-md rounded-3xl border p-7 flex flex-col items-center text-center space-y-5 shadow-2xl"
-        style={{
-          background:        "linear-gradient(145deg, rgba(168,85,247,0.16) 0%, rgba(109,40,217,0.08) 50%, rgba(15,10,20,0.95) 100%)",
-          borderColor:       "rgba(168,85,247,0.35)",
-          backdropFilter:    "blur(32px)",
-          WebkitBackdropFilter: "blur(32px)",
-          boxShadow:         "0 0 80px rgba(168,85,247,0.2), inset 0 1px 0 rgba(168,85,247,0.15)",
-        }}
-      >
-        <div
-          className="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-40 rounded-full blur-3xl opacity-30 pointer-events-none"
-          style={{ background: "radial-gradient(circle, #a855f7 0%, transparent 70%)" }}
-        />
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center relative"
-          style={{
-            background: "rgba(168,85,247,0.18)",
-            border:     "1px solid rgba(168,85,247,0.4)",
-            boxShadow:  "0 0 24px rgba(168,85,247,0.35)",
-          }}
-        >
-          <Crown className="w-8 h-8" style={{ color: "#c084fc" }} />
+      <div className="relative z-10 w-full max-w-md rounded-3xl border border-black/10 p-7 flex flex-col items-center text-center space-y-5 shadow-lg bg-white">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-primary/10 border border-primary/25">
+          <Crown className="w-8 h-8 text-primary" />
         </div>
         <div>
-          <div className="text-[10px] font-black uppercase tracking-[0.18em] mb-1.5" style={{ color: "#c084fc" }}>
+          <div className="text-[10px] font-black uppercase tracking-[0.18em] mb-1.5 text-primary">
             {t("progress.premiumAnalytics")}
           </div>
-          <h2 className="text-2xl font-black" style={{ color: "#e9d5ff" }}>
+          <h2 className="text-2xl font-black text-foreground">
             {t("progress.unlockTitle")}
           </h2>
         </div>
-        <p className="text-sm text-white/60 leading-relaxed max-w-xs">
+        <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
           {t("progress.unlockDesc")}
         </p>
         <div className="w-full space-y-2.5 text-left">
@@ -461,14 +441,11 @@ export function Progress() {
             { icon: "📊", label: "Relative Strength Index trend" },
           ].map(({ icon, label }) => (
             <div key={label} className="flex items-center gap-3">
-              <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm"
-                style={{ background: "rgba(168,85,247,0.14)", border: "1px solid rgba(168,85,247,0.22)" }}
-              >
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm bg-primary/10 border border-primary/20">
                 {icon}
               </div>
-              <span className="text-sm text-white/75">{label}</span>
-              <Check className="w-3.5 h-3.5 shrink-0 ml-auto" style={{ color: "#c084fc" }} />
+              <span className="text-sm text-foreground">{label}</span>
+              <Check className="w-3.5 h-3.5 shrink-0 ml-auto text-primary" />
             </div>
           ))}
         </div>
@@ -476,15 +453,11 @@ export function Progress() {
           <button
             onClick={() => setLocation("/shop")}
             className="w-full py-3.5 rounded-xl text-sm font-black tracking-wide transition-all"
-            style={{
-              background: "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
-              color:      "#fff",
-              boxShadow:  "0 4px 24px rgba(168,85,247,0.45), inset 0 1px 0 rgba(255,255,255,0.15)",
-            }}
+            style={{ background: "#177548", color: "#fff" }}
           >
             {t("progress.startTrial")}
           </button>
-          <p className="text-[10px] text-white/30 text-center">
+          <p className="text-[10px] text-muted-foreground text-center">
             {t("progress.trialNote")}
           </p>
         </div>
@@ -551,7 +524,7 @@ export function Progress() {
 
             <Card className={glassCardClass}>
               <CardContent className="p-6">
-                <TrendingUp className="w-5 h-5 text-violet-400 mb-2" style={{ filter: "drop-shadow(0 0 6px #a78bfa)" }} />
+                <TrendingUp className="w-5 h-5 text-primary mb-2" />
                 <div className="text-2xl font-bold font-mono">
                   {summary?.improvementPercent != null
                     ? `${summary.improvementPercent > 0 ? "+" : ""}${Math.round(summary.improvementPercent)}%`
@@ -764,13 +737,12 @@ export function Progress() {
                         </div>
 
                         {/* Composite readiness bar */}
-                        <div className="relative h-2.5 rounded-full overflow-hidden bg-white/[0.05]">
+                        <div className="relative h-2.5 rounded-full overflow-hidden bg-secondary">
                           <div
                             className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
                             style={{
                               width:      `${readiness}%`,
-                              background: `linear-gradient(90deg, ${color}50, ${color})`,
-                              boxShadow:  `0 0 10px ${color}60`,
+                              background: `linear-gradient(90deg, ${color}80, ${color})`,
                             }}
                           />
                         </div>
@@ -912,11 +884,11 @@ export function Progress() {
                         if (!cell) return <div key={wi} style={{ flex: 1, aspectRatio: "1" }} />;
                         const count = cell.count;
                         const bg    =
-                          count === 0 ? "rgba(255,255,255,0.04)"
-                          : count === 1 ? "rgba(34,197,94,0.25)"
-                          : count === 2 ? "rgba(34,197,94,0.55)"
-                          : "rgba(34,197,94,0.9)";
-                        const glow = count > 0 ? `0 0 ${count * 4}px rgba(34,197,94,${count * 0.2})` : "none";
+                          count === 0 ? "rgba(0,0,0,0.06)"
+                          : count === 1 ? "rgba(23,117,72,0.25)"
+                          : count === 2 ? "rgba(23,117,72,0.55)"
+                          : "rgba(23,117,72,0.9)";
+                        const glow = "none";
                         return (
                           <div
                             key={wi}
@@ -924,7 +896,7 @@ export function Progress() {
                             style={{
                               flex: 1, aspectRatio: "1", borderRadius: 3,
                               background: bg, boxShadow: glow,
-                              border: cell.isToday ? "1px solid rgba(34,197,94,0.8)" : "1px solid rgba(255,255,255,0.04)",
+                              border: cell.isToday ? "1px solid rgba(23,117,72,0.7)" : "1px solid rgba(0,0,0,0.08)",
                               transition: "background 0.2s", minWidth: 0,
                             }}
                           />
@@ -937,7 +909,7 @@ export function Progress() {
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, justifyContent: "flex-end" }}>
                 <span style={{ fontSize: 9, color: "rgba(100,116,139,0.6)", fontWeight: 600 }}>Less</span>
                 {[0, 1, 2, 3].map((n) => (
-                  <div key={n} style={{ width: 11, height: 11, borderRadius: 2, background: n === 0 ? "rgba(255,255,255,0.04)" : `rgba(34,197,94,${n * 0.3})`, border: "1px solid rgba(255,255,255,0.05)" }} />
+                  <div key={n} style={{ width: 11, height: 11, borderRadius: 2, background: n === 0 ? "rgba(0,0,0,0.06)" : `rgba(23,117,72,${n * 0.3})`, border: "1px solid rgba(0,0,0,0.08)" }} />
                 ))}
                 <span style={{ fontSize: 9, color: "rgba(100,116,139,0.6)", fontWeight: 600 }}>More</span>
               </div>
@@ -950,7 +922,7 @@ export function Progress() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    <Scale className="w-4 h-4 text-violet-400" style={{ filter: "drop-shadow(0 0 5px #a78bfa)" }} />
+                    <Scale className="w-4 h-4 text-primary" />
                     Relative Strength Index
                   </CardTitle>
                   <CardDescription>
@@ -959,7 +931,7 @@ export function Progress() {
                 </div>
                 {currentRSI !== null && (
                   <div className="text-right shrink-0">
-                    <div className="text-2xl font-bold font-mono text-violet-400" style={{ textShadow: "0 0 10px #a78bfa" }}>
+                    <div className="text-2xl font-bold font-mono text-primary">
                       {currentRSI}
                     </div>
                     <div className="text-xs text-muted-foreground">current RSI</div>
