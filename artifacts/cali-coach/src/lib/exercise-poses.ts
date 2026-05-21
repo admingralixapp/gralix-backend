@@ -1367,35 +1367,35 @@ const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
   // Side view. Front shin lies horizontal across the mat; back leg extends
   // straight behind. Torso progresses from upright to folded over the shin.
   "Pigeon Pose Hip Opener": [
-    { // START — all-fours (quadruped) about to transition
+    { // START
       head: { cx: 82, cy: 22, r: 6 },
       lines: [
-        [[78, 26], [62, 28], [46, 32]],                    // spine (horizontal)
-        [[62, 28], [44, 28], [28, 32]],                    // L-arm to floor
-        [[62, 28], [66, 40], [70, 52]],                    // R-arm (other side)
-        [[46, 32], [40, 52], [38, 70]],                    // L-leg (front, becoming shin)
-        [[46, 32], [56, 52], [70, 72]],                    // R-leg (back)
+        [[78,26],[62,28],[46,32]],
+        [[62,28],[44,28],[28,32]],
+        [[62,28],[66,40],[70,52]],
+        [[46,32],[40,52],[38,70]],
+        [[46,32],[56,52],[70,72]],
       ],
     },
-    { // MID — front shin across mat, back leg extended, torso upright over hip
-      head: { cx: 50, cy: 16, r: 6 },
+    { // MID
+      head: { cx: 50, cy: 38.5, r: 2.5 },
       lines: [
-        [[50, 22], [50, 56]],                              // torso upright
-        [[50, 30], [34, 40], [26, 54]],                    // L-arm
-        [[50, 30], [66, 40], [74, 54]],                    // R-arm
-        [[50, 56], [34, 62], [18, 62], [24, 74]],          // front leg: hip→shin horizontal→foot
-        [[50, 56], [64, 70], [84, 84], [92, 92]],          // back leg: extends far behind on floor
+        [[50,41.5],[50,56]],
+        [[50,44.5],[43,49],[39.5,55]],
+        [[50,44.5],[57,49],[60.5,55]],
+        [[50,56],[43,58.5],[36,58.5],[38.5,63.5]],
+        [[50,56],[56,62],[64.5,68],[68,71.5]],
       ],
-      muscleGlow: { cx: 26, cy: 64, rx: 14, ry: 10 },
+      muscleGlow: { cx: 39.5, cy: 59.5, rx: 6, ry: 4.25 },
     },
-    { // END — folded forward over front shin, chest sinking toward floor
+    { // END
       head: { cx: 28, cy: 54, r: 6 },
       lines: [
-        [[28, 48], [44, 44], [56, 46]],                    // torso folded (near horizontal)
-        [[56, 46], [38, 60], [20, 64], [24, 76]],          // front shin
-        [[56, 46], [68, 62], [86, 76], [94, 86]],          // back leg extended
-        [[40, 44], [24, 58], [12, 70]],                    // arm reaching forward
-        [[40, 44], [56, 58], [64, 68]],                    // other arm
+        [[28,48],[44,44],[56,46]],
+        [[56,46],[38,60],[20,64],[24,76]],
+        [[56,46],[68,62],[86,76],[94,86]],
+        [[40,44],[24,58],[12,70]],
+        [[40,44],[56,58],[64,68]],
       ],
     },
   ],

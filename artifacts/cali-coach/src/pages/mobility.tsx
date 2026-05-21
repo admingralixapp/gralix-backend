@@ -962,11 +962,14 @@ function ActiveWorkoutPlayer({
         #ms-shell *::-webkit-scrollbar { display: none; }
         #ms-shell button { touch-action: manipulation; cursor: pointer; }
 
-        /* ── ROW 1: Header bar ── */
+        /* ── ROW 1: Header bar — solid background creates hard stacking boundary ── */
         #ms-hdr {
           display: flex; align-items: center; justify-content: space-between;
           padding: 0 20px;
+          background: #080d12;
           border-bottom: 1px solid rgba(255,255,255,0.05);
+          position: relative; z-index: 10;
+          isolation: isolate;
         }
         #ms-hdr .exit-btn {
           display: flex; align-items: center; gap: 6px;
@@ -982,13 +985,15 @@ function ActiveWorkoutPlayer({
           color: rgba(148,163,184,0.9); font-size: 11px; font-weight: 600;
         }
 
-        /* ── ROW 2: Title block — sits in its own grid row, never touched by skeleton ── */
+        /* ── ROW 2: Title block — solid background, isolated stacking context ── */
         #ms-title {
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
           gap: 4px; padding: 10px 24px 8px;
           background: #080d12;
-          position: relative; z-index: 2;
+          position: relative; z-index: 5;
+          isolation: isolate;
+          contain: layout style paint;
           flex-shrink: 0;
         }
         #ms-title .chip {
@@ -1005,23 +1010,28 @@ function ActiveWorkoutPlayer({
           max-width: min(90vw, 480px); color: #f1f5f9;
         }
 
-        /* ── ROW 3: Skeleton canvas — strictly bounded, overflow hidden ── */
+        /* ── ROW 3: Skeleton canvas — hard bounding box, nothing escapes ── */
         #ms-canvas {
           position: relative;
+          width: 100%; height: 100%;
           display: flex; align-items: center; justify-content: center;
           overflow: hidden;
+          /* CSS Paint containment: browser guarantees nothing paints outside this box */
+          contain: layout style paint;
+          isolation: isolate;
           min-height: 0;
         }
-        /* Radial green glow rendered only within the canvas row */
+        /* Radial green glow — contained within the canvas row */
         #ms-canvas::before {
           content: "";
           position: absolute; inset: 0; pointer-events: none;
           background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(34,197,94,0.09) 0%, transparent 70%);
         }
-        /* Skeleton hero container */
+        /* Skeleton hero container — fills the full canvas cell */
         #ms-canvas .hero-inner {
+          position: relative;
           width: 100%; height: 100%; max-width: 340px;
-          position: relative; z-index: 1;
+          z-index: 1;
           animation: cockpitFadeIn 0.22s ease-out both;
         }
 
