@@ -74,41 +74,41 @@
   --elevate-2: rgba(255,255,255, .09);
 
   /* Force dark mode */
-  --background: 215 18% 9%;
+  --background: 240 10% 4%;
   --foreground: 0 0% 98%;
-  --border: 215 15% 14%;
-  --card: 215 18% 11%;
+  --border: 240 10% 12%;
+  --card: 240 10% 6%;
   --card-foreground: 0 0% 98%;
-  --card-border: 215 15% 14%;
-  --popover: 215 18% 11%;
+  --card-border: 240 10% 12%;
+  --popover: 240 10% 6%;
   --popover-foreground: 0 0% 98%;
-  --popover-border: 215 15% 14%;
-
-  /* Alpine Mist — ice-blue primary */
-  --primary: 210 80% 88%;
-  --primary-foreground: 215 25% 8%;
-
-  --secondary: 215 15% 14%;
+  --popover-border: 240 10% 12%;
+  
+  /* Neon green primary */
+  --primary: 150 100% 50%;
+  --primary-foreground: 240 10% 4%;
+  
+  --secondary: 240 10% 12%;
   --secondary-foreground: 0 0% 98%;
-  --muted: 215 15% 14%;
-  --muted-foreground: 215 10% 62%;
-  --accent: 215 15% 18%;
+  --muted: 240 10% 12%;
+  --muted-foreground: 240 5% 65%;
+  --accent: 240 10% 16%;
   --accent-foreground: 0 0% 98%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
-  --input: 215 15% 18%;
-  --ring: 210 80% 78%;
-
-  --sidebar: 215 18% 11%;
+  --input: 240 10% 16%;
+  --ring: 150 100% 50%;
+  
+  --sidebar: 240 10% 6%;
   --sidebar-foreground: 0 0% 98%;
-  --sidebar-border: 215 15% 14%;
-  --sidebar-primary: 210 80% 88%;
-  --sidebar-primary-foreground: 215 25% 8%;
-  --sidebar-accent: 215 15% 14%;
+  --sidebar-border: 240 10% 12%;
+  --sidebar-primary: 150 100% 50%;
+  --sidebar-primary-foreground: 240 10% 4%;
+  --sidebar-accent: 240 10% 12%;
   --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-ring: 210 80% 78%;
+  --sidebar-ring: 150 100% 50%;
 
-  --chart-1: 210 80% 72%;
+  --chart-1: 150 100% 50%;
   --chart-2: 200 100% 50%;
   --chart-3: 30 100% 50%;
   --chart-4: 280 100% 60%;
@@ -131,33 +131,33 @@
 
 /* ── Glassmorphism card ───────────────────────────────────────────────────── */
 .glass-card {
-  background: rgba(18, 24, 32, 0.80);
+  background: rgba(25, 25, 25, 0.75);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
 }
 
-/* ── Alpine Mist CTA glow ─────────────────────────────────────────────────── */
+/* ── Neon-green CTA glow ──────────────────────────────────────────────────── */
 .neon-glow {
   box-shadow:
-    0 0 20px rgba(180,220,255,0.18),
-    0 0 8px  rgba(180,220,255,0.10);
+    0 0 20px rgba(0, 255, 100, 0.30),
+    0 0 8px  rgba(0, 255, 100, 0.18);
 }
 .neon-glow:hover {
   box-shadow:
-    0 0 28px rgba(180,220,255,0.28),
-    0 0 12px rgba(180,220,255,0.16);
+    0 0 28px rgba(0, 255, 100, 0.45),
+    0 0 12px rgba(0, 255, 100, 0.28);
 }
 
-/* ── Active nav icon — ice-blue ───────────────────────────────────────────── */
+/* ── Active nav icon glow ─────────────────────────────────────────────────── */
 .nav-icon-active {
-  filter: drop-shadow(0 0 5px rgba(180,220,255,0.55));
+  filter: drop-shadow(0 0 6px rgba(0, 255, 100, 0.70));
 }
 
 /* ── Glass sidebar / bottom nav ──────────────────────────────────────────── */
 .glass-nav {
-  background: rgba(12, 16, 22, 0.88);
+  background: rgba(15, 15, 15, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
