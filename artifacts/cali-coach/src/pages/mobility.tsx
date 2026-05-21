@@ -121,6 +121,56 @@ function extractAllPoints(lines: [number, number][][]): [number, number][] {
   return out;
 }
 
+// ─── Mobility LERP engine ─────────────────────────────────────────────────────
+//
+// Stretching demands a much slower, calmer tempo than strength-exercise previews.
+// These constants produce a therapeutic 8.3-second loop:
+//   Start→Mid  3 000 ms  (ease-in-out cubic)
+//   Mid→End    3 000 ms  (ease-in-out cubic)
+//   Hold End   1 500 ms  (static — user appreciates the peak stretch)
+//   Fade-out     400 ms  (soft dissolve before reset)
+//   Fade-in      400 ms  (gentle reappear at Start)
+//   Total      8 300 ms
+
+const MOB_TRANSITION_MS = 3_000;
+const MOB_HOLD_MS       = 1_500;
+const MOB_FADE_MS       =   400;
+const MOB_CYCLE_MS      = 2 * MOB_TRANSITION_MS + MOB_HOLD_MS + 2 * MOB_FADE_MS; // 8 300 ms
+
+function mobEase(t: number): number {
+  // Ease-in-out cubic — slow start, fluid middle, gentle deceleration at peak.
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function lerpNum(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+/**
+ * Linearly interpolate between two PoseData frames.
+ * Each line's 2-D points are interpolated pair-wise so every joint glides
+ * smoothly rather than snapping between coordinate states.
+ */
+function lerpPoseData(a: PoseData, b: PoseData, rawT: number): PoseData {
+  const t = mobEase(rawT);
+  return {
+    head: {
+      cx: lerpNum(a.head.cx, b.head.cx, t),
+      cy: lerpNum(a.head.cy, b.head.cy, t),
+      r:  lerpNum(a.head.r ?? 7, b.head.r ?? 7, t),
+    },
+    lines: a.lines.map((lineA, li) =>
+      lineA.map(([ax, ay], pi) => {
+        const bp = b.lines[li]?.[pi];
+        return [
+          lerpNum(ax, bp?.[0] ?? ax, t),
+          lerpNum(ay, bp?.[1] ?? ay, t),
+        ] as [number, number];
+      }),
+    ),
+  };
+}
+
 // ─── Environmental Anchor Layer ───────────────────────────────────────────────
 // Renders behind the skeleton. Static (not animated) — the anchor never moves.
 // The "locked joint" illusion comes from identical endpoint coords across frames.
@@ -280,29 +330,17 @@ function EnvLayerThumb({ env }: { env: EnvAnchor }) {
 }
 
 // ─── BioSkeletonSVG — spring-morphing bio-mechanical hero figure ──────────────
-// Receives poseSet + frameIdx. When frameIdx changes, every motion.line and
-// motion.circle spring-animates from the old coordinates to the new ones,
-// creating a fluid "limbs slide into position" effect.
+// Renders a single already-interpolated PoseData frame as an SVG skeleton.
+// No animation logic here — the RAF loop in HeroSkeleton drives all motion by
+// calling lerpPoseData() every frame and passing the result as `pose`.
 
 function BioSkeletonSVG({
-  poseSet, frameIdx, paused, color = "#22c55e", env,
+  pose, paused, color = "#22c55e", env,
 }: {
-  poseSet: PoseData[]; frameIdx: 0 | 1 | 2; paused: boolean; color?: string; env?: EnvAnchor;
+  pose: PoseData; paused: boolean; color?: string; env?: EnvAnchor;
 }) {
-  // Pre-compute segments + points for all 3 poses.
-  // pose[0] values are used as `initial` so motion elements are never undefined on mount.
-  const allSegs = poseSet.map(p => extractSegments(p.lines));
-  const allPts  = poseSet.map(p => extractAllPoints(p.lines));
-
-  const targetSegs = allSegs[frameIdx];
-  const targetPts  = allPts[frameIdx];
-  const initSegs   = allSegs[0];
-  const initPts    = allPts[0];
-  const initHead   = poseSet[0].head;
-  const currHead   = poseSet[frameIdx].head;
-
-  // Soft spring — feels organic, not mechanical
-  const spring = { type: "spring" as const, stiffness: 130, damping: 17, mass: 0.85 };
+  const segs = extractSegments(pose.lines);
+  const pts  = extractAllPoints(pose.lines);
 
   return (
     <svg
@@ -330,56 +368,42 @@ function BioSkeletonSVG({
         </filter>
       </defs>
 
-      {/* ── Environmental anchor — rendered BEHIND skeleton ── */}
+      {/* Environmental anchor — rendered BEHIND skeleton */}
       {env && <EnvLayer env={env} />}
 
-      {/* ── Capsule limbs — thick rounded segments that spring into position ── */}
-      {targetSegs.map((seg, i) => {
-        const init = initSegs[i] ?? seg;
-        return (
-          <motion.line
-            key={i}
-            initial={{ x1: init.x1, y1: init.y1, x2: init.x2, y2: init.y2 }}
-            animate={{ x1: seg.x1, y1: seg.y1, x2: seg.x2, y2: seg.y2 }}
-            transition={spring}
-            stroke={color}
-            strokeWidth={7}
-            strokeLinecap="round"
-            fill="none"
-          />
-        );
-      })}
+      {/* Capsule limbs — coordinates computed by LERP, not spring physics */}
+      {segs.map((seg, i) => (
+        <line
+          key={i}
+          x1={seg.x1} y1={seg.y1} x2={seg.x2} y2={seg.y2}
+          stroke={color}
+          strokeWidth={7}
+          strokeLinecap="round"
+          fill="none"
+        />
+      ))}
 
-      {/* ── Glowing joint nodes at every skeleton point ── */}
-      {targetPts.map(([x, y], i) => {
-        const init = initPts[i] ?? [x, y];
-        return (
-          <motion.circle
-            key={i}
-            initial={{ cx: init[0], cy: init[1] }}
-            animate={{ cx: x, cy: y }}
-            transition={spring}
-            r={3.2}
-            fill={color}
-            filter="url(#bio-joint-glow)"
-          />
-        );
-      })}
+      {/* Glowing joint nodes */}
+      {pts.map(([x, y], i) => (
+        <circle
+          key={i}
+          cx={x} cy={y}
+          r={3.2}
+          fill={color}
+          filter="url(#bio-joint-glow)"
+        />
+      ))}
 
-      {/* ── Head — hollow halo ring + inner core dot ── */}
-      <motion.circle
-        initial={{ cx: initHead.cx, cy: initHead.cy }}
-        animate={{ cx: currHead.cx, cy: currHead.cy }}
-        transition={spring}
-        r={(currHead.r ?? 7) + 2}
+      {/* Head — hollow halo ring + inner core dot */}
+      <circle
+        cx={pose.head.cx} cy={pose.head.cy}
+        r={(pose.head.r ?? 7) + 2}
         fill="rgba(34,197,94,0.08)"
         stroke={color}
         strokeWidth={2.5}
       />
-      <motion.circle
-        initial={{ cx: initHead.cx, cy: initHead.cy }}
-        animate={{ cx: currHead.cx, cy: currHead.cy }}
-        transition={spring}
+      <circle
+        cx={pose.head.cx} cy={pose.head.cy}
         r={2.8}
         fill={color}
         opacity={0.5}
@@ -423,8 +447,11 @@ function BioThumbnailSVG({ pose, color, env }: { pose: PoseData; color: string; 
 }
 
 // ─── Hero Skeleton — bio-mechanical figure cycling Start → Mid → End ──────────
+//
+// Uses a requestAnimationFrame loop with ease-in-out cubic interpolation so
+// every joint glides smoothly between keyframes — same engine as the main
+// Workout ExerciseAnimation component, tuned for slow therapeutic stretching.
 
-const POSE_SEQ = [0, 1, 2] as const;
 const FRAME_LABELS = ["Start", "Mid", "End"] as const;
 
 function HeroSkeleton({
@@ -434,33 +461,81 @@ function HeroSkeleton({
 }) {
   const poseSet = getPoseSet(exerciseName);
   const env     = getWorldObjects(exerciseName)[0];
-  const intensity = getExerciseIntensity(exerciseName);
-  const intervalMs = intensity === "strenuous" ? 800 : intensity === "relaxed" ? 1900 : 1300;
 
-  const [seqIdx, setSeqIdx] = useState(0);
-  // Brief opacity fade when the sequence wraps from End back to Start.
-  const [resetting, setResetting] = useState(false);
+  // Live-rendered interpolated pose — starts at keyframe 0.
+  const [renderedPose, setRenderedPose] = useState<PoseData>(() => poseSet[0]);
+  // Separate opacity for the puppet wrapper (env stays solid during fade).
+  const [puppetOpacity, setPuppetOpacity] = useState(1);
+  // Which reference thumbnail is highlighted (0=Start, 1=Mid, 2=End).
+  const [frameIdx, setFrameIdx] = useState<0 | 1 | 2>(0);
+
+  // Use a ref so the RAF callback always reads the latest paused value without
+  // being part of the effect's dependency array (avoids restart on every toggle).
+  const pausedRef = useRef(paused);
+  useEffect(() => { pausedRef.current = paused; }, [paused]);
+
+  const rafRef   = useRef<number>(0);
 
   useEffect(() => {
-    if (paused) return;
-    const id = setInterval(() => {
-      setSeqIdx(s => {
-        const next = (s + 1) % POSE_SEQ.length;
-        if (next === 0) setResetting(true); // wrapping — trigger fade
-        return next;
-      });
-    }, intervalMs);
-    return () => clearInterval(id);
-  }, [paused, intervalMs]);
+    const [start, mid, end] = poseSet;
 
-  // Clear the resetting flag after the fade duration (250 ms fade-out + 50 ms hold).
-  useEffect(() => {
-    if (!resetting) return;
-    const t = setTimeout(() => setResetting(false), 300);
-    return () => clearTimeout(t);
-  }, [resetting]);
+    // Reset state whenever the exercise changes.
+    setRenderedPose(start);
+    setPuppetOpacity(1);
+    setFrameIdx(0);
 
-  const frameIdx = POSE_SEQ[seqIdx];
+    // Elapsed accumulator: only increments while not paused, so pause/resume
+    // is seamless — the animation continues exactly where it left off.
+    let elapsed  = 0;
+    let lastTime: number | null = null;
+
+    function tick(now: number) {
+      if (!pausedRef.current) {
+        if (lastTime !== null) elapsed = (elapsed + (now - lastTime)) % MOB_CYCLE_MS;
+        lastTime = now;
+      } else {
+        // While paused: keep lastTime null so no time accrues.
+        lastTime = null;
+      }
+
+      const cycleT = elapsed;
+
+      if (cycleT < MOB_TRANSITION_MS) {
+        // ── Phase 1: Start → Mid ──────────────────────────────────────────────
+        setRenderedPose(lerpPoseData(start, mid, cycleT / MOB_TRANSITION_MS));
+        setPuppetOpacity(1);
+        setFrameIdx(0);
+      } else if (cycleT < 2 * MOB_TRANSITION_MS) {
+        // ── Phase 2: Mid → End ────────────────────────────────────────────────
+        setRenderedPose(lerpPoseData(mid, end, (cycleT - MOB_TRANSITION_MS) / MOB_TRANSITION_MS));
+        setPuppetOpacity(1);
+        setFrameIdx(1);
+      } else if (cycleT < 2 * MOB_TRANSITION_MS + MOB_HOLD_MS) {
+        // ── Phase 3: Hold at End ──────────────────────────────────────────────
+        setRenderedPose(end);
+        setPuppetOpacity(1);
+        setFrameIdx(2);
+      } else if (cycleT < 2 * MOB_TRANSITION_MS + MOB_HOLD_MS + MOB_FADE_MS) {
+        // ── Phase 4: Fade-out (staying at End) ───────────────────────────────
+        const t = (cycleT - 2 * MOB_TRANSITION_MS - MOB_HOLD_MS) / MOB_FADE_MS;
+        setRenderedPose(end);
+        setPuppetOpacity(1 - t);
+        setFrameIdx(2);
+      } else {
+        // ── Phase 5: Fade-in (snapped to Start) ──────────────────────────────
+        const t = (cycleT - 2 * MOB_TRANSITION_MS - MOB_HOLD_MS - MOB_FADE_MS) / MOB_FADE_MS;
+        setRenderedPose(start);
+        setPuppetOpacity(t);
+        setFrameIdx(0);
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    }
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [exerciseName]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const frameLabel = FRAME_LABELS[frameIdx];
 
   return (
@@ -479,15 +554,10 @@ function HeroSkeleton({
         }}>
           {frameLabel}
         </div>
-        {/* Bio-mechanical skeleton with spring morphing + quick fade on reset */}
-        <div style={{
-          width: "100%", height: "100%",
-          opacity: resetting ? 0 : 1,
-          transition: resetting ? "opacity 0.25s linear" : "opacity 0.25s linear",
-        }}>
+        {/* RAF-driven LERP skeleton — opacity controlled by puppetOpacity */}
+        <div style={{ width: "100%", height: "100%", opacity: puppetOpacity }}>
           <BioSkeletonSVG
-            poseSet={poseSet}
-            frameIdx={frameIdx}
+            pose={renderedPose}
             paused={paused}
             color={color}
             env={env}
