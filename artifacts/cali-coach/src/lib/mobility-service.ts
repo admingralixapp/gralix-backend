@@ -897,6 +897,15 @@ const STRETCH_TAGS: Record<string, { goals: MobilityGoal[]; restrictions: Stiffn
 // Full extended library for bonus stretches when time allows
 const ALL_STRETCH_IDS = Object.keys(STRETCHES);
 
+/**
+ * Returns the canonical set of mobility/stretch exercise names as defined in
+ * the STRETCHES library. Use this to filter out non-mobility exercises from
+ * any pose or animation list.
+ */
+export function getMobilityStretchNames(): ReadonlySet<string> {
+  return new Set(Object.values(STRETCHES).map((s) => s.name));
+}
+
 export function getRoutineForGoal(goal: MobilityGoal | string): Stretch[] {
   const safeGoal = (GOAL_ROUTINES[goal as MobilityGoal] ? goal : "general") as MobilityGoal;
   return GOAL_ROUTINES[safeGoal].map((id) => STRETCHES[id]).filter(Boolean);

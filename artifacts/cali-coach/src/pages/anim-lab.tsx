@@ -13,6 +13,7 @@ import {
   type EnvAnchor,
 } from "@/lib/exercise-poses";
 import { getAllSkillTreeExercises } from "@/lib/skill-tree";
+import { getMobilityStretchNames } from "@/lib/mobility-service";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -531,7 +532,12 @@ function NumField({
 // ── Main AnimLab Page ────────────────────────────────────────────────────────
 
 export function AnimLabPage() {
-  const exerciseNames      = getMobilityExerciseNames();
+  const _allMobilityPoseNames = getMobilityExerciseNames();
+  const _mobilityStretchSet   = getMobilityStretchNames();
+  // Only show exercises that are canonical mobility stretches (not strength/skill-tree moves)
+  const exerciseNames = _allMobilityPoseNames
+    .filter(n => _mobilityStretchSet.has(n))
+    .sort();
   // Full skill-tree exercise list — every node, including ones with no pose data yet
   const skillExerciseNames = getAllSkillTreeExercises();
 

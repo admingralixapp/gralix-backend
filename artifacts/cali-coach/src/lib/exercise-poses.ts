@@ -3918,16 +3918,17 @@ export function getExerciseIntensity(exerciseName: string): ExerciseIntensity {
   if (RELAXED_SET.has(exerciseName))   return "relaxed";
   return "neutral";
 }
-export function getMobilityExerciseNames(): string[] {
-  return Object.keys(MOBILITY_POSE_LIBRARY);
-}
-
 /** Pose types that belong to skill-tree / regular workout exercises (not mobility-specific). */
 const SKILL_POSE_TYPES: ReadonlySet<string> = new Set([
   "push-up", "pull-up", "squat", "dip", "plank", "lunge",
   "hang-core", "muscle-up", "front-lever", "handstand",
   "human-flag", "dragon-flag", "l-sit", "row", "burpee", "nordic",
 ]);
+
+/** Returns all exercise names that have dedicated pose frames in MOBILITY_POSE_LIBRARY. */
+export function getMobilityExerciseNames(): string[] {
+  return Object.keys(MOBILITY_POSE_LIBRARY);
+}
 
 /** Returns all exercise names that map to skill-tree pose types, sorted alphabetically. */
 export function getSkillExerciseNames(): string[] {
