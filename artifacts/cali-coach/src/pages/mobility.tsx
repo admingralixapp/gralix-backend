@@ -635,8 +635,6 @@ function BioThumbnailSVG({ pose, color, env }: { pose: PoseData; color: string; 
 // every joint glides smoothly between keyframes — same engine as the main
 // Workout ExerciseAnimation component, tuned for slow therapeutic stretching.
 
-const FRAME_LABELS = ["Start", "Mid", "End"] as const;
-
 function HeroSkeleton({
   exerciseName, paused, color = "#22c55e",
 }: {
@@ -650,8 +648,6 @@ function HeroSkeleton({
   const [renderedPose, setRenderedPose] = useState<PoseData>(() => poseSet[0]);
   // Separate opacity for the puppet wrapper (env stays solid during fade).
   const [puppetOpacity, setPuppetOpacity] = useState(1);
-  // Which reference thumbnail is highlighted (0=Start, 1=Mid, 2=End).
-  const [frameIdx, setFrameIdx] = useState<0 | 1 | 2>(0);
   // Current SVG viewBox string — smoothly lerped toward the focus target.
   const [svgViewBox, setSvgViewBox] = useState("0 0 100 100");
   // 0→1 sine pulse for the force overlay animation.
@@ -675,7 +671,6 @@ function HeroSkeleton({
     // Reset state whenever the exercise changes.
     setRenderedPose(start);
     setPuppetOpacity(1);
-    setFrameIdx(0);
     // Snap viewBox to full-body on exercise change; zoom will ease in.
     currentVBRef.current = [...FULL_VB];
     setSvgViewBox("0 0 100 100");
@@ -711,29 +706,24 @@ function HeroSkeleton({
         // ── Phase 1: Start → Mid ──────────────────────────────────────────────
         setRenderedPose(lerpPoseData(start, mid, cycleT / MOB_TRANSITION_MS));
         setPuppetOpacity(1);
-        setFrameIdx(0);
       } else if (cycleT < 2 * MOB_TRANSITION_MS) {
         // ── Phase 2: Mid → End ────────────────────────────────────────────────
         setRenderedPose(lerpPoseData(mid, end, (cycleT - MOB_TRANSITION_MS) / MOB_TRANSITION_MS));
         setPuppetOpacity(1);
-        setFrameIdx(1);
       } else if (cycleT < 2 * MOB_TRANSITION_MS + MOB_HOLD_MS) {
         // ── Phase 3: Hold at End ──────────────────────────────────────────────
         setRenderedPose(end);
         setPuppetOpacity(1);
-        setFrameIdx(2);
       } else if (cycleT < 2 * MOB_TRANSITION_MS + MOB_HOLD_MS + MOB_FADE_MS) {
         // ── Phase 4: Fade-out (staying at End) ───────────────────────────────
         const t = (cycleT - 2 * MOB_TRANSITION_MS - MOB_HOLD_MS) / MOB_FADE_MS;
         setRenderedPose(end);
         setPuppetOpacity(1 - t);
-        setFrameIdx(2);
       } else {
         // ── Phase 5: Fade-in (snapped to Start) ──────────────────────────────
         const t = (cycleT - 2 * MOB_TRANSITION_MS - MOB_HOLD_MS - MOB_FADE_MS) / MOB_FADE_MS;
         setRenderedPose(start);
         setPuppetOpacity(t);
-        setFrameIdx(0);
       }
 
       rafRef.current = requestAnimationFrame(tick);
@@ -752,66 +742,18 @@ function HeroSkeleton({
     return { type: focusConfig.overlay, ax, ay, pulse: overlayPulse };
   })();
 
-  const frameLabel = FRAME_LABELS[frameIdx];
-
   return (
-    <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-
-      {/* ── Large bio-skeleton hero ── */}
-      <div style={{ width: "100%", maxWidth: 300, height: 240, position: "relative", flexShrink: 0 }}>
-        {/* Frame badge */}
-        <div style={{
-          position: "absolute", top: 6, left: "50%", transform: "translateX(-50%)",
-          fontSize: 9, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase",
-          color: "rgba(34,197,94,0.8)",
-          background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.22)",
-          borderRadius: 99, padding: "2px 11px", zIndex: 2, pointerEvents: "none", whiteSpace: "nowrap",
-          backdropFilter: "blur(6px)",
-        }}>
-          {frameLabel}
-        </div>
-        {/* RAF-driven LERP skeleton — opacity controlled by puppetOpacity */}
-        <div style={{ width: "100%", height: "100%", opacity: puppetOpacity }}>
-          <BioSkeletonSVG
-            pose={renderedPose}
-            paused={paused}
-            color={color}
-            env={env}
-            svgViewBox={svgViewBox}
-            overlayProps={overlayProps}
-          />
-        </div>
-      </div>
-
-      {/* ── 3 reference thumbnails ── */}
-      <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 300, flexShrink: 0 }}>
-        {poseSet.map((thumbPose, i) => {
-          const active = frameIdx === i;
-          return (
-            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-              <div style={{
-                width: "100%", aspectRatio: "1/1", borderRadius: 10, overflow: "visible", padding: 6,
-                border: `1px solid ${active ? "rgba(34,197,94,0.6)" : "rgba(255,255,255,0.06)"}`,
-                background: active ? "rgba(34,197,94,0.06)" : "rgba(255,255,255,0.02)",
-                boxShadow: active ? "0 0 16px rgba(34,197,94,0.2), inset 0 0 12px rgba(34,197,94,0.05)" : "none",
-                transition: "border-color 0.35s, box-shadow 0.35s, background 0.35s",
-              }}>
-                <BioThumbnailSVG
-                  pose={thumbPose}
-                  color={active ? color : "rgba(100,116,139,0.4)"}
-                  env={env}
-                />
-              </div>
-              <span style={{
-                fontSize: 8, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase",
-                color: active ? "rgba(34,197,94,0.9)" : "rgba(71,85,105,0.7)",
-                transition: "color 0.35s",
-              }}>
-                {FRAME_LABELS[i]}
-              </span>
-            </div>
-          );
-        })}
+    <div style={{ width: "100%", height: "100%", position: "relative" }}>
+      {/* RAF-driven LERP skeleton — opacity controlled by puppetOpacity */}
+      <div style={{ width: "100%", height: "100%", opacity: puppetOpacity }}>
+        <BioSkeletonSVG
+          pose={renderedPose}
+          paused={paused}
+          color={color}
+          env={env}
+          svgViewBox={svgViewBox}
+          overlayProps={overlayProps}
+        />
       </div>
     </div>
   );
@@ -1040,12 +982,12 @@ function ActiveWorkoutPlayer({
           color: rgba(148,163,184,0.9); font-size: 11px; font-weight: 600;
         }
 
-        /* ── ROW 2: Unified focus area — title + skeleton + thumbnails ── */
+        /* ── ROW 2: Unified focus area — title + skeleton ── */
         #ms-focus {
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          gap: 10px; padding: 10px 24px 6px;
-          overflow: hidden; min-height: 0;
+          gap: 10px; padding: 10px 24px 10px;
+          overflow: hidden; min-height: 0; flex: 1;
           position: relative; width: 100%;
         }
         /* Radial green glow behind skeleton */
@@ -1073,9 +1015,11 @@ function ActiveWorkoutPlayer({
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
           max-width: min(90vw, 480px); color: #f1f5f9;
         }
-        /* Skeleton hero container */
+        /* Skeleton hero container — fills space now thumbnails are removed */
         #ms-focus .hero-inner {
-          width: 100%; max-width: 320px; flex-shrink: 0; z-index: 1;
+          width: 100%; max-width: 340px;
+          flex: 1; min-height: 240px; max-height: 420px;
+          z-index: 1;
           animation: cockpitFadeIn 0.22s ease-out both;
         }
 

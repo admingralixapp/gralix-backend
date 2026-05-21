@@ -1514,35 +1514,34 @@ const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
   // Front view. Standing on one leg; raised foot draws large slow circles,
   // showing two opposite points in the arc (outward then inward).
   "Ankle Mobility Circles": [
-    { // START — standing, both feet flat (bilateral, about to lift one)
-      head: { cx: 50, cy: 10, r: 6 },
+    { // START
+      head: { cx: 45, cy: 21, r: 4.75 },
       lines: [
-        [[50, 16], [50, 48]],
-        [[50, 22], [36, 30], [28, 44]],
-        [[50, 22], [64, 30], [72, 44]],
-        [[50, 48], [44, 66], [42, 86]],
-        [[50, 48], [56, 66], [58, 86]],
+        [[45,29],[45.5,50]],
+        [[45,29],[34.5,39.5],[43,44.5]],
+        [[45,29],[56,38.5],[49,45]],
+        [[45.5,50],[41.5,66.5],[41,80]],
+        [[45.5,50],[50,67],[56,78.5],[54.5,81]],
       ],
     },
-    { // MID — standing on R-leg; L-knee raised, foot at outer arc (toe out-down)
-      head: { cx: 50, cy: 10, r: 6 },
+    { // MID
+      head: { cx: 45, cy: 21, r: 4.75 },
       lines: [
-        [[50, 16], [50, 48]],
-        [[50, 22], [36, 30], [28, 44]],
-        [[50, 22], [64, 30], [72, 44]],
-        [[50, 48], [56, 66], [60, 88]],                    // R-leg (standing, straight)
-        [[50, 48], [42, 62], [36, 76], [44, 86]],          // L-leg raised: knee up, foot circling outward
+        [[45,29],[45.5,50]],
+        [[45,29],[34.5,39.5],[43,44.5]],
+        [[45,29],[56,38.5],[49,45]],
+        [[45.5,50],[41.5,66.5],[41,80]],
+        [[45.5,50],[50,67],[54.5,77.5],[54.5,81]],
       ],
-      muscleGlow: { cx: 42, cy: 82, rx: 10, ry: 8 },
     },
-    { // END — foot has circled to inner arc (toe now pointing inward-down)
-      head: { cx: 50, cy: 10, r: 6 },
+    { // END
+      head: { cx: 45, cy: 21, r: 4.75 },
       lines: [
-        [[50, 16], [50, 48]],
-        [[50, 22], [36, 30], [28, 44]],
-        [[50, 22], [64, 30], [72, 44]],
-        [[50, 48], [56, 66], [60, 88]],
-        [[50, 48], [42, 62], [36, 76], [28, 82]],          // foot circled to inner position
+        [[45,29],[45.5,50]],
+        [[45,29],[34.5,39.5],[43,44.5]],
+        [[45,29],[56,38.5],[49,45]],
+        [[45.5,50],[41.5,66.5],[41,80]],
+        [[45.5,50],[50,67],[52,79.5],[54.5,81]],
       ],
     },
   ],
@@ -1994,35 +1993,34 @@ const MOBILITY_POSE_LIBRARY: Record<string, PoseSet> = {
   // Front view. Hanging from bar. Scapulae alternate between active depression
   // (body "rises") and full elevation (body "drops") — arms stay straight.
   "Active Scapular Hangs": [
-    { // START — dead hang, shoulders fully ELEVATED (passive, scapulae high)
-      head: { cx: 50, cy: 28, r: 6 },
+    { // START
+      head: { cx: 50.5, cy: 23.5, r: 4.75 },
       lines: [
-        [[50, 22], [36, 22], [28, 8]],                     // L-arm to bar
-        [[50, 22], [64, 22], [72, 8]],                     // R-arm to bar
-        [[50, 22], [50, 56]],                              // torso
-        [[50, 56], [44, 74], [42, 92]],
-        [[50, 56], [56, 74], [58, 92]],
+        [[50.5,34],[50.5,40],[50,48.5],[50.5,51]],
+        [[50.5,34],[42.5,18.5],[38.5,10],[38,8]],
+        [[50.5,34],[57.5,19],[61.5,10],[62,8.5]],
+        [[50,48.5],[45.5,62.5],[44.5,72]],
+        [[50,48.5],[55,62],[55.5,71.5]],
       ],
     },
-    { // MID — scapulae actively DEPRESSED; body rises in the socket
-      head: { cx: 50, cy: 36, r: 6 },
+    { // MID
+      head: { cx: 51, cy: 18, r: 4.75 },
       lines: [
-        [[50, 30], [36, 16], [28, 4]],                     // arms (shoulders now LOWER = pulled down)
-        [[50, 30], [64, 16], [72, 4]],
-        [[50, 30], [50, 64]],                              // torso slightly longer (body "rose")
-        [[50, 64], [44, 80], [42, 96]],
-        [[50, 64], [56, 80], [58, 96]],
+        [[50.5,26.5],[50.5,36],[50,44.5],[50.5,47]],
+        [[50.5,26.5],[43,20],[38.5,10.5],[37.5,8]],
+        [[50.5,26.5],[58,20],[61.5,10],[62.5,8.5]],
+        [[50,44.5],[45.5,58.5],[44.5,68]],
+        [[50,44.5],[55,58],[55.5,67.5]],
       ],
-      muscleGlow: { cx: 50, cy: 40, rx: 18, ry: 12 },
     },
-    { // END — scapulae re-elevated (top of full range cycle)
-      head: { cx: 50, cy: 24, r: 6 },
+    { // END
+      head: { cx: 51, cy: 18, r: 4.75 },
       lines: [
-        [[50, 18], [36, 24], [28, 10]],                    // shoulders elevated again
-        [[50, 18], [64, 24], [72, 10]],
-        [[50, 18], [50, 52]],
-        [[50, 52], [44, 70], [42, 88]],
-        [[50, 52], [56, 70], [58, 88]],
+        [[50.5,26.5],[50.5,36],[50,44.5],[50.5,47]],
+        [[50.5,26.5],[43,20],[38.5,10.5],[37.5,8]],
+        [[50.5,26.5],[58,20],[61.5,10],[62.5,8.5]],
+        [[50,44.5],[45.5,58.5],[44.5,68]],
+        [[50,44.5],[55,58],[55.5,67.5]],
       ],
     },
   ],
