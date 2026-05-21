@@ -985,8 +985,8 @@ function ActiveWorkoutPlayer({
         /* ── ROW 2: Unified focus area — title + skeleton ── */
         #ms-focus {
           display: flex; flex-direction: column;
-          align-items: center; justify-content: center;
-          gap: 10px; padding: 10px 24px 10px;
+          align-items: center; justify-content: flex-start;
+          gap: 0; padding: 10px 24px 8px;
           overflow: hidden; min-height: 0; flex: 1;
           position: relative; width: 100%;
         }
@@ -996,11 +996,17 @@ function ActiveWorkoutPlayer({
           position: absolute; inset: 0; pointer-events: none;
           background: radial-gradient(ellipse 55% 50% at 50% 55%, rgba(34,197,94,0.08) 0%, transparent 72%);
         }
-        /* Title chip + exercise name */
+        /* Title chip + exercise name — always above the skeleton */
         #ms-focus .focus-title {
           display: flex; flex-direction: column;
-          align-items: center; gap: 4px; z-index: 1;
+          align-items: center; gap: 4px;
+          position: relative; z-index: 3;
           flex-shrink: 0;
+          padding-bottom: 4px;
+          /* Subtle fade-out so any skeleton glow under the title dissolves cleanly */
+          background: linear-gradient(to bottom, rgba(8,13,18,0.72) 60%, transparent 100%);
+          border-radius: 8px;
+          padding: 4px 16px 8px;
         }
         #ms-focus .chip {
           font-size: 9px; font-weight: 800;
@@ -1015,11 +1021,13 @@ function ActiveWorkoutPlayer({
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
           max-width: min(90vw, 480px); color: #f1f5f9;
         }
-        /* Skeleton hero container — fills space now thumbnails are removed */
+        /* Skeleton hero container — fills remaining space below the title */
         #ms-focus .hero-inner {
           width: 100%; max-width: 340px;
-          flex: 1; min-height: 240px; max-height: 420px;
-          z-index: 1;
+          flex: 1; min-height: 220px; max-height: 400px;
+          position: relative; z-index: 1;
+          /* clip the SVG's overflow:visible glow so it never bleeds upward into the title */
+          clip-path: inset(-40px -40px 0 -40px);
           animation: cockpitFadeIn 0.22s ease-out both;
         }
 
