@@ -223,8 +223,8 @@ function PerformanceTrendsCard({ isPro }: { isPro: boolean }) {
 
       {/* Pro paywall overlay — only for free users */}
       {!isPro && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-6 py-8">
-          <div className="fixed inset-0 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 z-20 flex items-center justify-center px-6 py-8">
+          <div className="absolute inset-0 backdrop-blur-[2px]" />
           <div
             className="relative z-10 w-full max-w-sm rounded-2xl border p-6 flex flex-col items-center text-center space-y-4 shadow-2xl"
             style={{
