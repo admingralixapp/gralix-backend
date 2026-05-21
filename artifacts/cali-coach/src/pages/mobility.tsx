@@ -8,9 +8,6 @@ import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
 import { getPoseSet, getWorldObjects, getExerciseIntensity, type PoseData, type EnvAnchor } from "@/lib/exercise-poses";
 import { useTranslation } from "react-i18next";
-import { speak, setActiveVoiceProfile } from "@/lib/voice-service";
-import { getVoiceCues, getVoiceProfile } from "@/lib/workout-preferences";
-import { getWorkoutCue, getStretchCue } from "@/lib/cue-translations";
 import {
   getTasksForPreferences,
   shuffleRoutine,
@@ -907,38 +904,6 @@ function ActiveWorkoutPlayer({
   const isLast = stretchIndex + 1 >= routine.length;
 
   const { i18n } = useTranslation();
-
-  // ── Sync the equipped voice profile ─────────────────────────────────────
-  useEffect(() => {
-    setActiveVoiceProfile(getVoiceProfile());
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Speak the exercise coaching cue at the START of each stretch ─────────
-  useEffect(() => {
-    if (!getVoiceCues()) return;
-    if (!currentStretch) return;
-    const cue = getStretchCue(currentStretch.id, i18n.language) || currentStretch.coachingCue;
-    const t = setTimeout(() => {
-      speak(cue, "encouraging");
-    }, 600);
-    return () => clearTimeout(t);
-  }, [stretchIndex]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Voice cues at 30 s remaining and at 0 s ───────────────────────────────
-  const spokenRef = useRef<Record<string, boolean>>({});
-  useEffect(() => {
-    if (!getVoiceCues()) return;
-    const key30 = `${stretchIndex}:30`;
-    const key0  = `${stretchIndex}:0`;
-    if (secondsLeft === 30 && !spokenRef.current[key30]) {
-      spokenRef.current[key30] = true;
-      speak(getWorkoutCue("30s", i18n.language), "encouraging");
-    }
-    if (secondsLeft === 0 && !spokenRef.current[key0]) {
-      spokenRef.current[key0] = true;
-      speak(getWorkoutCue("complete", i18n.language), "encouraging");
-    }
-  }, [secondsLeft, stretchIndex, i18n.language]);
 
   // ── Viewport + scroll lock ────────────────────────────────────────────────
   useEffect(() => {
