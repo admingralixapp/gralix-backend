@@ -941,12 +941,12 @@ function ActiveWorkoutPlayer({
         @keyframes cockpitFadeIn   { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         @keyframes bioGhostPulse   { 0%,100%{opacity:.78} 50%{opacity:1} }
 
-        /* ── Shell: solid dark full-screen grid (3 rows) ── */
+        /* ── Shell: solid dark full-screen grid (4 rows) ── */
         #ms-shell {
           position: fixed; inset: 0;
           background: #080d12;
           display: grid;
-          grid-template-rows: 52px 1fr 172px;
+          grid-template-rows: 52px auto 1fr 172px;
           overflow: hidden;
           touch-action: none; overscroll-behavior: none;
           user-select: none; -webkit-user-select: none;
@@ -982,52 +982,46 @@ function ActiveWorkoutPlayer({
           color: rgba(148,163,184,0.9); font-size: 11px; font-weight: 600;
         }
 
-        /* ── ROW 2: Unified focus area — title + skeleton ── */
-        #ms-focus {
+        /* ── ROW 2: Title block — sits in its own grid row, never touched by skeleton ── */
+        #ms-title {
           display: flex; flex-direction: column;
-          align-items: center; justify-content: flex-start;
-          gap: 0; padding: 10px 24px 8px;
-          overflow: hidden; min-height: 0; flex: 1;
-          position: relative; width: 100%;
-        }
-        /* Radial green glow behind skeleton */
-        #ms-focus::before {
-          content: "";
-          position: absolute; inset: 0; pointer-events: none;
-          background: radial-gradient(ellipse 55% 50% at 50% 55%, rgba(34,197,94,0.08) 0%, transparent 72%);
-        }
-        /* Title chip + exercise name — always above the skeleton */
-        #ms-focus .focus-title {
-          display: flex; flex-direction: column;
-          align-items: center; gap: 4px;
-          position: relative; z-index: 3;
+          align-items: center; justify-content: center;
+          gap: 4px; padding: 10px 24px 8px;
+          background: #080d12;
+          position: relative; z-index: 2;
           flex-shrink: 0;
-          padding-bottom: 4px;
-          /* Subtle fade-out so any skeleton glow under the title dissolves cleanly */
-          background: linear-gradient(to bottom, rgba(8,13,18,0.72) 60%, transparent 100%);
-          border-radius: 8px;
-          padding: 4px 16px 8px;
         }
-        #ms-focus .chip {
+        #ms-title .chip {
           font-size: 9px; font-weight: 800;
           letter-spacing: 0.16em; text-transform: uppercase;
           color: #22c55e;
           background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.22);
           border-radius: 99px; padding: 2px 10px; line-height: 1.6;
         }
-        #ms-focus h2 {
+        #ms-title h2 {
           font-size: 21px; font-weight: 900; letter-spacing: -0.02em;
           margin: 0; line-height: 1.15; text-align: center;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
           max-width: min(90vw, 480px); color: #f1f5f9;
         }
-        /* Skeleton hero container — fills remaining space below the title */
-        #ms-focus .hero-inner {
-          width: 100%; max-width: 340px;
-          flex: 1; min-height: 220px; max-height: 400px;
+
+        /* ── ROW 3: Skeleton canvas — strictly bounded, overflow hidden ── */
+        #ms-canvas {
+          position: relative;
+          display: flex; align-items: center; justify-content: center;
+          overflow: hidden;
+          min-height: 0;
+        }
+        /* Radial green glow rendered only within the canvas row */
+        #ms-canvas::before {
+          content: "";
+          position: absolute; inset: 0; pointer-events: none;
+          background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(34,197,94,0.09) 0%, transparent 70%);
+        }
+        /* Skeleton hero container */
+        #ms-canvas .hero-inner {
+          width: 100%; height: 100%; max-width: 340px;
           position: relative; z-index: 1;
-          /* clip the SVG's overflow:visible glow so it never bleeds upward into the title */
-          clip-path: inset(-40px -40px 0 -40px);
           animation: cockpitFadeIn 0.22s ease-out both;
         }
 
@@ -1128,20 +1122,21 @@ function ActiveWorkoutPlayer({
           </div>
         </div>
 
-        {/* ── ROW 2: Unified focus column — title + skeleton + thumbnails ── */}
-        <div id="ms-focus">
-
-          {/* Title: chip + exercise name — animates in on stretch change */}
+        {/* ── ROW 2: Title block — its own grid row, skeleton cannot touch it ── */}
+        <div id="ms-title">
           <AnimatePresence mode="wait">
-            <motion.div key={`ttl-${stretchIndex}`} className="focus-title"
+            <motion.div key={`ttl-${stretchIndex}`}
               initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: "easeOut" }}>
+              exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.18, ease: "easeOut" }}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
               <div className="chip">Stretch {stretchIndex + 1} of {routine.length}</div>
               <h2>{currentStretch.name}</h2>
             </motion.div>
           </AnimatePresence>
+        </div>
 
-          {/* Skeleton hero — spring-morphing bio-mechanical figure */}
+        {/* ── ROW 3: Skeleton canvas — strictly bounded, overflow hidden ── */}
+        <div id="ms-canvas">
           <AnimatePresence mode="wait">
             <motion.div key={`hero-${stretchIndex}`} className="hero-inner"
               initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }}
@@ -1149,7 +1144,6 @@ function ActiveWorkoutPlayer({
               <HeroSkeleton exerciseName={currentStretch.name} paused={paused} />
             </motion.div>
           </AnimatePresence>
-
         </div>
 
         {/* ── ROW 3: Symmetric info dock ────────────────────────────── */}
