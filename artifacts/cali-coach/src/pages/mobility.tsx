@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
@@ -519,23 +519,24 @@ function EnvLayerThumb({ env }: { env: EnvAnchor }) {
 // physical size, then draws via PuppetFrame (identical to the Workout tab).
 
 function BioSkeletonSVG({
-  pose, paused, color = "#177548", env, overlayProps,
+  pose, paused, color = "#177548", env, frozenXfm, overlayProps,
 }: {
   pose: PoseData;
   paused: boolean;
   color?: string;
   env?: EnvAnchor;
+  /** Pre-computed transform frozen to the start frame — never recomputed mid-animation. */
+  frozenXfm: TorsoXfm | null;
   overlayProps?: { type: OverlayType; ax: number; ay: number; pulse: number };
 }) {
   const raw  = legacyToNamed(pose);
-  const xfm  = computeTorsoXfm(raw);
-  const norm = xfm ? applyTorsoXfm(raw, xfm) : raw;
+  const norm = frozenXfm ? applyTorsoXfm(raw, frozenXfm) : raw;
 
-  // Overlay anchor is in original pose space — apply the same transform.
-  const normOverlay = overlayProps && xfm ? {
+  // Overlay anchor is in original pose space — apply the same frozen transform.
+  const normOverlay = overlayProps && frozenXfm ? {
     ...overlayProps,
-    ax: overlayProps.ax * xfm.scale + xfm.tx,
-    ay: overlayProps.ay * xfm.scale + xfm.ty,
+    ax: overlayProps.ax * frozenXfm.scale + frozenXfm.tx,
+    ay: overlayProps.ay * frozenXfm.scale + frozenXfm.ty,
   } : overlayProps;
 
   return (
@@ -601,6 +602,14 @@ function HeroSkeleton({
   const poseSet    = getPoseSet(exerciseName);
   const env        = getWorldObjects(exerciseName)[0];
   const focusConfig = FOCUS_CONFIG[exerciseName] ?? null;
+
+  // Compute the torso transform ONCE from the start frame and freeze it for
+  // the entire exercise session. Using the start frame prevents any mid-animation
+  // scale jitter caused by tiny lerp-induced changes in spine coordinate length.
+  const frozenXfm = useMemo(
+    () => computeTorsoXfm(legacyToNamed(poseSet[0])),
+    [exerciseName], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   // Live-rendered interpolated pose — starts at keyframe 0.
   const [renderedPose, setRenderedPose] = useState<PoseData>(() => poseSet[0]);
@@ -690,6 +699,7 @@ function HeroSkeleton({
           paused={paused}
           color={color}
           env={env}
+          frozenXfm={frozenXfm}
           overlayProps={overlayProps}
         />
       </div>
