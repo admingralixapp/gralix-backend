@@ -17,7 +17,7 @@ export function TrainingHub() {
   return (
     <div className="flex flex-col min-h-full">
       <div
-        className="sticky top-0 z-20 flex border-b border-border bg-background"
+        className="sticky top-0 z-[60] flex border-b border-border bg-background"
       >
         <button
           onClick={() => setTab("workout")}
