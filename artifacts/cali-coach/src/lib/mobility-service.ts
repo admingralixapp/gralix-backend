@@ -995,6 +995,80 @@ export function getWarmupSuggestionsFor(exerciseName: string): Stretch[] {
   );
 }
 
+/**
+ * Contextual 10-Minute Warmup Sequence Engine.
+ *
+ * Priority hierarchy:
+ *   1. Discomfort match — if flaggedJoints is non-empty, pull stretches whose
+ *      `restrictions` cover those joint areas (wrist/elbow→Wrists,
+ *      shoulder/neck→Shoulders, hips/knee→Hips, ankle→Ankles).
+ *   2. Workout goal match — if joints are all nominal, infer the mobility goal
+ *      from the active exercise name and return stretches tagged for that goal.
+ *
+ * Always returns exactly `count` (default 4) unique stretches (~10 min).
+ */
+export function buildWarmupSequence(
+  flaggedJoints: string[],
+  exerciseName?: string,
+  count = 4,
+): Stretch[] {
+  // Joint name → StiffnessArea mapping
+  const JOINT_TO_AREA: Record<string, StiffnessArea> = {
+    wrist:    "Wrists",
+    elbow:    "Wrists",
+    shoulder: "Shoulders",
+    neck:     "Shoulders",
+    hips:     "Hips",
+    knee:     "Hips",
+    ankle:    "Ankles",
+  };
+
+  if (flaggedJoints.length > 0) {
+    // Resolve unique target areas from flagged joint names
+    const targetAreas = new Set<StiffnessArea>(
+      flaggedJoints
+        .map(j => JOINT_TO_AREA[j.toLowerCase()])
+        .filter((a): a is StiffnessArea => a !== undefined),
+    );
+
+    // Score every stretch by how many target areas it covers
+    const scored = Object.entries(STRETCHES).map(([id, stretch]) => {
+      const tags = STRETCH_TAGS[id];
+      const score = tags
+        ? [...tags.restrictions].filter(r => targetAreas.has(r as StiffnessArea)).length
+        : 0;
+      return { stretch, score };
+    });
+
+    const matching = scored
+      .filter(s => s.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(s => s.stretch);
+
+    if (matching.length >= count) return matching.slice(0, count);
+
+    // Pad to `count` with general stretches not already included
+    const used = new Set(matching.map(s => s.id));
+    const fallback = Object.values(STRETCHES).filter(s => !used.has(s.id));
+    return [...matching, ...fallback].slice(0, count);
+  }
+
+  // No joint flags — use goal inference from the active exercise name
+  const goal = exerciseName ? inferGoalFromSessions([exerciseName]) : "general";
+
+  const goalMatches = Object.entries(STRETCH_TAGS)
+    .filter(([, t]) => t.goals.includes(goal as MobilityGoal))
+    .map(([id]) => STRETCHES[id])
+    .filter((s): s is Stretch => s !== undefined);
+
+  if (goalMatches.length >= count) return goalMatches.slice(0, count);
+
+  // Pad with the general goal routine
+  const used = new Set(goalMatches.map(s => s.id));
+  const general = getRoutineForGoal("general").filter(s => !used.has(s.id));
+  return [...goalMatches, ...general].slice(0, count);
+}
+
 /** Format seconds as M:SS */
 export function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);

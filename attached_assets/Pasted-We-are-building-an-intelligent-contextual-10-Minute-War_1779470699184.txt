@@ -1,0 +1,27 @@
+We are building an intelligent, contextual '10-Minute Warmup' routine engine that bridges the Joint Readiness data, the main Workout selector, and the Daily Mobility exercise data arrays:
+
+1. Add Post-Log Navigation Action Buttons:
+
+Open the Joint Readiness component configuration (src/components/Dashboard.tsx or related view file).
+
+Tier 1 View: Below the nominal text confirmation, render a clean call-to-action button: PROCEED TO WORKOUT that smoothly focuses the view on the primary workout selection card.
+
+Tier 2 & 3 View: Below the warning/caution banners, render two side-by-side minimalist options: START TARGETED WARMUP (solid #177548 green fill) and CONTINUE TO WORKOUT ANYWAY (thin black border outline, giving full user autonomy).
+
+2. Create the Contextual Warmup Filtering Logic:
+
+Create a reusable or conditional view context for the Warmup sequence. This must not be a new application section, but an overlay modal or inline module fueled by the existing Daily Mobility exercise database.
+
+Program the algorithm to compile a specialized 4-exercise, 10-minute sequence using this priority hierarchy:
+
+Discomfort Match: If any joint readiness slider score is below 7, filter the mobility list to only render exercises matching those specific flagged joint strings (e.g., Wrist, Shoulder).
+
+Movement Goal Match: If joint telemetry is perfect, filter the warmup sequence based on the active selection in the Workout dropdown menu (e.g., if 'Push-Up' is active, pull chest and scapular mobility exercises mapped to that physical goal).
+
+3. Add the Launcher Shortcut:
+
+Open the main Workout tab selector card layout. Near the primary 'START WORKOUT' action button, inject a sleek, secondary button option: Start Warmup First.
+
+Ensure this launcher button fires the exact same contextual, muscle-group-targeted mobility sequence described above.
+
+Goal: Interconnect the readiness scores and exercise choices to dynamically generate custom, high-fidelity warmup loops without locking or restricting the user's primary navigation freedom

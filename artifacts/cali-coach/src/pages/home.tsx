@@ -21,6 +21,8 @@ import {
   ChevronDown,
   AlertTriangle,
   ShieldCheck,
+  X,
+  Timer,
 } from "lucide-react";
 import { getDailyPrescription } from "@/lib/daily-prescription";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,10 +31,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SkillMap } from "@/components/skill-map";
 import { SocialFeed } from "@/components/social-feed";
 import { useMobilityStatus, useNotificationScheduler } from "@/lib/use-mobility";
-import { GOAL_LABELS, type MobilityGoal } from "@/lib/mobility-service";
+import { GOAL_LABELS, type MobilityGoal, type Stretch, buildWarmupSequence } from "@/lib/mobility-service";
 import { useLeaderboard, useMyProfile } from "@/lib/social";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { format as fmtDate } from "date-fns";
 import {
   ResponsiveContainer,
@@ -260,6 +263,102 @@ function PerformanceTrendsCard({ isPro }: { isPro: boolean }) {
   );
 }
 
+// ─── Contextual 10-Minute Warmup Modal ───────────────────────────────────────
+
+function WarmupModal({
+  stretches,
+  onClose,
+}: {
+  stretches: Stretch[];
+  onClose: () => void;
+}) {
+  const totalSeconds = stretches.reduce((s, x) => s + x.durationSeconds, 0);
+  const mins = Math.ceil(totalSeconds / 60);
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+      />
+      {/* Sheet */}
+      <div
+        className="relative z-10 bg-white w-full sm:max-w-md mx-auto rounded-t-3xl sm:rounded-3xl max-h-[88vh] flex flex-col"
+        style={{ border: "1px solid rgba(0,0,0,0.10)" }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 shrink-0">
+          <div>
+            <h2 className="text-base font-black text-black">Targeted Warmup</h2>
+            <p className="text-xs text-black/45 flex items-center gap-1 mt-0.5">
+              <Timer className="w-3 h-3" />
+              {stretches.length} exercises · ~{mins} min
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/6 transition-colors"
+          >
+            <X className="w-4 h-4 text-black/50" />
+          </button>
+        </div>
+
+        {/* Exercise list */}
+        <div className="overflow-y-auto flex-1 divide-y divide-black/8">
+          {stretches.map((stretch, i) => (
+            <div key={stretch.id} className="px-6 py-4 flex gap-4">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0 mt-0.5"
+                style={{ background: "#177548" }}
+              >
+                {i + 1}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="text-sm font-bold text-black">{stretch.name}</span>
+                  <span
+                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                    style={{ background: "rgba(23,117,72,0.08)", color: "#177548" }}
+                  >
+                    {stretch.durationSeconds}s
+                  </span>
+                </div>
+                <p className="text-xs text-black/55 leading-snug mb-1.5">
+                  {stretch.description}
+                </p>
+                <p className="text-[11px] font-semibold leading-snug" style={{ color: "#177548" }}>
+                  💡 {stretch.coachingCue}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer CTAs */}
+        <div className="px-6 py-4 border-t border-black/10 space-y-2 shrink-0">
+          <Link
+            href="/training?tab=daily"
+            onClick={onClose}
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-black text-white transition-all hover:opacity-90"
+            style={{ background: "#177548" }}
+          >
+            <Sparkles className="w-4 h-4" />
+            Open Full Mobility Session
+          </Link>
+          <button
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold text-black/55 hover:bg-black/4 transition-colors border border-black/12"
+          >
+            Continue to Workout Instead
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 // ─── Joint Readiness Quick-Log Widget ────────────────────────────────────────
 
 const JOINT_LS_KEY = "calicoach_joint_readiness_v1";
@@ -280,7 +379,13 @@ const DEFAULT_INPUT: JointInput = { wrist: 7, elbow: 7, shoulder: 7, neck: 7, hi
 type WarningTier = 1 | 2 | 3;
 interface ReadinessWarning { tier: WarningTier; joints: string[] }
 
-function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () => void }) {
+function JointReadinessWidget({
+  onNavigateProgress,
+  onOpenWarmup,
+}: {
+  onNavigateProgress: () => void;
+  onOpenWarmup: (flaggedJoints: string[]) => void;
+}) {
   const today = fmtDate(new Date(), "yyyy-MM-dd");
 
   const [logs,      setLogs]      = useState<JointLog[]>(loadJoints);
@@ -377,64 +482,106 @@ function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () =
 
       {/* ── Warning / success banner — always visible once submitted ──────────── */}
       {warning && !expanded && (
-        <div className="px-5 pb-4">
+        <div className="px-5 pb-4 space-y-2.5">
+          {/* ── Tier 1: all nominal ─────────────────────────────────────────────── */}
           {warning.tier === 1 && (
-            <div
-              className="flex items-start gap-2.5 rounded-xl px-4 py-3"
-              style={{ background: "rgba(23,117,72,0.07)", border: "1px solid rgba(23,117,72,0.25)" }}
-            >
-              <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#177548" }} />
-              <p className="text-xs font-semibold leading-snug" style={{ color: "#177548" }}>
-                Mechanical integrity nominal. Enjoy your session.
-              </p>
-            </div>
-          )}
-
-          {warning.tier === 2 && (
-            <div
-              className="rounded-xl px-4 py-3 space-y-2"
-              style={{ background: "rgba(180,83,9,0.06)", border: "1px solid rgba(180,83,9,0.28)" }}
-            >
-              <div className="flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#b45309" }} />
-                <p className="text-xs font-semibold leading-snug text-black">
-                  Sub-optimal joint readiness detected in your{" "}
-                  <span className="font-black" style={{ color: "#b45309" }}>
-                    {fmtJoints(warning.joints)}
-                  </span>
-                  . Consider executing a targeted warm-up before loading these joints.
+            <>
+              <div
+                className="flex items-start gap-2.5 rounded-xl px-4 py-3"
+                style={{ background: "rgba(23,117,72,0.07)", border: "1px solid rgba(23,117,72,0.25)" }}
+              >
+                <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#177548" }} />
+                <p className="text-xs font-semibold leading-snug" style={{ color: "#177548" }}>
+                  Mechanical integrity nominal. Enjoy your session.
                 </p>
               </div>
-            </div>
-          )}
-
-          {warning.tier === 3 && (
-            <div
-              className="rounded-xl px-4 py-3.5 space-y-3"
-              style={{ background: "rgba(185,28,28,0.06)", border: "2px solid rgba(185,28,28,0.55)" }}
-            >
-              <div className="flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-red-700" />
-                <p className="text-xs font-bold leading-snug text-black">
-                  <span className="font-black text-red-700">⚠ CRITICAL INJURY RISK DETECTED:</span>{" "}
-                  Heavy joint strain flagged in your{" "}
-                  <span className="font-black text-red-700">{fmtJoints(warning.joints)}</span>.
-                  {" "}We strongly recommend routing to today's therapeutic Daily Mobility sequence instead.
-                </p>
-              </div>
-              {/* Primary suggested CTA — highlighted to Mobility; workout stays unlocked */}
               <Link
-                href="/mobility"
-                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-xs font-black uppercase tracking-wider text-white transition-all hover:opacity-90"
+                href="/training"
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-white transition-all hover:opacity-90"
                 style={{ background: "#177548" }}
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                Start Daily Mobility Sequence
+                <Activity className="w-3.5 h-3.5" />
+                Proceed to Workout
               </Link>
-              <p className="text-[10px] text-black/40 text-center leading-tight">
-                Your standard workout remains fully accessible — this is a recommendation only.
+            </>
+          )}
+
+          {/* ── Tier 2: sub-optimal ─────────────────────────────────────────────── */}
+          {warning.tier === 2 && (
+            <>
+              <div
+                className="rounded-xl px-4 py-3"
+                style={{ background: "rgba(180,83,9,0.06)", border: "1px solid rgba(180,83,9,0.28)" }}
+              >
+                <div className="flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#b45309" }} />
+                  <p className="text-xs font-semibold leading-snug text-black">
+                    Sub-optimal joint readiness detected in your{" "}
+                    <span className="font-black" style={{ color: "#b45309" }}>
+                      {fmtJoints(warning.joints)}
+                    </span>
+                    . Consider executing a targeted warm-up before loading these joints.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onOpenWarmup(warning.joints)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide text-white transition-all hover:opacity-90"
+                  style={{ background: "#177548" }}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Start Targeted Warmup
+                </button>
+                <Link
+                  href="/training"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide text-black/70 border border-black/20 hover:bg-black/4 transition-all"
+                >
+                  <Activity className="w-3.5 h-3.5" />
+                  Workout Anyway
+                </Link>
+              </div>
+            </>
+          )}
+
+          {/* ── Tier 3: critical ────────────────────────────────────────────────── */}
+          {warning.tier === 3 && (
+            <>
+              <div
+                className="rounded-xl px-4 py-3"
+                style={{ background: "rgba(185,28,28,0.06)", border: "2px solid rgba(185,28,28,0.55)" }}
+              >
+                <div className="flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-red-700" />
+                  <p className="text-xs font-bold leading-snug text-black">
+                    <span className="font-black text-red-700">⚠ CRITICAL INJURY RISK DETECTED:</span>{" "}
+                    Heavy joint strain flagged in your{" "}
+                    <span className="font-black text-red-700">{fmtJoints(warning.joints)}</span>.
+                    {" "}We strongly recommend a therapeutic warm-up before loading this area.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onOpenWarmup(warning.joints)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide text-white transition-all hover:opacity-90"
+                  style={{ background: "#177548" }}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Start Targeted Warmup
+                </button>
+                <Link
+                  href="/training"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wide text-black/70 border border-black/20 hover:bg-black/4 transition-all"
+                >
+                  <Activity className="w-3.5 h-3.5" />
+                  Workout Anyway
+                </Link>
+              </div>
+              <p className="text-[10px] text-black/35 text-center leading-tight">
+                Full workout access is preserved — this is a safety recommendation only.
               </p>
-            </div>
+            </>
           )}
         </div>
       )}
@@ -599,6 +746,21 @@ export function Home() {
   const { data: mobilityStatus, isLoading: loadingMobility } = useMobilityStatus();
   const { data: profile } = useMyProfile();
 
+  // ── Warmup modal state ────────────────────────────────────────────────────
+  const [warmupCtx, setWarmupCtx] = useState<{
+    flaggedJoints: string[];
+    exerciseName?: string;
+  } | null>(null);
+
+  const warmupStretches = useMemo(
+    () => warmupCtx
+      ? buildWarmupSequence(warmupCtx.flaggedJoints, warmupCtx.exerciseName)
+      : [],
+    [warmupCtx],
+  );
+
+  const recentExerciseName = recentSessions?.[0]?.exerciseName;
+
   // Fetch all sessions to evaluate real skill tree mastery (same as skill-tree page)
   const { data: allSessions } = useListSessions(
     { limit: 500 },
@@ -645,12 +807,24 @@ export function Home() {
             </div>
           )}
         </div>
-        <Button asChild size="lg" className="font-extrabold">
-          <Link href="/training">
-            <Activity className="w-5 h-5 mr-2" />
-            {t("dashboard.startWorkout")}
-          </Link>
-        </Button>
+        <div className="flex flex-col items-end gap-2">
+          <Button asChild size="lg" className="font-extrabold">
+            <Link href="/training">
+              <Activity className="w-5 h-5 mr-2" />
+              {t("dashboard.startWorkout")}
+            </Link>
+          </Button>
+          <button
+            onClick={() => setWarmupCtx({
+              flaggedJoints: [],
+              exerciseName: recentExerciseName,
+            })}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-black/15 text-black/55 hover:bg-black/4 transition-all"
+          >
+            <Sparkles className="w-3 h-3" style={{ color: "#177548" }} />
+            Start Warmup First
+          </button>
+        </div>
       </header>
 
       {/* ── Stats Grid (5 cards) ───────────────────────────────────── */}
@@ -708,6 +882,9 @@ export function Home() {
       {/* ── Joint Readiness Quick-Log ──────────────────────────────── */}
       <JointReadinessWidget
         onNavigateProgress={() => setLocation("/mastery?tab=progress")}
+        onOpenWarmup={(flaggedJoints) =>
+          setWarmupCtx({ flaggedJoints, exerciseName: recentExerciseName })
+        }
       />
 
       {/* ── Performance Trends (Pro paywall) ──────────────────────── */}
@@ -865,6 +1042,14 @@ export function Home() {
           <SocialFeed />
         </CardContent>
       </Card>
+
+      {/* ── Contextual Warmup Modal ────────────────────────────────── */}
+      {warmupCtx && warmupStretches.length > 0 && (
+        <WarmupModal
+          stretches={warmupStretches}
+          onClose={() => setWarmupCtx(null)}
+        />
+      )}
     </div>
   );
 }
