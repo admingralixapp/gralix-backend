@@ -3540,10 +3540,10 @@ export function Workout() {
                       <span
                         className="text-[11px] font-black uppercase tracking-[0.18em] px-3 py-1.5 rounded-lg"
                         style={{
-                          background: "rgba(23,117,72,0.10)",
-                          color: "#177548",
-                          border: "1px solid rgba(23,117,72,0.28)",
-                          boxShadow: "0 1px 6px rgba(23,117,72,0.12)",
+                          background: "rgba(255,255,255,0.85)",
+                          color: "#000000",
+                          border: "1.5px solid #000000",
+                          boxShadow: "0 1px 6px rgba(0,0,0,0.10)",
                         }}
                       >
                         ⚡ Pro Feature
