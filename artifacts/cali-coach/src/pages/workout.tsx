@@ -2495,7 +2495,7 @@ export function Workout() {
             </div>
 
             {/* CTAs */}
-            <div className="w-full space-y-2.5 pt-1">
+            <div className="w-full space-y-3 pt-1">
               <button
                 onClick={() => { setShowCameraPaywall(false); setLocation("/shop"); }}
                 className="w-full py-3.5 rounded-xl text-sm font-black tracking-wide transition-all"
@@ -2507,19 +2507,14 @@ export function Workout() {
               >
                 {t("progress.startTrial", "Start 3-Day Free Trial")}
               </button>
+              <p className="text-[10px] text-muted-foreground/60">{t("progress.trialNote", "Cancel any time · No charge today")}</p>
               <button
-                onClick={() => {
-                  setShowCameraPaywall(false);
-                  setIsManualLog(true);
-                  setManualReps(10);
-                  setManualRpe(null);
-                }}
-                className="w-full py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setShowCameraPaywall(false)}
+                className="w-full py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                {t("workout.manualLogNoAI", "Continue with Manual Log")}
+                Cancel
               </button>
             </div>
-            <p className="text-[10px] text-muted-foreground/60">{t("progress.trialNote", "Cancel any time · No charge today")}</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -3511,27 +3506,50 @@ export function Workout() {
               <div className="space-y-0 divide-y divide-black/[0.06] rounded-2xl border border-black/[0.08] overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
 
                 {/* ROW 1 — Live Feedback (Pro) */}
-                <div className="px-4 py-4 space-y-3 bg-white">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-black">⚡ Train with Live Feedback</span>
-                    {!isPro && (
-                      <span
-                        className="text-[9px] font-black uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-md"
-                        style={{ background: "rgba(23,117,72,0.10)", color: "#177548", border: "1px solid rgba(23,117,72,0.22)" }}
-                      >
-                        PRO
-                      </span>
-                    )}
+                <div
+                  className="relative px-4 py-4 space-y-3 bg-white overflow-hidden"
+                  onClick={!isPro ? () => setShowCameraPaywall(true) : undefined}
+                  style={!isPro ? { cursor: "pointer" } : undefined}
+                >
+                  {/* Content — always rendered; blurred behind overlay for free users */}
+                  <div className={!isPro ? "pointer-events-none select-none" : undefined}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-black">⚡ Train with Live Feedback</span>
+                    </div>
+                    <button
+                      onClick={isPro ? handleStart : undefined}
+                      disabled={!selectedExerciseId || isModelLoading}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+                      style={{ background: "#177548", boxShadow: "0 3px 14px rgba(23,117,72,0.28)" }}
+                    >
+                      <Play className="w-4 h-4 fill-current" />
+                      {isModelLoading ? t("workout.loadingModel") : "Start Session"}
+                    </button>
                   </div>
-                  <button
-                    onClick={handleStart}
-                    disabled={!selectedExerciseId || isModelLoading}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
-                    style={{ background: "#177548", boxShadow: "0 3px 14px rgba(23,117,72,0.28)" }}
-                  >
-                    <Play className="w-4 h-4 fill-current" />
-                    {isModelLoading ? t("workout.loadingModel") : "Start Session"}
-                  </button>
+
+                  {/* Frosted glass overlay — free tier only */}
+                  {!isPro && (
+                    <div
+                      className="absolute inset-0 flex items-center justify-center"
+                      style={{
+                        backdropFilter: "blur(5px)",
+                        WebkitBackdropFilter: "blur(5px)",
+                        background: "rgba(255,255,255,0.55)",
+                      }}
+                    >
+                      <span
+                        className="text-[11px] font-black uppercase tracking-[0.18em] px-3 py-1.5 rounded-lg"
+                        style={{
+                          background: "rgba(23,117,72,0.10)",
+                          color: "#177548",
+                          border: "1px solid rgba(23,117,72,0.28)",
+                          boxShadow: "0 1px 6px rgba(23,117,72,0.12)",
+                        }}
+                      >
+                        ⚡ Pro Feature
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* ROW 2 — Manual (free) */}
