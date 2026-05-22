@@ -2963,7 +2963,7 @@ export function Workout() {
           SETUP MODE — standard page view, nav bar always visible
       ══════════════════════════════════════════════════════════════════════ */}
       {!cameraActive && (
-        <div className="px-4 pt-5 pb-6 sm:px-6 sm:pt-6 max-w-xl mx-auto space-y-4">
+        <div className="px-4 py-6 sm:px-6 max-w-xl mx-auto space-y-4">
 
           {/* ── Page header ─────────────────────────────────────────────── */}
           <div className="flex items-center gap-3">
@@ -3025,7 +3025,7 @@ export function Workout() {
 
             return (
               /* position+zIndex creates ONE stacking context above Sets/Ready cards */
-              <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-2 gap-4" style={{ position: "relative", zIndex: 50 }}>
+              <div className="grid grid-cols-2 gap-3" style={{ position: "relative", zIndex: 50 }}>
 
                 {/* ══ LEFT: Bodyweight Fundamentals ══════════════════════════ */}
                 {/* No backdropFilter — avoids creating a nested stacking context that clips the dropdown */}
