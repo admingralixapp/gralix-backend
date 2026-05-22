@@ -192,7 +192,7 @@ function EnvSVG({ env }: { env: EnvAnchor }) {
  * derived from runtime coordinates, there is zero z-order flicker even when
  * limbs pass through each other's screen positions.
  */
-function PuppetFrame({ pose, color }: { pose: NamedPoseData; color: string }) {
+export function PuppetFrame({ pose, color }: { pose: NamedPoseData; color: string }) {
   const drawOrder: [string, [number, number][]][] = [
     ["spine",    pose.spine],
     ["rightLeg", pose.rightLeg],

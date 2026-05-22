@@ -6,7 +6,8 @@ import { ArrowLeft, CheckCircle2, Clock, Flame, Pause, Pencil, Play, Shuffle, Sk
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
-import { getPoseSet, getWorldObjects, getExerciseIntensity, type PoseData, type EnvAnchor } from "@/lib/exercise-poses";
+import { getPoseSet, getWorldObjects, getExerciseIntensity, legacyToNamed, type PoseData, type EnvAnchor } from "@/lib/exercise-poses";
+import { PuppetFrame } from "@/components/exercise-animation";
 import { useTranslation } from "react-i18next";
 import {
   getTasksForPreferences,
@@ -98,25 +99,7 @@ function ProgressDots({
   );
 }
 
-// ─── Bio-Mechanical Skeleton helpers ─────────────────────────────────────────
-
-type BioSeg = { x1: number; y1: number; x2: number; y2: number };
-
-function extractSegments(lines: [number, number][][]): BioSeg[] {
-  const segs: BioSeg[] = [];
-  for (const pts of lines) {
-    for (let i = 0; i < pts.length - 1; i++) {
-      segs.push({ x1: pts[i][0], y1: pts[i][1], x2: pts[i + 1][0], y2: pts[i + 1][1] });
-    }
-  }
-  return segs;
-}
-
-function extractAllPoints(lines: [number, number][][]): [number, number][] {
-  const out: [number, number][] = [];
-  for (const pts of lines) for (const p of pts) out.push(p);
-  return out;
-}
+// ─── Mobility LERP helpers ────────────────────────────────────────────────────
 
 // ─── Mobility LERP engine ─────────────────────────────────────────────────────
 //
@@ -524,28 +507,21 @@ function EnvLayerThumb({ env }: { env: EnvAnchor }) {
   return null;
 }
 
-// ─── BioSkeletonSVG — spring-morphing bio-mechanical hero figure ──────────────
-// Renders a single already-interpolated PoseData frame as an SVG skeleton.
-// No animation logic here — the RAF loop in HeroSkeleton drives all motion by
-// calling lerpPoseData() every frame and passing the result as `pose`.
+// ─── BioSkeletonSVG — delegates rendering to the shared PuppetFrame renderer ──
+// Converts the legacy PoseData frame to NamedPoseData and renders identically
+// to the main Workout tab's ExerciseAnimation component.
 
 function BioSkeletonSVG({
-  pose, paused, color = "#177548", boneColor = "#177548", env, svgViewBox = "0 0 100 100", overlayProps,
+  pose, paused, color = "#177548", env, svgViewBox = "0 0 100 100", overlayProps,
 }: {
   pose: PoseData;
   paused: boolean;
-  /** Joint node fill color — deep green */
   color?: string;
-  /** Bone stroke color — dark charcoal */
-  boneColor?: string;
   env?: EnvAnchor;
-  /** Zoomed viewBox string — lerped by HeroSkeleton for smooth auto-zoom. */
   svgViewBox?: string;
-  /** If set, a force-direction overlay is drawn at the given SVG coordinate. */
   overlayProps?: { type: OverlayType; ax: number; ay: number; pulse: number };
 }) {
-  const segs = extractSegments(pose.lines);
-  const pts  = extractAllPoints(pose.lines);
+  const named = legacyToNamed(pose);
 
   return (
     <svg
@@ -555,66 +531,14 @@ function BioSkeletonSVG({
       aria-hidden="true"
       style={{
         overflow: "visible",
-        filter: paused
-          ? "none"
-          : "drop-shadow(0 0 5px rgba(23,117,72,0.30))",
+        filter: paused ? "none" : `drop-shadow(0 0 10px ${color}44)`,
         opacity: paused ? 0.40 : 1,
         animation: !paused ? "bioGhostPulse 2.5s ease-in-out infinite" : "none",
         transition: "opacity 0.4s ease",
       }}
     >
-      <defs>
-        <filter id="bio-joint-glow" x="-250%" y="-250%" width="600%" height="600%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-
-      {/* Environmental anchor — rendered BEHIND skeleton */}
       {env && <EnvLayer env={env} />}
-
-      {/* Capsule limbs — dark charcoal bones for light background */}
-      {segs.map((seg, i) => (
-        <line
-          key={i}
-          x1={seg.x1} y1={seg.y1} x2={seg.x2} y2={seg.y2}
-          stroke={boneColor}
-          strokeWidth={7}
-          strokeLinecap="round"
-          fill="none"
-        />
-      ))}
-
-      {/* Glowing joint nodes — deep green accent */}
-      {pts.map(([x, y], i) => (
-        <circle
-          key={i}
-          cx={x} cy={y}
-          r={3.2}
-          fill={color}
-          filter="url(#bio-joint-glow)"
-        />
-      ))}
-
-      {/* Head — hollow halo ring + inner core dot */}
-      <circle
-        cx={pose.head.cx} cy={pose.head.cy}
-        r={(pose.head.r ?? 7) + 2}
-        fill="rgba(23,117,72,0.06)"
-        stroke={boneColor}
-        strokeWidth={2.5}
-      />
-      <circle
-        cx={pose.head.cx} cy={pose.head.cy}
-        r={2.8}
-        fill={color}
-        opacity={0.7}
-      />
-
-      {/* Force-direction overlay — drawn on top of everything, in SVG space */}
+      <PuppetFrame pose={named} color={color} />
       {overlayProps && (
         <ForceOverlayLayer
           type={overlayProps.type}
@@ -629,9 +553,8 @@ function BioSkeletonSVG({
 
 // ─── BioThumbnailSVG — static capsule-style figure for reference strips ───────
 
-function BioThumbnailSVG({ pose, color = "#177548", boneColor = "#177548", env }: { pose: PoseData; color?: string; boneColor?: string; env?: EnvAnchor }) {
-  const segs = extractSegments(pose.lines);
-  const pts  = extractAllPoints(pose.lines);
+function BioThumbnailSVG({ pose, color = "#177548", env }: { pose: PoseData; color?: string; env?: EnvAnchor }) {
+  const named = legacyToNamed(pose);
   return (
     <svg
       viewBox="0 0 100 100"
@@ -640,22 +563,11 @@ function BioThumbnailSVG({ pose, color = "#177548", boneColor = "#177548", env }
       aria-hidden="true"
       style={{
         overflow: "visible",
-        filter: "drop-shadow(0 0 3px rgba(23,117,72,0.30))",
+        filter: `drop-shadow(0 0 3px ${color}4d)`,
       }}
     >
-      {/* ── Environmental anchor behind skeleton ── */}
       {env && <EnvLayerThumb env={env} />}
-      {segs.map((s, i) => (
-        <line key={i} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2}
-          stroke={boneColor} strokeWidth={5} strokeLinecap="round" fill="none" />
-      ))}
-      {pts.map(([x, y], i) => (
-        <circle key={i} cx={x} cy={y} r={2.5} fill={color} />
-      ))}
-      <circle
-        cx={pose.head.cx} cy={pose.head.cy} r={(pose.head.r ?? 7) + 1.5}
-        fill="none" stroke={boneColor} strokeWidth={2}
-      />
+      <PuppetFrame pose={named} color={color} />
     </svg>
   );
 }
@@ -667,9 +579,9 @@ function BioThumbnailSVG({ pose, color = "#177548", boneColor = "#177548", env }
 // Workout ExerciseAnimation component, tuned for slow therapeutic stretching.
 
 function HeroSkeleton({
-  exerciseName, paused, color = "#177548", boneColor = "#177548",
+  exerciseName, paused, color = "#177548",
 }: {
-  exerciseName: string; paused: boolean; color?: string; boneColor?: string;
+  exerciseName: string; paused: boolean; color?: string;
 }) {
   const poseSet    = getPoseSet(exerciseName);
   const env        = getWorldObjects(exerciseName)[0];
@@ -789,7 +701,6 @@ function HeroSkeleton({
           pose={renderedPose}
           paused={paused}
           color={color}
-          boneColor={boneColor}
           env={env}
           svgViewBox={svgViewBox}
           overlayProps={overlayProps}
