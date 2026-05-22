@@ -82,7 +82,7 @@ function StatCard({
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm text-muted-foreground font-light opacity-80 flex items-center gap-2">
+        <CardTitle className="tracking-tight text-muted-foreground font-light opacity-80 flex items-center gap-2 text-[13px]">
           {icon}
           {label}
         </CardTitle>
