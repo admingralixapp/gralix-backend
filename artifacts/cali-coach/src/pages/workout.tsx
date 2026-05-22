@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useSearch } from "wouter";
 import { useListExercises, useListSessions, useCreateSession, useUpdateSession, useCreateRep, useGetCalibration, getListSessionsQueryKey, getGetRecentSessionsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -7,14 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Activity, Play, Square, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell, Crown, Sparkles, Clock } from "lucide-react";
+import { Activity, Play, Square, Ghost, Settings2, ChevronDown, ChevronRight, Info, Crosshair, Zap, Eye, EyeOff, Mic, MicOff, PenLine, ChevronLeft, Plus, Minus, Timer, SkipForward, Layers, Lock, Ruler, Search, Dumbbell, Crown, Sparkles, Clock, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMyProfile } from "@/lib/social";
 import { useBadgeCelebrationTrigger } from "@/components/badge-celebration-context";
 import { useSkillMasteryCelebrationTrigger, type SkillMasteryCelebration } from "@/components/skill-mastery-context";
 import { MILESTONE_BADGE_MAP } from "@/lib/milestone-badges";
 import { getExerciseConfig, getRequiredLandmarks, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
-import { getWarmupSuggestionsFor, formatTime } from "@/lib/mobility-service";
+import { getWarmupSuggestionsFor, formatTime, buildWarmupSequence, type Stretch } from "@/lib/mobility-service";
 import { ExerciseAnimation } from "@/components/exercise-animation";
 import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile, getAudioContext, CUE_PRIORITY } from "@/lib/voice-service";
 import { getWorkoutPhrase } from "@/lib/cue-translations";
@@ -511,6 +512,94 @@ interface PendingFrameData {
   prevPhase:      Phase;
 }
 
+// ─── Contextual Warmup Modal (Training-tab) ───────────────────────────────────
+
+function WorkoutWarmupModal({
+  stretches,
+  onClose,
+}: {
+  stretches: Stretch[];
+  onClose: () => void;
+}) {
+  const totalSeconds = stretches.reduce((s, x) => s + x.durationSeconds, 0);
+  const mins = Math.ceil(totalSeconds / 60);
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div
+        className="relative z-10 bg-white w-full sm:max-w-md mx-auto rounded-t-3xl sm:rounded-3xl max-h-[88vh] flex flex-col"
+        style={{ border: "1px solid rgba(0,0,0,0.10)" }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-black/10 shrink-0">
+          <div>
+            <h2 className="text-base font-black text-black">Targeted Warmup</h2>
+            <p className="text-xs text-black/45 flex items-center gap-1 mt-0.5">
+              <Timer className="w-3 h-3" />
+              {stretches.length} exercises · ~{mins} min
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/6 transition-colors"
+          >
+            <X className="w-4 h-4 text-black/50" />
+          </button>
+        </div>
+
+        {/* Exercise list */}
+        <div className="overflow-y-auto flex-1 divide-y divide-black/8">
+          {stretches.map((stretch, i) => (
+            <div key={stretch.id} className="px-6 py-4 flex gap-4">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white shrink-0 mt-0.5"
+                style={{ background: "#177548" }}
+              >
+                {i + 1}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className="text-sm font-bold text-black">{stretch.name}</span>
+                  <span
+                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                    style={{ background: "rgba(23,117,72,0.08)", color: "#177548" }}
+                  >
+                    {stretch.durationSeconds}s
+                  </span>
+                </div>
+                <p className="text-xs text-black/55 leading-snug mb-1.5">{stretch.description}</p>
+                <p className="text-[11px] font-semibold leading-snug" style={{ color: "#177548" }}>
+                  💡 {stretch.coachingCue}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer CTAs */}
+        <div className="px-6 py-4 border-t border-black/10 space-y-2 shrink-0">
+          <button
+            onClick={onClose}
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-black text-white transition-all hover:opacity-90"
+            style={{ background: "#177548" }}
+          >
+            <Play className="w-4 h-4 fill-current" />
+            Done — Start Workout
+          </button>
+          <button
+            onClick={onClose}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold text-black/55 hover:bg-black/4 transition-colors border border-black/12"
+          >
+            Continue to Workout Instead
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 // ─── Workout component ────────────────────────────────────────────────────────
 
 export function Workout() {
@@ -529,6 +618,7 @@ export function Workout() {
   }, [i18n.language]);
 
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>("");
+  const [warmupExerciseName, setWarmupExerciseName] = useState<string | null>(null);
   const [sessionResults, setSessionResults] = useState<Omit<SessionResultsProps, "onClose"> | null>(null);
   const [povReview,      setPovReview]      = useState<{ payload: RepReviewPayload; results: Omit<SessionResultsProps, "onClose"> } | null>(null);
   const [infoExercise,   setInfoExercise]   = useState<{ name: string; id: number; nodeId: string | null } | null>(null);
@@ -3416,6 +3506,39 @@ export function Workout() {
                 {isModelLoading ? t("workout.loadingModel") : t("workout.start")}
               </Button>
 
+              {/* Start Warmup First — mirrors START disabled state */}
+              {(() => {
+                const selEx = exercises?.find(e => e.id.toString() === selectedExerciseId);
+                const disabled = !selectedExerciseId || isModelLoading;
+                return (
+                  <button
+                    disabled={disabled}
+                    onClick={() => setWarmupExerciseName(selEx?.name ?? "")}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all border"
+                    style={
+                      disabled
+                        ? {
+                            borderColor: "rgba(0,0,0,0.12)",
+                            color: "rgba(0,0,0,0.25)",
+                            background: "rgba(0,0,0,0.03)",
+                            cursor: "not-allowed",
+                          }
+                        : {
+                            borderColor: "rgba(0,0,0,0.20)",
+                            color: "#000000",
+                            background: "transparent",
+                          }
+                    }
+                  >
+                    <Sparkles
+                      className="w-4 h-4 shrink-0"
+                      style={{ color: disabled ? "rgba(0,0,0,0.20)" : "#177548" }}
+                    />
+                    Start Warmup First
+                  </button>
+                );
+              })()}
+
               {/* Divider */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -3442,6 +3565,17 @@ export function Workout() {
 
         </div>
       )}
+
+      {/* ── Contextual Warmup Modal ──────────────────────────────────── */}
+      {warmupExerciseName !== null && (() => {
+        const stretches = buildWarmupSequence([], warmupExerciseName);
+        return stretches.length > 0 ? (
+          <WorkoutWarmupModal
+            stretches={stretches}
+            onClose={() => setWarmupExerciseName(null)}
+          />
+        ) : null;
+      })()}
     </div>
   );
 }
