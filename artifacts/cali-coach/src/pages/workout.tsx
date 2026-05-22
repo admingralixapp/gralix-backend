@@ -2467,10 +2467,10 @@ export function Workout() {
                 {t("shop.proLabel", "Pro Feature")}
               </div>
               <DialogTitle className="text-xl font-black text-foreground">
-                {t("workout.proPaywallTitle", "Unlock AI Form Tracking")}
+                {t("workout.proPaywallTitle", "Unlock Live Form Tracking")}
               </DialogTitle>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                {t("workout.proPaywallDesc", "Real-time pose detection, rep counting, and form scoring require a Pro plan. Manual logging is always free.")}
+                {t("workout.proPaywallDesc", "Get real-time position analysis, joint angle calibration, and automatic rep calculation with a Pro plan.")}
               </p>
             </div>
 
@@ -3507,71 +3507,68 @@ export function Workout() {
                 );
               })()}
 
-              {/* START */}
-              <Button
-                size="lg"
-                className="w-full h-13 text-lg rounded-xl font-bold"
-                onClick={handleStart}
-                disabled={!selectedExerciseId || isModelLoading}
-              >
-                <Play className="w-5 h-5 mr-2 fill-current" />
-                {isModelLoading ? t("workout.loadingModel") : t("workout.start")}
-              </Button>
+              {/* ── Tiered action rows ───────────────────────────────────── */}
+              <div className="space-y-0 divide-y divide-black/[0.06] rounded-2xl border border-black/[0.08] overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
 
-              {/* Start Warmup First — mirrors START disabled state */}
-              {(() => {
-                const selEx = exercises?.find(e => e.id.toString() === selectedExerciseId);
-                const disabled = !selectedExerciseId || isModelLoading;
-                return (
+                {/* ROW 1 — Live Feedback (Pro) */}
+                <div className="px-4 py-4 space-y-3 bg-white">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-black">⚡ Train with Live Feedback</span>
+                    {!isPro && (
+                      <span
+                        className="text-[9px] font-black uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-md"
+                        style={{ background: "rgba(23,117,72,0.10)", color: "#177548", border: "1px solid rgba(23,117,72,0.22)" }}
+                      >
+                        PRO
+                      </span>
+                    )}
+                  </div>
                   <button
-                    disabled={disabled}
-                    onClick={() => setWarmupExerciseName(selEx?.name ?? "")}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all border"
-                    style={
-                      disabled
-                        ? {
-                            borderColor: "rgba(0,0,0,0.12)",
-                            color: "rgba(0,0,0,0.25)",
-                            background: "rgba(0,0,0,0.03)",
-                            cursor: "not-allowed",
-                          }
-                        : {
-                            borderColor: "rgba(0,0,0,0.20)",
-                            color: "#000000",
-                            background: "transparent",
-                          }
-                    }
+                    onClick={handleStart}
+                    disabled={!selectedExerciseId || isModelLoading}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+                    style={{ background: "#177548", boxShadow: "0 3px 14px rgba(23,117,72,0.28)" }}
                   >
-                    <Sparkles
-                      className="w-4 h-4 shrink-0"
-                      style={{ color: disabled ? "rgba(0,0,0,0.20)" : "#177548" }}
-                    />
-                    Start Warmup First
+                    <Play className="w-4 h-4 fill-current" />
+                    {isModelLoading ? t("workout.loadingModel") : "Start Session"}
                   </button>
-                );
-              })()}
+                </div>
 
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
+                {/* ROW 2 — Manual (free) */}
+                <div className="px-4 py-4 space-y-3 bg-white">
+                  <span className="text-sm font-bold text-black">📝 Train Without Live Feedback</span>
+                  <button
+                    onClick={() => { setIsManualLog(true); setManualReps(10); setManualRpe(null); }}
+                    disabled={!selectedExerciseId}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-35 disabled:cursor-not-allowed hover:bg-black/[0.03]"
+                    style={{ background: "#ffffff", border: "1.5px solid rgba(0,0,0,0.18)", color: "#000000" }}
+                  >
+                    <PenLine className="w-4 h-4" />
+                    Start Manual Log
+                  </button>
                 </div>
-                <div className="relative flex justify-center text-xs text-muted-foreground uppercase tracking-widest">
-                  <span className="bg-white px-3">{t("common.or")}</span>
-                </div>
+
+                {/* ROW 3 — Warmup (free, requires exercise selection) */}
+                {(() => {
+                  const selEx = exercises?.find(e => e.id.toString() === selectedExerciseId);
+                  const disabled = !selectedExerciseId || isModelLoading;
+                  return (
+                    <div className="px-4 py-4 space-y-3 bg-white">
+                      <span className="text-sm font-bold text-black">🤸 Targeted Warmup Routine</span>
+                      <button
+                        disabled={disabled}
+                        onClick={() => setWarmupExerciseName(selEx?.name ?? "")}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-35 disabled:cursor-not-allowed hover:bg-black/[0.03]"
+                        style={{ background: "#ffffff", border: "1.5px solid rgba(0,0,0,0.18)", color: "#000000" }}
+                      >
+                        <Sparkles className="w-4 h-4" style={{ color: disabled ? "inherit" : "#177548" }} />
+                        Start Warmup
+                      </button>
+                    </div>
+                  );
+                })()}
+
               </div>
-
-              {/* Manual Log */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full border border-primary/30 text-primary hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-all rounded-xl"
-                onClick={() => { setIsManualLog(true); setManualReps(10); setManualRpe(null); }}
-                disabled={!selectedExerciseId}
-              >
-                <PenLine className="w-4 h-4 mr-2" />
-                {t("workout.manualLogNoAI")}
-              </Button>
             </div>
           )}
 
