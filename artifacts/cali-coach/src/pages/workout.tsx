@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { EmojiIcon } from "@/components/emoji-icon";
 import { createPortal } from "react-dom";
 import { useLocation, useSearch } from "wouter";
 import { useListExercises, useListSessions, useCreateSession, useUpdateSession, useCreateRep, useGetCalibration, getListSessionsQueryKey, getGetRecentSessionsQueryKey } from "@workspace/api-client-react";
@@ -581,8 +582,9 @@ function WorkoutWarmupModal({
                   </span>
                 </div>
                 <p className="text-xs text-black/55 leading-snug mb-1.5">{stretch.description}</p>
-                <p className="text-[11px] font-semibold leading-snug" style={{ color: "#177548" }}>
-                  💡 {stretch.coachingCue}
+                <p className="text-[11px] font-semibold leading-snug flex items-center gap-1" style={{ color: "#177548" }}>
+                  <EmojiIcon emoji="💡" className="w-3.5 h-3.5 object-contain shrink-0" style={{ filter: "invert(37%) sepia(51%) saturate(1260%) hue-rotate(101deg) brightness(95%) contrast(96%)" }} />
+                  {stretch.coachingCue}
                 </p>
               </div>
             </div>
@@ -2484,10 +2486,10 @@ export function Workout() {
               ].map(({ icon, label }) => (
                 <div key={label} className="flex items-center gap-3">
                   <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                     style={{ background: "rgba(23,117,72,0.08)", border: "1px solid rgba(23,117,72,0.18)" }}
                   >
-                    {icon}
+                    <EmojiIcon emoji={icon} className="w-4 h-4 object-contain" />
                   </div>
                   <span className="text-sm text-foreground/80">{label}</span>
                 </div>
@@ -3514,7 +3516,7 @@ export function Workout() {
                   {/* Content — always rendered; blurred behind overlay for free users */}
                   <div className={!isPro ? "pointer-events-none select-none" : undefined}>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-black">⚡ Train with Live Feedback</span>
+                      <span className="text-sm font-bold text-black flex items-center gap-1.5"><EmojiIcon emoji="⚡" className="w-4 h-4 object-contain shrink-0" /> Train with Live Feedback</span>
                     </div>
                     <button
                       onClick={isPro ? handleStart : undefined}
@@ -3546,7 +3548,7 @@ export function Workout() {
                           boxShadow: "0 1px 6px rgba(0,0,0,0.10)",
                         }}
                       >
-                        ⚡ Pro Feature
+                        <EmojiIcon emoji="⚡" className="w-3.5 h-3.5 object-contain shrink-0 inline-block align-middle mr-1" /> Pro Feature
                       </span>
                     </div>
                   )}
@@ -3554,7 +3556,7 @@ export function Workout() {
 
                 {/* ROW 2 — Manual (free) */}
                 <div className="px-4 py-4 space-y-3 bg-white">
-                  <span className="text-sm font-bold text-black">📝 Train Without Live Feedback</span>
+                  <span className="text-sm font-bold text-black flex items-center gap-1.5"><EmojiIcon emoji="📝" className="w-4 h-4 object-contain shrink-0" /> Train Without Live Feedback</span>
                   <button
                     onClick={() => { setIsManualLog(true); setManualReps(10); setManualRpe(null); }}
                     disabled={!selectedExerciseId}
@@ -3572,7 +3574,7 @@ export function Workout() {
                   const disabled = !selectedExerciseId || isModelLoading;
                   return (
                     <div className="px-4 py-4 space-y-3 bg-white">
-                      <span className="text-sm font-bold text-black">🤸 Targeted Warmup Routine</span>
+                      <span className="text-sm font-bold text-black flex items-center gap-1.5"><EmojiIcon emoji="🤸" className="w-4 h-4 object-contain shrink-0" /> Targeted Warmup Routine</span>
                       <button
                         disabled={disabled}
                         onClick={() => setWarmupExerciseName(selEx?.name ?? "")}

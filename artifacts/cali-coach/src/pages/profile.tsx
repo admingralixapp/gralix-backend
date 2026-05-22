@@ -1,4 +1,5 @@
 import { useParams, Link } from "wouter";
+import { EmojiIcon } from "@/components/emoji-icon";
 import { Show } from "@clerk/react";
 import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -433,7 +434,7 @@ function ProfileContent() {
                   "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border",
                   badge.bgColor, badge.textColor, badge.borderColor,
                 )}>
-                  <span>{badge.icon}</span>
+                  <EmojiIcon emoji={badge.icon} className="w-3.5 h-3.5 object-contain shrink-0" />
                   {badge.label}
                 </span>
               ) : null;
@@ -823,7 +824,7 @@ function ProfileContent() {
                           : skill.branch === "CORE"
                             ? "bg-violet-500/20 text-violet-300 border-violet-500/40 shadow-violet-500/20"
                             : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-emerald-500/20";
-                    const emoji =
+                    const branchEmoji =
                       skill.branch === "PUSH" ? "💪"
                       : skill.branch === "PULL" ? "🔵"
                       : skill.branch === "CORE" ? "⚡"
@@ -836,7 +837,7 @@ function ProfileContent() {
                           pillClass,
                         )}
                       >
-                        <span>{emoji}</span>
+                        <EmojiIcon emoji={branchEmoji} className="w-4 h-4 object-contain shrink-0" />
                         {skill.title}
                         <span className="text-yellow-400">★</span>
                       </div>

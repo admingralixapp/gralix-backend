@@ -11,6 +11,7 @@
  */
 
 import { useMemo } from "react";
+import { EmojiIcon } from "@/components/emoji-icon";
 import { Link, useLocation } from "wouter";
 import { Star, Lock, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -210,7 +211,7 @@ function BranchWindow({
         }}
       >
         <div className="flex items-center gap-1.5">
-          <span className="text-sm">{meta.emoji}</span>
+          <EmojiIcon emoji={meta.emoji} className="w-4 h-4 object-contain shrink-0" />
           <span className="font-bold text-sm" style={{ color: meta.color }}>
             {t(`skillTree.${branch.toLowerCase()}`)}
           </span>

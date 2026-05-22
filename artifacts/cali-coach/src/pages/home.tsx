@@ -1,4 +1,5 @@
 import { useGetProgressSummary, useGetRecentSessions, useGetProgressTimeline, useListSessions } from "@workspace/api-client-react";
+import { EmojiIcon } from "@/components/emoji-icon";
 import { evaluateSkillTree } from "@/lib/skill-tree";
 import { Link, useLocation } from "wouter";
 import {
@@ -339,8 +340,9 @@ function WarmupModal({
                 <p className="text-xs text-black/55 leading-snug mb-1.5">
                   {stretch.description}
                 </p>
-                <p className="text-[11px] font-semibold leading-snug" style={{ color: "#177548" }}>
-                  💡 {stretch.coachingCue}
+                <p className="text-[11px] font-semibold leading-snug flex items-center gap-1" style={{ color: "#177548" }}>
+                  <EmojiIcon emoji="💡" className="w-3.5 h-3.5 object-contain shrink-0" style={{ filter: "invert(37%) sepia(51%) saturate(1260%) hue-rotate(101deg) brightness(95%) contrast(96%)" }} />
+                  {stretch.coachingCue}
                 </p>
               </div>
             </div>
@@ -930,8 +932,9 @@ export function Home() {
                   {loadingMobility ? (
                     t("dashboard.loadingMobility")
                   ) : mobilityStatus?.currentStreak ? (
-                    <span className="text-orange-400 font-medium">
-                      🔥 {t("dashboard.dayStreak", { count: mobilityStatus.currentStreak })}
+                    <span className="text-orange-400 font-medium flex items-center gap-1">
+                      <EmojiIcon emoji="🔥" className="w-3.5 h-3.5 object-contain shrink-0" style={{ filter: "invert(55%) sepia(80%) saturate(600%) hue-rotate(360deg) brightness(110%)" }} />
+                      {t("dashboard.dayStreak", { count: mobilityStatus.currentStreak })}
                     </span>
                   ) : (
                     t("dashboard.startStreak")

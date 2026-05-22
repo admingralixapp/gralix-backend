@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { EmojiIcon } from "@/components/emoji-icon";
 import { createPortal } from "react-dom";
 import { useLocation, Link } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
@@ -666,7 +667,7 @@ export function Settings() {
                         : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06]",
                     ].join(" ")}
                   >
-                    <span className="text-base leading-none">{isMale ? "🏋️" : "👩‍🏫"}</span>
+                    <EmojiIcon emoji={isMale ? "🏋️" : "👩‍🏫"} className="w-5 h-5 object-contain shrink-0" />
                     {isMale
                       ? t("settings.voiceMale",   { defaultValue: "Male" })
                       : t("settings.voiceFemale", { defaultValue: "Female" })}
@@ -682,7 +683,7 @@ export function Settings() {
           <div>
             <div className="flex items-center gap-3 mb-3">
               <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/25 flex items-center justify-center shrink-0">
-                <span className="text-base leading-none">⚡</span>
+                <EmojiIcon emoji="⚡" className="w-5 h-5 object-contain" />
               </div>
               <div>
                 <div className="text-sm font-semibold text-foreground">{t("settings.coachPersonality")}</div>
@@ -717,7 +718,7 @@ export function Settings() {
                             : "border-white/8 bg-white/[0.03] text-muted-foreground hover:border-white/15 hover:bg-white/[0.06] hover:text-foreground",
                         ].join(" ")}
                       >
-                        <span className="text-base shrink-0 leading-none">{p.emoji}</span>
+                        <EmojiIcon emoji={p.emoji} className="w-5 h-5 object-contain shrink-0" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1 min-w-0">
                             <span className={["text-xs font-semibold truncate", active ? "text-primary" : ""].join(" ")}>
@@ -1129,7 +1130,7 @@ export function Settings() {
 
               {/* Headline */}
               <div className="text-center pt-1 space-y-2">
-                <div className="text-3xl">🎁</div>
+                <div className="flex justify-center"><EmojiIcon emoji="🎁" className="w-9 h-9 object-contain" /></div>
                 <h3 className="text-xl font-black text-white">{t("settings.waitDontGo")}</h3>
                 <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>
                   {t("settings.stayProDiscount")}

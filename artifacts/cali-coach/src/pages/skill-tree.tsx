@@ -12,6 +12,7 @@
  *   • Equipment Specialty section below
  */
 
+import { EmojiIcon } from "@/components/emoji-icon";
 import {
   useMemo, useState, useRef, useEffect, useCallback,
 } from "react";
@@ -1004,7 +1005,7 @@ function SkillOverlay({
         )}
         {(skill.type as SkillType) === "explosive" && (
           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-200">
-            ⚡ {t("skillTree.explosive")}
+            <EmojiIcon emoji="⚡" className="w-3 h-3 object-contain shrink-0 inline-block align-middle mr-0.5" /> {t("skillTree.explosive")}
           </span>
         )}
         {isLocked && (
@@ -1111,13 +1112,13 @@ function SkillOverlay({
           )}
           {!isStatic && prog.bestReps > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-[9px] text-muted-foreground">🏆 {t("skillTree.bestReps")}</span>
+              <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><EmojiIcon emoji="🏆" className="w-3 h-3 object-contain shrink-0" /> {t("skillTree.bestReps")}</span>
               <span className="text-[10px] font-bold text-foreground tabular-nums">{prog.bestReps}</span>
             </div>
           )}
           {prog.bestFormScore > 0 && (
             <div className="flex justify-between items-center">
-              <span className="text-[9px] text-muted-foreground">🎯 {t("skillTree.formScoreLabel")}</span>
+              <span className="text-[9px] text-muted-foreground flex items-center gap-0.5"><EmojiIcon emoji="🎯" className="w-3 h-3 object-contain shrink-0" /> {t("skillTree.formScoreLabel")}</span>
               <span className="text-[10px] font-bold text-foreground tabular-nums">
                 {Math.round(prog.bestFormScore)}%
               </span>

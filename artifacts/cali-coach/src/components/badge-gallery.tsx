@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { EmojiIcon } from "@/components/emoji-icon";
 import {
   ALL_MILESTONE_BADGES,
   MILESTONE_CATEGORIES,
@@ -76,7 +77,7 @@ export function BadgeGallery({ earnedBadgeIds, lifetimeReps, compact = false }: 
                 TIER_GLOW[badge.tier],
               )}
             >
-              <span className="text-[10px]">{badge.icon}</span>
+              <EmojiIcon emoji={badge.icon} className="w-3.5 h-3.5 object-contain shrink-0" />
               {badge.name}
             </span>
           );
@@ -99,7 +100,7 @@ export function BadgeGallery({ earnedBadgeIds, lifetimeReps, compact = false }: 
           <div key={cat}>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
-                <span className="text-base">{categoryBadges[0]?.icon}</span>
+                <EmojiIcon emoji={categoryBadges[0]?.icon ?? ""} className="w-5 h-5 object-contain shrink-0" />
                 <span className={cn("text-sm font-semibold", colors.text)}>
                   {CATEGORY_LABELS[cat]}
                 </span>
@@ -123,8 +124,8 @@ export function BadgeGallery({ earnedBadgeIds, lifetimeReps, compact = false }: 
                         : "bg-secondary/30 border-border opacity-50 grayscale",
                     )}
                   >
-                    <span className={cn("text-xl", !earned && "opacity-40")}>
-                      {earned ? badge.icon : "🔒"}
+                    <span className={cn(!earned && "opacity-40")}>
+                      <EmojiIcon emoji={earned ? badge.icon : "🔒"} className="w-6 h-6 object-contain" />
                     </span>
                     <span className={cn(
                       "text-[9px] font-bold leading-tight",

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { EmojiIcon } from "@/components/emoji-icon";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useUser } from "@clerk/react";
@@ -267,8 +268,8 @@ export function ShopPage() {
               { icon: "💚", label: t("shop.whyProItem2Label"), description: t("shop.whyProItem2Desc") },
             ].map(({ icon, label, description }) => (
               <div key={label} className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm mt-0.5 bg-primary/10 border border-primary/20">
-                  {icon}
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 bg-primary/10 border border-primary/20">
+                  <EmojiIcon emoji={icon} className="w-4 h-4 object-contain" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="text-sm text-foreground">{label}</span>
@@ -366,8 +367,8 @@ export function ShopPage() {
             className="rounded-2xl border border-primary/30 bg-primary/5 p-4 flex items-center gap-4 cursor-pointer"
             onClick={() => setShowClaimModal(true)}
           >
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-xl bg-primary/10 border border-primary/25">
-              🎁
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-primary/10 border border-primary/25">
+              <EmojiIcon emoji="🎁" className="w-6 h-6 object-contain" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-black text-sm text-foreground">

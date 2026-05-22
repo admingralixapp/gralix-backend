@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { EmojiIcon } from "@/components/emoji-icon";
 import { useTranslation } from "react-i18next";
 import { useLocalizedPrices } from "@/lib/locale";
 import { useLocation } from "wouter";
@@ -441,8 +442,8 @@ export function Progress() {
             { icon: "📊", label: "Relative Strength Index trend" },
           ].map(({ icon, label }) => (
             <div key={label} className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-sm bg-primary/10 border border-primary/20">
-                {icon}
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-primary/10 border border-primary/20">
+                <EmojiIcon emoji={icon} className="w-4 h-4 object-contain" />
               </div>
               <span className="text-sm text-foreground">{label}</span>
               <Check className="w-3.5 h-3.5 shrink-0 ml-auto text-primary" />

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { EmojiIcon } from "@/components/emoji-icon";
 import {
   EXERCISE_MASTERY_DEFS,
   MASTERY_THRESHOLDS,
@@ -94,7 +95,7 @@ export function MasteryGallery({ exerciseStats, compact = false }: MasteryGaller
   if (entries.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground text-sm">
-        <p className="text-2xl mb-2">🏅</p>
+        <div className="flex justify-center mb-2"><EmojiIcon emoji="🏅" className="w-8 h-8 object-contain" /></div>
         <p>Complete workouts to earn mastery titles.</p>
         <p className="text-xs mt-1">Reach 10 reps or 10 seconds on any exercise to start.</p>
       </div>
