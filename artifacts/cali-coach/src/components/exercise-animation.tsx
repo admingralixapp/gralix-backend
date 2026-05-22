@@ -73,6 +73,109 @@ function normalizeHumanFlag(pose: NamedPoseData): NamedPoseData {
   return { ...pose, leftArm, rightArm, leftLeg, rightLeg };
 }
 
+// ── Anatomical torso-anchor normalisation ────────────────────────────────────
+//
+// Every exercise is authored independently in the 100×100 viewBox, so figures
+// end up at wildly different scales and positions.  Without correction the
+// figure appears larger or smaller depending on the exercise — especially when
+// wide stretches or deep floor movements push extremities far from the torso.
+//
+// Fix (per the architectural spec):
+//   1. Derive ONE scale multiplier per exercise from the FIRST frame's torso
+//      length: Euclidean distance from spine[0] (neck) to spine[-1] (hip).
+//      That same scale is applied to ALL three frames — the figure NEVER
+//      resizes during playback; limbs simply reach toward viewport edges.
+//   2. Pin each frame's own hip/pelvis node to a fixed canonical viewport
+//      coordinate so the skeleton is always centred on the same anchor point
+//      regardless of how the original frame was authored.
+//
+// No dynamic per-frame bounding-box calculation is performed.
+
+/** Target torso height in SVG units (100 × 100 viewBox). */
+const TARGET_TORSO_HEIGHT = 30;
+
+/** Fixed hip/pelvis canvas anchor — the centre-of-mass viewport pin. */
+const HIP_ANCHOR_X = 50;
+const HIP_ANCHOR_Y = 65;
+
+/** Scale + re-anchor a single point using the master torso scale. */
+function scalePoint(
+  [px, py]: [number, number],
+  hipX: number,
+  hipY: number,
+  scale: number,
+): [number, number] {
+  return [
+    (px - hipX) * scale + HIP_ANCHOR_X,
+    (py - hipY) * scale + HIP_ANCHOR_Y,
+  ];
+}
+
+/** Apply the master scale and per-frame hip anchor to every joint in a pose. */
+function scalePose(
+  pose: NamedPoseData,
+  hipX: number,
+  hipY: number,
+  scale: number,
+): NamedPoseData {
+  const sp = (pt: [number, number]) => scalePoint(pt, hipX, hipY, scale);
+  return {
+    head: {
+      cx: (pose.head.cx - hipX) * scale + HIP_ANCHOR_X,
+      cy: (pose.head.cy - hipY) * scale + HIP_ANCHOR_Y,
+      r:  pose.head.r * scale,
+    },
+    spine:    pose.spine.map(sp),
+    leftArm:  pose.leftArm.map(sp),
+    rightArm: pose.rightArm.map(sp),
+    leftLeg:  pose.leftLeg.map(sp),
+    rightLeg: pose.rightLeg.map(sp),
+    muscleGlow: pose.muscleGlow
+      ? {
+          cx: (pose.muscleGlow.cx - hipX) * scale + HIP_ANCHOR_X,
+          cy: (pose.muscleGlow.cy - hipY) * scale + HIP_ANCHOR_Y,
+          rx: pose.muscleGlow.rx * scale,
+          ry: pose.muscleGlow.ry * scale,
+        }
+      : undefined,
+  };
+}
+
+/**
+ * Normalise all three frames of a pose set to a fixed anatomical scale and
+ * stable hip-centre viewport pin.
+ *
+ * Scale is derived from frame 0's torso (spine[0] = neck → spine[-1] = hip)
+ * and applied identically to frames 1 and 2 — the figure size is constant
+ * across every frame of every exercise.  Each frame independently re-anchors
+ * its own hip to [HIP_ANCHOR_X, HIP_ANCHOR_Y] so the skeleton stays centred
+ * on the stable pelvis node throughout the animation cycle.
+ */
+function normalizePoseSet(
+  frames: [NamedPoseData, NamedPoseData, NamedPoseData],
+): [NamedPoseData, NamedPoseData, NamedPoseData] {
+  const ref  = frames[0];
+  const neck = ref.spine[0];
+  const hip0 = ref.spine[ref.spine.length - 1];
+  if (!neck || !hip0) return frames;
+
+  // Euclidean torso length from the reference frame — MASTER SCALE BASIS.
+  const torsoHeight = Math.sqrt(
+    (neck[0] - hip0[0]) ** 2 + (neck[1] - hip0[1]) ** 2,
+  );
+  if (torsoHeight < 1) return frames; // degenerate pose — pass through unchanged
+
+  const scale = TARGET_TORSO_HEIGHT / torsoHeight;
+
+  // Each frame uses the SAME scale but its OWN hip as the translation anchor
+  // so the pelvis/hip is always pinned to [HIP_ANCHOR_X, HIP_ANCHOR_Y].
+  return frames.map((frame) => {
+    const hip = frame.spine[frame.spine.length - 1];
+    if (!hip) return frame;
+    return scalePose(frame, hip[0], hip[1], scale);
+  }) as [NamedPoseData, NamedPoseData, NamedPoseData];
+}
+
 // ── Math helpers ─────────────────────────────────────────────────────────────
 
 /** Ease-in-out cubic: slow start, fast middle, slow end. */
@@ -257,9 +360,11 @@ interface ExerciseAnimationProps {
 /** Load and normalise pose frames for a given exercise. */
 function loadPoses(exerciseName: string): [NamedPoseData, NamedPoseData, NamedPoseData] {
   const raw = getNamedPoseSet(exerciseName);
-  return HUMAN_FLAG_EXERCISES.has(exerciseName)
-    ? [normalizeHumanFlag(raw[0]), normalizeHumanFlag(raw[1]), normalizeHumanFlag(raw[2])]
-    : raw;
+  const flagNorm: [NamedPoseData, NamedPoseData, NamedPoseData] =
+    HUMAN_FLAG_EXERCISES.has(exerciseName)
+      ? [normalizeHumanFlag(raw[0]), normalizeHumanFlag(raw[1]), normalizeHumanFlag(raw[2])]
+      : raw;
+  return normalizePoseSet(flagNorm);
 }
 
 export function ExerciseAnimation({
