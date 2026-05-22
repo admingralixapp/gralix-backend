@@ -530,7 +530,7 @@ function EnvLayerThumb({ env }: { env: EnvAnchor }) {
 // calling lerpPoseData() every frame and passing the result as `pose`.
 
 function BioSkeletonSVG({
-  pose, paused, color = "#177548", boneColor = "#1a1a1a", env, svgViewBox = "0 0 100 100", overlayProps,
+  pose, paused, color = "#177548", boneColor = "#177548", env, svgViewBox = "0 0 100 100", overlayProps,
 }: {
   pose: PoseData;
   paused: boolean;
@@ -629,7 +629,7 @@ function BioSkeletonSVG({
 
 // ─── BioThumbnailSVG — static capsule-style figure for reference strips ───────
 
-function BioThumbnailSVG({ pose, color = "#177548", boneColor = "#1a1a1a", env }: { pose: PoseData; color?: string; boneColor?: string; env?: EnvAnchor }) {
+function BioThumbnailSVG({ pose, color = "#177548", boneColor = "#177548", env }: { pose: PoseData; color?: string; boneColor?: string; env?: EnvAnchor }) {
   const segs = extractSegments(pose.lines);
   const pts  = extractAllPoints(pose.lines);
   return (
@@ -667,7 +667,7 @@ function BioThumbnailSVG({ pose, color = "#177548", boneColor = "#1a1a1a", env }
 // Workout ExerciseAnimation component, tuned for slow therapeutic stretching.
 
 function HeroSkeleton({
-  exerciseName, paused, color = "#177548", boneColor = "#1a1a1a",
+  exerciseName, paused, color = "#177548", boneColor = "#177548",
 }: {
   exerciseName: string; paused: boolean; color?: string; boneColor?: string;
 }) {
