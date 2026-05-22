@@ -320,27 +320,11 @@ function PuppetFrame({ pose, color }: { pose: NamedPoseData; color: string }) {
           );
         })
       )}
-      {/* Joint dots — same depth order */}
-      {drawOrder.flatMap(([key, line]) =>
-        line.map(([x, y], pi) => {
-          const isKnuckle = pi === line.length - 1 && line.length >= 4;
-          return (
-            <circle key={`d-${key}-${pi}`}
-              cx={x} cy={y}
-              r={isKnuckle ? 2.0 : 2.8}
-              fill={color}
-              opacity={isKnuckle ? 0.9 : 0.6} />
-          );
-        })
-      )}
-      {/* Head halo + core */}
+      {/* Head circle */}
       <circle
         cx={pose.head.cx} cy={pose.head.cy}
-        r={pose.head.r + 2}
-        fill="rgba(23,117,72,0.07)" stroke={color} strokeWidth={2.5} />
-      <circle
-        cx={pose.head.cx} cy={pose.head.cy}
-        r={2.5} fill={color} opacity={0.5} />
+        r={pose.head.r}
+        fill="none" stroke={color} strokeWidth={2.5} />
     </>
   );
 }
