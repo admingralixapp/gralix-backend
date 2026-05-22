@@ -10,7 +10,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Share2, X, CheckCircle2 } from "lucide-react";
+import { Share2, X, CheckCircle2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreatePost } from "@/lib/community-feed";
 import { useUploadManager } from "@/lib/upload-manager";
@@ -122,9 +122,10 @@ export function ShareToFeedSheet({
                 {exerciseName}
               </span>
               {isAiVerified && (
-                <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
-                  <CheckCircle2 className="w-2.5 h-2.5" />
-                  AI Verified
+                <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border"
+                  style={{ color: "#177548", borderColor: "#177548", background: "rgba(23,117,72,0.07)" }}>
+                  <ShieldCheck className="w-2.5 h-2.5" />
+                  Form Verified
                 </span>
               )}
               {existingObjectPath && (

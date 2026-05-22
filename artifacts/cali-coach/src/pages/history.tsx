@@ -25,10 +25,10 @@ import { getClip } from "@/lib/clip-store";
 type Branch = "PUSH" | "PULL" | "CORE" | "LEGS";
 
 const BRANCH_STYLES: Record<Branch, { label: string; bg: string; text: string; border: string }> = {
-  PUSH: { label: "Push", bg: "bg-orange-500/15", text: "text-orange-400", border: "border-orange-500/30" },
-  PULL: { label: "Pull", bg: "bg-blue-500/15",   text: "text-blue-400",   border: "border-blue-500/30"   },
-  CORE: { label: "Core", bg: "bg-yellow-500/15", text: "text-yellow-400", border: "border-yellow-500/30" },
-  LEGS: { label: "Legs", bg: "bg-green-500/15",  text: "text-green-400",  border: "border-green-500/30"  },
+  PUSH: { label: "Push", bg: "bg-transparent", text: "text-foreground", border: "border-black/25" },
+  PULL: { label: "Pull", bg: "bg-transparent", text: "text-foreground", border: "border-black/25" },
+  CORE: { label: "Core", bg: "bg-transparent", text: "text-foreground", border: "border-black/25" },
+  LEGS: { label: "Legs", bg: "bg-transparent", text: "text-foreground", border: "border-black/25" },
 };
 
 function getExerciseBranch(name: string): Branch {
@@ -132,10 +132,10 @@ function SessionCard({ session }: SessionCardProps) {
                 </span>
 
                 {session.isVerified ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
-                    style={{ boxShadow: "0 0 6px 0 rgba(16,185,129,0.2)" }}>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                    style={{ color: "#177548", borderColor: "#177548", background: "rgba(23,117,72,0.07)" }}>
                     <ShieldCheck className="w-2.5 h-2.5" />
-                    {t("history.aiVerified", "AI Verified")}
+                    {t("history.aiVerified", "Form Verified")}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-muted/60 border border-border text-muted-foreground">
@@ -176,7 +176,7 @@ function SessionCard({ session }: SessionCardProps) {
               {formScore != null && (
                 <div className="text-right hidden sm:block">
                   <div className={`font-mono text-2xl font-bold ${scoreColor}`}
-                    style={session.isVerified && formScore >= 85 ? { textShadow: "0 0 10px hsl(var(--primary))" } : undefined}>
+                    style={undefined}>
                     {formScore}
                   </div>
                   <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">

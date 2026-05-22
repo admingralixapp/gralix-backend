@@ -199,8 +199,9 @@ function VideoCard({ post }: { post: FeedPost }) {
               </span>
             )}
             {post.isAiVerified ? (
-              <span className="flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded-full border border-emerald-400/20 shrink-0">
-                <CheckCircle2 className="w-2.5 h-2.5" />
+              <span className="flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border shrink-0"
+                style={{ color: "#177548", borderColor: "#177548", background: "rgba(23,117,72,0.07)" }}>
+                <ShieldCheck className="w-2.5 h-2.5" />
                 {t("community.aiVerified")}
               </span>
             ) : (

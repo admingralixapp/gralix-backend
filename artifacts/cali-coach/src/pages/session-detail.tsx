@@ -153,8 +153,8 @@ export function SessionDetail() {
           </p>
         </div>
         {session.isVerified && (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
-            style={{ boxShadow: "0 0 8px rgba(16,185,129,0.2)" }}>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border"
+            style={{ color: "#177548", borderColor: "#177548", background: "rgba(23,117,72,0.07)" }}>
             <ShieldCheck className="w-3.5 h-3.5" />
             {t("session.aiVerified")}
           </span>
