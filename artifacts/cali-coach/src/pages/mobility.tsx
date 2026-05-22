@@ -6,7 +6,7 @@ import { ArrowLeft, CheckCircle2, Clock, Flame, Pause, Pencil, Play, Shuffle, Sk
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ExerciseMotionSnapshot } from "@/components/exercise-motion-snapshot";
-import { getPoseSet, getWorldObjects, getExerciseIntensity, legacyToNamed, type PoseData, type EnvAnchor } from "@/lib/exercise-poses";
+import { getPoseSet, getWorldObjects, getExerciseIntensity, legacyToNamed, type PoseData, type NamedPoseData, type EnvAnchor } from "@/lib/exercise-poses";
 import { PuppetFrame } from "@/components/exercise-animation";
 import { useTranslation } from "react-i18next";
 import {
@@ -174,39 +174,45 @@ interface FocusConfig {
   overlayLineIdx: number;
 }
 
-/** Default full-body viewBox — fallback only. */
-const FULL_VB: [number, number, number, number] = [0, 0, 100, 100];
+// ── Uniform torso-anchored coordinate normalization ───────────────────────────
+//
+// Instead of adjusting the SVG viewBox per exercise (which changes apparent
+// stroke thickness), we transform the pose COORDINATES so the spine
+// (neck → hip) always spans exactly TARGET_TORSO_PX units in a fixed
+// 0 0 100 100 viewport, with the hip pinned at a consistent anchor.
+// This guarantees identical figure size AND stroke weight across all exercises.
 
-/**
- * Compute a torso-anchored viewBox so every exercise renders at the same
- * apparent skeleton size regardless of where its raw coordinates sit in the
- * 0-100 SVG space.
- *
- * Anatomy convention used throughout the pose library:
- *   lines[0][0]        = neck / shoulder junction  (top of torso)
- *   lines[0][last]     = hip  / pelvis              (bottom of torso)
- *
- * The viewBox is sized so the neck→hip torso vector always occupies
- * TARGET_TORSO_VB units, and the hip is pinned at a fixed viewport fraction
- * (50 % across, 55 % down) so head + torso sit above the midpoint and the
- * legs have room below.
- */
-const TARGET_TORSO_VB = 30;  // torso spans this many viewport units out of 100
-const HIP_ANCHOR_X    = 0.50; // hip lands at 50 % of viewport width
-const HIP_ANCHOR_Y    = 0.55; // hip lands at 55 % of viewport height
+const TARGET_TORSO_PX = 30;  // spine length in the normalized 0-100 space
+const HIP_ANCHOR_X    = 50;  // hip X — horizontal centre
+const HIP_ANCHOR_Y    = 62;  // hip Y — leaves room for head above & legs below
 
-function computeNormViewBox(pose: PoseData): [number, number, number, number] {
-  const line0 = pose.lines[0];
-  if (!line0 || line0.length < 2) return [...FULL_VB];
-  const [nx, ny] = line0[0]!;
-  const [hx, hy] = line0[line0.length - 1]!;
-  const T = Math.hypot(hx - nx, hy - ny);
-  if (T < 2) return [...FULL_VB];
-  // Viewport size in original SVG coordinate units
-  const vw = T * (100 / TARGET_TORSO_VB);
-  const vx = hx - HIP_ANCHOR_X * vw;
-  const vy = hy - HIP_ANCHOR_Y * vw;
-  return [vx, vy, vw, vw];
+interface TorsoXfm { scale: number; tx: number; ty: number }
+
+function computeTorsoXfm(p: NamedPoseData): TorsoXfm | null {
+  const s = p.spine;
+  if (s.length < 2) return null;
+  const [nx, ny] = s[0]!;
+  const [hx, hy] = s[s.length - 1]!;
+  const len = Math.hypot(hx - nx, hy - ny);
+  if (len < 1) return null;
+  const scale = TARGET_TORSO_PX / len;
+  return { scale, tx: HIP_ANCHOR_X - hx * scale, ty: HIP_ANCHOR_Y - hy * scale };
+}
+
+function xfmPts(pts: [number, number][], x: TorsoXfm): [number, number][] {
+  return pts.map(([px, py]) => [px * x.scale + x.tx, py * x.scale + x.ty]);
+}
+
+function applyTorsoXfm(p: NamedPoseData, x: TorsoXfm): NamedPoseData {
+  return {
+    head:     { cx: p.head.cx * x.scale + x.tx, cy: p.head.cy * x.scale + x.ty, r: p.head.r * x.scale },
+    spine:    xfmPts(p.spine,    x),
+    leftArm:  xfmPts(p.leftArm,  x),
+    rightArm: xfmPts(p.rightArm, x),
+    leftLeg:  xfmPts(p.leftLeg,  x),
+    rightLeg: xfmPts(p.rightLeg, x),
+    muscleGlow: p.muscleGlow,
+  };
 }
 
 /**
@@ -508,24 +514,33 @@ function EnvLayerThumb({ env }: { env: EnvAnchor }) {
 }
 
 // ─── BioSkeletonSVG — delegates rendering to the shared PuppetFrame renderer ──
-// Converts the legacy PoseData frame to NamedPoseData and renders identically
-// to the main Workout tab's ExerciseAnimation component.
+// Converts the legacy PoseData frame to NamedPoseData, applies a uniform
+// torso-anchored coordinate transform so every exercise renders at the same
+// physical size, then draws via PuppetFrame (identical to the Workout tab).
 
 function BioSkeletonSVG({
-  pose, paused, color = "#177548", env, svgViewBox = "0 0 100 100", overlayProps,
+  pose, paused, color = "#177548", env, overlayProps,
 }: {
   pose: PoseData;
   paused: boolean;
   color?: string;
   env?: EnvAnchor;
-  svgViewBox?: string;
   overlayProps?: { type: OverlayType; ax: number; ay: number; pulse: number };
 }) {
-  const named = legacyToNamed(pose);
+  const raw  = legacyToNamed(pose);
+  const xfm  = computeTorsoXfm(raw);
+  const norm = xfm ? applyTorsoXfm(raw, xfm) : raw;
+
+  // Overlay anchor is in original pose space — apply the same transform.
+  const normOverlay = overlayProps && xfm ? {
+    ...overlayProps,
+    ax: overlayProps.ax * xfm.scale + xfm.tx,
+    ay: overlayProps.ay * xfm.scale + xfm.ty,
+  } : overlayProps;
 
   return (
     <svg
-      viewBox={svgViewBox}
+      viewBox="0 0 100 100"
       width="100%"
       height="100%"
       aria-hidden="true"
@@ -538,13 +553,13 @@ function BioSkeletonSVG({
       }}
     >
       {env && <EnvLayer env={env} />}
-      <PuppetFrame pose={named} color={color} />
-      {overlayProps && (
+      <PuppetFrame pose={norm} color={color} />
+      {normOverlay && (
         <ForceOverlayLayer
-          type={overlayProps.type}
-          ax={overlayProps.ax}
-          ay={overlayProps.ay}
-          pulse={overlayProps.pulse}
+          type={normOverlay.type}
+          ax={normOverlay.ax}
+          ay={normOverlay.ay}
+          pulse={normOverlay.pulse}
         />
       )}
     </svg>
@@ -587,22 +602,12 @@ function HeroSkeleton({
   const env        = getWorldObjects(exerciseName)[0];
   const focusConfig = FOCUS_CONFIG[exerciseName] ?? null;
 
-  // Torso-anchored baseline viewBox for this exercise — stable for the whole
-  // animation cycle so scale never changes as joints move.
-  const normVB = computeNormViewBox(poseSet[0]);
-
   // Live-rendered interpolated pose — starts at keyframe 0.
   const [renderedPose, setRenderedPose] = useState<PoseData>(() => poseSet[0]);
   // Separate opacity for the puppet wrapper (env stays solid during fade).
   const [puppetOpacity, setPuppetOpacity] = useState(1);
-  // Current SVG viewBox string — smoothly lerped toward the focus target.
-  const [svgViewBox, setSvgViewBox] = useState(() => normVB.map(v => v.toFixed(2)).join(" "));
   // 0→1 sine pulse for the force overlay animation.
   const [overlayPulse, setOverlayPulse] = useState(0);
-
-  // Smooth viewBox lerp: ref holds current [x,y,w,h] floats, state holds the
-  // rendered string.  We lerp ~5 % per frame → ~95 % convergence in ~1.2 s.
-  const currentVBRef = useRef<[number, number, number, number]>([...normVB]);
 
   // Use a ref so the RAF callback always reads the latest paused value without
   // being part of the effect's dependency array (avoids restart on every toggle).
@@ -613,18 +618,10 @@ function HeroSkeleton({
 
   useEffect(() => {
     const [start, mid, end] = poseSet;
-    // For exercises with a FOCUS_CONFIG, lerp from the norm viewBox toward the
-    // zoomed focus region.  For all others, snap directly to normVB (no lerp
-    // needed since it IS the target) — keeping scale perfectly stable.
-    const vbTarget = focusConfig?.viewBox ?? normVB;
 
     // Reset state whenever the exercise changes.
     setRenderedPose(start);
     setPuppetOpacity(1);
-    // Snap to the torso-anchored viewBox immediately; focus-config exercises
-    // will then ease in to their zoomed region over ~1.2 s.
-    currentVBRef.current = [...normVB];
-    setSvgViewBox(normVB.map(v => v.toFixed(2)).join(" "));
 
     let elapsed  = 0;
     let lastTime: number | null = null;
@@ -636,17 +633,6 @@ function HeroSkeleton({
       } else {
         lastTime = null;
       }
-
-      // ── Smooth viewBox zoom ──────────────────────────────────────────────────
-      const cv = currentVBRef.current;
-      const ZOOM_K = 0.05; // ~1.2 s to reach 95 % of target
-      currentVBRef.current = [
-        lerpNum(cv[0], vbTarget[0], ZOOM_K),
-        lerpNum(cv[1], vbTarget[1], ZOOM_K),
-        lerpNum(cv[2], vbTarget[2], ZOOM_K),
-        lerpNum(cv[3], vbTarget[3], ZOOM_K),
-      ];
-      setSvgViewBox(currentVBRef.current.map(v => v.toFixed(2)).join(" "));
 
       // ── Overlay pulse (1.4 s sine wave, independent of stretch cycle) ───────
       setOverlayPulse(0.5 + 0.5 * Math.sin((elapsed / 1400) * Math.PI * 2));
@@ -685,6 +671,8 @@ function HeroSkeleton({
   }, [exerciseName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Build overlay props: extract last point of the configured line as anchor.
+  // Coordinates are in the original 0-100 pose space; BioSkeletonSVG applies
+  // the torso transform to them before rendering.
   const overlayProps = (() => {
     if (!focusConfig?.overlay) return undefined;
     const line = renderedPose.lines[focusConfig.overlayLineIdx];
@@ -702,7 +690,6 @@ function HeroSkeleton({
           paused={paused}
           color={color}
           env={env}
-          svgViewBox={svgViewBox}
           overlayProps={overlayProps}
         />
       </div>
