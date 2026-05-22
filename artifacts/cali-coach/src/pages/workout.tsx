@@ -16,6 +16,7 @@ import { useSkillMasteryCelebrationTrigger, type SkillMasteryCelebration } from 
 import { MILESTONE_BADGE_MAP } from "@/lib/milestone-badges";
 import { getExerciseConfig, getRequiredLandmarks, type Phase, type Landmark, type EquipmentContext } from "@/lib/exercise-registry";
 import { getWarmupSuggestionsFor, formatTime, buildWarmupSequence, type Stretch } from "@/lib/mobility-service";
+import { WarmupSequencePlayer } from "@/components/warmup-sequence-player";
 import { ExerciseAnimation } from "@/components/exercise-animation";
 import { speak as voiceSpeak, speakCue as voiceSpeakCue, clearCueCache, cancelSpeech, setVoiceMuted, setVoiceLanguage, setActiveVoiceProfile, getAudioContext, CUE_PRIORITY } from "@/lib/voice-service";
 import { getWorkoutPhrase } from "@/lib/cue-translations";
@@ -521,8 +522,19 @@ function WorkoutWarmupModal({
   stretches: Stretch[];
   onClose: () => void;
 }) {
+  const [playerActive, setPlayerActive] = useState(false);
   const totalSeconds = stretches.reduce((s, x) => s + x.durationSeconds, 0);
   const mins = Math.ceil(totalSeconds / 60);
+
+  if (playerActive) {
+    return (
+      <WarmupSequencePlayer
+        stretches={stretches}
+        onComplete={onClose}
+        onExit={() => setPlayerActive(false)}
+      />
+    );
+  }
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -580,12 +592,12 @@ function WorkoutWarmupModal({
         {/* Footer CTAs */}
         <div className="px-6 py-4 border-t border-black/10 space-y-2 shrink-0">
           <button
-            onClick={onClose}
+            onClick={() => setPlayerActive(true)}
             className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-black text-white transition-all hover:opacity-90"
             style={{ background: "#177548" }}
           >
             <Play className="w-4 h-4 fill-current" />
-            Done — Start Workout
+            Begin Warmup
           </button>
           <button
             onClick={onClose}

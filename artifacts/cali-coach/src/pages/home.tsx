@@ -32,6 +32,7 @@ import { SkillMap } from "@/components/skill-map";
 import { SocialFeed } from "@/components/social-feed";
 import { useMobilityStatus, useNotificationScheduler } from "@/lib/use-mobility";
 import { GOAL_LABELS, type MobilityGoal, type Stretch, buildWarmupSequence } from "@/lib/mobility-service";
+import { WarmupSequencePlayer } from "@/components/warmup-sequence-player";
 import { useLeaderboard, useMyProfile } from "@/lib/social";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
@@ -272,8 +273,19 @@ function WarmupModal({
   stretches: Stretch[];
   onClose: () => void;
 }) {
+  const [playerActive, setPlayerActive] = useState(false);
   const totalSeconds = stretches.reduce((s, x) => s + x.durationSeconds, 0);
   const mins = Math.ceil(totalSeconds / 60);
+
+  if (playerActive) {
+    return (
+      <WarmupSequencePlayer
+        stretches={stretches}
+        onComplete={onClose}
+        onExit={() => setPlayerActive(false)}
+      />
+    );
+  }
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -337,15 +349,14 @@ function WarmupModal({
 
         {/* Footer CTAs */}
         <div className="px-6 py-4 border-t border-black/10 space-y-2 shrink-0">
-          <Link
-            href="/training?tab=daily"
-            onClick={onClose}
+          <button
+            onClick={() => setPlayerActive(true)}
             className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-black text-white transition-all hover:opacity-90"
             style={{ background: "#177548" }}
           >
             <Sparkles className="w-4 h-4" />
-            Open Full Mobility Session
-          </Link>
+            Begin Warmup
+          </button>
           <button
             onClick={onClose}
             className="w-full py-2.5 rounded-xl text-sm font-semibold text-black/55 hover:bg-black/4 transition-colors border border-black/12"
