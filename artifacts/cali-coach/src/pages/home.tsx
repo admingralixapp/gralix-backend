@@ -19,6 +19,8 @@ import {
   Zap,
   HeartPulse,
   ChevronDown,
+  AlertTriangle,
+  ShieldCheck,
 } from "lucide-react";
 import { getDailyPrescription } from "@/lib/daily-prescription";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -275,13 +277,17 @@ function loadJoints(): JointLog[] {
 
 const DEFAULT_INPUT: JointInput = { wrist: 7, elbow: 7, shoulder: 7, neck: 7, hips: 7, knee: 7, ankle: 7 };
 
+type WarningTier = 1 | 2 | 3;
+interface ReadinessWarning { tier: WarningTier; joints: string[] }
+
 function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () => void }) {
   const today = fmtDate(new Date(), "yyyy-MM-dd");
 
-  const [logs,       setLogs]       = useState<JointLog[]>(loadJoints);
-  const [input,      setInput]      = useState<JointInput>(DEFAULT_INPUT);
-  const [todayDone,  setTodayDone]  = useState(() => loadJoints().some(l => l.date === today));
-  const [expanded,   setExpanded]   = useState(() => !loadJoints().some(l => l.date === today));
+  const [logs,      setLogs]      = useState<JointLog[]>(loadJoints);
+  const [input,     setInput]     = useState<JointInput>(DEFAULT_INPUT);
+  const [todayDone, setTodayDone] = useState(() => loadJoints().some(l => l.date === today));
+  const [expanded,  setExpanded]  = useState(() => !loadJoints().some(l => l.date === today));
+  const [warning,   setWarning]   = useState<ReadinessWarning | null>(null);
 
   const avgLast7 = useMemo(() => {
     const recent = logs.slice(-7);
@@ -294,9 +300,9 @@ function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () =
   }, [logs]);
 
   const comfortColor = avgLast7 === null ? "#888"
-    : avgLast7 >= 7 ? "#22c55e"
-    : avgLast7 >= 5 ? "#f59e0b"
-    : "#ef4444";
+    : avgLast7 >= 7 ? "#177548"
+    : avgLast7 >= 5 ? "#b45309"
+    : "#b91c1c";
 
   const handleLog = useCallback(() => {
     const updated = [...logs.filter(l => l.date !== today), { date: today, ...input }].slice(-30);
@@ -304,29 +310,54 @@ function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () =
     localStorage.setItem(JOINT_LS_KEY, JSON.stringify(updated));
     setTodayDone(true);
     setExpanded(false);
+
+    // ── Tier 3: any joint <= 3 — critical ─────────────────────────────────────
+    const criticalJoints = JOINTS.filter(j => input[j] <= 3);
+    if (criticalJoints.length > 0) {
+      setWarning({ tier: 3, joints: criticalJoints });
+      return;
+    }
+    // ── Tier 2: any joint 4–6 — cautionary ────────────────────────────────────
+    const cautionJoints = JOINTS.filter(j => input[j] >= 4 && input[j] <= 6);
+    if (cautionJoints.length > 0) {
+      setWarning({ tier: 2, joints: cautionJoints });
+      return;
+    }
+    // ── Tier 1: all >= 7 — nominal ────────────────────────────────────────────
+    setWarning({ tier: 1, joints: [] });
   }, [logs, today, input]);
 
+  // Format joint list as readable string, e.g. "Wrist & Shoulder"
+  function fmtJoints(joints: string[]): string {
+    const cap = joints.map(j => j.charAt(0).toUpperCase() + j.slice(1));
+    if (cap.length === 1) return cap[0];
+    if (cap.length === 2) return `${cap[0]} & ${cap[1]}`;
+    return cap.slice(0, -1).join(", ") + " & " + cap[cap.length - 1];
+  }
+
   return (
-    <div className="rounded-2xl overflow-hidden border border-border bg-card">
+    <div className="rounded-2xl overflow-hidden border border-black/12 bg-white">
       {/* Header row — always visible */}
       <button
         type="button"
         onClick={() => setExpanded(v => !v)}
         className="w-full flex items-center gap-3 px-5 pt-4 pb-3 text-left"
       >
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-primary/10 border border-primary/25">
-          <HeartPulse className="w-4 h-4 text-primary" />
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: "rgba(23,117,72,0.10)", border: "1px solid rgba(23,117,72,0.25)" }}>
+          <HeartPulse className="w-4 h-4" style={{ color: "#177548" }} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-foreground">Joint Readiness</span>
+            <span className="text-sm font-bold text-black">Joint Readiness</span>
             {todayDone && (
-              <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/25 text-primary">
+              <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                style={{ background: "rgba(23,117,72,0.10)", border: "1px solid rgba(23,117,72,0.25)", color: "#177548" }}>
                 ✓ Logged
               </span>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground leading-none mt-0.5">
+          <p className="text-[11px] text-black/45 leading-none mt-0.5">
             {todayDone ? "Today's check-in complete" : "Log today's joint comfort"}
           </p>
         </div>
@@ -335,36 +366,103 @@ function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () =
             <div className="text-xl font-black font-mono" style={{ color: comfortColor }}>
               {avgLast7}
             </div>
-            <div className="text-[9px] text-muted-foreground">7-day avg</div>
+            <div className="text-[9px] text-black/40">7-day avg</div>
           </div>
         )}
         <ChevronDown
-          className="w-4 h-4 shrink-0 text-muted-foreground transition-transform"
+          className="w-4 h-4 shrink-0 text-black/35 transition-transform"
           style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
         />
       </button>
 
+      {/* ── Warning / success banner — always visible once submitted ──────────── */}
+      {warning && !expanded && (
+        <div className="px-5 pb-4">
+          {warning.tier === 1 && (
+            <div
+              className="flex items-start gap-2.5 rounded-xl px-4 py-3"
+              style={{ background: "rgba(23,117,72,0.07)", border: "1px solid rgba(23,117,72,0.25)" }}
+            >
+              <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#177548" }} />
+              <p className="text-xs font-semibold leading-snug" style={{ color: "#177548" }}>
+                Mechanical integrity nominal. Enjoy your session.
+              </p>
+            </div>
+          )}
+
+          {warning.tier === 2 && (
+            <div
+              className="rounded-xl px-4 py-3 space-y-2"
+              style={{ background: "rgba(180,83,9,0.06)", border: "1px solid rgba(180,83,9,0.28)" }}
+            >
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "#b45309" }} />
+                <p className="text-xs font-semibold leading-snug text-black">
+                  Sub-optimal joint readiness detected in your{" "}
+                  <span className="font-black" style={{ color: "#b45309" }}>
+                    {fmtJoints(warning.joints)}
+                  </span>
+                  . Consider executing a targeted warm-up before loading these joints.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {warning.tier === 3 && (
+            <div
+              className="rounded-xl px-4 py-3.5 space-y-3"
+              style={{ background: "rgba(185,28,28,0.06)", border: "2px solid rgba(185,28,28,0.55)" }}
+            >
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-red-700" />
+                <p className="text-xs font-bold leading-snug text-black">
+                  <span className="font-black text-red-700">⚠ CRITICAL INJURY RISK DETECTED:</span>{" "}
+                  Heavy joint strain flagged in your{" "}
+                  <span className="font-black text-red-700">{fmtJoints(warning.joints)}</span>.
+                  {" "}We strongly recommend routing to today's therapeutic Daily Mobility sequence instead.
+                </p>
+              </div>
+              {/* Primary suggested CTA — highlighted to Mobility; workout stays unlocked */}
+              <Link
+                href="/mobility"
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-xs font-black uppercase tracking-wider text-white transition-all hover:opacity-90"
+                style={{ background: "#177548" }}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Start Daily Mobility Sequence
+              </Link>
+              <p className="text-[10px] text-black/40 text-center leading-tight">
+                Your standard workout remains fully accessible — this is a recommendation only.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Expandable sliders */}
       {expanded && (
         <div className="px-5 pb-4 space-y-3">
-          <div className="rounded-xl p-4 space-y-3 bg-secondary border border-border">
+          <div className="rounded-xl p-4 space-y-3 bg-black/[0.03] border border-black/8">
             {JOINTS.map((joint) => (
               <div key={joint} className="flex items-center gap-3">
-                <span className="w-16 text-xs capitalize text-muted-foreground shrink-0">{joint}</span>
+                <span className="w-16 text-xs capitalize text-black/45 shrink-0">{joint}</span>
                 <input
                   type="range"
                   min={1}
                   max={10}
                   step={1}
                   value={input[joint]}
-                  onChange={e => setInput(prev => ({ ...prev, [joint]: parseInt(e.target.value) }))}
+                  onChange={e => {
+                    setWarning(null);
+                    setInput(prev => ({ ...prev, [joint]: parseInt(e.target.value) }));
+                  }}
                   className="flex-1 h-1.5 cursor-pointer"
                   style={{ accentColor: "#177548" }}
                 />
                 <span
                   className="w-5 text-sm font-bold font-mono text-right shrink-0"
                   style={{
-                    color: input[joint] >= 7 ? "#22c55e" : input[joint] >= 5 ? "#f59e0b" : "#ef4444",
+                    color: input[joint] >= 7 ? "#177548" : input[joint] >= 4 ? "#b45309" : "#b91c1c",
                   }}
                 >
                   {input[joint]}
@@ -374,7 +472,8 @@ function JointReadinessWidget({ onNavigateProgress }: { onNavigateProgress: () =
           </div>
           <button
             onClick={handleLog}
-            className="w-full py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all bg-primary text-white hover:bg-primary/90"
+            className="w-full py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all text-white hover:opacity-90"
+            style={{ background: "#177548" }}
           >
             {todayDone ? "Update Today" : "Log Today"}
           </button>
