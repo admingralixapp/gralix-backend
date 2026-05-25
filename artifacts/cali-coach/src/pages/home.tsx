@@ -154,11 +154,6 @@ function PerformanceTrendsCard({ isPro }: { isPro: boolean }) {
           <div className="grid grid-cols-3 gap-3">
             {[
               {
-                label: t("dashboard.avgForm", "Avg Form"),
-                value: summary?.avgFormScore != null ? `${Math.round(summary.avgFormScore)}` : "--",
-                unit: "/100",
-              },
-              {
                 label: t("dashboard.totalReps", "Total Reps"),
                 value: summary?.totalReps != null ? `${summary.totalReps}` : "--",
                 unit: "",
@@ -847,17 +842,6 @@ export function Home() {
           label={t("dashboard.workoutStreak")}
           value={summary?.currentStreak ?? 0}
           sub={t("dashboard.daysInARow")}
-          isLoading={loadingSummary}
-        />
-        <StatCard
-          icon={<Target className="w-4 h-4 text-primary" />}
-          label={t("dashboard.avgForm")}
-          value={
-            summary?.avgFormScore != null
-              ? Math.round(summary.avgFormScore)
-              : "--"
-          }
-          sub={t("dashboard.outOf100")}
           isLoading={loadingSummary}
         />
         <StatCard
