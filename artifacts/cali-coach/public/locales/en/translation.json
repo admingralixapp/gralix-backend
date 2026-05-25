@@ -490,7 +490,7 @@
     "rpeLabel": "RPE — How Hard Was It?",
     "rpeHint": "1 = very easy · 10 = all-out effort · optional",
     "workoutTitle": "Workout",
-    "workoutSubtitle": "AI form coaching with Ghost Mode",
+    "workoutSubtitle": "Live feedback coaching with Ghost Mode",
     "exerciseLocked": "Exercise Locked",
     "exerciseLockedPrereq": "Complete Lv.{{level}} {{title}} in the Skill Tree to unlock this exercise.",
     "exerciseLockedGeneric": "Complete the prerequisite skill in the Skill Tree to unlock this exercise.",
