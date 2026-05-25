@@ -1028,19 +1028,6 @@ export function Home() {
         )}
       </div>
 
-      {/* ── Friends Activity ──────────────────────────────────────── */}
-      <Card className="border-border bg-card">
-        <CardHeader className="pb-3 border-b border-border">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-yellow-400" />
-            {t("dashboard.friendsActivity")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <SocialFeed />
-        </CardContent>
-      </Card>
-
       {/* ── Contextual Warmup Modal ────────────────────────────────── */}
       {warmupCtx && warmupStretches.length > 0 && (
         <WarmupModal
