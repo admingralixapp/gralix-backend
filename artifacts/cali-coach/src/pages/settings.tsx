@@ -351,6 +351,30 @@ export function Settings() {
               Open
             </button>
           </div>
+
+          <div className="h-px bg-border/60" />
+
+          {/* Manage Subscription */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(25,119,80,0.12)", border: "1px solid rgba(25,119,80,0.25)" }}>
+                <Crown className="w-4 h-4" style={{ color: "#197750" }} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-foreground">Manage Subscription</div>
+                <div className="text-[11px] text-muted-foreground">
+                  {profile?.isPro ? "CaliCoach Pro — Active" : "CaliCoach Pro membership"}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setLocation("/manage-subscription")}
+              className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors"
+              style={{ borderColor: "rgba(25,119,80,0.40)", color: "#197750" }}
+            >
+              Open
+            </button>
+          </div>
         </div>
       </section>
 

@@ -33,6 +33,7 @@ import { ProfilePage } from "@/pages/profile";
 import { Leaderboard } from "@/pages/leaderboard";
 import { Settings } from "@/pages/settings";
 import { ShopPage } from "@/pages/shop";
+import { ManageSubscription } from "@/pages/manage-subscription";
 import { SignInPage } from "@/pages/sign-in";
 import { SignUpPage } from "@/pages/sign-up";
 import { Landing } from "@/pages/landing";
@@ -364,6 +365,7 @@ function AppRouter() {
                     <Route path="/friends" component={Friends} />
                     <Route path="/profile/:username" component={ProfilePage} />
                     <Route path="/settings" component={Settings} />
+                    <Route path="/manage-subscription" component={ManageSubscription} />
                     <Route path="/shop" component={ShopPage} />
                     <Route path="/calibration" component={BodyCalibration} />
                     <Route path="/physical-calibration" component={PhysicalCalibration} />

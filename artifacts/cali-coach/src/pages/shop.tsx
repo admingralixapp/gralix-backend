@@ -7,13 +7,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocalizedPrices } from "@/lib/locale";
 import {
   ShoppingBag,
-  Crown,
   Sparkles,
   Check,
   Gift,
   Tag,
   X,
-  Zap,
   LogIn,
   Play,
   Loader2,
@@ -24,7 +22,6 @@ import {
   useShopPurchase,
   useClaimFreeAura,
   useRedeemCode,
-  useActivatePro,
 } from "@/lib/social";
 import { AURA_PACKS } from "@/lib/aura-packs";
 import { useToast } from "@/hooks/use-toast";
@@ -132,24 +129,10 @@ export function ShopPage() {
   void i18n; // language change triggers re-render, prices update reactively
 
   const [, setLocation] = useLocation();
-  const activatePro = useActivatePro();
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [redeemInput, setRedeemInput] = useState("");
   const [activeVoiceProfileId, setActiveVoiceProfileId] = useState<string>(() => getVoiceProfile());
   const [testingVoiceId, setTestingVoiceId] = useState<string | null>(null);
-
-  function handleActivateTrial() {
-    activatePro.mutate(undefined, {
-      onSuccess: () =>
-        toast({
-          title: t("shop.trialStarted"),
-          description: t("shop.trialStartedDesc"),
-        }),
-      onError: () =>
-        toast({ title: t("shop.somethingWentWrong"), variant: "destructive" }),
-    });
-  }
 
   const inventory: string[] = profile?.inventory ?? ["classic"];
   const canClaimBonus = !!profile?.isPro && !profile?.hasClaimedSigningBonus;
@@ -232,130 +215,6 @@ export function ShopPage() {
           <p className="text-xs text-muted-foreground">{t("shop.subtitle")}</p>
         </div>
       </div>
-
-      {/* ── Pro Subscription Card ── */}
-      <section>
-        <div
-          className="rounded-3xl border border-black/10 p-5 space-y-4 relative overflow-hidden bg-white shadow-sm"
-        >
-          {/* Header row */}
-          <div className="flex items-center justify-between relative">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-primary/10 border border-primary/25">
-                <Crown className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <div className="font-black text-base text-foreground">
-                  CaliCoach Pro
-                </div>
-                {profile?.isPro ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/25">
-                    {t("shop.proActive")}
-                  </span>
-                ) : (
-                  <div className="text-[11px] text-muted-foreground">{t("shop.proSubtitle")}</div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Why go Pro list */}
-          <div className="space-y-2.5 relative">
-            {[
-              { icon: "🎥", label: t("shop.whyProItem1Label"), description: t("shop.whyProItem1Desc") },
-              { icon: "📊", label: t("shop.whyProItem4Label"), description: t("shop.whyProItem4Desc") },
-              { icon: "🎁", label: t("shop.whyProItem3Label"), description: t("shop.whyProItem3Desc") },
-              { icon: "💚", label: t("shop.whyProItem2Label"), description: t("shop.whyProItem2Desc") },
-            ].map(({ icon, label, description }) => (
-              <div key={label} className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 bg-primary/10 border border-primary/20">
-                  <EmojiIcon emoji={icon} className="w-4 h-4 object-contain" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm text-foreground">{label}</span>
-                  {description && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">{description}</p>
-                  )}
-                </div>
-                <Check className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
-              </div>
-            ))}
-          </div>
-
-          {!profile?.isPro && (
-            <>
-              {/* Billing toggle */}
-              <div
-                className="flex rounded-xl overflow-hidden border border-border p-0.5 gap-0.5 relative bg-secondary"
-              >
-                {(["monthly", "yearly"] as const).map((cycle) => (
-                  <button
-                    key={cycle}
-                    onClick={() => setBillingCycle(cycle)}
-                    className={[
-                      "flex-1 py-2 rounded-[9px] text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5",
-                      billingCycle === cycle
-                        ? "text-white shadow-md"
-                        : "text-muted-foreground hover:text-foreground",
-                    ].join(" ")}
-                    style={billingCycle === cycle ? { background: "#177548" } : {}}
-                  >
-                    {cycle === "monthly" ? t("shop.monthly") : t("shop.yearly")}
-                    {cycle === "yearly" && (
-                      <span
-                        className={[
-                          "text-[10px] font-bold px-1.5 py-0.5 rounded-full",
-                          billingCycle === "yearly"
-                            ? "bg-white/20 text-white"
-                            : "bg-primary/15 text-primary",
-                        ].join(" ")}
-                      >
-                        {t("shop.save20")}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              {/* Price */}
-              <div className="text-center py-1 relative">
-                <span className="text-4xl font-black text-foreground">
-                  {billingCycle === "monthly" ? prices.monthly : prices.yearly}
-                </span>
-                <span className="text-sm text-muted-foreground ml-1">
-                  {billingCycle === "monthly" ? t("shop.perMonthFull") : t("shop.perYearFull")}
-                </span>
-              </div>
-
-              {/* CTA */}
-              <button
-                onClick={handleActivateTrial}
-                disabled={activatePro.isPending}
-                className="w-full py-3 rounded-xl text-sm font-black tracking-wide transition-all disabled:opacity-60 relative"
-                style={{ background: "#177548", color: "#fff" }}
-              >
-                {activatePro.isPending ? t("common.loading") : t("shop.startTrial")}
-              </button>
-              <p className="text-[10px] text-muted-foreground text-center">
-                {t("shop.trialNote")}
-              </p>
-            </>
-          )}
-
-          {profile?.isPro && (
-            <div className="flex items-center justify-center gap-2 py-1.5 text-sm relative text-primary">
-              <Zap className="w-4 h-4" />
-              <span>{t("shop.proActiveManage")}</span>
-              <button
-                onClick={() => setLocation("/settings?section=membership")}
-                className="font-bold underline underline-offset-2 hover:opacity-80 transition-opacity text-primary"
-              >
-                {t("shop.manageSubscription")}
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
 
       {/* ── Pro Signing Bonus Banner ── */}
       <AnimatePresence>
