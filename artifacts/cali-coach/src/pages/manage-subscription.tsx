@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Volume2, Tag, X, Loader2,
   History, Sparkles, ExternalLink, TrendingUp,
-  Crown, AlertTriangle, CheckCircle2,
+  Crown, AlertTriangle, CheckCircle2, FlaskConical,
 } from "lucide-react";
 
 // ─── Skeleton overlay (MediaPipe-style pose tracking) ─────────────────────────
@@ -300,12 +300,16 @@ export function ManageSubscription() {
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const [showPromo, setShowPromo] = useState(false);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
+  const [devIsPro, setDevIsPro] = useState<boolean | null>(null);
   const { data: profile } = useMyProfile();
   const activatePro = useActivatePro();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const isPro = profile?.isPro ?? false;
+  const isPro =
+    import.meta.env.DEV && devIsPro !== null
+      ? devIsPro
+      : (profile?.isPro ?? false);
 
   function handleDragEnd(_: unknown, info: PanInfo) {
     if (info.offset.x < -50 && slide < SLIDE_COUNT - 1) setSlide((s) => s + 1);
@@ -650,6 +654,72 @@ export function ManageSubscription() {
       </div>
 
       {showPromo && <PromoModal onClose={() => setShowPromo(false)} />}
+
+      {/* ── Dev-only toggle panel ── */}
+      {import.meta.env.DEV && (
+        <div className="shrink-0 border-t-2 border-dashed border-amber-300 bg-amber-50 px-4 py-3">
+          <div className="max-w-lg mx-auto">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <FlaskConical className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wide">
+                  Dev · Subscription state
+                </span>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                {/* Reset to real value */}
+                {devIsPro !== null && (
+                  <button
+                    onClick={() => {
+                      setDevIsPro(null);
+                      setShowCancelWarning(false);
+                    }}
+                    className="text-[10px] text-amber-600 hover:text-amber-800 underline underline-offset-2 transition-colors mr-1"
+                  >
+                    reset
+                  </button>
+                )}
+                {/* Free pill */}
+                <button
+                  onClick={() => {
+                    setDevIsPro(false);
+                    setShowCancelWarning(false);
+                  }}
+                  className={[
+                    "px-3 py-1 rounded-l-lg border text-[11px] font-bold transition-all",
+                    isPro
+                      ? "bg-white border-amber-300 text-amber-600 hover:bg-amber-100"
+                      : "bg-amber-500 border-amber-500 text-white shadow-sm",
+                  ].join(" ")}
+                >
+                  Free
+                </button>
+                {/* Pro pill */}
+                <button
+                  onClick={() => {
+                    setDevIsPro(true);
+                    setShowCancelWarning(false);
+                  }}
+                  className={[
+                    "px-3 py-1 rounded-r-lg border-t border-b border-r text-[11px] font-bold transition-all",
+                    isPro
+                      ? "bg-amber-500 border-amber-500 text-white shadow-sm"
+                      : "bg-white border-amber-300 text-amber-600 hover:bg-amber-100",
+                  ].join(" ")}
+                >
+                  Pro
+                </button>
+              </div>
+            </div>
+            {devIsPro !== null && (
+              <p className="text-[10px] text-amber-600/70 mt-1.5 leading-snug">
+                Overriding real value ({profile?.isPro ? "Pro" : "Free"}) with{" "}
+                <strong>{devIsPro ? "Pro" : "Free"}</strong>. Hit reset to restore.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
