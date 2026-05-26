@@ -334,8 +334,8 @@ export function Settings() {
           {/* Manage Physical Data */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center shrink-0">
-                <Ruler className="w-4 h-4 text-emerald-400" />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(25,119,80,0.12)", border: "1px solid rgba(25,119,80,0.25)" }}>
+                <Ruler className="w-4 h-4" style={{ color: "#197750" }} />
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-foreground">Manage Physical Data</div>
@@ -346,7 +346,8 @@ export function Settings() {
             </div>
             <button
               onClick={() => profile?.username && setLocation(`/profile/${profile.username}`)}
-              className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+              className="shrink-0 px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors"
+              style={{ borderColor: "rgba(25,119,80,0.40)", color: "#197750" }}
             >
               Open
             </button>
