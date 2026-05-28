@@ -32,10 +32,6 @@ export function Landing() {
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-16 text-center">
         <div className="max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-6">
-            <Activity className="w-3.5 h-3.5" />
-            AI-Powered Calisthenics Coaching
-          </div>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 leading-tight">
             Master your movement,<br />
             <span className="text-primary">share your journey.</span>
