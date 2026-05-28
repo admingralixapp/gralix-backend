@@ -44,7 +44,7 @@ const STEPS: TourStep[] = [
   {
     navKey: "training",
     title: "Choose Your Focus",
-    body: "Access AI-verified workouts or your personalized Daily Mobility routine.",
+    body: "Access form-verified workouts or your personalized Daily Mobility routine.",
   },
   {
     navKey: "mastery",

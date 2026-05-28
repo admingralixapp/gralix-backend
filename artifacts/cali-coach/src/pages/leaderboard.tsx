@@ -246,7 +246,7 @@ export function Leaderboard() {
       <div className="mt-5 px-6 pb-2 flex items-center justify-center gap-1.5">
         <ShieldCheck className="w-3 h-3 shrink-0" style={{ color: "#177548" }} />
         <span className="text-[11px]" style={{ color: "#177548" }}>
-          All entries are AI-verified skill node completions
+          All entries are form-verified skill node completions
         </span>
       </div>
     </div>

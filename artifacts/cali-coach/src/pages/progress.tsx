@@ -772,7 +772,7 @@ export function Progress() {
               ) : (
                 <div className="text-center py-10 text-muted-foreground">
                   <Zap className="w-8 h-8 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">Complete more AI-verified sessions to see your readiness scores.</p>
+                  <p className="text-sm">Complete more form-verified sessions to see your readiness scores.</p>
                 </div>
               )}
             </CardContent>
