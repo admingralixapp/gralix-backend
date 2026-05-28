@@ -151,8 +151,8 @@
   },
   "shop": {
     "title": "CaliShop",
-    "subtitle": "Підписка, Aura Packs та ексклюзивні оновлення",
-    "signInPrompt": "Увійдіть, щоб підписатися, переглянути Aura Packs та активувати коди.",
+    "subtitle": "Підписка, Voice Packs та ексклюзивні оновлення",
+    "signInPrompt": "Увійдіть, щоб підписатися, переглянути Voice Packs та активувати коди.",
     "proTitle": "CaliCoach Pro",
     "proSubtitle": "Розблокуйте повний досвід",
     "proActive": "✓ Активно",
@@ -160,7 +160,7 @@
     "whyProItems": {
       "coaching": "Коучинг з AI-камерою у реальному часі",
       "badge": "Світлодіодний фіолетовий підтверджений значок",
-      "bonus": "1x безкоштовний підпис на Aura Pack за підписання"
+      "bonus": "1x безкоштовний підпис на Voice Pack за підписання"
     },
     "monthly": "Щомісячно",
     "yearly": "Щорічно",
@@ -173,9 +173,9 @@
     "startTrial": "Розпочати 3-добовий безкоштовний пробний період",
     "manageSubscription": "Керувати підпискою",
     "signingBonus": "Бонус за підписання",
-    "signingBonusDesc": "Ви розблокували безкоштовний Aura Pack! Заберіть його нижче.",
+    "signingBonusDesc": "Ви розблокували безкоштовний Voice Pack! Заберіть його нижче.",
     "claimBonus": "Отримати безкоштовний пак",
-    "auraPacks": "Aura Packs",
+    "auraPacks": "Voice Packs",
     "auraPacksDesc": "Налаштуйте голос вашого коучингу та аватар-привид",
     "buyFor": "Купити за {{price}}",
     "promoCode": "Промо-код",

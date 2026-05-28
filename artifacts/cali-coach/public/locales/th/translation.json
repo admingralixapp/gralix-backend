@@ -134,7 +134,7 @@
     "whyProItems": {
       "coaching": "โค้ชด้วยกล้อง AI แบบเรียลไทม์",
       "badge": "ป้ายตรวจสอบสีม่วงเรืองแสง",
-      "bonus": "โบนัส SIGNING Aura Pack ฟรี 1 ชุด"
+      "bonus": "โบนัส SIGNING Voice Pack ฟรี 1 ชุด"
     },
     "monthly": "รายเดือน",
     "yearly": "รายปี",
@@ -147,7 +147,7 @@
     "startTrial": "เริ่มทดลองใช้ฟรี 3 วัน",
     "manageSubscription": "จัดการสมาชิก",
     "signingBonus": "โบนัส SIGNING สำหรับ Pro",
-    "signingBonusDesc": "คุณได้ปลดล็อก Aura Pack ฟรีแล้ว! รับเลยด้านล่าง",
+    "signingBonusDesc": "คุณได้ปลดล็อก Voice Pack ฟรีแล้ว! รับเลยด้านล่าง",
     "claimBonus": "รับแพ็กฟรีของคุณ",
     "auraPacks": "แพ็ก Aura",
     "auraPacksDesc": "ปรับแต่งเสียงโค้ชและอวาตาร์แบบ Ghost ของคุณ",
@@ -177,7 +177,7 @@
     "elevenLabsError": "ข้อผิดพลาดในการเชื่อมต่อ ElevenLabs",
     "elevenLabsErrorDesc": "ไม่สามารถดึงเสียงสำหรับ {{name}} ได้ โปรดตรวจสอบการเชื่อมต่อ",
     "proActiveManage": "Pro ที่ใช้งานอยู่ —",
-    "claimBonusTitle": "รับ Aura Pack ฟรีของคุณ",
+    "claimBonusTitle": "รับ Voice Pack ฟรีของคุณ",
     "claimBonusDesc": "ยินดีต้อนรับสู่ Pro! เลือกแพ็คแบบชำระเงินใดก็ได้ฟรี",
     "claim": "รับเลย",
     "voicesTitle": "เสียงโค้ช AI",
@@ -197,7 +197,7 @@
     "whyProItem1Desc": "รับคำติชมแบบสดเกี่ยวกับฟอร์มและท่าทางของคุณในทุกการออกกำลังกาย",
     "whyProItem2Label": "ป้ายตรวจสอบสีม่วงเรืองแสง",
     "whyProItem2Desc": "โดดเด่นในชุมชนและกระดานผู้นำด้วยป้าย Pro เฉพาะเท่านั้น",
-    "whyProItem3Label": "โบนัส SIGNING Aura Pack ฟรี 1 ชุด",
+    "whyProItem3Label": "โบนัส SIGNING Voice Pack ฟรี 1 ชุด",
     "whyProItem3Desc": "เริ่มต้นการฝึกด้วย Aura พรีเมียมใดก็ได้ที่คุณเลือก ปลดล็อกได้ตลอดไป",
     "whyProItem4Label": "Analytics ความก้าวหน้าขั้นสูง",
     "whyProItem4Desc": "วิเคราะห์แนวโน้มฟอร์ม, การเพิ่มความแข็งแรง และเมตริกการแสดงผลอย่างละเอียด",

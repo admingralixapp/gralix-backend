@@ -75,7 +75,7 @@ export const GHOST_SKINS: GhostSkin[] = [
   },
   {
     id: "spirit-aura",
-    label: "Spirit Aura",
+    label: "Spirit Voice",
     description: "Ethereal purple energy field",
     emoji: "✨",
     free: false,

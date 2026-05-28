@@ -151,8 +151,8 @@
   },
   "shop": {
     "title": "CaliShop",
-    "subtitle": "订阅、光环包与独家升级",
-    "signInPrompt": "登录以订阅、浏览光环包并兑换代码。",
+    "subtitle": "订阅、Voice Packs与独家升级",
+    "signInPrompt": "登录以订阅、浏览Voice Packs并兑换代码。",
     "proTitle": "CaliCoach Pro",
     "proSubtitle": "解锁完整体验",
     "proActive": "✓ 已激活",
@@ -160,7 +160,7 @@
     "whyProItems": {
       "coaching": "实时 AI 摄像头动作指导",
       "badge": "炫紫验证徽章",
-      "bonus": "1x 免费光环包签约奖励"
+      "bonus": "1x 免费Voice Packs签约奖励"
     },
     "monthly": "按月",
     "yearly": "按年",
@@ -173,9 +173,9 @@
     "startTrial": "开始 3 天免费试用",
     "manageSubscription": "管理订阅",
     "signingBonus": "Pro 签约奖励",
-    "signingBonusDesc": "你已解锁一个免费光环包！在下方领取。",
+    "signingBonusDesc": "你已解锁一个免费Voice Packs！在下方领取。",
     "claimBonus": "领取你的免费包",
-    "auraPacks": "光环包",
+    "auraPacks": "Voice Packs",
     "auraPacksDesc": "自定义你的教练语音和虚影化身",
     "buyFor": "购买价格 {{price}}",
     "promoCode": "优惠码",
@@ -209,7 +209,7 @@
     "voicesTitle": "AI教练语音",
     "voicesDesc": "选择你的教练个性。免费语音使用设备的语音引擎。Pro语音采用ElevenLabs AI + GPT-4o角色注入，效果更佳。",
     "starterVoices": "入门语音",
-    "customAuras": "自定义气场",
+    "customAuras": "Voice Packs",
     "premiumVoices": "高级语音与幽灵皮肤",
     "redeemCodeSection": "兑换代码",
     "redeemCodeDesc": "代码可解锁包、Pro权限或限时奖励。",

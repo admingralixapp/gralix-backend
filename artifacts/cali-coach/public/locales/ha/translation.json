@@ -116,7 +116,7 @@
     "noThanksCancel": "A'a, na gode, ci gaba da yanke →",
     "goBack": "Dawo baya",
     "sorrySeeYouGo": "Muna jin takaici ganin ka tafi.",
-    "loseAccessWarning": "Za ka rasa dama zuwa Advanced Analytics da Pro Auras a ƙarshen tsarin kuɗin ka.",
+    "loseAccessWarning": "Za ka rasa dama zuwa Advanced Analytics da Pro Voice Packs a ƙarshen tsarin kuɗin ka.",
     "cancellingLabel": "Yanke...",
     "subscriptionCancelled": "An yanke ƙungiya",
     "subscriptionCancelledDesc": "An yanke ƙungiyarka. Za ka sami damar shiga har zuwa {{date}}.",
@@ -134,7 +134,7 @@
     "whyProItems": {
       "coaching": "Jagorancin AI na ainihi lokaci guda na camera",
       "badge": "Lambar Tabbatar Purple Mai Kyalli",
-      "bonus": "1x Kyautar Sa hannu Mai Kyauta Aura Pack"
+      "bonus": "1x Kyautar Sa hannu Mai Kyauta Voice Pack"
     },
     "monthly": "Kowane wata",
     "yearly": "Kowane shekara",
@@ -147,7 +147,7 @@
     "startTrial": "Fara Gwajin Kyauta na 3-Kwana",
     "manageSubscription": "Gudanar da Ƙungiya",
     "signingBonus": "Kyautar Sa hannu Mai Gwani",
-    "signingBonusDesc": "Ka buɗe Aura Pack kyauta! Nema shi a kasa.",
+    "signingBonusDesc": "Ka buɗe Voice Pack kyauta! Nema shi a kasa.",
     "claimBonus": "Nema Kyautar Kyauta",
     "auraPacks": "Ayyukan Aura",
     "auraPacksDesc": "Saita muryar coaching dinka da avatar ghost",
@@ -177,7 +177,7 @@
     "elevenLabsError": "Kuskuren Haɗin ElevenLabs",
     "elevenLabsErrorDesc": "Ba a iya samo sauti don {{name}} ba. Duba haɗin internet.",
     "proActiveManage": "Gwani mai aiki —",
-    "claimBonusTitle": "Nema Aura Pack kyauta naka",
+    "claimBonusTitle": "Nema Voice Pack kyauta naka",
     "claimBonusDesc": "Barka da zuwa Pro! Zaɓi kowanne pack mai biya kyauta.",
     "claim": "Nema",
     "voicesTitle": "Muryoyin Coach na AI",

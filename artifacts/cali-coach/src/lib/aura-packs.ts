@@ -20,7 +20,7 @@ export const AURA_PACKS: AuraPack[] = [
   // ── Free packs ────────────────────────────────────────────────────────────
   {
     id: "classic",
-    name: "Classic Aura",
+    name: "Classic Voice",
     tagline: "The default CaliCoach experience",
     emoji: "👻",
     voiceId: "classic",
@@ -34,7 +34,7 @@ export const AURA_PACKS: AuraPack[] = [
   },
   {
     id: "classic_female",
-    name: "Classic Female Aura",
+    name: "Classic Female Voice",
     tagline: "Warm, supportive coaching — browser voice",
     emoji: "👩‍🏫",
     voiceId: "classic_female",
