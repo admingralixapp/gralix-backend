@@ -1,3 +1,5 @@
+// Bypass import and define directly to resolve the TypeScript error
+const API_BASE_URL = "https://gralix-backend.onrender.com";
 /**
  * voiceService — ElevenLabs streaming TTS via new Audio() element
  *
@@ -44,10 +46,10 @@ const FREE_VOICE_PROFILES = new Set<string>([]);
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const DUCK_TARGET    = 0.3;
+const DUCK_TARGET = 0.3;
 const DUCK_RAMP_DOWN = 0.08;
-const DUCK_RAMP_UP   = 0.5;
-const FULL_GAIN      = 1.0;
+const DUCK_RAMP_UP = 0.5;
+const FULL_GAIN = 1.0;
 
 /**
  * Dead time (ms) between consecutive cues.
@@ -65,12 +67,16 @@ function getCtx(): AudioContext {
   if (!_ctx || _ctx.state === "closed") {
     _ctx = new AudioContext();
     _duckingGain = null;
-    _speechGain  = null;
+    _speechGain = null;
   }
   return _ctx;
 }
 
-function getGains(): { ac: AudioContext; duckGain: GainNode; speechGain: GainNode } {
+function getGains(): {
+  ac: AudioContext;
+  duckGain: GainNode;
+  speechGain: GainNode;
+} {
   const ac = getCtx();
   if (!_duckingGain) {
     _duckingGain = ac.createGain();
@@ -113,14 +119,20 @@ function releaseDuck(ac: AudioContext, duckGain: GainNode): void {
 
 function requestAudioFocus(): void {
   try {
-    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
-  } catch { /* ignore */ }
+    if ("mediaSession" in navigator)
+      navigator.mediaSession.playbackState = "playing";
+  } catch {
+    /* ignore */
+  }
 }
 
 function abandonAudioFocus(): void {
   try {
-    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
-  } catch { /* ignore */ }
+    if ("mediaSession" in navigator)
+      navigator.mediaSession.playbackState = "paused";
+  } catch {
+    /* ignore */
+  }
 }
 
 // ─── Current Audio element (paid profiles) ────────────────────────────────────
@@ -131,11 +143,13 @@ function stopCurrentAudio(): void {
   if (_currentAudioEl) {
     try {
       // Null handlers BEFORE clearing src — prevents spurious onerror("Empty src attribute").
-      _currentAudioEl.onerror  = null;
-      _currentAudioEl.onended  = null;
+      _currentAudioEl.onerror = null;
+      _currentAudioEl.onended = null;
       _currentAudioEl.pause();
       _currentAudioEl.src = "";
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     _currentAudioEl = null;
   }
 }
@@ -166,7 +180,9 @@ export function setVoiceLanguage(bcp47: string): void {
   _speechLang = bcp47;
   try {
     localStorage.setItem("calicoach_lang", bcp47);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 // ─── Browser TTS (FREE profiles ONLY) ────────────────────────────────────────
@@ -175,17 +191,19 @@ function browserSpeakForProfile(text: string, profileId: string): void {
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.rate   = 1.1;
-    u.pitch  = profileId === "classic_female" ? 1.5 : 0.95;
+    u.rate = 1.1;
+    u.pitch = profileId === "classic_female" ? 1.5 : 0.95;
     u.volume = 1;
-    u.lang   = _speechLang;
+    u.lang = _speechLang;
 
     if (profileId === "classic_female") {
       const voices = window.speechSynthesis.getVoices();
       const femaleVoice = voices.find(
         (v) =>
           v.lang.startsWith(_speechLang.split("-")[0] ?? "en") &&
-          /female|woman|girl|zira|samantha|karen|moira|tessa|fiona|victoria/i.test(v.name),
+          /female|woman|girl|zira|samantha|karen|moira|tessa|fiona|victoria/i.test(
+            v.name,
+          ),
       );
       if (femaleVoice) u.voice = femaleVoice;
     }
@@ -224,14 +242,14 @@ function _speakWithAudioElement(
   cacheKey: string,
 ): Promise<void> {
   const params = new URLSearchParams({
-    text:         text.slice(0, 500),
-    profile:      profileId,
+    text: text.slice(0, 500),
+    profile: profileId,
     exerciseName: exerciseName,
-    cacheKey:     cacheKey,
-    language:     getLiveCoachLang(),
+    cacheKey: cacheKey,
+    language: getLiveCoachLang(),
   });
 
-  const url = `/api/tts/stream?${params.toString()}`;
+  const url = `${API_BASE_URL}/api/tts/stream?${params.toString()}`;
   console.log(`[CaliCoach Voice] new Audio() → ${url.slice(0, 120)}`);
 
   const audio = new Audio(url);
@@ -243,19 +261,26 @@ function _speakWithAudioElement(
   requestAudioFocus();
 
   return new Promise<void>((resolve, reject) => {
-    audio.play().then(() => {
-      console.log(`[CaliCoach Voice] ▶️  Audio element playing — profile="${profileId}"`);
-    }).catch((err: unknown) => {
-      console.error(`[CaliCoach Voice] ❌ Audio element play() failed:`, err);
-      if (_currentAudioEl === audio) _currentAudioEl = null;
-      const { ac: ac2, duckGain: dg } = getGains();
-      if (ac2.state !== "closed") releaseDuck(ac2, dg);
-      abandonAudioFocus();
-      reject(err instanceof Error ? err : new Error(String(err)));
-    });
+    audio
+      .play()
+      .then(() => {
+        console.log(
+          `[CaliCoach Voice] ▶️  Audio element playing — profile="${profileId}"`,
+        );
+      })
+      .catch((err: unknown) => {
+        console.error(`[CaliCoach Voice] ❌ Audio element play() failed:`, err);
+        if (_currentAudioEl === audio) _currentAudioEl = null;
+        const { ac: ac2, duckGain: dg } = getGains();
+        if (ac2.state !== "closed") releaseDuck(ac2, dg);
+        abandonAudioFocus();
+        reject(err instanceof Error ? err : new Error(String(err)));
+      });
 
     audio.onended = () => {
-      console.log(`[CaliCoach Voice] ✅ Audio element finished — profile="${profileId}"`);
+      console.log(
+        `[CaliCoach Voice] ✅ Audio element finished — profile="${profileId}"`,
+      );
       if (_currentAudioEl === audio) _currentAudioEl = null;
       const { ac: ac2, duckGain: dg } = getGains();
       if (ac2.state !== "closed") releaseDuck(ac2, dg);
@@ -265,8 +290,10 @@ function _speakWithAudioElement(
 
     audio.onerror = () => {
       const code = (audio.error?.code ?? -1).toString();
-      const msg  = audio.error?.message ?? "unknown";
-      console.error(`[CaliCoach Voice] ❌ Audio element error code=${code}: ${msg}`);
+      const msg = audio.error?.message ?? "unknown";
+      console.error(
+        `[CaliCoach Voice] ❌ Audio element error code=${code}: ${msg}`,
+      );
       if (_currentAudioEl === audio) _currentAudioEl = null;
       const { ac: ac2, duckGain: dg } = getGains();
       if (ac2.state !== "closed") releaseDuck(ac2, dg);
@@ -288,32 +315,35 @@ function _speakWithAudioElement(
  *  MOTIVATIONAL — Rep counts, encouragement, milestone cues.
  */
 export const CUE_PRIORITY = {
-  SAFETY:       0,
-  FORM:         1,
-  PHASE:        2,
+  SAFETY: 0,
+  FORM: 1,
+  PHASE: 2,
   MOTIVATIONAL: 3,
 } as const;
 
-export type CuePriority = typeof CUE_PRIORITY[keyof typeof CUE_PRIORITY];
+export type CuePriority = (typeof CUE_PRIORITY)[keyof typeof CUE_PRIORITY];
 
 export interface QueuedCue {
-  text:         string;
-  profileId:    string;
+  text: string;
+  profileId: string;
   exerciseName: string;
-  cacheKey:     string;
-  priority:     CuePriority;
-  tone:         "encouraging" | "firm" | "neutral";
+  cacheKey: string;
+  priority: CuePriority;
+  tone: "encouraging" | "firm" | "neutral";
 }
 
 /** Highest-priority cue accumulated while playback is in progress. */
-let _pendingCue:   QueuedCue | null = null;
+let _pendingCue: QueuedCue | null = null;
 /** True while a cue is actively playing (ElevenLabs request + audio duration). */
-let _busy          = false;
+let _busy = false;
 /** setTimeout handle for the post-cue silence buffer. */
 let _silenceTimer: ReturnType<typeof setTimeout> | null = null;
 
 function _clearSilenceTimer(): void {
-  if (_silenceTimer) { clearTimeout(_silenceTimer); _silenceTimer = null; }
+  if (_silenceTimer) {
+    clearTimeout(_silenceTimer);
+    _silenceTimer = null;
+  }
 }
 
 function _scheduleFlush(): void {
@@ -333,9 +363,14 @@ async function _executeCue(cue: QueuedCue): Promise<void> {
       browserSpeakForProfile(cue.text, cue.profileId);
       // Browser TTS has no reliable completion callback across all browsers.
       // Wait a fixed upper-bound so the silence buffer still fires correctly.
-      await new Promise<void>(res => setTimeout(res, 3500));
+      await new Promise<void>((res) => setTimeout(res, 3500));
     } else {
-      await _speakWithAudioElement(cue.text, cue.profileId, cue.exerciseName, cue.cacheKey);
+      await _speakWithAudioElement(
+        cue.text,
+        cue.profileId,
+        cue.exerciseName,
+        cue.cacheKey,
+      );
     }
   } catch {
     // Errors already logged inside the underlying functions.
@@ -361,7 +396,11 @@ export function enqueueCue(cue: QueuedCue): void {
     _clearSilenceTimer();
     _pendingCue = null;
     stopCurrentAudio();
-    try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
+    try {
+      window.speechSynthesis.cancel();
+    } catch {
+      /* ignore */
+    }
     _busy = false;
     void _executeCue(cue);
     return;
@@ -386,16 +425,25 @@ export function enqueueCue(cue: QueuedCue): void {
  * Speak a general coaching cue.
  * Workout code should prefer enqueueCue() for explicit priority control.
  */
-export function speak(text: string, tone: "encouraging" | "firm" | "neutral" = "neutral", priority: CuePriority = CUE_PRIORITY.MOTIVATIONAL): void {
+export function speak(
+  text: string,
+  tone: "encouraging" | "firm" | "neutral" = "neutral",
+  priority: CuePriority = CUE_PRIORITY.MOTIVATIONAL,
+): void {
   if (_muted) return;
   const lang = getLiveCoachLang();
   const slug = (s: string) =>
-    s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40);
-  const cacheKey = lang !== "en" ? `${lang}:${slug(text)}` : `general:${slug(text)}`;
+    s
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_|_$/g, "")
+      .slice(0, 40);
+  const cacheKey =
+    lang !== "en" ? `${lang}:${slug(text)}` : `general:${slug(text)}`;
 
   enqueueCue({
     text,
-    profileId:    _activeProfileId,
+    profileId: _activeProfileId,
     exerciseName: "Coaching",
     cacheKey,
     priority,
@@ -416,12 +464,12 @@ export function speakCue(
   if (_muted) return;
 
   enqueueCue({
-    text:         audioCue,
+    text: audioCue,
     profileId,
     exerciseName,
     cacheKey,
     priority,
-    tone:         "neutral",
+    tone: "neutral",
   });
 }
 
@@ -429,20 +477,31 @@ export function speakCue(
  * Play a short sample cue for a personality so the user can preview it.
  * Called by the Shop "Test Voice" buttons.
  */
-export function testCoachVoice(profileId: string, label?: string): Promise<void> {
+export function testCoachVoice(
+  profileId: string,
+  label?: string,
+): Promise<void> {
   const SAMPLE_CUES: Record<string, string> = {
-    classic:        "Keep your core tight and drive through that rep — great work, keep it up!",
-    classic_female: "Stay focused, breathe through the movement — you're doing amazing!",
-    sergeant:       "Get those hips up, recruit! You're sagging like a wet noodle!",
-    sensei:         "The body follows the mind — align your core, find stillness.",
-    cyborg:         "Hip angle deviation detected: 12 degrees below optimal. Correct now.",
-    monk:           "Breathe in. Let the Ascension begin. Flow into perfect alignment.",
-    noir_detective: "Those hips, kid — dropping like a bad lead in a cold case.",
-    ogre:           "Smash down! Strong tiny-human! OGRE IS PROUD.",
-    olympic_coach:  "Eccentric control is lacking — engage your v-taper and drive bio-mechanically.",
-    aussie_legend:  "Mate, you're doing ripper work — stoked to see that! Reckon you've got this!",
-    retro_gamer:    "COMBO BREAKER! Power-up your core or it's game over — finish that rep!",
-    rio_flair:      "Vamos! Keep your chest up and drive through with power — Ginga is in your soul!",
+    classic:
+      "Keep your core tight and drive through that rep — great work, keep it up!",
+    classic_female:
+      "Stay focused, breathe through the movement — you're doing amazing!",
+    sergeant: "Get those hips up, recruit! You're sagging like a wet noodle!",
+    sensei: "The body follows the mind — align your core, find stillness.",
+    cyborg:
+      "Hip angle deviation detected: 12 degrees below optimal. Correct now.",
+    monk: "Breathe in. Let the Ascension begin. Flow into perfect alignment.",
+    noir_detective:
+      "Those hips, kid — dropping like a bad lead in a cold case.",
+    ogre: "Smash down! Strong tiny-human! OGRE IS PROUD.",
+    olympic_coach:
+      "Eccentric control is lacking — engage your v-taper and drive bio-mechanically.",
+    aussie_legend:
+      "Mate, you're doing ripper work — stoked to see that! Reckon you've got this!",
+    retro_gamer:
+      "COMBO BREAKER! Power-up your core or it's game over — finish that rep!",
+    rio_flair:
+      "Vamos! Keep your chest up and drive through with power — Ginga is in your soul!",
   };
 
   const activeLang = getLiveCoachLang();
@@ -451,7 +510,7 @@ export function testCoachVoice(profileId: string, label?: string): Promise<void>
     activeLang !== "en"
       ? getTestPhrase(activeLang)
       : (SAMPLE_CUES[profileId] ??
-         "Great form — keep your core tight and breathe through the movement.");
+        "Great form — keep your core tight and breathe through the movement.");
 
   console.log(
     `%c[CaliCoach Voice] Sending to ElevenLabs: "${sampleText}" in "${activeLang}"`,
@@ -459,18 +518,27 @@ export function testCoachVoice(profileId: string, label?: string): Promise<void>
   );
 
   if (FREE_VOICE_PROFILES.has(profileId)) {
-    console.log(`[CaliCoach Voice] testCoachVoice() → FREE profile="${profileId}" — browser TTS (lang: ${activeLang})`);
+    console.log(
+      `[CaliCoach Voice] testCoachVoice() → FREE profile="${profileId}" — browser TTS (lang: ${activeLang})`,
+    );
     browserSpeakForProfile(sampleText, profileId);
     return Promise.resolve();
   }
 
   const voiceName = label ?? profileId;
-  console.log(`[CaliCoach Voice] 🎙️ profile="${profileId}" (${voiceName}) → /api/tts/stream?language=${activeLang}`);
+  console.log(
+    `[CaliCoach Voice] 🎙️ profile="${profileId}" (${voiceName}) → /api/tts/stream?language=${activeLang}`,
+  );
 
   // Test-voice bypasses the queue and stops current audio directly,
   // so the user gets immediate feedback when previewing profiles in the Shop.
   stopCurrentAudio();
-  return _speakWithAudioElement(sampleText, profileId, "Demo", `${profileId}:test_${Date.now()}`);
+  return _speakWithAudioElement(
+    sampleText,
+    profileId,
+    "Demo",
+    `${profileId}:test_${Date.now()}`,
+  );
 }
 
 /**
@@ -487,7 +555,9 @@ export function cancelSpeech(): void {
 
   try {
     window.speechSynthesis.cancel();
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   try {
     if (_duckingGain && _ctx && _ctx.state !== "closed") {
@@ -495,7 +565,9 @@ export function cancelSpeech(): void {
       _duckingGain.gain.cancelScheduledValues(now);
       _duckingGain.gain.setValueAtTime(FULL_GAIN, now);
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   abandonAudioFocus();
 }

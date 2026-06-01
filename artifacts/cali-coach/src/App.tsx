@@ -1,3 +1,9 @@
+// At the top of App.tsx or main.tsx
+import { setBaseUrl } from '../../../lib/api-client-react/src/custom-fetch';
+
+// Somewhere at the top level of your component or file
+setBaseUrl('https://gralix-backend.onrender.com');
+
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { isRTL } from "@/i18n/languages";

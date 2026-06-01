@@ -35,7 +35,16 @@ app.use(
 // Clerk proxy must come before body parsers (streams raw bytes)
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
-app.use(cors({ credentials: true, origin: true }));
+// Replace line 38 with this:
+const allowedOrigins = [
+  "https://d3612ce3-54c2-4bc7-9580-ec237d066899-00-2cd0zc1wcfpfp.worf.replit.dev", // Your Replit URL
+  "https://gralix.com" // Add your production domain here if you have one
+];
+
+app.use(cors({
+  credentials: true,
+  origin: allowedOrigins
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
